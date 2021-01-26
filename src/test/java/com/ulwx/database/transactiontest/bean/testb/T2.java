@@ -1,6 +1,6 @@
-package com.ulwx.database.transactiontest.bean.testb;
-import com.ulwx.database.MdbOptions;
-import com.ulwx.tool.support.ObjectUtils;
+package com.github.ulwx.database.transactiontest.bean.testb;
+import com.github.ulwx.database.MdbOptions;
+import com.github.ulwx.tool.support.ObjectUtils;
 
 /*********************************************
 

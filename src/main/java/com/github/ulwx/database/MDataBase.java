@@ -1,10 +1,10 @@
-package com.ulwx.database;
+package com.github.ulwx.database;
 
-import com.ulwx.database.nsql.NSQL;
-import com.ulwx.tool.MD;
-import com.ulwx.tool.PageBean;
-import com.ulwx.tool.support.StringUtils;
-import com.ulwx.tool.support.type.TResult2;
+import com.github.ulwx.database.nsql.NSQL;
+import com.github.ulwx.tool.MD;
+import com.github.ulwx.tool.PageBean;
+import com.github.ulwx.tool.support.StringUtils;
+import com.github.ulwx.tool.support.type.TResult2;
 
 import java.io.*;
 import java.sql.Connection;
@@ -110,7 +110,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	
 	/**
 	 * 
-	 * @param mdFullMethodName：定位md文件里的方法，格式为：{@code com.ulwx.database.test.SysRightDao.md:getDataCount} ,
+	 * @param mdFullMethodName：定位md文件里的方法，格式为：{@code com.github.ulwx.database.test.SysRightDao.md:getDataCount} ,
 	 *   表示定位到com/ulwx/database/test/SysRightDao.md文件里的{@code codegetDataCount}方法
 	 * @param vParameters :参数，在md文件中，只能用${xx},不能用#{xx}
 	 * @return 执行成功的结果 ，否则抛出异常
@@ -126,7 +126,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	/**
 	 * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用DataBaseMd.close()方法关闭
 	 * 
-	 * @param mdFullMethodName  定位md文件里的方法，格式为：{@code com.ulwx.database.test.SysRightDao.md:getDataCount} ,
+	 * @param mdFullMethodName  定位md文件里的方法，格式为：{@code com.github.ulwx.database.test.SysRightDao.md:getDataCount} ,
 	 *   表示定位到com/ulwx/database/test/SysRightDao.md文件里的{@code codegetDataCount}方法
 	 * @param vParameters 参数
 	 * @return 返回查询到的结果集
@@ -141,7 +141,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	/**
 	 * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用DataBaseMd.close()方法关闭 连接
 	 * 
-	 * @param mdFullMethodName  定位md文件里的方法，格式为：{@code com.ulwx.database.test.SysRightDao.md:getDataCount} ,
+	 * @param mdFullMethodName  定位md文件里的方法，格式为：{@code com.github.ulwx.database.test.SysRightDao.md:getDataCount} ,
 	 *   表示定位到com/ulwx/database/test/SysRightDao.md文件里的{@code codegetDataCount}方法
 	 * @param vParameters
 	 * @param page
@@ -150,7 +150,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 *            每页多少行
 	 * @param pageUtils
 	 *            返回的分页信息
-	 * @param countSqlMdFullMethodName 格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}
+	 * @param countSqlMdFullMethodName 格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}
 	 *            在md文件里定位查询总数的sql语句，此sql语句查询记录的总数，根据此算页数；
 	 *            <p>countSqlMdFullMethodName也可以为一个整数字符串，用于指定总数；
 	 *            <p>countSqlMdFullMethodName如果指定null或""字符串，那么系统会根据查询语句自动生成查询总数的sql语句
@@ -189,8 +189,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * @param <T>
 	 *            需映射的类
 	 * @param mdFullMethodName
-	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，其中
-	 *            com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
+	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，其中
+	 *            com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
 	 *            getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param args
 	 *            sql查询语句里的参数
@@ -202,7 +202,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 *            返回分页信息
 	 * @param rowMapper
 	 *            映射接口，用户可以通过此接口的回调函数来执行映射
-	 * @param countSqlMdFullMethodName 格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}
+	 * @param countSqlMdFullMethodName 格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}
 	 *            在md文件里定位查询总数的sql语句，此sql语句查询记录的总数，根据此算页数；
 	 *            <p>countSqlMdFullMethodName也可以为一个整数字符串，用于指定总数；
 	 *            <p>countSqlMdFullMethodName如果指定null或""字符串，那么系统会根据查询语句自动生成查询总数的sql语句
@@ -234,14 +234,14 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	/**
 	 * 查询的结果返回一个Map列表
 	 * @param mdFullMethodName
-	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，其中
-	 *            com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
+	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，其中
+	 *            com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
 	 *            getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param args
 	 * @param page
 	 * @param perPage
 	 * @param pageUtils
-	 * @param countSqlMdFullMethodName 格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}
+	 * @param countSqlMdFullMethodName 格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}
 	 *            在md文件里定位查询总数的sql语句，此sql语句查询记录的总数，根据此算页数；
 	 *            <p>countSqlMdFullMethodName也可以为一个整数字符串，用于指定总数；
 	 *            <p>countSqlMdFullMethodName如果指定null或""字符串，那么系统会根据查询语句自动生成查询总数的sql语句
@@ -273,8 +273,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * @param clazz
 	 *            需映射的类
 	 * @param mdFullMethodName
-	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，其中
-	 *            com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
+	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，其中
+	 *            com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
 	 *            getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param args
 	 *            参数
@@ -327,8 +327,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 *  <p> 
 	 *  如果主类对应于n表(news)，那么sql前缀为"n."
 	 * @param mdFullMethodName
-	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，其中
-	 *            com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
+	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，其中
+	 *            com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
 	 *            getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param vParameters
 	 *            参数
@@ -356,8 +356,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * @param clazz
 	 *            需映射类的Class对象
 	 * @param mdFullMethodName
-	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，其中
-	 *            com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
+	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，其中
+	 *            com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
 	 *            getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param vParameters
 	 *            参数
@@ -367,7 +367,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 *            每页多少行
 	 * @param pageUtils
 	 *            返回分页信息的类
-	 * @param countSqlMdFullMethodName 格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}
+	 * @param countSqlMdFullMethodName 格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}
 	 *            在md文件里定位查询总数的sql语句，此sql语句查询记录的总数，根据此算页数；
 	 *            <p>countSqlMdFullMethodName也可以为一个整数字符串，用于指定总数；
 	 *            <p>countSqlMdFullMethodName如果指定null或""字符串，那么系统会根据查询语句自动生成查询总数的sql语句
@@ -406,8 +406,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * @param sqlPrefix
 	 *            主类对应的sql前缀
 	 * @param mdFullMethodName
-	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，其中
-	 *            com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
+	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，其中
+	 *            com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，:后面的
 	 *            getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param vParameters
 	 *            参数
@@ -419,7 +419,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 *            每页多少行
 	 * @param pageUtils
 	 *            返回分页信息的类
-	 * @param countSqlMdFullMethodName 格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}
+	 * @param countSqlMdFullMethodName 格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}
 	 *            在md文件里定位查询总数的sql语句，此sql语句查询记录的总数，根据此算页数；
 	 *            <p>countSqlMdFullMethodName也可以为一个整数字符串，用于指定总数；
 	 *            <p>countSqlMdFullMethodName如果指定null或""字符串，那么系统会根据查询语句自动生成查询总数的sql语句
@@ -461,8 +461,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * @param beanKey
 	 *            为主类对应的主键属性名， 如果主键为复合主键，以英文逗号隔开。
 	 * @param mdFullMethodName
-	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，其中
-	 *            com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，冒号（:）后面的
+	 *            在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，其中
+	 *            com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，冒号（:）后面的
 	 *            getDataCount为方法名，此方法名称下方为sql模板语句
 	 * <p>
 	 * <blockquote>
@@ -500,8 +500,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * @param <T>
 	 *            需映射的类
 	 * @param mdFullMethodName
-	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，
-	 *       其中 com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
+	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
+	 *       其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
 	 *       冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param args
 	 *            参数
@@ -523,8 +523,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	/**
 	 * 分页查询，返回的一页结果为Map列表
 	 * @param mdFullMethodName
-	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，
-	 *       其中 com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
+	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
+	 *       其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
 	 *       冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param args 
 	 * 			 参数
@@ -545,8 +545,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * 删除
 	 * 
 	 * @param mdFullMethodName
-	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，
-	 *       其中 com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
+	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
+	 *       其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
 	 *       冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param vParameters
 	 *            参数
@@ -565,8 +565,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	/**
 	 * 更新操作（包括删除）
 	 * @param mdFullMethodName
-	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，
-	 *       其中 com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
+	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
+	 *       其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
 	 *       冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param vParameters
 	 *            参数
@@ -586,8 +586,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * 调用存储过程
 	 * 
 	 * @param mdFullMethodName
-	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，
-	 *       其中 com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
+	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
+	 *       其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
 	 *       冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
 	 * @param parms
 	 * 用法举例如下：
@@ -650,8 +650,8 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBaseMd.close()方法
 	 * 
 	 * @param mdFullMethodName
-	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.ulwx.database.test.SysRightDao.md:getDataCount}，
-	 *       其中 com.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
+	 *       在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
+	 *       其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
 	 *       冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
 	 *            sql语句
 	 * @param vParameters
@@ -1259,7 +1259,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * <p>
 	 * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBaseMd.close()方法
 	 * 
-	 * @param mdFullMethodNameList  为md文件里的方法名称数组，例如某一条方法名称格式为： com.ulwx.database.test.SysRightDao.md:getDataCount,
+	 * @param mdFullMethodNameList  为md文件里的方法名称数组，例如某一条方法名称格式为： com.github.ulwx.database.test.SysRightDao.md:getDataCount,
 	 *   表示在com/ulwx/database/test/SysRightDao.md文件里查找getDataCount的方法
 	 * @param vParametersArray  为参数数组
 	 * @return 如果为null表明执行失败
@@ -1291,7 +1291,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 	 * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBaseMd.close()方法
 	 * 
 	 * @param mdFullMethodName
-	 *            md文件里的方法名，格式为： com.ulwx.database.test.SysRightDao.md:getDataCount
+	 *            md文件里的方法名，格式为： com.github.ulwx.database.test.SysRightDao.md:getDataCount
 	 * @param vParametersList
 	 *            每条语句所携带的参数，每条语句对应一个Map，每个Map存放相应语句的参数
 	 * @return 返回每条语句更新记录的行数，执行错误，会抛出异常
@@ -1319,7 +1319,7 @@ public class MDataBase implements NoSqlOperation,AutoCloseable {
 
 	/**
 	 * 批量更新操作（增，删，改），返回每条语句更新记录的行数
-	 * @param mdFullMethodNameList :md文件里的方法名称列表，例如某一条方法名称格式为： com.ulwx.database.test.SysRightDao.md:getDataCount,
+	 * @param mdFullMethodNameList :md文件里的方法名称列表，例如某一条方法名称格式为： com.github.ulwx.database.test.SysRightDao.md:getDataCount,
 	 *   表示在com/ulwx/database/test/SysRightDao.md文件里查找getDataCount的方法
 	 * @return
 	 * @throws DbException

@@ -2,10 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>common-dbutils</artifactId>
-	<groupId>com.ulwx.soft</groupId>
+	<groupId>com.github.ulwx</groupId>
 	<version>1.0.0-SNAPSHOT</version>
 	<parent>
-		<groupId>com.ulwx.soft</groupId>
+		<groupId>com.github.ulwx</groupId>
 		<artifactId>common-dbutils-parent</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>../common-dbutils-parent/pom.xml</relativePath>

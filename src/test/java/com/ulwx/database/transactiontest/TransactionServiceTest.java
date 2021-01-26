@@ -1,11 +1,11 @@
-package com.ulwx.database.transactiontest;
+package com.github.ulwx.database.transactiontest;
 
-import com.ulwx.database.DbException;
-import com.ulwx.database.MDbTransactionManager;
-import com.ulwx.database.transactiontest.bean.testa.T1;
-import com.ulwx.database.transactiontest.dao.Dao;
-import com.ulwx.database.transactiontest.dao.testa.T1Dao;
-import com.ulwx.tool.MDbUtils;
+import com.github.ulwx.database.DbException;
+import com.github.ulwx.database.MDbTransactionManager;
+import com.github.ulwx.database.transactiontest.bean.testa.T1;
+import com.github.ulwx.database.transactiontest.dao.Dao;
+import com.github.ulwx.database.transactiontest.dao.testa.T1Dao;
+import com.github.ulwx.tool.MDbUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -54,15 +54,15 @@ public class TransactionServiceTest {
     }
 
     public void testSimpleForTransactionCommitForTestb() throws Exception {
-        com.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(1);
+        com.github.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(1);
         MDbTransactionManager.execute(() -> {
-            com.ulwx.database.transactiontest.bean.testb.T1 t1 = com.ulwx.database.transactiontest.dao.testb.T1Dao
+            com.github.ulwx.database.transactiontest.bean.testb.T1 t1 = com.github.ulwx.database.transactiontest.dao.testb.T1Dao
                     .getOne();
-            com.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(2);
-            com.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(3);
+            com.github.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(2);
+            com.github.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(3);
         });
-        com.ulwx.database.transactiontest.bean.testb.T1 t1 =
-                com.ulwx.database.transactiontest.dao.testb.T1Dao.getOne();
+        com.github.ulwx.database.transactiontest.bean.testb.T1 t1 =
+                com.github.ulwx.database.transactiontest.dao.testb.T1Dao.getOne();
         Assert.assertSame(t1.getA(), 3);
 
     }
@@ -101,20 +101,20 @@ public class TransactionServiceTest {
     }
 
     public void testSimpleForTransactionTwoForTestb() throws Exception {
-        com.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(1);
+        com.github.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(1);
         MDbTransactionManager.execute(()-> {
             testSimpleForTransactionCommitForTestb();
             testSimpleForTransactionCommitForTestb();
         });
 
-        com.ulwx.database.transactiontest.bean.testb.T1 t1 = com.ulwx.database.transactiontest.dao.testb.T1Dao.getOne();
+        com.github.ulwx.database.transactiontest.bean.testb.T1 t1 = com.github.ulwx.database.transactiontest.dao.testb.T1Dao.getOne();
         Assert.assertSame(t1.getA(), 3);
 
     }
 
     public void testSimpleForTransactionTwoDif() throws Exception {
         T1Dao.updateA(1);
-        com.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(1);
+        com.github.ulwx.database.transactiontest.dao.testb.T1Dao.updateA(1);
         MDbTransactionManager.execute(()-> {
             testSimpleForTransactionTwoForTesta();
             testSimpleForTransactionTwoForTestb();
@@ -122,7 +122,7 @@ public class TransactionServiceTest {
 
         T1 t1 = T1Dao.getOne();
         Assert.assertSame(t1.getA(), 3);
-        com.ulwx.database.transactiontest.bean.testb.T1 t11 = com.ulwx.database.transactiontest.dao.testb.T1Dao
+        com.github.ulwx.database.transactiontest.bean.testb.T1 t11 = com.github.ulwx.database.transactiontest.dao.testb.T1Dao
                 .getOne();
         Assert.assertSame(t11.getA(), 3);
 

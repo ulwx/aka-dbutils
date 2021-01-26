@@ -1,9 +1,9 @@
-package com.ulwx.database.transactiontest.dao.testb;
+package com.github.ulwx.database.transactiontest.dao.testb;
 
 
-import com.ulwx.database.transactiontest.bean.testb.T1;
-import com.ulwx.database.transactiontest.dao.Dao;
-import com.ulwx.tool.MDbUtils;
+import com.github.ulwx.database.transactiontest.bean.testb.T1;
+import com.github.ulwx.database.transactiontest.dao.Dao;
+import com.github.ulwx.tool.MDbUtils;
 
 public class T1Dao {
 

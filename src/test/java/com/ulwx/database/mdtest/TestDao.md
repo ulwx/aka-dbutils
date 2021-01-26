@@ -1,6 +1,6 @@
 
 getDataCount1
-===
+====
 SELECT COUNT(SysRightCode) AS dataCount FROM SysRight WHERE (1=1)  
 @ if ($$:sysRightCode) {  
  AND SysRightCode like #{%sysRightCode%}
@@ -12,8 +12,9 @@ SELECT COUNT(SysRightCode) AS dataCount FROM SysRight WHERE (1=1)
 
 @ System.out.println("ssss");
 @ int f=0;
+
 getDataCount2
-===
+====
 SELECT COUNT(SysRightCode) AS dataCount FROM SysRight WHERE (1=1)  
 @ /* 下面的语句可以用  if($$:sysRightCode) 取代 */
 @ if ($$.sysRightCode != null && !"".equals($$.sysRightCode)) {  
@@ -34,11 +35,11 @@ SELECT COUNT(SysRightCode) AS dataCount FROM SysRight WHERE (1=1)
 @ /*#{MyUser%} 为like方式*/
  AND MyUser like #{MyUser%}
 @ /* ${=java表达式}*/
- AND s=${=  "xxx".length()}
+ AND s=${= "xxx".length()}
 @ }
 
 @ System.out.println("ssss");
 @ int f=0;
 
 ${&getDataCount2}
-${&com.ulwx.database.test.TestDao.md:getDataCount2}
+${&com.github.ulwx.database.test.TestDao.md:getDataCount2}

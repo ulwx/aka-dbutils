@@ -1,4 +1,4 @@
-package com.ulwx.database.transactiontest.dao;
+package com.github.ulwx.database.transactiontest.dao;
 
 public class Dao {
 

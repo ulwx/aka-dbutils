@@ -1,4 +1,4 @@
-package com.ulwx.database.transactiontest.dao.testa;
+package com.github.ulwx.database.transactiontest.dao.testa;
 
 public class T2Dao {
 

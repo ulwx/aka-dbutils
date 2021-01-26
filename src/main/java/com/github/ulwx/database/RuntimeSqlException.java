@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.ulwx.database;
+package com.github.ulwx.database;
 
 /**
  * @author Clinton Begin

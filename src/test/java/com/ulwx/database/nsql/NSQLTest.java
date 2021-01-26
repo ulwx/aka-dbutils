@@ -1,6 +1,6 @@
-package com.ulwx.database.nsql;
+package com.github.ulwx.database.nsql;
 
-import com.ulwx.tool.support.ObjectUtils;
+import com.github.ulwx.tool.support.ObjectUtils;
 import junit.framework.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

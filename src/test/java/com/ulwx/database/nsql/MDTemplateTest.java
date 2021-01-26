@@ -1,6 +1,6 @@
-package com.ulwx.database.nsql;
+package com.github.ulwx.database.nsql;
 
-import com.ulwx.tool.support.type.TInteger;
+import com.github.ulwx.tool.support.type.TInteger;
 import junit.framework.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

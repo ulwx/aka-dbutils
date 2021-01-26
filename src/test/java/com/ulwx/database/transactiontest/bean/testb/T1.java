@@ -1,7 +1,7 @@
-package com.ulwx.database.transactiontest.bean.testb;
+package com.github.ulwx.database.transactiontest.bean.testb;
 
-import com.ulwx.database.MdbOptions;
-import com.ulwx.tool.support.ObjectUtils;
+import com.github.ulwx.database.MdbOptions;
+import com.github.ulwx.tool.support.ObjectUtils;
 
 import java.time.LocalDateTime;
 
