@@ -1,5 +1,6 @@
 package com.ulwx.tool;
 
+/**处理md文件工具类*/
 public class MD {
     public static String md(Class daoClass, String method) {
         String prefix = daoClass.getName();

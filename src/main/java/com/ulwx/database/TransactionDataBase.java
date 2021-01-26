@@ -9,6 +9,9 @@ import javax.sql.DataSource;
 import java.util.Map;
 import java.util.Stack;
 
+/**
+ * 支持事务性DataBase
+ */
 public class TransactionDataBase extends DataBaseDecorator {
 	private static Logger log = LoggerFactory.getLogger(TransactionDataBase.class);
 	public TransactionDataBase() {
