@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Appenders>
+    <RollingFile name="A1" fileName="c:/log/common-database/log.txt" filePattern="c:/log/common-database/log%d{yyyy-MM-dd}.txt">
+	    <PatternLayout pattern="%t[%X{logid}]%d %-5p %l - %m%n"/>  
+	    <Policies>  
+	        <TimeBasedTriggeringPolicy modulate="true" interval="1"/>  
+	    </Policies>  
+   </RollingFile> 
+    <Console name="STDOUT" target="SYSTEM_OUT">
+      <PatternLayout pattern="%t[%X{logid}]%d %-5p %l - %m%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+  
+	<logger name="freemarker" additivity="false" level="ERROR">
+	  <AppenderRef ref="A1"/>
+	   <AppenderRef ref="STDOUT"/>
+	</logger>
+	<logger name="httpclient.wire" additivity="false" level="ERROR">
+	  <AppenderRef ref="A1"/>
+	   <AppenderRef ref="STDOUT"/> 
+	</logger>
+	<logger name="org.apache.http" additivity="false" level="ERROR">
+	  <AppenderRef ref="A1"/>
+	   <AppenderRef ref="STDOUT"/> 
+	</logger>
+	<logger name="org.apache.commons" additivity="false" level="ERROR">
+	  <AppenderRef ref="A1"/>
+	   <AppenderRef ref="STDOUT"/> 
+	</logger>
+	<logger name="org.apache.struts2" additivity="false" level="ERROR">
+	  <AppenderRef ref="A1"/>
+	   <AppenderRef ref="STDOUT"/>
+	</logger>
+	<logger name="com.opensymphony" additivity="false" level="ERROR">
+	  <AppenderRef ref="A1"/>
+	   <AppenderRef ref="STDOUT"/>
+	</logger>
+	
+    <Root level="trace">
+      <AppenderRef ref="STDOUT"/>
+    </Root>
+  </Loggers>
+</Configuration>

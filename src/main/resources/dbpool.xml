@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbpool-config>
+
+  <setting>
+    <!--
+    表名与javabean类名的转换规则，
+    分underline_to_camel、normal、first_letter_upcase三种，
+    underline_to_camel：表示下划线转驼峰，
+    normal：为数据库表名和javabean类名一致
+    first_letter_upcase：为数据库表名转为javabean类名时第一个字母大写
+    -->
+    <table-name-rule>underline_to_camel</table-name-rule>
+    <!--
+    表字段与javabean属性名的转换规则，分underline_to_camel、normal两种，
+    underline_to_camel：下划线转驼峰
+    normal：为数据库表名和javabean属性一致
+    -->
+    <table-colum-rule>underline_to_camel</table-colum-rule>
+  </setting>
+  <!--
+  每个dbpool配置对应一个连接池
+  type属性：指定连接池c3p0或tomcatdbpool
+  driverClassName：数据库的驱动名称
+  url： 连接字符串
+  username：用户名
+  password：用户密码
+  checkoutTimeout：当数据库满时，等待从连接池里取出connection的最长时间，毫秒为单位
+  maxIdleTime ：最长空隙时间，以秒为单位，多于连接池里可容纳的最小connection数（由minPoolSize指定）的多余connection超过此时间，会被释放
+  maxPoolSize ：连接池可容纳connection的最大数
+  minPoolSize： 连接池可容纳的connection的最小数
+  idleConnectionTestPeriod: 空闲连接检测是否有效的时间间隔，如果无效则清除此连接。此参数以秒为单位
+  maxStatements：缓存的statement数
+  encrypt : password属性是否加密，0：不加密 1：加密
+  
+  -->
+
+  <dbpool name="testa" type="tomcatdbpool"  table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel">
+    <property name="driverClassName">com.mysql.jdbc.Driver</property>
+    <property name="url">jdbc:mysql://localhost:3306/testa?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false</property>
+    <property name="username">root</property>
+    <property name="password">scj_123123</property>
+    <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
+    <property name="checkoutTimeout">60000</property>
+    <property name="idleConnectionTestPeriod">30</property>
+    <property name="maxIdleTime">60</property>
+    <property name="maxPoolSize">30</property>
+    <property name="minPoolSize">2</property>
+    <property name="maxStatements">20</property>
+  </dbpool>
+  <dbpool name="testb" type="tomcatdbpool"  >
+    <property name="driverClassName">com.mysql.jdbc.Driver</property>
+    <property name="url">jdbc:mysql://localhost:3306/testb?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false</property>
+    <property name="username">root</property>
+    <property name="password">scj_123123</property>
+    <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
+    <property name="checkoutTimeout">60000</property>
+    <property name="idleConnectionTestPeriod">30</property>
+    <property name="maxIdleTime">60</property>
+    <property name="maxPoolSize">30</property>
+    <property name="minPoolSize">2</property>
+    <property name="maxStatements">20</property>
+  </dbpool>
+<!--   <dbpool name="tt2" type="tomcatdbpool">  -->
+<!--     <property name="driverClassName">com.mysql.cj.jdbc.Driver</property> -->
+<!--     <property name="url">jdbc:mysql://localhost:3306/world?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=UTC</property> -->
+<!--     <property name="username">root</property> -->
+<!--     <property name="password">root</property> -->
+<!--     <property name="checkoutTimeout">60000</property> -->
+<!--     <property name="idleConnectionTestPeriod">60</property> -->
+<!--     <property name="maxIdleTime">60</property> -->
+<!--     <property name="maxPoolSize">60</property> -->
+<!--  		    <property name="minPoolSize">50</property> -->
+<!--     <property name="maxStatements">20</property> -->
+<!--     <slaves> -->
+<!--       <server name="slave1"> -->
+<!--             <property name="url">jdbc:mysql://localhost:3306/test</property> -->
+<!-- 		    <property name="username">root</property> -->
+<!-- 		    <property name="password">root</property> -->
+<!-- 		    <property name="checkoutTimeout">60000</property> -->
+<!-- 		    <property name="idleConnectionTestPeriod">60</property> -->
+<!-- 		    <property name="maxIdleTime">60</property> -->
+<!--    			 <property name="maxPoolSize">60</property> -->
+<!--  		    <property name="minPoolSize">50</property> -->
+<!-- 		    <property name="maxStatements">20</property> -->
+<!--       </server> -->
+<!--        <server name="slave2"> -->
+<!--           <property name="url">jdbc:mysql://localhost:3306/sakila</property> -->
+<!-- 		    <property name="username">root</property> -->
+<!-- 		    <property name="password">root</property> -->
+<!-- 		    <property name="checkoutTimeout">60000</property> -->
+<!-- 		    <property name="idleConnectionTestPeriod">60</property> -->
+<!-- 		    <property name="maxIdleTime">60</property> -->
+<!--     		<property name="maxPoolSize">60</property> -->
+<!--  		    <property name="minPoolSize">50</property> -->
+<!-- 		    <property name="maxStatements">20</property> -->
+<!--       </server> -->
+<!--     </slaves> -->
+<!--   </dbpool> -->
+
+
+
+</dbpool-config>
