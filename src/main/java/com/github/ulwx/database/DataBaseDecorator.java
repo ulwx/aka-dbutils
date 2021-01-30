@@ -37,14 +37,7 @@ public abstract   class DataBaseDecorator implements DBObjectOperation, AutoClos
 	public boolean isExternalControlConClose() {
 		throw new UnsupportedOperationException();
 	}
-	@Override
-	public boolean isAutoReconnect() {
-		return db.isAutoReconnect();
-	}
-	@Override
-	public void setAutoReconnect(boolean autoReconnect) throws DbException {
-		db.setAutoReconnect(autoReconnect);
-	}
+
 	@Override
 	public String getDbPoolName() {
 		return db.getDbPoolName();
@@ -61,10 +54,7 @@ public abstract   class DataBaseDecorator implements DBObjectOperation, AutoClos
 	public boolean getInternalConnectionAutoCommit() throws DbException {
 		return db.getInternalConnectionAutoCommit();
 	}
-	@Override
-	public void selectSlaveDb() throws DbException {
-		db.selectSlaveDb();
-	}
+
 	@Override
 	public String getDataBaseType() {
 		return db.getDataBaseType();
@@ -85,10 +75,6 @@ public abstract   class DataBaseDecorator implements DBObjectOperation, AutoClos
 		return db.isColsed();
 	}
 
-	@Override
-	public void closer() throws DbException {
-		db.closer();
-	}
 
 	@Override
 	public Connection getConnection() {

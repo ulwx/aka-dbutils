@@ -44,25 +44,14 @@ public class TransactionDataBaseTrace extends DataBaseDecorator {
 
 	}
 	@Override
-	public void reConnectDb() throws DbException {
-
-	}
-
-	@Override
 	public void rollback() throws DbException {
-
-	}
-	@Override
-	public void rollbackAndClose() throws DbException {
 
 	}
 	@Override
 	public void commit() throws DbException {
 	}
 
-	@Override
-	public void commitAndClose() throws DbException {
-	}
+
 	@Override
 	public void close() {
 	}

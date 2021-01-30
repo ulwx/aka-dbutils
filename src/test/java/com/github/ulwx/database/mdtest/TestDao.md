@@ -26,16 +26,14 @@ SELECT COUNT(SysRightCode) AS dataCount FROM SysRight WHERE (1=1)
  AND SysRightName = ${sysRightName}
 @ /*#{XXX} 为预处理模式*/
  AND SysRightName2 = #{sysRightName}
-@ /*#{[Array]XXX} 为数组方式，[Array]可以去掉*/
- AND Roles in(#{[Array]roles})
-@ /*#{XXX} 为list方式*/
+@ /*如果roles为数组或List，则可以直接引用*/
  AND Roles in(#{roles})
 @ /*#{%MyUser%} 为like方式*/
  AND MyUser like #{%myUser%}
 @ /*#{MyUser%} 为like方式*/
  AND MyUser like #{MyUser%}
 @ /* ${=java表达式}*/
- AND s=${= "xxx".length()}
+ AND s=${="xxx".length()}
 @ }
 
 @ System.out.println("ssss");

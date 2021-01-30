@@ -16,7 +16,4 @@ public class MD {
         return className+".md:"+methodName;
     }
 
-    public static void main(String[] args) {
-        md();
-    }
 }

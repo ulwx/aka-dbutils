@@ -11,21 +11,11 @@ import java.util.Map;
 public interface MDataBase extends DBObjectOperation, AutoCloseable{
     boolean isExternalControlConClose();
 
-    DataBase getDataBase();
-
-    void setDataBase(DataBase dataBase);
-
-    boolean isAutoReconnect();
-
-    void setAutoReconnect(boolean autoReconnect) throws DbException;
-
     boolean isMainSlaveMode();
 
     void setMainSlaveMode(boolean mainSlaveMode);
 
     boolean getInternalConnectionAutoCommit() throws DbException;
-
-    void selectSlaveDb() throws DbException;
 
     String getDataBaseType();
 
@@ -101,8 +91,6 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable{
     boolean isColsed() throws DbException;
 
     void commit() throws DbException;
-
-    void closer() throws DbException;
 
     void close();
 }

@@ -13,7 +13,7 @@ public class DataBaseFactory {
 	 * @throws DbException
 	 */
 	public static DataBase getDataBase() throws DbException {
-		return getDataBase(MainSlaveModeConnectMode.Try_Connect_MainServer);
+		return getDataBase(MainSlaveModeConnectMode.Connect_MainServer);
 
 	}
 	
@@ -34,7 +34,7 @@ public class DataBaseFactory {
 	 * @throws DbException
 	 */
 	public static DataBase getDataBase(String dbPoolName) throws DbException {
-		return getDataBase(dbPoolName,MainSlaveModeConnectMode.Try_Connect_MainServer);
+		return getDataBase(dbPoolName,MainSlaveModeConnectMode.Connect_MainServer);
 
 	}
 	

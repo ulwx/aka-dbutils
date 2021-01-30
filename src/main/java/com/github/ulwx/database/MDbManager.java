@@ -8,7 +8,7 @@ public class MDbManager {
 	private static Logger log = LoggerFactory.getLogger(DataBase.class);
 
 	public static MDataBase getDataBase() throws DbException {
-		return getDataBase(DataBase.MainSlaveModeConnectMode.Try_Connect_MainServer);
+		return getDataBase(DataBase.MainSlaveModeConnectMode.Connect_MainServer);
 
 	}
 	@SuppressWarnings("resource")
@@ -26,7 +26,7 @@ public class MDbManager {
 	 * @throws DbException
 	 */
 	public static MDataBase getDataBase(String dbPoolName) throws DbException {
-		return getDataBase(dbPoolName, DataBase.MainSlaveModeConnectMode.Try_Connect_MainServer);
+		return getDataBase(dbPoolName, DataBase.MainSlaveModeConnectMode.Connect_MainServer);
 
 	}
 

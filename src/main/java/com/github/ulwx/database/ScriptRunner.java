@@ -106,7 +106,7 @@ public class ScriptRunner {
 				script.append(LINE_SEPARATOR);
 			}
 			String command = script.toString();
-			//println(command);
+
 			executeStatement(command);
 			return this.resultWriter.toString();
 		} catch (Exception e) {

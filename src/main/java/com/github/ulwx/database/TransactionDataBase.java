@@ -1,12 +1,12 @@
 package com.github.ulwx.database;
 
-import com.github.ulwx.database.DataBaseImpl.ConnectType;
 import com.github.ulwx.tool.support.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Stack;
+
 
 public class TransactionDataBase extends DataBaseDecorator {
 	private static Logger log = LoggerFactory.getLogger(TransactionDataBase.class);
@@ -16,29 +16,10 @@ public class TransactionDataBase extends DataBaseDecorator {
 	public TransactionDataBase(DataBase db) {
 		super(db);
 	}
-	@Override
-	public void reConnectDb() throws DbException {
-		Map<String, DataBaseDecorator> context = getCurTransactionContext();
-		if (context != null) {
-			throw new DbException("在事务上下文中不能重连！");
-		}
-
-		if (!this.isColsed()) {
-			this.close();
-		}
-		ConnectType ct = db.getConnectionType();
-		if (ct == ConnectType.POOL) {
-			this.connectDb(db.getDbPoolName(), this.getMainSlaveModeConnectMode());
-		} else {
-			throw new DbException("您的数据库连接方式不支持重连！");
-		}
-
-	}
-
 
 	@Override
 	public void connectDb(String dbPoolName) throws DbException {
-		this.connectDb(dbPoolName, MainSlaveModeConnectMode.Try_Connect_MainServer);
+		this.connectDb(dbPoolName, MainSlaveModeConnectMode.Connect_MainServer);
 	}
 
 	@Override
@@ -87,14 +68,7 @@ public class TransactionDataBase extends DataBaseDecorator {
 		}
 		db.rollback();
 	}
-	@Override
-	public void rollbackAndClose() throws DbException {
-		DataBase findDb = findInCurTransactionContext(this.getDbPoolName());
-		if (findDb != null) {// 拦截
-			return;
-		}
-		db.rollbackAndClose();
-	}
+
 	@Override
 	public void commit() throws DbException {
 		DataBase findDb = findInCurTransactionContext(this.getDbPoolName());
@@ -103,14 +77,7 @@ public class TransactionDataBase extends DataBaseDecorator {
 		}
 		db.commit();
 	}
-	@Override
-	public void commitAndClose() throws DbException {
-		DataBase findDb = findInCurTransactionContext(this.getDbPoolName());
-		if (findDb != null) {// 拦截
-			return;
-		}
-		db.commitAndClose();
-	}
+
 	@Override
 	public void setAutoCommit(boolean b) throws DbException {
 		DataBase findDb = findInCurTransactionContext(this.getDbPoolName());

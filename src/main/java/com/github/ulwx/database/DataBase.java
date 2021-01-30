@@ -13,7 +13,7 @@ import java.util.Map;
 public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     public static enum SQLType {
-        INSERT, UPDATE, SELECT, STORE_DPROCEDURE
+        NONE,INSERT, UPDATE, SELECT, STORE_DPROCEDURE,SCRIPT
     }
 
     public static class DataBaseType {
@@ -31,19 +31,16 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     }
 
     public static enum MainSlaveModeConnectMode {
-        // 如果是主从模式，并且是非事务性操作，尝试获取主库连接，如果发现执行的sql语句是select则从库连接
-        Try_Connect_MainServer,
-        // 如果是主从模式，并且是非事务性操作,如果是这种模式，则只去获取主库链接
+        // 如果是主从模式，并且是非事务性操作,如果是这种模式，则只去获取主库连接
         Connect_MainServer,
-        // 如果是主从模式，并且是非事务性操作，如果是这种模式，则只去获取从库链接
-        Connect_SlaveServer
+        // 如果是主从模式，并且是非事务性操作，如果是这种模式，则只去获取从库连接
+        Connect_SlaveServer,
+        // 根据语句或是否含有事务来判断自动获取主库连接还是从宽连接。如果是执行语句包含在事务里或者是insert，update，delete语句，则获取主库连接;
+        // 如果为查询语句，并且不包含在事务里，在获取从库连接
+        Connect_Auto
     }
 
     public MainSlaveModeConnectMode getMainSlaveModeConnectMode();
-
-    boolean isAutoReconnect();
-
-    void setAutoReconnect(boolean autoReconnect) throws DbException;
 
     String getDbPoolName();
 
@@ -53,18 +50,12 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     boolean getInternalConnectionAutoCommit() throws DbException;
 
-    /**
-     * 如果数据库是主从式模式，则语句为查询语句并且是非事务性的时候，则选择从库查询
-     */
-    void selectSlaveDb() throws DbException;
-
     String getDataBaseType();
 
     default void connectDb(DataSource dataSource) {
     }
 
 
-    void connectDb(String dbPoolName) throws DbException;
 
     DataBaseImpl.ConnectType getConnectionType();
 
@@ -74,7 +65,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     default boolean isExternalControlConClose() {
         return false;
     }
-
+    void connectDb(String dbPoolName) throws DbException;
     /**
      * 从dbpool.xml里设置的连接池获得连接
      *
@@ -167,16 +158,6 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      */
     void setAutoCommit(boolean b) throws DbException;
 
-    /**
-     * <pre>
-     *   重新连接数据库，当数据库连接关闭时，可以调用此方法进行重连。如果嫌每次重连太麻烦，你也可以通过设置
-     *   {@link #setAutoReconnect(boolean)}方法，通过传入参数为true，来让操作关闭后自动重连。
-     *
-     * </pre>
-     *
-     * @throws DbException
-     */
-    void reConnectDb() throws DbException;
 
     /**
      * 返回是否为事务操作，false表明为事务操作，事务操作即多个语句功能一个数据库连接。通过DataBase.setAutoCommit()方法
@@ -195,12 +176,6 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      */
     void rollback() throws DbException;
 
-    /**
-     * 回滚并且关闭连接
-     *
-     * @throws DbException
-     */
-    void rollbackAndClose() throws DbException;
 
     /**
      * 判断资源和底层数据库连接是否关闭
@@ -217,13 +192,6 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      * @throws DbException
      */
     void commit() throws DbException;
-
-    void commitAndClose() throws DbException;
-
-    /**
-     * 关闭底层资源，但不关闭数据库连接
-     */
-    void closer() throws DbException;
 
     /**
      * 关闭数据库连接，释放底层占用资源

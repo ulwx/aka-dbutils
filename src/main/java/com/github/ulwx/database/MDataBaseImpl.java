@@ -29,31 +29,14 @@ public class MDataBaseImpl implements  MDataBase {
         this.dataBase = dataBase;
     }
 
-    @Override
     public DataBase getDataBase() {
         return dataBase;
     }
 
-    @Override
     public void setDataBase(DataBase dataBase) {
         this.dataBase = dataBase;
     }
 
-
-    /**
-     * 是否自动重连
-     *
-     * @return
-     */
-    @Override
-    public boolean isAutoReconnect() {
-        return this.dataBase.isAutoReconnect();
-    }
-
-    @Override
-    public void setAutoReconnect(boolean autoReconnect) throws DbException {
-        this.dataBase.setAutoCommit(autoReconnect);
-    }
 
     @Override
     public boolean isMainSlaveMode() {
@@ -69,14 +52,6 @@ public class MDataBaseImpl implements  MDataBase {
     @Override
     public boolean getInternalConnectionAutoCommit() throws DbException {
         return this.dataBase.getInternalConnectionAutoCommit();
-    }
-
-    /**
-     * 如果数据库是主从式模式，则语句为查询语句并且是非事务性的时候，则选择从库查询
-     */
-    @Override
-    public void selectSlaveDb() throws DbException {
-        this.dataBase.selectSlaveDb();
     }
 
     @Override
@@ -669,14 +644,6 @@ public class MDataBaseImpl implements  MDataBase {
         this.dataBase.commit();
     }
 
-
-    /**
-     * 关闭底层资源，但不关闭数据库连接
-     */
-    @Override
-    public void closer() throws DbException {
-        this.dataBase.closer();
-    }
 
     /**
      * 关闭数据库连接，释放底层占用资源

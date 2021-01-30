@@ -243,48 +243,28 @@ public class DataBaseImpl implements DataBase {
     private Connection conn = null;
     private PreparedStatement ps = null;
     private ResultSet rs = null;
-
     private CallableStatement cs = null;
     private boolean mainSlaveMode = false;
-    private boolean needAutoReconnect = false;
     private DataSource dataSource;
-
-    @Override
-    public boolean isAutoReconnect() {
-
-        return needAutoReconnect;
-    }
-
     private boolean isAutoCommit = true;
-
-    @Override
-    public void setAutoReconnect(boolean autoReconnect) throws DbException {
-        this.needAutoReconnect = autoReconnect;
-    }
-
-    private SQLType sqlType = SQLType.SELECT;
-    private MainSlaveModeConnectMode mainSlaveModeConnectMode = MainSlaveModeConnectMode.Try_Connect_MainServer;
-
+    private SQLType sqlType = SQLType.NONE;
+    private MainSlaveModeConnectMode mainSlaveModeConnectMode = MainSlaveModeConnectMode.Connect_MainServer;
     private String dataBaseType = DataBaseType.OTHER;
     private int dataBaseMajorVersion = 0;
-
     private String dbPoolName = "";
-
     private boolean externalControlConClose = false;
+    private ConnectType connectType = null;
 
     @Override
     public String getDbPoolName() {
         return dbPoolName;
     }
-
     /*
      * POOL：从连接池里获得连接
      */
     public static enum ConnectType {
         POOL, DATASOURCE, CONNECTION
     }
-
-    ;
 
     @Override
     public boolean isMainSlaveMode() {
@@ -300,10 +280,7 @@ public class DataBaseImpl implements DataBase {
         return this.mainSlaveModeConnectMode;
     }
 
-    // private
-    private ConnectType connectType = null;
-
-    private void setInteralConnectionAutoCommit(boolean autoCommit) throws DbException {
+    private void setInternalConnectionAutoCommit(boolean autoCommit) throws DbException {
         try {
 
             this.conn.setAutoCommit(autoCommit);
@@ -325,32 +302,6 @@ public class DataBaseImpl implements DataBase {
     public DataBaseImpl() {
     }
 
-    /**
-     * 如果数据库是主从式模式，则语句为查询语句并且是非事务性的时候，则选择从库查询
-     */
-    @Override
-    public void selectSlaveDb() throws DbException {
-        long start = System.currentTimeMillis();
-        if (this.connectType == ConnectType.POOL && this.isMainSlaveMode()) {
-            this.close();
-            log.debug("1:" + (System.currentTimeMillis() - start));
-            DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName);
-            log.debug("2:" + (System.currentTimeMillis() - start));
-            if (ds != null) {
-                log.debug("3:" + (System.currentTimeMillis() - start));
-                start = System.currentTimeMillis();
-                try {
-                    conn = ds.getConnection();
-                } catch (SQLException throwables) {
-                    throw new DbException(throwables.getMessage(), throwables);
-                }
-                this.dataSource = ds;
-                log.debug("use Slave Server!,connect time:" + (System.currentTimeMillis() - start) + " 毫秒");
-            }
-
-        }
-
-    }
 
     @Override
     public String getDataBaseType() {
@@ -420,11 +371,10 @@ public class DataBaseImpl implements DataBase {
         String msg = "";
         msg = "获得数据库库链接";
         this.conn = connection;
-        log.debug(Thread.currentThread().getId() + ":" + ":connect:" + msg + ",connect time:"
-                + (System.currentTimeMillis() - start0) + " 毫秒");
-        this.setDataBaseType(conn);
-        this.dataSource = dataSource;
+        this.dataSource = null;
         this.dbPoolName = "";
+        this.setDataBaseType(conn);
+
     }
 
     @Override
@@ -438,16 +388,8 @@ public class DataBaseImpl implements DataBase {
         try {
             if (conn != null)
                 return;
-            //非主从模式
             this.setMainSlaveMode(false);
             this.mainSlaveModeConnectMode = MainSlaveModeConnectMode.Connect_MainServer;
-            long start0 = System.currentTimeMillis();
-            String msg = "";
-            msg = "获得数据库库链接";
-            conn = dataSource.getConnection();
-            log.debug(Thread.currentThread().getId() + ":" + dataSource.toString() + ":connect:" + msg + ",connect time:"
-                    + (System.currentTimeMillis() - start0) + " 毫秒");
-            this.setDataBaseType(conn);
             this.dataSource = dataSource;
             this.dbPoolName = "";
 
@@ -458,13 +400,84 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public void connectDb(String dbPoolName) throws DbException {
-        this.connectDb(dbPoolName, MainSlaveModeConnectMode.Try_Connect_MainServer);
+        this.connectDb(dbPoolName, MainSlaveModeConnectMode.Connect_MainServer);
     }
 
     public ConnectType getConnectionType() {
         return this.connectType;
     }
 
+    private void fetchConnection() throws DbException {
+        long start0 = System.currentTimeMillis();
+        String msg = "";
+        try {
+            if(!this.isColsed()){
+                return;
+            }
+            if (this.connectType == ConnectType.POOL) {
+                if (this.mainSlaveMode) {
+                    if ( mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是主从模式，并将是连接从库
+                        if(!this.getAutoCommit()){//事务性操作
+                            throw new DbException("当前操作为事务性，不能在从库上执行，您需要设置setAutoCommit(false)!!");
+                        }
+                        if(this.sqlType!=SQLType.SELECT){
+                            throw new DbException("从库只能执行select语句执行！");
+                        }
+                        msg = "获得从库链接";
+                        DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName);
+                        this.dataSource = ds;
+
+                    } else if(mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer){
+                        msg = "获得主库链接";
+                        DataSource datasource = this.getDataSourceFromPool(dbPoolName);
+                        this.dataSource = datasource;
+                    }else{ //Connect_Auto
+                        if(this.sqlType==SQLType.SELECT){
+                            if(!this.getAutoCommit()){//事务性操作
+                                msg = "获得主库链接";
+                                DataSource ds= this.getDataSourceFromPool(dbPoolName);
+                                this.dataSource = ds;
+                            }else{
+                                msg = "获得从库链接";
+                                DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName);
+                                this.dataSource = ds;
+                            }
+                        }else{ //update、delete、存储过程,脚本在主库上执行
+                            msg = "获得主库链接";
+                            DataSource  ds= this.getDataSourceFromPool(dbPoolName);
+                            this.dataSource = ds;
+                        }
+
+                    }
+                } else { //非主从库方式
+                    msg = "获得主库链接";
+                    DataSource datasource = this.getDataSourceFromPool(dbPoolName);
+                    this.dataSource = datasource;
+                }
+                conn = this.dataSource.getConnection();
+
+            } else if (this.connectType == ConnectType.CONNECTION) {
+                if (this.conn == null || this.conn.isClosed()) {
+                    msg = "获得数据库库链接"+conn;
+                    throw new DbException("数据库连接为空或已经关闭！");
+                }
+            } else if (this.connectType == ConnectType.DATASOURCE) {
+                msg = "获得数据库库链接";
+                conn = dataSource.getConnection();
+            } else {
+                throw new DbException("不支持的连接方式！"+this.connectType );
+            }
+            if(!this.getAutoCommit()){//事务性操作
+                this.setInternalConnectionAutoCommit(false);
+            }
+            this.setDataBaseType(conn);
+
+            log.debug(Thread.currentThread().getId() + ":create a new db[" + this.dbPoolName + "]connect:" + msg + ",connect time:"
+                    + (System.currentTimeMillis() - start0) + " 毫秒");
+        }catch(Exception e){
+            throw new DbException(e);
+        }
+    }
 
     /**
      * 从dbpool.xml里设置的连接池获得连接
@@ -483,22 +496,6 @@ public class DataBaseImpl implements DataBase {
             // 设置是否是主从模式
             this.setMainSlaveMode(DBPoolFactory.getInstance().isMainSlaveMode(dbPoolName));
             this.mainSlaveModeConnectMode = mainSlaveModeConnectMode;
-
-            long start0 = System.currentTimeMillis();
-            String msg = "";
-            if (this.isMainSlaveMode() && mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是主从模式，并将是连接从库
-                this.selectSlaveDb();
-                msg = "获得从库链接";
-            } else {
-                msg = "获得主库链接";
-                DataSource datasource = this.getDataSourceFromPool(dbPoolName);
-                conn = datasource.getConnection();
-                this.dataSource = datasource;
-            }
-            log.debug(Thread.currentThread().getId() + ":create a new db:" + this.dbPoolName + ":connect:" + msg + ",connect time:"
-                    + (System.currentTimeMillis() - start0) + " 毫秒");
-            // System.out.println("----------"+conn.getTransactionIsolation());
-            this.setDataBaseType(conn);
 
         } catch (Exception e) {
             throw new DbException("get pool connection error!", e);
@@ -549,7 +546,7 @@ public class DataBaseImpl implements DataBase {
 
         Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
         return new DataBaseSet(
-                this.doCachedPageQuery(sqlQuery, args, page, perPage, pageBean, this.getAutoCommit(), countSql));
+                this.doCachedPageQuery(sqlQuery, args, page, perPage, pageBean,  countSql));
     }
 
     @Override
@@ -617,24 +614,12 @@ public class DataBaseImpl implements DataBase {
         return this.doPageQueryMap(sqlQuery, args, page, perPage, pageBean, countSql);
     }
 
-    private RowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters) throws DbException {
-        return doCachedQuery(sqlQuery, vParameters, this.getAutoCommit());
-    }
 
     private CachedRowSet doCachedPageQuery(String sqlQuery, Collection<Object> vParameters, int page, int perPage,
-                                           PageBean pageBean, boolean close, String countSql) throws DbException {
+                                           PageBean pageBean, String countSql) throws DbException {
 
         CachedRowSet crs = null;
         try {
-            if (this.conn == null || this.conn.isClosed()) {
-                if (this.isAutoReconnect()) {
-                    log.debug("reconnect database!");
-                    this.reConnectDb();
-                } else {
-                    throw new DbException("connection is null!");
-                }
-            }
-
             TInteger rsStart = new TInteger();
             TInteger rsEnd = new TInteger();
             String pageSql = this.getPagedSql(sqlQuery, vParameters, page, perPage, pageBean, countSql, rsStart,
@@ -654,7 +639,7 @@ public class DataBaseImpl implements DataBase {
         } finally {
             try {
                 if (this.conn != null) {
-                    if (close) {
+                    if (this.getAutoCommit()) {
                         this.close();
                     } else {
                         this.closer();
@@ -668,7 +653,19 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters, boolean close)
+    private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters)
+            throws DbException {
+        return this.doCachedQuery(sqlQuery, vParameters, false);
+    }
+    /**
+     *
+     * @param sqlQuery
+     * @param vParameters
+     * @param internalUse:是否是内部使用，如果是内部使用则不关闭连接
+     * @return
+     * @throws DbException
+     */
+        private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters,boolean internalUse)
             throws DbException {
 
         CachedRowSet crs = null;
@@ -687,10 +684,14 @@ public class DataBaseImpl implements DataBase {
         } finally {
             try {
                 if (this.conn != null) {
-                    if (close) {
-                        this.close();
-                    } else {
+                    if(internalUse){
                         this.closer();
+                    }else {
+                        if (this.getAutoCommit()) {
+                            this.close();
+                        } else {
+                            this.closer();
+                        }
                     }
                 }
             } catch (Exception e2) {
@@ -753,7 +754,7 @@ public class DataBaseImpl implements DataBase {
     }
 
 
-    private <T> List<T> doQueryClassNoSql(Class<T> clazz, T selectObject, String selectProperties) throws DbException {
+    private <T> List<T> doQueryClassForObject(Class<T> clazz, T selectObject, String selectProperties) throws DbException {
         String sql = "";
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
@@ -772,7 +773,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> List<T> doQueryClassNoSql(T selectObject) throws DbException {
+    private <T> List<T> doQueryClassForObject(T selectObject) throws DbException {
         String sql = "";
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
@@ -791,9 +792,9 @@ public class DataBaseImpl implements DataBase {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> List<T> doQueryClassNoSql(T selectObject, String selectProperties) throws DbException {
+    private <T> List<T> doQueryClassForObject(T selectObject, String selectProperties) throws DbException {
 
-        return this.doQueryClassNoSql((Class<T>) selectObject.getClass(), selectObject, selectProperties);
+        return this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, selectProperties);
     }
 
     /**
@@ -806,10 +807,10 @@ public class DataBaseImpl implements DataBase {
      *                         <blockquote>
      *
      *                         <pre>
-     *                                                 String sql = &quot;select n.*,p.*,a.* from news n left outer join photos p&quot;
-     *                                                 		+ &quot; on   n.id=p.newsid  left outer join archives a &quot;
-     *                                                 		+ &quot; on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc&quot;;
-     *                                                 </pre>
+     *                                                                         String sql = &quot;select n.*,p.*,a.* from news n left outer join photos p&quot;
+     *                                                                         		+ &quot; on   n.id=p.newsid  left outer join archives a &quot;
+     *                                                                         		+ &quot; on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc&quot;;
+     *                                                                         </pre>
      *
      *                         </blockquote>
      *                         </p>
@@ -823,7 +824,7 @@ public class DataBaseImpl implements DataBase {
      */
     private <T> List<T> doQueryClassOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery,
                                             Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList) throws DbException {
-        return this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, null, this.getAutoCommit(),
+        return this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, null,
                 false, 0, 0);
 
     }
@@ -888,7 +889,7 @@ public class DataBaseImpl implements DataBase {
         if (StringUtils.isEmpty(pageSql)) {
             return new ArrayList<T>();
         }
-        return this.doQueryClass(clazz, pageSql, vParameters, queryMapNestList, sqlPrefix, null, this.getAutoCommit(),
+        return this.doQueryClass(clazz, pageSql, vParameters, queryMapNestList, sqlPrefix, null,
                 true, rsStart.getValue(), rsEnd.getValue());
 
     }
@@ -939,10 +940,10 @@ public class DataBaseImpl implements DataBase {
      *                         <blockquote>
      *
      *                         <pre>
-     *                                                 String sql = &quot;select n.*,p.*,a.* from news n left outer join photos p&quot;
-     *                                                 		+ &quot; on   n.id=p.newsid  left outer join archives a &quot;
-     *                                                 		+ &quot; on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc&quot;;
-     *                                                 </pre>
+     *                                                                         String sql = &quot;select n.*,p.*,a.* from news n left outer join photos p&quot;
+     *                                                                         		+ &quot; on   n.id=p.newsid  left outer join archives a &quot;
+     *                                                                         		+ &quot; on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc&quot;;
+     *                                                                         </pre>
      *
      *                         </blockquote>
      *                         </p>
@@ -956,8 +957,7 @@ public class DataBaseImpl implements DataBase {
     private <T> List<T> doQueryClassOne2Many(Class<T> clazz, String sqlPrefix, String beanKey, String sqlQuery,
                                              Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
 
-        List<T> list = this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, beanKey,
-                this.getAutoCommit());
+        List<T> list = this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, beanKey);
         // 过滤，并进行子类赋值
         for (int m = 0; m < list.size(); m++) {
             Object bean = list.get(m);
@@ -998,15 +998,7 @@ public class DataBaseImpl implements DataBase {
 
         List<T> results = new ArrayList();
         try {
-            // Collection<Object> vParameters
-            if (this.conn == null || this.conn.isClosed()) {
-                if (this.isAutoReconnect()) {
-                    log.debug("reconnect database!");
-                    this.reConnectDb();
-                } else {
-                    throw new DbException("connection is null!");
-                }
-            }
+
             DataBaseSet dbset = this.getResultSet(sqlQuery, vParameters);
             this.rs = dbset.getResultSet();
 
@@ -1099,7 +1091,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
-                                     QueryMapNestOne2One[] queryMapNestList, String sqlPrefix, String beanKey, boolean close,
+                                     QueryMapNestOne2One[] queryMapNestList, String sqlPrefix, String beanKey,
                                      boolean isPageQuery, int rsStart, int rsEnd) throws DbException {
 
         ArrayList<T> list = new ArrayList<>();
@@ -1209,7 +1201,7 @@ public class DataBaseImpl implements DataBase {
         } finally {
             try {
                 if (this.conn != null) {
-                    if (close) {
+                    if (this.getAutoCommit()) {
                         this.close();
                     } else {
                         this.closer();
@@ -1231,7 +1223,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
-                                     QueryMapNestOne2Many[] queryMapNestList, String sqlPrefix, String beanKey, boolean close)
+                                     QueryMapNestOne2Many[] queryMapNestList, String sqlPrefix, String beanKey)
             throws DbException {
 
         ArrayList<T> list = new ArrayList<T>();
@@ -1354,7 +1346,7 @@ public class DataBaseImpl implements DataBase {
         } finally {
             try {
                 if (this.conn != null) {
-                    if (close) {
+                    if (this.getAutoCommit()) {
                         this.close();
                     } else {
                         this.closer();
@@ -1462,7 +1454,7 @@ public class DataBaseImpl implements DataBase {
                     maxSql = this.trimTailOrderBy(maxSql, new TString());
                 }
 
-                RowSet rs = this.doCachedQuery(maxSql, vParameters, false);// 不关闭数据库连接
+                RowSet rs = this.doCachedQuery(maxSql, vParameters,true);// 不关闭数据库连接
 
                 while (rs != null && rs.next()) {
                     total = rs.getInt(1);
@@ -1621,14 +1613,6 @@ public class DataBaseImpl implements DataBase {
         DataBaseSet result = null;
         try {
 
-            if (this.conn == null || this.conn.isClosed()) {
-                if (this.isAutoReconnect()) {
-                    log.debug("reconnect database!");
-                    this.reConnectDb();
-                } else {
-                    throw new DbException("connection is null!");
-                }
-            }
             result = this.getResultSet(sqlQuery, vParameters);
 
         } catch (Exception e) {
@@ -1673,7 +1657,8 @@ public class DataBaseImpl implements DataBase {
     private int executeBindUpdate(String sqltext, Map<Integer, Object> vParameters) throws DbException {
 
         Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
-        return this.executeBindUpdate(sqltext, args);
+        long[] ret= this.executeBindUpdate(sqltext, args);
+        return (int)ret[0];
 
     }
 
@@ -1689,24 +1674,24 @@ public class DataBaseImpl implements DataBase {
      * @param sqltext            sql语句
      * @param parms              用法举例如下： <code>
      *                           <pre>
-     *                           用法：
-     *                           parms.put("1","中");//默认为in类型
-     *                           parms.put("2:in","孙");
-     *                           parms.put("3:in",new Integer(3));
-     *                           parms.put("4:out",int.class);
-     *                           parms.put("5:out",java.util.data.class);
-     *                           parms.put("6:inout",new Long(44));
-     *                           </pre>
+     *                                                     用法：
+     *                                                     parms.put("1","中");//默认为in类型
+     *                                                     parms.put("2:in","孙");
+     *                                                     parms.put("3:in",new Integer(3));
+     *                                                     parms.put("4:out",int.class);
+     *                                                     parms.put("5:out",java.util.data.class);
+     *                                                     parms.put("6:inout",new Long(44));
+     *                                                     </pre>
      *                           </code>
      * @param outPramsValues     存放输出参数的返回值，根据parms(输入法参数)里的out,inout对应，如果输入参数为上面的例子所示，那么outPramsValues可能输入如下：
      *
      *                           <pre>
-     *                             {
-     *                               4:45556,
-     *                               5:"2015-09-23 12:34:56"
-     *                               6:34456
-     *                              }
-     *                                                     </pre>
+     *                                                       {
+     *                                                         4:45556,
+     *                                                         5:"2015-09-23 12:34:56"
+     *                                                         6:34456
+     *                                                        }
+     *                                                                               </pre>
      * @param returnDataBaseSets 需返回值的结果集
      * @return
      * @throws DbException
@@ -1719,14 +1704,6 @@ public class DataBaseImpl implements DataBase {
 
             close = this.getAutoCommit();
 
-            if (this.conn == null || this.conn.isClosed()) {
-                if (this.isAutoReconnect()) {
-                    log.debug("reconnect database!");
-                    this.reConnectDb();
-                } else {
-                    throw new DbException("connection is null!");
-                }
-            }
             Set<String> keys = new HashSet<String>();
             if (parms != null) {
                 keys = parms.keySet();
@@ -1848,33 +1825,22 @@ public class DataBaseImpl implements DataBase {
         return this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
 
     }
-
+    private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters) throws DbException {
+        return this.executeBindUpdate(sqltext, vParameters, false);
+    }
     /**
-     * 返回更新的记录行的个数
-     *
+     * 执行更新操作
      * @param sqltext
      * @param vParameters
-     * @return
+     * @param innerUse 是否是内部使用，如果是内部使用，则不需要关闭连接
+     * @return 返回两个元素的数组，0位置的元素为更新的个数，1位置的元素为主键（如果存在，否则为-1）
+     * @throws DbException
      */
-    private int executeBindUpdate(String sqltext, Collection<Object> vParameters) throws DbException {
-
-        long[] twoInt = this.executeBindUpdate(sqltext, vParameters, this.getAutoCommit());
-        return (int) twoInt[0];
-    }
-
-    private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters, boolean close) throws DbException {
+    private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters,boolean innerUse) throws DbException {
 
         int count = 0;
         long[] twoInt = new long[]{-1, -1};
         try {
-            if (this.conn == null || this.conn.isClosed()) {
-                if (this.isAutoReconnect()) {
-                    log.debug("reconnect database!");
-                    this.reConnectDb();
-                } else {
-                    throw new DbException("connection is null!");
-                }
-            }
 
             boolean isInsert = false;
             PreparedStatement preStmt = null;
@@ -1932,10 +1898,14 @@ public class DataBaseImpl implements DataBase {
         } finally {
             try {
                 if (this.conn != null) {
-                    if (close) {
-                        this.close();
-                    } else {
+                    if(innerUse){
                         this.closer();
+                    }else {
+                        if (this.getAutoCommit()) {
+                            this.close();
+                        } else {
+                            this.closer();
+                        }
                     }
                 }
             } catch (Exception e2) {
@@ -2772,7 +2742,7 @@ public class DataBaseImpl implements DataBase {
      * @return 返回插入记录的行数，-1表明插入出错
      */
     private int executeBindInsert(String sqltext, Collection<Object> vParameters) throws DbException {
-        long[] twoInt = this.executeBindUpdate(sqltext, vParameters, this.getAutoCommit());
+        long[] twoInt = this.executeBindUpdate(sqltext, vParameters);
         return (int) twoInt[0];
     }
 
@@ -2797,13 +2767,13 @@ public class DataBaseImpl implements DataBase {
     }
 
     private long executeBindOneInsert(String sqltext, Collection<Object> vParameters) throws DbException {
-        long[] twoInt = this.executeBindUpdate(sqltext, vParameters, this.getAutoCommit());
+        long[] twoInt = this.executeBindUpdate(sqltext, vParameters);
         return twoInt[1];
     }
 
     /**
      * 设置是否为事务操作，false表明为事务操作（事务分为常规事务和分布式事务），事务操作即多个语句功能一个数据库连接。通过DataBase.
-     * setAutoCommit()方法 可以设置是否为事务操作，如果为事物操作，那么DataBase里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
+     * setAutoCommit()方法 可以设置是否为事务操作，如果为事务操作，那么DataBase里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
      * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过DataBase.close()方法关闭数据库连接
      *
      * @return
@@ -2811,37 +2781,10 @@ public class DataBaseImpl implements DataBase {
      */
     @Override
     public void setAutoCommit(boolean b) throws DbException {
-
         this.isAutoCommit = b;
-        this.setInteralConnectionAutoCommit(b);
-    }
-
-    /**
-     * <pre>
-     *   重新连接数据库，当数据库连接关闭时，可以调用此方法进行重连。如果嫌每次重连太麻烦，你也可以通过设置
-     *   {@link #setAutoReconnect(boolean)}方法，通过传入参数为true，来让操作关闭后自动重连。
-     *
-     * </pre>
-     *
-     * @throws DbException
-     */
-    @Override
-    public void reConnectDb() throws DbException {
-
-        if (!this.isColsed()) {
-            this.close();
-        }
-        ConnectType ct = this.connectType;
-        if (ct == ConnectType.POOL) {
-            this.connectDb(this.dbPoolName, this.mainSlaveModeConnectMode);
-        } else if (ct == ConnectType.DATASOURCE) {
-            this.connectDb(this.dataSource);
-        } else {
-            throw new DbException("您的数据库连接方式不支持重连！");
-
-        }
 
     }
+
 
     /**
      * 返回是否为事务操作，false表明为事务操作，事务操作即多个语句功能一个数据库连接。通过DataBase.setAutoCommit()方法
@@ -2853,20 +2796,7 @@ public class DataBaseImpl implements DataBase {
      */
     @Override
     public boolean getAutoCommit() throws DbException {
-        try {
-            if (this.conn == null || this.conn.isClosed()) {
-                if (this.isAutoReconnect()) {
-                    log.debug("reconnect database!");
-                    this.reConnectDb();
-                } else {
-                    throw new DbException("connection is null!");
-                }
-            }
-            return this.isAutoCommit;
-        } catch (Exception e) {
-            // log.error("", e);
-            throw new DbException(e);
-        }
+        return this.isAutoCommit;
     }
 
     /**
@@ -2888,20 +2818,6 @@ public class DataBaseImpl implements DataBase {
         }
     }
 
-    /**
-     * 回滚并且关闭连接
-     *
-     * @throws DbException
-     */
-    @Override
-    public void rollbackAndClose() throws DbException {
-        try {
-            this.rollback();
-        } finally {
-            this.close();
-        }
-
-    }
 
     /**
      * 判断资源和底层数据库连接是否关闭
@@ -2941,17 +2857,6 @@ public class DataBaseImpl implements DataBase {
         }
     }
 
-    @Override
-    public void commitAndClose() throws DbException {
-
-        try {
-            if (conn != null)
-                this.commit();
-        } finally {
-            this.close();
-        }
-    }
-
     /**
      * @param sqltext
      * @param vParametersArray
@@ -2959,22 +2864,14 @@ public class DataBaseImpl implements DataBase {
      * @return 返回每条语句更新记录的条数，执行错误，会抛出异常
      * @throws DbException
      */
-    private int[] executeBindBatch(String sqltext, List<Collection<Object>> vParametersArray, boolean close)
+    private int[] executeBindBatchBy(String sqltext, List<Collection<Object>> vParametersArray)
             throws DbException {
-
+        Boolean backAutoCommit=null;
         int[] count = null;
         try {
-            if (this.conn == null || this.conn.isClosed()) {
-                if (this.isAutoReconnect()) {
-                    log.debug("reconnect database!");
-                    this.reConnectDb();
-                } else {
-                    throw new DbException("connection is null!");
-                }
-            }
-            if (close) {
-                this.setInteralConnectionAutoCommit(false);
-                // conn.setAutoCommit(false);
+            backAutoCommit=this.getAutoCommit();
+            if (this.getAutoCommit()) {
+                this.setAutoCommit(false);//暂时设置为false，使之成为事务性操作
             }
 
             PreparedStatement preStmt = null;
@@ -3010,10 +2907,9 @@ public class DataBaseImpl implements DataBase {
                     break;
                 }
             }
-            if (close) {
+            if (backAutoCommit) {
                 if (error) {
                     this.rollback();
-
                     count = null;
                     throw new DbException("执行错误,!第[" + i + "]条语句更新失败!");
                 } else {
@@ -3023,8 +2919,7 @@ public class DataBaseImpl implements DataBase {
 
         } catch (Exception e) {
             count = null;
-            // log.error("", e);
-            if (close) {
+            if (backAutoCommit) {
                 this.rollback();
             }
             throw new DbException(e);
@@ -3032,8 +2927,9 @@ public class DataBaseImpl implements DataBase {
         } finally {
             try {
                 if (this.conn != null) {
-                    if (close) {
+                    if (backAutoCommit) {
                         this.close();
+                        this.setAutoCommit(true);
                     } else {
                         this.closer();
                     }
@@ -3072,7 +2968,7 @@ public class DataBaseImpl implements DataBase {
         try {
             bkCommit = this.getAutoCommit();
             if (bkCommit) {
-                this.setInteralConnectionAutoCommit(false);
+                this.setAutoCommit(false);
             }
 
             for (int i = 0; i < sqltxts.length; i++) {
@@ -3082,7 +2978,7 @@ public class DataBaseImpl implements DataBase {
                         args = CollectionUtils.getSortedValues(vParametersArray[i]);
                     }
                 }
-                long[] twoInt = this.executeBindUpdate(sqltxts[i], args, false);
+                long[] twoInt = this.executeBindUpdate(sqltxts[i], args, true);
                 int ret = (int) twoInt[0];// 返回记录的行数
                 res[i] = ret;
             }
@@ -3113,6 +3009,7 @@ public class DataBaseImpl implements DataBase {
             try {
                 if (bkCommit) {
                     this.close();
+                    this.setAutoCommit(true);
                 } else {
                     this.closer();
                 }
@@ -3155,7 +3052,7 @@ public class DataBaseImpl implements DataBase {
             argsList.add(args);
         }
 
-        return executeBindBatch(sqltxt, argsList, this.getAutoCommit());
+        return executeBindBatchBy(sqltxt, argsList);
     }
 
     @Override
@@ -3176,7 +3073,7 @@ public class DataBaseImpl implements DataBase {
      * @throws DbException
      */
     private int[] executeBatch(ArrayList<String> sqltxt) throws DbException {
-        return updateBatch(sqltxt, this.getAutoCommit());
+        return updateBatch(sqltxt);
     }
 
     @Override
@@ -3191,7 +3088,7 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private int[] updateBatch(ArrayList<String> sqltxt, boolean close) throws DbException {
+    private int[] updateBatch(ArrayList<String> sqltxt) throws DbException {
 
         return this.executeBindBatch(sqltxt.toArray(new String[0]), null);
 
@@ -3207,47 +3104,31 @@ public class DataBaseImpl implements DataBase {
 
     private PreparedStatement getPreparedStatement(String sqltxt) throws DbException {
         try {
-            if (this.conn == null || this.conn.isClosed()) {
-                if (this.isAutoReconnect()) {
-                    log.debug("reconnect database!");
-                    this.reConnectDb();
-                } else {
-                    throw new DbException("connection is null!");
-                }
-            }
             if (StringUtils.startsWithIgnoreCase(sqltxt.trim(), "select")) {
                 try {
                     this.sqlType = SQLType.SELECT;
-                    if (this.isMainSlaveMode()) {
-                        if (this.getInternalConnectionAutoCommit()) {// 如果不是事务性操作，则读从库
-                            if (this.mainSlaveModeConnectMode == MainSlaveModeConnectMode.Try_Connect_MainServer) {
-                                log.debug("查询sql语句，且Try_Connect_MainServer模式，获取从库连接");
-                                this.selectSlaveDb();
-                            }
-                        }
-                    }
+                    this.fetchConnection();
                     ps = conn.prepareStatement(sqltxt, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
                 } catch (Exception e) {
-                    // log.error("您的数据库驱动程序版本过低，请更新成支持jdbc3.0以上版本的驱动！");
                     throw e;
                 }
             } else if (StringUtils.startsWithIgnoreCase(sqltxt.trim(), "insert")) {
                 try {
                     this.sqlType = SQLType.INSERT;
+                    this.fetchConnection();
                     ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
                 } catch (Exception e) {
                     log.warn("您的数据库驱动程序不支持带Statement.RETURN_GENERATED_KEYS参数"
                             + "的PreparedStatement构造函数，可能由于您的数据库版本较低，建议升级您的驱动程序！");
-                    // ps = conn.prepareStatement(sqltxt);
                     throw e;
                 }
             } else {
                 this.sqlType = SQLType.UPDATE;
+                this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt);
             }
 
         } catch (Exception e) {
-            // log.error("", e);
             throw new DbException(e);
         }
         return ps;
@@ -3256,7 +3137,6 @@ public class DataBaseImpl implements DataBase {
     /**
      * 关闭底层资源，但不关闭数据库连接
      */
-    @Override
     public void closer() throws DbException {
 
         try {
@@ -3286,9 +3166,7 @@ public class DataBaseImpl implements DataBase {
      */
     @Override
     public void close() {
-
         try {
-
             this.forceClose();
 
         } catch (Exception e) {
@@ -3317,7 +3195,7 @@ public class DataBaseImpl implements DataBase {
                 if (!conn.isClosed()) {
                     try {
                         if (!this.externalControlConClose) {
-                            this.setInteralConnectionAutoCommit(true);
+                            this.setInternalConnectionAutoCommit(true);
                             conn.close();
                             conn = null;
                             log.debug(Thread.currentThread().getId() + ":db=" + this.dbPoolName + ":closed!");
@@ -3412,7 +3290,7 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> T queryOneBy(T selectObject, String selectProperties) throws DbException {
 
-        List<T> list = this.doQueryClassNoSql(selectObject, selectProperties);
+        List<T> list = this.doQueryClassForObject(selectObject, selectProperties);
         if (list.size() > 0) {
             return list.get(0);
         } else {
@@ -3424,7 +3302,7 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> List<T> queryListBy(T selectObject, String selectProperties) throws DbException {
 
-        return this.doQueryClassNoSql((Class<T>) selectObject.getClass(), selectObject, selectProperties);
+        return this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, selectProperties);
     }
 
     @Override
@@ -3474,13 +3352,13 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> List<T> queryListBy(T selectObject) throws DbException {
 
-        return this.doQueryClassNoSql(selectObject);
+        return this.doQueryClassForObject(selectObject);
     }
 
     @Override
     public <T> T queryOneBy(T selectObject) throws DbException {
 
-        List<T> list = this.doQueryClassNoSql(selectObject);
+        List<T> list = this.doQueryClassForObject(selectObject);
 
         if (list.size() > 0) {
             return list.get(0);
@@ -3645,6 +3523,8 @@ public class DataBaseImpl implements DataBase {
 
         boolean close = this.getAutoCommit();
         try {
+            this.sqlType=SQLType.SCRIPT;
+            this.fetchConnection();
             ScriptRunner scriptRunner = new ScriptRunner(this.getConnection());
             scriptRunner.setLogWriter(logWriter);
             scriptRunner.setErrorLogWriter(logWriter);
