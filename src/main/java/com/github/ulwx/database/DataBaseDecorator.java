@@ -3,6 +3,7 @@ package com.github.ulwx.database;
 import com.github.ulwx.database.DataBaseImpl.ConnectType;
 import com.github.ulwx.tool.PageBean;
 
+import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.sql.Connection;
@@ -10,429 +11,320 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public abstract class DataBaseDecorator implements NoSqlOperation, AutoCloseable, DataBase {
+public abstract   class DataBaseDecorator implements DBObjectOperation, AutoCloseable, DataBase {
 	protected DataBase db;
 
 	public DataBaseDecorator(DataBase db) {
-		// TODO Auto-generated constructor stub
 		this.db = db;
 	}
+
 	public DataBase getContentDataBase() {
 		return this.db;
 	}
-
+	@Override
 	public MainSlaveModeConnectMode getMainSlaveModeConnectMode() {
 		return db.getMainSlaveModeConnectMode();
 	}
+	@Override
+	public void connectDb(Connection connection, boolean externalControlConClose) {
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public void connectDb(DataSource dataSource) {
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public boolean isExternalControlConClose() {
+		throw new UnsupportedOperationException();
+	}
+	@Override
 	public boolean isAutoReconnect() {
 		return db.isAutoReconnect();
 	}
+	@Override
 	public void setAutoReconnect(boolean autoReconnect) throws DbException {
 		db.setAutoReconnect(autoReconnect);
 	}
+	@Override
 	public String getDbPoolName() {
 		return db.getDbPoolName();
 	}
+	@Override
 	public boolean isMainSlaveMode() {
 		return db.isMainSlaveMode();
 	}
+	@Override
 	public void setMainSlaveMode(boolean mainSlaveMode) {
 		db.setMainSlaveMode(mainSlaveMode);
 	}
+	@Override
 	public boolean getInternalConnectionAutoCommit() throws DbException {
 		return db.getInternalConnectionAutoCommit();
 	}
+	@Override
 	public void selectSlaveDb() throws DbException {
 		db.selectSlaveDb();
 	}
+	@Override
 	public String getDataBaseType() {
 		return db.getDataBaseType();
 	}
-	public void connectDb(String dbPoolName) throws DbException {
-		 this.connectDb(dbPoolName, MainSlaveModeConnectMode.Try_Connect_MainServer);
-	}
+
+	@Override
 	public ConnectType getConnectionType() {
 		return db.getConnectionType();
 	}
-	public void connectDb(String dbPoolName, MainSlaveModeConnectMode mainSlaveModeConnectMode) throws DbException {
-		db.connectDb(dbPoolName, mainSlaveModeConnectMode);
+
+	@Override
+	public boolean getAutoCommit() throws DbException {
+		return db.getAutoCommit();
 	}
-	public DataBaseSet doCachedQuery(String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
-		return db.doCachedQuery(sqlQuery, vParameters);
+
+	@Override
+	public boolean isColsed() throws DbException {
+		return db.isColsed();
 	}
-	public DataBaseSet doCachedPageQuery(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
+
+	@Override
+	public void closer() throws DbException {
+		db.closer();
+	}
+
+	@Override
+	public Connection getConnection() {
+		return db.getConnection();
+	}
+
+	@Override
+	public DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
 			PageBean pageUtils, String countSql) throws DbException {
-		return db.doCachedPageQuery(sqlQuery, vParameters, page, perPage, pageUtils, countSql);
+		return db.queryForResultSet(sqlQuery, vParameters, page, perPage, pageUtils, countSql);
 	}
-	public DataBaseSet query(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
-			PageBean pageUtils, String countSql) throws DbException {
-		return db.query(sqlQuery, vParameters, page, perPage, pageUtils, countSql);
+	@Override
+	public DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
+		return db.queryForResultSet(sqlQuery, vParameters);
 	}
-	public <T> List<T> doPageQueryObject(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
-			PageBean pageUtils, RowMapper<T> rowMapper, String countSql) throws DbException {
-		return db.doPageQueryObject(sqlQuery, args, page, perPage, pageUtils, rowMapper, countSql);
-	}
-	public <T> List<T> query(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageUtils,
+	@Override
+	public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageUtils,
 			RowMapper<T> rowMapper, String countSql) throws DbException {
-		return db.query(sqlQuery, args, page, perPage, pageUtils, rowMapper, countSql);
+		return db.queryList(sqlQuery, args, page, perPage, pageUtils, rowMapper, countSql);
 	}
-	public List<Map<String, Object>> doPageQueryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
-			PageBean pageUtils, String countSql) throws DbException {
-		return db.doPageQueryMap(sqlQuery, args, page, perPage, pageUtils, countSql);
-	}
+	@Override
 	public List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
 			PageBean pageUtils, String countSql) throws DbException {
 		return db.queryMap(sqlQuery, args, page, perPage, pageUtils, countSql);
 	}
-	public <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters)
-			throws DbException {
-		return db.doQueryClass(clazz, sqlQuery, vParameters);
+	@Override
+	public <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
+		return db.queryList(clazz, sqlQuery, vParameters);
 	}
-	public <T> List<T> query(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
-		return db.query(clazz, sqlQuery, vParameters);
-	}
-	public <T> T doQueryClassOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
-		return db.doQueryClassOne(clazz, sqlQuery, vParameters);
-	}
+	@Override
 	public <T> T queryOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
 		return db.queryOne(clazz, sqlQuery, vParameters);
 	}
-	public <T> List<T> doQueryClassNoSql(Class<T> clazz, T selectObject, String selectProperties) throws DbException {
-		return db.doQueryClassNoSql(clazz, selectObject, selectProperties);
-	}
-	public <T> List<T> doQueryClassNoSql(T selectObject) throws DbException {
-		return db.doQueryClassNoSql(selectObject);
-	}
-	public <T> List<T> doQueryClassNoSql(T selectObject, String selectProperties) throws DbException {
-		return db.doQueryClassNoSql(selectObject, selectProperties);
-	}
-	public <T> List<T> doQueryClassOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery,
-			Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList) throws DbException {
-		return db.doQueryClassOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList);
-	}
-	public <T> List<T> query(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
+	@Override
+	public <T> List<T> queryList(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
 			QueryMapNestOne2One[] queryMapNestList) throws DbException {
-		return db.query(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList);
+		return db.queryList(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList);
 	}
-	public <T> List<T> doPageQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page,
-			int perPage, PageBean pageUtils, String countSql) throws DbException {
-		return db.doPageQueryClass(clazz, sqlQuery, vParameters, page, perPage, pageUtils, countSql);
-	}
-	public <T> List<T> query(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
+	@Override
+	public <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
 			PageBean pageUtils, String countSql) throws DbException {
-		return db.query(clazz, sqlQuery, vParameters, page, perPage, pageUtils, countSql);
+		return db.queryList(clazz, sqlQuery, vParameters, page, perPage, pageUtils, countSql);
 	}
-	public <T> List<T> query(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
+	@Override
+	public <T> List<T> queryList(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
 			QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageUtils, String countSql)
 			throws DbException {
-		return db.query(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage, pageUtils, countSql);
+		return db.queryList(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage, pageUtils, countSql);
 	}
-	public <T> List<T> doPageQueryClassOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery,
-			Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList, int page, int perPage,
-			PageBean pageUtils, String countSql) throws DbException {
-		return db.doPageQueryClassOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage,
-				pageUtils, countSql);
-	}
-	public <T> List<T> doQueryClassOne2Many(Class<T> clazz, String sqlPrefix, String beanKey, String sqlQuery,
+
+	@Override
+	public <T> List<T> queryList(Class<T> clazz, String sqlPrefix, String beanKey, String sqlQuery,
 			Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
-		return db.doQueryClassOne2Many(clazz, sqlPrefix, beanKey, sqlQuery, vParameters, queryMapNestList);
+		return db.queryList(clazz, sqlPrefix, beanKey, sqlQuery, vParameters, queryMapNestList);
 	}
-	public <T> List<T> query(Class<T> clazz, String sqlPrefix, String beanKey, String sqlQuery,
-			Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
-		return db.query(clazz, sqlPrefix, beanKey, sqlQuery, vParameters, queryMapNestList);
+	@Override
+	public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException {
+		return db.queryList(sqlQuery, args, rowMapper);
 	}
-	public <T> List<T> doQueryObject(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper)
-			throws DbException {
-		return db.doQueryObject(sqlQuery, args, rowMapper);
+	@Override
+	public List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args) throws DbException {
+		return db.queryMap(sqlQuery, args);
 	}
-	public <T> List<T> query(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException {
-		return db.query(sqlQuery, args, rowMapper);
-	}
-	public List<Map<String, Object>> doQueryMap(String sqlQuery, Map<Integer, Object> args) throws DbException {
-		return db.doQueryMap(sqlQuery, args);
-	}
-	public List<Map<String, Object>> query(String sqlQuery, Map<Integer, Object> args) throws DbException {
-		return db.query(sqlQuery, args);
-	}
-	public int executeBindDelete(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-		return db.executeBindDelete(sqltext, vParameters);
-	}
+	@Override
 	public int del(String sqltext, Map<Integer, Object> vParameters) throws DbException {
 		return db.del(sqltext, vParameters);
 	}
-	public int executeBindUpdate(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-		return db.executeBindUpdate(sqltext, vParameters);
-	}
+	@Override
 	public int update(String sqltext, Map<Integer, Object> vParameters) throws DbException {
 		return db.update(sqltext, vParameters);
 	}
-	public int executeStoredProcedure(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
-			List<DataBaseSet> returnDataBaseSets) throws DbException {
-		return db.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
-	}
+	@Override
 	public int callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
 			List<DataBaseSet> returnDataBaseSets) throws DbException {
 		return db.callStoredPro(sqltext, parms, outPramsValues, returnDataBaseSets);
 	}
-	public int executeBindInsert(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-		return db.executeBindInsert(sqltext, vParameters);
-	}
+	@Override
 	public int insert(String sqltext, Map<Integer, Object> vParameters) throws DbException {
 		return db.insert(sqltext, vParameters);
 	}
-	public <T> int excuteInsertWholeClass(T insertObject) throws DbException {
-		return db.excuteInsertWholeClass(insertObject);
-	}
-	public <T> int excuteInsertClass(T insertObject) throws DbException {
-		return db.excuteInsertClass(insertObject);
-	}
-	public <T> int excuteInsertClass(T insertObject, String[] properties) throws DbException {
-		return db.excuteInsertClass(insertObject, properties);
-	}
-	public <T> int excuteInsertWholeClass(T insertObject, String[] properties) throws DbException {
-		return db.excuteInsertWholeClass(insertObject, properties);
-	}
-	public <T> long excuteInsertClassReturnKey(T insertObject, String[] properties) throws DbException {
-		return db.excuteInsertClassReturnKey(insertObject, properties);
-	}
-	public <T> long excuteInsertWholeClassReturnKey(T insertObject, String[] properties) throws DbException {
-		return db.excuteInsertWholeClassReturnKey(insertObject, properties);
-	}
-	public <T> long excuteInsertClassReturnKey(T insertObject) throws DbException {
-		return db.excuteInsertClassReturnKey(insertObject);
-	}
-	public <T> long excuteInsertWholeClassReturnKey(T insertObject) throws DbException {
-		return db.excuteInsertWholeClassReturnKey(insertObject);
-	}
-	public <T> int[] excuteInsertClass(T[] insertObjects, String[] properties) throws DbException {
-		return db.excuteInsertClass(insertObjects, properties);
-	}
-	public <T> int[] excuteInsertWholeClass(T[] insertObjects, String[] properties) throws DbException {
-		return db.excuteInsertWholeClass(insertObjects, properties);
-	}
-	public int[] excuteInsertObjects(Object[] insertObjects, String[][] properties) throws DbException {
-		return db.excuteInsertObjects(insertObjects, properties);
-	}
-	public int[] excuteInsertWholeObjects(Object[] insertObjects, String[][] properties) throws DbException {
-		return db.excuteInsertWholeObjects(insertObjects, properties);
-	}
-	public int[] excuteInsertWholeObjects(Object[] insertObjects) throws DbException {
-		return db.excuteInsertWholeObjects(insertObjects);
-	}
-	public int[] excuteInsertObjects(Object[] insertObjects) throws DbException {
-		return db.excuteInsertObjects(insertObjects);
-	}
-	public <T> int[] excuteInsertClass(T[] objs) throws DbException {
-		return db.excuteInsertClass(objs);
-	}
-	public <T> int[] excuteInsertWholeClass(T[] objs) throws DbException {
-		return db.excuteInsertWholeClass(objs);
-	}
-	public <T> int excuteUpdateClass(T updateObject, String beanKey, String[] properties) throws DbException {
-		return db.excuteUpdateClass(updateObject, beanKey, properties);
-	}
-	public <T> int excuteUpdateWholeClass(T updateObject, String beanKey, String[] properties) throws DbException {
-		return db.excuteUpdateWholeClass(updateObject, beanKey, properties);
-	}
-	public <T> int[] excuteDeleteClass(T[] deleteObject, String deleteProperteis) throws DbException {
-		return db.excuteDeleteClass(deleteObject, deleteProperteis);
-	}
-	public <T> int excuteDeleteClass(T deleteObject, String deleteProperteis) throws DbException {
-		return db.excuteDeleteClass(deleteObject, deleteProperteis);
-	}
-	public <T> int excuteUpdateClass(T updateObject, String beanKey) throws DbException {
-		return db.excuteUpdateClass(updateObject, beanKey);
-	}
-	public <T> int excuteUpdateWholeClass(T updateObject, String beanKey) throws DbException {
-		return db.excuteUpdateWholeClass(updateObject, beanKey);
-	}
-	public <T> int[] excuteUpdateClass(T[] updateObject, String beanKey) throws DbException {
-		return db.excuteUpdateClass(updateObject, beanKey);
-	}
-	public <T> int[] excuteUpdateWholeClass(T[] updateObject, String beanKey) throws DbException {
-		return db.excuteUpdateWholeClass(updateObject, beanKey);
-	}
-	public <T> int[] excuteUpdateClass(T[] objects, String beanKey, String[] properties) throws DbException {
-		return db.excuteUpdateClass(objects, beanKey, properties);
-	}
-	public <T> int[] excuteUpdateWholeClass(T[] objects, String beanKey, String[] properties) throws DbException {
-		return db.excuteUpdateWholeClass(objects, beanKey, properties);
-	}
-	public int[] excuteUpdateObjects(Object[] objects, String[] beanKeys) throws DbException {
-		return db.excuteUpdateObjects(objects, beanKeys);
-	}
-	public int[] excuteUpdateObjects(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-		return db.excuteUpdateObjects(objects, beanKeys, properties);
-	}
-	public int[] excuteUpdateWholeObjects(Object[] objects, String[] beanKeys, String[][] properties)
-			throws DbException {
-		return db.excuteUpdateWholeObjects(objects, beanKeys, properties);
-	}
-	public int[] excuteUpdateWholeObjects(Object[] objects, String[] beanKeys) throws DbException {
-		return db.excuteUpdateWholeObjects(objects, beanKeys);
-	}
-	public int[] excuteDeleteObjects(Object[] deleteObjects, String[] deletePropertiesArray) throws DbException {
-		return db.excuteDeleteObjects(deleteObjects, deletePropertiesArray);
-	}
-	public long executeBindInsertReturnKey(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-		return db.executeBindInsertReturnKey(sqltext, vParameters);
-	}
+	@Override
 	public long insertReturnKey(String sqltext, Map<Integer, Object> vParameters) throws DbException {
 		return db.insertReturnKey(sqltext, vParameters);
 	}
-	public void setAutoCommit(boolean b) throws DbException {
-		db.setAutoCommit(b);
-	}
-	public void reConnectDb() throws DbException {
-		db.reConnectDb();
-	}
-	public boolean getAutoCommit() throws DbException {
-		return db.getAutoCommit();
-	}
-	public void rollback() throws DbException {
-		db.rollback();
-	}
-	public void rollbackAndClose() throws DbException {
-		db.rollbackAndClose();
-	}
-	public boolean isColsed() throws DbException {
-		return db.isColsed();
-	}
-	public void commit() throws DbException {
-		db.commit();
-	}
-	public void commitAndClose() throws DbException {
-		db.commitAndClose();
-	}
-	public int[] executeBindBatch(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
-		return db.executeBindBatch(sqltxts, vParametersArray);
-	}
+
+
+	@Override
 	public int[] update(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
 		return db.update(sqltxts, vParametersArray);
 	}
+	@Override
 	public int[] insert(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
 		return db.insert(sqltxts, vParametersArray);
 	}
-	public int[] executeBindBatch(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException {
-		return db.executeBindBatch(sqltxt, vParametersList);
-	}
+	@Override
 	public int[] update(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException {
 		return db.update(sqltxt, vParametersList);
 	}
+	@Override
 	public int[] insert(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException {
 		return db.insert(sqltxt, vParametersList);
 	}
-	public int[] executeBatch(ArrayList<String> sqltxt) throws DbException {
-		return db.executeBatch(sqltxt);
-	}
+	@Override
 	public int[] update(ArrayList<String> sqltxts) throws DbException {
 		return db.update(sqltxts);
 	}
+	@Override
 	public int[] insert(ArrayList<String> sqltxts) throws DbException {
 		return db.insert(sqltxts);
 	}
-	public void closer() throws DbException {
-		db.closer();
+	@Override
+	public <T> int insertBy(T insertObject) throws DbException {
+		return db.insertBy(insertObject);
 	}
-	public void close() {
-		db.close();
+	@Override
+	public <T> long insertReturnKeyBy(T insertObject) throws DbException {
+		return db.insertReturnKeyBy(insertObject);
 	}
-	public Connection getConnection() {
-		return db.getConnection();
+	@Override
+	public <T> int insertBy(T insertObject, String[] properties) throws DbException {
+		return db.insertBy(insertObject, properties);
 	}
-	public <T> int insert(T insertObject) throws DbException {
-		return db.insert(insertObject);
+	@Override
+	public <T> long insertReturnKeyBy(T insertObject, String[] properties) throws DbException {
+		return db.insertReturnKeyBy(insertObject, properties);
 	}
-	public <T> long insertReturnKey(T insertObject) throws DbException {
-		return db.insertReturnKey(insertObject);
+	@Override
+	public <T> int[] insertBy(T[] objs) throws DbException {
+		return db.insertBy(objs);
 	}
-	public <T> int insert(T insertObject, String[] properties) throws DbException {
-		return db.insert(insertObject, properties);
+	@Override
+	public <T> int[] insertBy(T[] objs, String[] properties) throws DbException {
+		return db.insertBy(objs, properties);
 	}
-	public <T> long insertReturnKey(T insertObject, String[] properties) throws DbException {
-		return db.insertReturnKey(insertObject, properties);
+	@Override
+	public <T> int updateBy(T updateObject, String beanKey) throws DbException {
+		return db.updateBy(updateObject, beanKey);
 	}
-	public <T> int[] insert(T[] objs) throws DbException {
-		return db.insert(objs);
+	@Override
+	public <T> int updateBy(T updateObject, String beanKey, String[] properties) throws DbException {
+		return db.updateBy(updateObject, beanKey, properties);
 	}
-	public <T> int[] insert(T[] objs, String[] properties) throws DbException {
-		return db.insert(objs, properties);
+	@Override
+	public <T> int[] updateBy(T[] objects, String beanKey, String[] properties) throws DbException {
+		return db.updateBy(objects, beanKey, properties);
 	}
-	public <T> int update(T updateObject, String beanKey) throws DbException {
-		return db.update(updateObject, beanKey);
+	@Override
+	public <T> int[] updateBy(T[] objects, String beanKey) throws DbException {
+		return db.updateBy(objects, beanKey);
 	}
-	public <T> int update(T updateObject, String beanKey, String[] properties) throws DbException {
-		return db.update(updateObject, beanKey, properties);
+	@Override
+	public <T> int[] updateBy(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
+		return db.updateBy(objects, beanKeys, properties);
 	}
-	public <T> int[] update(T[] objects, String beanKey, String[] properties) throws DbException {
-		return db.update(objects, beanKey, properties);
+	@Override
+	public <T> T queryOneBy(T selectObject, String selectProperties) throws DbException {
+		return db.queryOneBy(selectObject, selectProperties);
 	}
-	public <T> int[] update(T[] objects, String beanKey) throws DbException {
-		return db.update(objects, beanKey);
+	@Override
+	public <T> List<T> queryListBy(T selectObject, String selectProperties) throws DbException {
+		return db.queryListBy(selectObject, selectProperties);
 	}
-	public <T> int[] update(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-		return db.update(objects, beanKeys, properties);
-	}
-	public <T> T queryOne(T selectObject, String selectProperties) throws DbException {
-		return db.queryOne(selectObject, selectProperties);
-	}
-	public <T> List<T> query(T selectObject, String selectProperties) throws DbException {
-		return db.query(selectObject, selectProperties);
-	}
-	public <T> List<T> query(T selectObject, String selectProperties, int page, int perPage, PageBean pb)
+	@Override
+	public <T> List<T> queryListBy(T selectObject, String selectProperties, int page, int perPage, PageBean pb)
 			throws DbException {
-		return db.query(selectObject, selectProperties, page, perPage, pb);
+		return db.queryListBy(selectObject, selectProperties, page, perPage, pb);
 	}
-	public <T> List<T> query(T selectObject, int page, int perPage, PageBean pb) throws DbException {
-		return db.query(selectObject, page, perPage, pb);
+	@Override
+	public <T> List<T> queryListBy(T selectObject, int page, int perPage, PageBean pb) throws DbException {
+		return db.queryListBy(selectObject, page, perPage, pb);
 	}
-	public <T> List<T> query(T selectObject) throws DbException {
-		return db.query(selectObject);
+	@Override
+	public <T> List<T> queryListBy(T selectObject) throws DbException {
+		return db.queryListBy(selectObject);
 	}
-	public <T> T queryOne(T selectObject) throws DbException {
-		return db.queryOne(selectObject);
+	@Override
+	public <T> T queryOneBy(T selectObject) throws DbException {
+		return db.queryOneBy(selectObject);
 	}
-	public <T> int del(T deleteObject, String deleteProperteis) throws DbException {
-		return db.del(deleteObject, deleteProperteis);
+	@Override
+	public <T> int delBy(T deleteObject, String deleteProperteis) throws DbException {
+		return db.delBy(deleteObject, deleteProperteis);
 	}
-	public <T> int[] del(T[] deleteObjects, String deleteProperteis) throws DbException {
-		return db.del(deleteObjects, deleteProperteis);
+	@Override
+	public <T> int[] delBy(T[] deleteObjects, String deleteProperteis) throws DbException {
+		return db.delBy(deleteObjects, deleteProperteis);
 	}
-	public <T> int[] del(Object[] deleteObjects, String[] deletePropertiesArray) throws DbException {
-		return db.del(deleteObjects, deletePropertiesArray);
+	@Override
+	public <T> int[] delBy(Object[] deleteObjects, String[] deletePropertiesArray) throws DbException {
+		return db.delBy(deleteObjects, deletePropertiesArray);
 	}
-	public <T> int insertWhole(T insertObject) throws DbException {
-		return db.insertWhole(insertObject);
+	@Override
+	public <T> int insertWholeBy(T insertObject) throws DbException {
+		return db.insertWholeBy(insertObject);
 	}
-	public <T> long insertWholeReturnKey(T insertObject) throws DbException {
-		return db.insertWholeReturnKey(insertObject);
+
+	@Override
+	public <T> long insertWholeReturnKeyBy(T insertObject) throws DbException {
+		return db.insertWholeReturnKeyBy(insertObject);
 	}
-	public <T> int insertWhole(T insertObject, String[] properties) throws DbException {
-		return db.insertWhole(insertObject, properties);
+
+	@Override
+	public <T> int insertWholeBy(T insertObject, String[] properties) throws DbException {
+		return db.insertWholeBy(insertObject, properties);
 	}
-	public <T> long insertWholeReturnKey(T insertObject, String[] properties) throws DbException {
-		return db.insertWholeReturnKey(insertObject, properties);
+	@Override
+	public <T> long insertWholeReturnKeyBy(T insertObject, String[] properties) throws DbException {
+		return db.insertWholeReturnKeyBy(insertObject, properties);
 	}
-	public <T> int[] insertWhole(T[] objs) throws DbException {
-		return db.insertWhole(objs);
+	@Override
+	public <T> int[] insertWholeBy(T[] objs) throws DbException {
+		return db.insertWholeBy(objs);
 	}
-	public <T> int[] insertWhole(T[] objs, String[] properties) throws DbException {
-		return db.insertWhole(objs, properties);
+	@Override
+	public <T> int[] insertWholeBy(T[] objs, String[] properties) throws DbException {
+		return db.insertWholeBy(objs, properties);
 	}
-	public <T> int updateWhole(T updateObject, String beanKey) throws DbException {
-		return db.updateWhole(updateObject, beanKey);
+	@Override
+	public <T> int updateWholeBy(T updateObject, String beanKey) throws DbException {
+		return db.updateWholeBy(updateObject, beanKey);
 	}
-	public <T> int updateWhole(T updateObject, String beanKey, String[] properties) throws DbException {
-		return db.updateWhole(updateObject, beanKey, properties);
+	@Override
+	public <T> int updateWholeBy(T updateObject, String beanKey, String[] properties) throws DbException {
+		return db.updateWholeBy(updateObject, beanKey, properties);
 	}
-	public <T> int[] updateWhole(T[] objects, String beanKey, String[] properties) throws DbException {
-		return db.updateWhole(objects, beanKey, properties);
+	@Override
+	public <T> int[] updateWholeBy(T[] objects, String beanKey, String[] properties) throws DbException {
+		return db.updateWholeBy(objects, beanKey, properties);
 	}
-	public <T> int[] updateWhole(T[] objects, String beanKey) throws DbException {
-		return db.updateWhole(objects, beanKey);
+	@Override
+	public <T> int[] updateWholeBy(T[] objects, String beanKey) throws DbException {
+		return db.updateWholeBy(objects, beanKey);
 	}
-	public <T> int[] updateWhole(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-		return db.updateWhole(objects, beanKeys, properties);
+	@Override
+	public <T> int[] updateWholeBy(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
+		return db.updateWholeBy(objects, beanKeys, properties);
 	}
 
 	@Override

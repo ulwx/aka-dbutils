@@ -2203,7 +2203,7 @@ public abstract class StringUtils {
 	 * 查找src字符串里匹配于regex的模式串，然后对模式串里的子模式串（通过组号来识别） 进行处理(handler)，
 	 * 处理后的结果替换模式串里的相应的子串
 	 * 
-	 * @param src
+	 * @param src  源字符串
 	 * @param regex
 	 *            匹配的正则表达式，如:&(\\d+;)([a-z)+)
 	 * @param handleGroupIndex
@@ -2325,72 +2325,6 @@ public abstract class StringUtils {
 
 	public static void main(String[] args) {
 
-		// GroupHandler group = new GroupHandler() {
-		// public String handler(String groupStr) {
-		// return "";
-		// }
-		// };
-		// String s = "ssss&24;&45;dddd&67;";
-		// int[] is=new int[]{5,3,1};
-		// Arrays.sort(is);
-		// //System.out.println(StringUtils.arrayToCommaDelimitedString(is));
-		// System.out.println(StringUtils.replaceAllOnlyGroup(s, "ss(&)(\\d+;)",
-		// 1, group,new int[]{2}));
-		// String src="12344ab";
-		// System.out.println(StringUtils.startsWith(src, "2",true));
-		// // int[] is=new int[]{1,2,3};
-		// //
-		// // System.out.println(arrayToCommaDelimitedString(is));
-		// System.out.println(StringUtils.printStringArray(StringUtils.searchSubStrByReg("sunchaojichaon",
-		// "chao", 0)));
-		// System.out.println(StringUtils.fill("jdddd",'0',4,false));
-		// System.out.println(paddingAndFixString("1234",'0',100,false));
-		// Object[] s2=new String[]{"111","333","444"};
-		// String[] s3=(String[])s2;
-
-		// Map map = urlQueryStrToMap("name=12&name=23&name=44&code=2");
-		// System.out.println(ArrayUtils.toString(map.get("name")) + "-- "
-		// + ArrayUtils.toString(map.get("code")));
-		// List list = new ArrayList();
-		// list.add("111");
-		// list.add(22);
-		// System.out.println(CollectionUtils.toString(list));
-		// List<String> list2 = new ArrayList<String>();
-		// // list2.add("123");
-		// // list2.add("34a");
-		// System.out.println(collectionToCommaDelimitedString(list2));
-
-		// String sss = " l<y>e/>j";
-		// System.out.println(StringUtils.trimLeadingStrings(sss, new String[] {
-		// "<br/>","<br/>"," " }));
-		// System.out.println(StringUtils.trimTailStrings(sss, new String[] {
-		// "<br/>","<br/>" }));
-		// // System.out.println("yy=".split("=").length);
-		// System.out.println(StringUtils.containsAny(sss, new
-		// String[]{"br","er","jk"}, true));
-		// String s = "SELECT top 100 percent * from test order by id";
-		// String reg = "order\\s+by\\s+\\w+(\\s+(asc|desc))?";
-		// TInteger end = new TInteger();
-		// boolean b = StringUtils.endsWith(s, reg, true, end);
-		//
-		// boolean c = StringUtils.startsWith(s, "select", true, end);
-		// int i = 0;
-		// i = 3;
-		// System.out.println(end);
-		//
-		// System.out.println("start=" + StringUtils.indexOf(s, "top", true,
-		// end));
-		// System.out.println("end=" + end);
-		// (<REQHEADER>.*?</REQHEADER>)\\s*((<REQDATA>.*?</REQDATA>)\\s*)*
-		String xml = "cccc<REQHEADER>xxx</REQHEADER>  <REQDATA>bbb</REQDATA>  <REQDATA>mmmm</REQDATA>yyyy";
-
-		String[] strs = StringUtils.searchSubStrByReg(xml, "(<REQHEADER>.*?</REQHEADER>)\\s*(<REQDATA>.*</REQDATA>)",
-				2);
-
-		String[][] strs2 = StringUtils.searchSubStrByReg(xml, "(<REQHEADER>.*?</REQHEADER>)\\s*(<REQDATA>.*</REQDATA>)",
-				new int[] { 1, 2 });
-
-		String s = "";
 
 	}
 

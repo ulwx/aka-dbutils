@@ -5,7 +5,6 @@ import com.github.ulwx.tool.support.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.util.Map;
 import java.util.Stack;
 
@@ -14,7 +13,6 @@ public class TransactionDataBase extends DataBaseDecorator {
 	public TransactionDataBase() {
 		super(new DataBaseImpl());
 	}
-
 	public TransactionDataBase(DataBase db) {
 		super(db);
 	}
@@ -37,9 +35,10 @@ public class TransactionDataBase extends DataBaseDecorator {
 
 	}
 
+
 	@Override
-	public void connectDb(DataSource dataSource) {
-		throw new UnsupportedOperationException();
+	public void connectDb(String dbPoolName) throws DbException {
+		this.connectDb(dbPoolName, MainSlaveModeConnectMode.Try_Connect_MainServer);
 	}
 
 	@Override

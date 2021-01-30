@@ -3,6 +3,7 @@ package com.github.ulwx.database.spring;
 import com.github.ulwx.database.DataBase;
 import com.github.ulwx.database.DataBaseImpl;
 import com.github.ulwx.database.MDataBase;
+import com.github.ulwx.database.MDataBaseImpl;
 import com.github.ulwx.database.utils.DbConst;
 
 import javax.sql.DataSource;
@@ -41,7 +42,7 @@ public class MDataBaseFactory {
         DataBase dataBase=new DataBaseImpl();
         dataBase.connectDb(connection,externalControlClose);
         dataBase.setAutoCommit(autoCommit);
-        return new MDataBase(dataBase);
+        return new MDataBaseImpl(dataBase);
 
     }
 }

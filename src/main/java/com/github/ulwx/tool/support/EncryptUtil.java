@@ -270,13 +270,7 @@ public class EncryptUtil {
 		return false;
 	}
 
-	/**
-	 * SELECT TO_BASE64(AES_ENCRYPT('123459888999988','key')) SELECT
-	 * AES_DECRYPT(FROM_BASE64("jbjmPimhQZHWZrM/oN+6mQ=="),'key')
-	 * 
-	 * @param s
-	 * @return
-	 */
+
 	public static String aesEncrypt(String s,String KEY) {
 		try {
 
@@ -298,13 +292,7 @@ public class EncryptUtil {
 		return null;
 	}
 
-	/**
-	 * SELECT TO_BASE64(AES_ENCRYPT('123459888999988','key')) SELECT
-	 * AES_DECRYPT(FROM_BASE64("jbjmPimhQZHWZrM/oN+6mQ=="),'key')
-	 * 
-	 * @param str
-	 * @return
-	 */
+
 	public static String aesUnEncrypt(String str,String KEY) {
 
 		try {
@@ -326,6 +314,7 @@ public class EncryptUtil {
 		}
 		return null;
 	}
+
 
 	public static void main(String[] args) {
 		String data = "1";

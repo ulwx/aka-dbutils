@@ -12,9 +12,7 @@ import java.sql.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author Clinton Begin
- */
+
 public class ScriptRunner {
 
 	private static Logger log = LoggerFactory.getLogger(ScriptRunner.class);

@@ -38,7 +38,7 @@ public class DBPoolFactory {
 	}
 
 	public static String getEncryptPassword(String password) {
-		return EncryptUtil.aesEncrypt(password, KEY);
+		return aesEncrypt(password);
 	}
 
 	public static DBPoolFactory getInstance() {
@@ -373,5 +373,10 @@ public class DBPoolFactory {
 			log.error("", e);
 		}
 	}
-
+	public static String aesUnEncrypt(String str) {
+		return EncryptUtil.aesUnEncrypt(str,KEY);
+	}
+	public static String aesEncrypt(String str) {
+		return EncryptUtil.aesEncrypt(str,KEY);
+	}
 }

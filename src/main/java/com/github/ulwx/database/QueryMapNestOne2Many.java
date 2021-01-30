@@ -11,8 +11,8 @@ import java.util.Map;
 public class QueryMapNestOne2Many extends MapNest {
 
 	private Class classType;
-
-	private String nestedBeanPropertyKeys = "";// 子关联类主键属性，如果为复合主键，以","隔开
+	// 子关联类主键属性，如果为复合主键，以","隔开
+	private String nestedBeanPropertyKeys = "";
 
 	// 存放父亲主键(复合主键以逗号隔开)对应的返回classType类的映射列表
 	private Map<String, LinkedHashMap<String, Object>> result = new HashMap<>();
@@ -85,13 +85,9 @@ public class QueryMapNestOne2Many extends MapNest {
 		return classType;
 	}
 
-	/**
-	 * @param args
-	 */
+
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		QueryMapNestOne2Many qs = new QueryMapNestOne2Many();
-		Class<String> s = qs.getClassType();
+
 	}
 
 }

@@ -300,7 +300,6 @@ public class SqlUtils {
 		sb.append("import java.util.*;\n");
 		sb.append("import java.sql.*;\n");
 		sb.append("import java.time.*;\n");
-		sb.append("import com.github.ulwx.tool.support.ObjectUtils;\n");
 		sb.append("\n/*********************************************\n");
 		sb.append(tableRemark);
 		sb.append("\n***********************************************/\n");
@@ -369,11 +368,11 @@ public class SqlUtils {
 					+ "(){\n");
 			sm.append("\t\treturn " + name + ";\n\t}\n");
 		}
-		String toStringMethod = "\n\tpublic String toString(){\n";
-		toStringMethod = toStringMethod + "\t\treturn  ObjectUtils.toString(this);\n\t}\n";
+		//String toStringMethod = "\n\tpublic String toString(){\n";
+		//toStringMethod = toStringMethod + "\t\treturn  ObjectUtils.toString(this);\n\t}\n";
 
 		sb.append("\n" + sm);
-		sb.append(toStringMethod);
+		//sb.append(toStringMethod);
 		int hashCode=(tableName+toPackage).hashCode();
 		String to = "\n\tprivate static final long serialVersionUID ="+hashCode+"L;\n";
 		sb.append(to);
@@ -432,23 +431,26 @@ public class SqlUtils {
 					if (db.getDataBaseType() == DataBase.DataBaseType.MYSQL) {
 						String sql = "SELECT TABLE_COMMENT FROM INFORMATION_SCHEMA.TABLES "
 								+ "WHERE TABLE_NAME=? AND TABLE_SCHEMA='"+ schema + "'";
-						DataBase db2 = DataBaseFactory.getDataBase(pool);
+						DataBase db2 = null;
 						try {
+							db2=DataBaseFactory.getDataBase(pool);
 							Map<Integer, Object> args = new HashMap<Integer, Object>();
 							args.put(1, tableName);
-							DataBaseSet dbrs = db2.doCachedQuery(sql, args);
+							DataBaseSet dbrs = db2.queryForResultSet(sql, args);
 							if (dbrs.next()) {
 								tableComment = dbrs.getString("TABLE_COMMENT");
 							}
 						} finally {
-							db2.close();
+							if(db2!=null) {
+								db2.close();
+							}
 						}
 
 					}
 				}
 				//
 				tableCommentList.add(tableComment);
-				// System.out.
+
 			}
 
 			rs.close();
@@ -501,40 +503,14 @@ public class SqlUtils {
 
 
 	public static void main(String[] args) throws Exception {
-		String ss="xxxss'xxx''ss";
-		System.out.println(ss.replace("'", "''"));
-		// exportTables("tollcenter", "e:/okok3", "tollcenter.modeldb",
-		// "utf-8");
 
-		// Businessmanproject bmp=new Businessmanproject();
-		// bmp.setProjectID(1045);
-		// bmp.setBusiAccountName("23423");
-		// bmp.setPHoneMFAcountName("l");
-		// Class<?> t = PropertyUtils.getPropertyType(bmp,
-		// "PHoneMFAcountName");
-		// String value=(String)PropertyUtils.getProperty(bmp,
-		// "PHoneMFAcountName");
-		// Class<?> t2 = PropertyUtils.getPropertyType(bmp,
-		// "busiAccountName");
-		// int i=12;
-		Map map = new HashMap();
-		// Map returnvParameters = new HashMap();
-		// Platform p = new Platform();
-		// p.setId(123);
-		// p.setName("okok");
-		//
-		// String sql = SqlUtils.generateUpdateSql(null,p,"Id"
-		// ,returnvParameters,null);
-		// System.out.println(sql);
-//		 List list = new ArrayList();
-//		 String sql =
-//		 "select * from news where id=? and id2=? and id3=? and time1=?";
-//		 list.add(123);
-//		 list.add(12.345);
-//		 list.add("2222");
-//		 list.add(new Date());
-//		 list.add(new java.sql.Timestamp(new Date().getTime()));
-//		 System.out.println(SqlUtils.generateNotParmatersSql(sql, list));
+	    String having="sum( abcRty )>10 ";
+		having=StringUtils.replaceAll(having, "(\\()(.*?)(\\))", 2, (groupStr) -> {
+			groupStr=StringUtils.trim(groupStr);
+			return SqlUtils.dbEscapeLefChar.get("mysql")
+					+ SqlUtils.getColumName("", groupStr) + SqlUtils.dbEscapeRightChar.get("mysql");
+		},new int[]{1,3});
+		System.out.println(having);
 
 	}
 
@@ -777,7 +753,7 @@ public class SqlUtils {
 		String select = "select *";
 		if(selectObject instanceof MdbOptions) {
 			MdbOptions mm=(MdbOptions)selectObject;
-			String selectPartString=mm.selectOptions().selectPartString(dbpoolName,dataBaseType);
+			String selectPartString=handSelectPartString(mm.selectOptions(),dbpoolName,dataBaseType);
 			if(!selectPartString.isEmpty()) {
 				select=selectPartString;
 			}
@@ -820,7 +796,7 @@ public class SqlUtils {
 			sql = sql + " " + where + " ";
 			if(selectObject instanceof MdbOptions) {
 				MdbOptions mm=(MdbOptions)selectObject;
-				String tailPartString=mm.selectOptions().tailPartString(dbpoolName,dataBaseType);
+				String tailPartString=handTailPartString(mm.selectOptions(),dbpoolName,dataBaseType);
 				if(!tailPartString.isEmpty()){
 					sql=sql+tailPartString;
 				}
@@ -832,8 +808,71 @@ public class SqlUtils {
 		}
 
 	}
-	
-	
+
+
+	public static String handSelectPartString(SelectOptions so,String dbpoolName,String dataBaseType) {
+		return so.getSelect();
+	}
+
+	public  static String handTailPartString(SelectOptions so,String dbpoolName,String dataBaseType) {
+		String orderStr="";
+		if(!so.getOrderBy().isEmpty()) {
+			String[] strs=so.getOrderBy().split(",");
+
+			for(int i=0; i<strs.length; i++) {
+				String s=strs[i].trim();
+				String[] temps=s.split(" +");
+
+				String part=SqlUtils.dbEscapeLefChar.get(dataBaseType)
+						+SqlUtils.getColumName(dbpoolName,temps[0])+SqlUtils.dbEscapeRightChar.get(dataBaseType);
+				if(temps.length>=2) {
+					part=part+" "+temps[1];
+				}
+				if(i==0) {
+					orderStr=orderStr+""+part;
+				}else {
+					orderStr=orderStr+","+part;
+				}
+			}
+		}
+		String groupByStr="";
+		if(!so.getGroupBy().isEmpty()) {
+			String[] strs=so.getGroupBy().split(",");
+
+			for(int i=0; i<strs.length; i++) {
+				String s=strs[i].trim();
+				String part=SqlUtils.dbEscapeLefChar.get(dataBaseType)
+						+SqlUtils.getColumName(dbpoolName,s)+SqlUtils.dbEscapeRightChar.get(dataBaseType);
+				if(i==0) {
+					groupByStr=groupByStr+""+part;
+				}else {
+					groupByStr=groupByStr+","+part;
+				}
+			}
+		}
+		String ret="";
+
+		if(!groupByStr.isEmpty()) {
+			ret=ret+" group by "+groupByStr;
+		}
+		if(!so.getHaving().isEmpty()) {
+			String having=so.getHaving();
+			having=StringUtils.replaceAll(having, "(\\()(.*?)(\\))", 2, (groupStr) -> {
+				groupStr=StringUtils.trim(groupStr);
+				return SqlUtils.dbEscapeLefChar.get(dataBaseType)
+						+ SqlUtils.getColumName(dbpoolName, groupStr) + SqlUtils.dbEscapeRightChar.get(dataBaseType);
+			},new int[]{1,3});
+;
+			ret=ret+" having by "+having;
+		}
+		if(!orderStr.isEmpty()) {
+			ret=ret+" order by "+orderStr;
+		}
+		if(!so.getLimit().isEmpty()) {
+			ret=ret+" limit "+so.getLimit();
+		}
+		return ret;
+	}
 
 	public static String generateSelectSql(String dbpoolName,Object selectObject,Class reflectClass,
 			String selectProperties, Map<Integer, Object> returnvParameters,
@@ -844,12 +883,13 @@ public class SqlUtils {
 		String select = "select *";
 		if(selectObject instanceof MdbOptions) {
 			MdbOptions mm=(MdbOptions)selectObject;
-			String selectPartString=mm.selectOptions().selectPartString(dbpoolName,dataBaseType);
+			String selectPartString=handSelectPartString(mm.selectOptions(),dbpoolName,dataBaseType);
 			if(!selectPartString.isEmpty()) {
 				select=selectPartString;
 			}
 		}
-		sql = select+" from " +dbEscapeLefChar.get(dataBaseType)+ getTableName(dbpoolName,className)+dbEscapeRightChar.get(dataBaseType) + " ";
+		sql = select+" from " +dbEscapeLefChar.get(dataBaseType)+
+				getTableName(dbpoolName,className)+dbEscapeRightChar.get(dataBaseType) + " ";
 
 		if (selectProperties == null || selectProperties.trim().equals("")) {
 			return sql;
@@ -875,8 +915,8 @@ public class SqlUtils {
 			}
 			sql = sql + where;
 			if(selectObject instanceof MdbOptions) {
-				SelectOptions mm=(SelectOptions)selectObject;
-				String tailPartString=mm.tailPartString(dbpoolName,dataBaseType);
+				MdbOptions mm=(MdbOptions)selectObject;
+				String tailPartString=handTailPartString(mm.selectOptions(),dbpoolName,dataBaseType);
 				if(!tailPartString.isEmpty()){
 					sql=sql+tailPartString;
 				}
@@ -887,6 +927,7 @@ public class SqlUtils {
 		}
 
 	}
+
 
 	public static String generateDeleteSqlByObject(String dbpoolName,Object deleteObject,Class reflectClass,Map<Integer, Object> returnvParameters,
 			Map<String, String> exmap,String dataBaseType) throws Exception {
@@ -926,8 +967,6 @@ public class SqlUtils {
 	
 	public static String getColumName(String dbStr,String proName) {
 		String colName =proName ;
-		
-	
 		String tableColumRule=DbConst.getTableColumRule(dbStr);
 		if(StringUtils.isEmpty(tableColumRule)) {
 			tableColumRule=DbConst.getTableColumRule();

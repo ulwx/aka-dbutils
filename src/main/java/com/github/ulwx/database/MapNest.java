@@ -3,8 +3,7 @@ package com.github.ulwx.database;
 public class MapNest {
 	public static int ONE_TO_ONE = 1;
 	public static int ONE_TO_MANY = 2;
-	public static int MANY_TO_MANY =3;
-	
+
 	protected String[] toPros = null;// 对应于javabean的属性名
 	protected String toPropertyName = null;
 	protected String prefix = null;

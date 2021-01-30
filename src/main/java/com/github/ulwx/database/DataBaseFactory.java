@@ -6,8 +6,9 @@ import com.github.ulwx.database.DataBase.MainSlaveModeConnectMode;
 
 public class DataBaseFactory {
 
+	public static String DefaultDbpoolName="default";
 	/**
-	 * 用于从连接池构造DataBase对象，连接池配置文件在src目录下的dbpool.xml里
+	 * 用于从连接池构造DataBase对象，连接池配置文件为classpath下的dbpool.xml文件
 	 * @return
 	 * @throws DbException
 	 */
@@ -19,7 +20,7 @@ public class DataBaseFactory {
 	public static DataBase getDataBase(MainSlaveModeConnectMode mainSlaveModeConnectMode) throws DbException {
 		DataBase db = new TransactionDataBase();
 		try {
-			db.connectDb("tt1",mainSlaveModeConnectMode);
+			db.connectDb(DefaultDbpoolName,mainSlaveModeConnectMode);
 		} catch (DbException e) {
 			throw new DbException("can't connect database!", e);
 		}
