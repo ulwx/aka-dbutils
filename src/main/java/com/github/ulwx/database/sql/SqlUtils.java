@@ -875,7 +875,7 @@ public class SqlUtils {
 	}
 
 	public static String generateSelectSql(String dbpoolName,Object selectObject,Class reflectClass,
-			String selectProperties, Map<Integer, Object> returnvParameters,
+			String[] whereProperteis, Map<Integer, Object> returnvParameters,
 			Map<String, String> exmap,String dataBaseType) throws Exception {
 
 		String sql = "";
@@ -891,10 +891,10 @@ public class SqlUtils {
 		sql = select+" from " +dbEscapeLefChar.get(dataBaseType)+
 				getTableName(dbpoolName,className)+dbEscapeRightChar.get(dataBaseType) + " ";
 
-		if (selectProperties == null || selectProperties.trim().equals("")) {
+		if (whereProperteis == null || whereProperteis.length==0) {
 			return sql;
 		}
-		String[] keys = selectProperties.split(",|;");
+		String[] keys = whereProperteis;
 		if (ArrayUtils.isEmpty(keys)) {
 			return sql;
 		}
@@ -929,10 +929,12 @@ public class SqlUtils {
 	}
 
 
-	public static String generateDeleteSqlByObject(String dbpoolName,Object deleteObject,Class reflectClass,Map<Integer, Object> returnvParameters,
-			Map<String, String> exmap,String dataBaseType) throws Exception {
+	public static String generateDeleteSqlByObject(String dbpoolName,Object deleteObject,
+												   Class reflectClass,
+												   Map<Integer, Object> returnvParameters,
+												   Map<String, String> exmap,String dataBaseType) throws Exception {
 
-		String deleteProperteis="";
+		List<String> whereProperteis=new ArrayList<>();
 		
 		Map<String,TResult2<Class,Object>> map = PropertyUtil.describeForTypes(deleteObject,reflectClass);
 		Set<?> set = map.keySet();
@@ -947,21 +949,19 @@ public class SqlUtils {
 
 			// name为javabean属性名
 			if (SqlUtils.checkedSimpleType(t)) {// 简单类型
-
 				value = tr2.getSecondValue();
 				if (value != null) {
-					deleteProperteis=deleteProperteis+","+name;
+					whereProperteis.add(name);
 				}
 			} else {
 				continue;
 			}
 			
 		}
-		deleteProperteis=StringUtils.trimLeadingString(deleteProperteis, ",");
-		if(StringUtils.isEmpty(deleteProperteis)){
+		if(whereProperteis.size()==0){
 			throw new RuntimeException("对象所有属性值为空，获取不了属性！");
 		}
-		return SqlUtils.generateDeleteSql(dbpoolName,deleteObject,reflectClass, deleteProperteis, returnvParameters, exmap, dataBaseType);
+		return SqlUtils.generateDeleteSql(dbpoolName,deleteObject,reflectClass, whereProperteis.toArray(new String[0]), returnvParameters, exmap, dataBaseType);
 
 	}
 	
@@ -996,7 +996,7 @@ public class SqlUtils {
 		return tableName;
 	}
 	public static String generateDeleteSql(String dbpoolName,Object deleteObject,Class reflectClass,
-			String deleteProperteis, Map<Integer, Object> returnvParameters,
+			String[] whereProperteis, Map<Integer, Object> returnvParameters,
 			Map<String, String> exmap,String dataBaseType) throws Exception {
 
 		String sql = "";
@@ -1004,10 +1004,10 @@ public class SqlUtils {
 	
 		sql = "delete from "+dbEscapeLefChar.get(dataBaseType) + getTableName(dbpoolName,className) +dbEscapeRightChar.get(dataBaseType);
 
-		if(StringUtils.isEmpty(deleteProperteis)){
+		if(whereProperteis==null || whereProperteis.length==0){
 			throw new RuntimeException("deleteProperteis为空");
 		}
-		String[] keys = deleteProperteis.split(",|;");
+		String[] keys = whereProperteis;
 
 		try {
 
@@ -1050,18 +1050,20 @@ public class SqlUtils {
 	 * @throws Exception
 	 */
 	public static String generateUpdateSql(String dbpoolName,String[] properties,
-			Object updateObject,Class reflectClass,  String beankey,
+			Object updateObject,Class reflectClass,  String[] whereProperteis,
 			Map<Integer, Object> returnvParameters, Map<String, String> exmap,boolean ignoreNull,
 			String dataBaseType)
 			throws Exception {
 
+		if(whereProperteis==null || whereProperteis.length==0){
+			throw new RuntimeException("whereProperteis为空");
+		}
+
 		String sql = "";
 		String className = reflectClass.getSimpleName();
-
-	
 		sql = "update " +dbEscapeLefChar.get(dataBaseType)+  getTableName(dbpoolName,className) +dbEscapeRightChar.get(dataBaseType)+ " ";
 		String colPart = "set ";
-		String[] keys = beankey.split(",|;");
+		String[] keys = whereProperteis;
 		try {
 			Map<String,TResult2<Class,Object>> map = PropertyUtil.describeForTypes(updateObject,reflectClass);
 			Set<?> set = map.keySet();
@@ -1188,8 +1190,6 @@ public class SqlUtils {
 				if (SqlUtils.checkedSimpleType(t)) {// 简单类型
 
 					Object colValue = tr2.getSecondValue();
-
-					
 					if (colValue == null){
 						if(ignoreNull){
 							continue;

@@ -4,6 +4,7 @@ package com.github.ulwx.database.transactiontest.dao.testb;
 import com.github.ulwx.database.transactiontest.bean.testb.T1;
 import com.github.ulwx.database.transactiontest.dao.Dao;
 import com.github.ulwx.tool.MDbUtils;
+import com.github.ulwx.tool.support.reflect.GetFun;
 
 public class T1Dao {
 
@@ -19,7 +20,8 @@ public class T1Dao {
 		T1 t1=new T1();
 		t1.setId(1);
 		t1.setA(v);
-		 MDbUtils.updateBy(Dao.testb, t1, "id");
+		MDbUtils.updateBy(Dao.testb, t1, new GetFun[]{t1::getId});
 	}
+
 
 }

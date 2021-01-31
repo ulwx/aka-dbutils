@@ -55,9 +55,9 @@ public class QueryMapNestOne2Many extends MapNest {
 	 * 
 	 * @param nestedBeanClassType
 	 *            对应子关联类的Class
-	 * @param nestedBeanName
+	 * @param toPropertyName
 	 *            对应子关联类属性名
-	 * @param nestedBeanKey
+	 * @param nestedBeanPropertyKeys
 	 *            子关联类的主键属性，如果为复合主键，以","隔开
 	 * @param sqlPrefix
 	 *            子关联类对应sql语句的前缀

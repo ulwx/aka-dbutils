@@ -19,7 +19,8 @@ public class T1Dao {
 		T1 t1=new T1();
 		t1.setId(1);
 		t1.setA(v);
-		 MDbUtils.updateBy(Dao.testa, t1, "id");
+
+		 MDbUtils.updateBy(Dao.testa, t1,new String[]{"id"});
 	}
 
 }

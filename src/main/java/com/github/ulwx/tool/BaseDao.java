@@ -34,19 +34,19 @@ public class BaseDao {
 
     }
 
-    public static <T> int delBy(String pollName, T deleteObject, String deleteProperteis)
+    public static <T> int delBy(String pollName, T deleteObject, Object[] whereProperties)
             throws DbException {
         return execute(db -> {
             return db.delBy(deleteObject,
-                    deleteProperteis);
+                    whereProperties);
         }, pollName);
     }
 
-    public static <T> int[] delBy(String pollName, T[] deleteObjects, String deleteProperteis)
+    public static <T> int[] delBy(String pollName, T[] deleteObjects, Object[] whereProperties)
             throws DbException {
         return execute(db -> {
             return db.delBy(deleteObjects,
-                    deleteProperteis);
+                    whereProperties);
         }, pollName);
     }
 
@@ -57,10 +57,10 @@ public class BaseDao {
         }, pollName);
     }
 
-    public static <T> int insertBy(String pollName, T insertObject, String[] properties)
+    public static <T> int insertBy(String pollName, T insertObject, String[] insertProperties)
             throws DbException {
         return execute(db -> {
-            return db.insertBy(insertObject, properties);
+            return db.insertBy(insertObject, insertProperties);
         }, pollName);
     }
 
@@ -70,10 +70,10 @@ public class BaseDao {
         }, pollName);
     }
 
-    public static <T> int[] insertBy(String pollName, T[] objs, String[] properties)
+    public static <T> int[] insertBy(String pollName, T[] objs, Object[] insertProperties)
             throws DbException {
         return execute(db -> {
-            return db.insertBy(objs, properties);
+            return db.insertBy(objs, insertProperties);
         }, pollName);
     }
 
@@ -83,52 +83,52 @@ public class BaseDao {
         }, pollName);
     }
 
-    public static <T> long insertReturnKeyBy(String pollName, T insertObject, String[] properties)
+    public static <T> long insertReturnKeyBy(String pollName, T insertObject, Object[] insertProperties)
             throws DbException {
         return execute(db -> {
-            return db.insertReturnKeyBy(insertObject, properties);
+            return db.insertReturnKeyBy(insertObject, insertProperties);
         }, pollName);
     }
 
 
-    public static <T> int insertWholeBy(String pollName, T insertObject) throws DbException {
+    public static <T> int insertBy(String pollName, T insertObject, boolean includeNull) throws DbException {
         return execute(db -> {
-            return db.insertWholeBy(insertObject);
+            return db.insertBy(insertObject, includeNull);
         }, pollName);
     }
 
-    public static <T> int insertWholeBy(String pollName, T insertObject, String[] properties)
+    public static <T> int insertBy(String pollName, T insertObject, Object[] insertProperties, boolean includeNull)
             throws DbException {
         return execute(db -> {
-            return db.insertWholeBy(insertObject, properties);
+            return db.insertBy(insertObject, insertProperties, includeNull);
         }, pollName);
     }
 
-    public static <T> int[] insertWholeBy(String pollName, T[] objs) throws DbException {
+    public static <T> int[] insertBy(String pollName, T[] objs, boolean includeNull) throws DbException {
         return execute(db -> {
-            return db.insertWholeBy(objs);
+            return db.insertBy(objs, includeNull);
         }, pollName);
     }
 
-    public static <T> int[] insertWholeBy(String pollName, T[] objs, String[] properties)
+    public static <T> int[] insertBy(String pollName, T[] objs, Object[] insertProperties, boolean includeNull)
             throws DbException {
         return execute(db -> {
-            return db.insertWholeBy(objs, properties);
+            return db.insertBy(objs, insertProperties, includeNull);
         }, pollName);
     }
 
 
-    public static <T> long insertWholeReturnKeyBy(String pollName, T insertObject) throws DbException {
+    public static <T> long insertReturnKeyBy(String pollName, T insertObject, boolean includeNull) throws DbException {
         return execute(db -> {
-            return db.insertWholeReturnKeyBy(insertObject);
+            return db.insertReturnKeyBy(insertObject, includeNull);
         }, pollName);
     }
 
 
-    public static <T> long insertWholeReturnKeyBy(String pollName, T insertObject, String[] properties)
+    public static <T> long insertReturnKeyBy(String pollName, T insertObject, Object[] insertProperties, boolean includeNull)
             throws DbException {
         return execute(db -> {
-            return db.insertWholeReturnKeyBy(insertObject, properties);
+            return db.insertReturnKeyBy(insertObject, insertProperties, includeNull);
         }, pollName);
     }
 
@@ -146,17 +146,17 @@ public class BaseDao {
     }
 
     public static <T> List<T> queryListBy(String pollName, T selectObject,
-                                          String selectProperties) throws DbException {
+                                          Object[] whereProperties) throws DbException {
         return execute(db -> {
             return db.queryListBy(selectObject,
-                    selectProperties);
+                    whereProperties);
         }, pollName);
     }
 
-    public static <T> List<T> queryListBy(String pollName, T selectObject, String selectProperties, int page,
+    public static <T> List<T> queryListBy(String pollName, T selectObject, Object[] whereProperties, int page,
                                           int perPage, PageBean pb) throws DbException {
         return execute(db -> {
-            return db.queryListBy(selectObject, selectProperties, page, perPage, pb);
+            return db.queryListBy(selectObject, whereProperties, page, perPage, pb);
         }, pollName);
     }
 
@@ -170,85 +170,69 @@ public class BaseDao {
 
 
     public static <T> T queryOneBy(String pollName, T selectObject,
-                                   String selectProperties) throws DbException {
+                                   Object[] whereProperties) throws DbException {
 
         return execute(db -> {
-            return db.queryOneBy(selectObject, selectProperties);
+            return db.queryOneBy(selectObject, whereProperties);
         }, pollName);
 
     }
 
-
-    public static <T> int[] updateBy(String pollName, Object[] objects, String[] beanKeys,
-                                     String[][] properties) throws DbException {
-        return execute(db -> {
-            return db.updateBy(objects, beanKeys,
-                    properties);
-        }, pollName);
-    }
-
-    public static <T> int updateBy(String pollName, T updateObject, String beanKey)
-            throws DbException  {
-        return execute(db -> {
-            return db.updateBy(updateObject, beanKey);
-        }, pollName);
-    }
-
-    public static <T> int updateBy(String pollName, T updateObject, String beanKey,
-                                   String[] properties) throws DbException  {
-        return execute(db -> {
-            return db.updateBy(updateObject, beanKey,
-                    properties);
-        }, pollName);
-    }
-
-    public static <T> int[] updateBy(String pollName, T[] objects, String beanKey) throws DbException {
-        return execute(db -> {
-            return db.updateBy(objects, beanKey);
-        }, pollName);
-    }
-
-    public static <T> int[] updateBy(String pollName, T[] objects, String beanKey,
-                                     String[] properties) throws DbException {
-        return execute(db -> {
-            return db
-                    .updateBy(objects, beanKey, properties);
-        }, pollName);
-    }
-
-    public static <T> int[] updateWholeBy(String pollName, Object[] objects, String[] beanKeys,
-                                          String[][] properties) throws DbException {
-        return execute(db -> {
-            return db.updateWholeBy(objects, beanKeys,
-                    properties);
-        }, pollName);
-    }
-
-    public static <T> int updateWholeBy(String pollName, T updateObject, String beanKey)
+    public static <T> int updateBy(String pollName, T updateObject, Object[] whereProperties)
             throws DbException {
         return execute(db -> {
-            return db.updateWholeBy(updateObject, beanKey);
+            return db.updateBy(updateObject, whereProperties);
         }, pollName);
     }
 
-    public static <T> int updateWholeBy(String pollName, T updateObject, String beanKey,
-                                        String[] properties) throws DbException {
+    public static <T> int updateBy(String pollName, T updateObject, Object[] whereProperties,
+                                   Object[] updateProperties) throws DbException {
         return execute(db -> {
-            return db.updateWholeBy(updateObject, beanKey,
-                    properties);
+            return db.updateBy(updateObject, whereProperties,
+                    updateProperties);
         }, pollName);
     }
 
-    public static <T> int[] updateWholeBy(String pollName, T[] objects, String beanKey) throws DbException {
+    public static <T> int[] updateBy(String pollName, T[] objects, Object[] whereProperties) throws DbException {
         return execute(db -> {
-            return db.updateWholeBy(objects, beanKey);
+            return db.updateBy(objects, whereProperties);
         }, pollName);
     }
 
-    public static <T> int[] updateWholeBy(String pollName, T[] objects, String beanKey,
-                                        String[] properties) throws DbException {
+    public static <T> int[] updateBy(String pollName, T[] objects, Object[] whereProperties,
+                                     Object[] updateProperties) throws DbException {
         return execute(db -> {
-        return db.updateWholeBy(objects, beanKey, properties);
+            return db
+                    .updateBy(objects, whereProperties, updateProperties);
+        }, pollName);
+    }
+
+
+    public static <T> int updateBy(String pollName, T updateObject, Object[] whereProperties, boolean includeNull)
+            throws DbException {
+        return execute(db -> {
+            return db.updateBy(updateObject, whereProperties, includeNull);
+        }, pollName);
+    }
+
+    public static <T> int updateBy(String pollName, T updateObject, Object[] whereProperties,
+                                   Object[] updateProperties, boolean includeNull) throws DbException {
+        return execute(db -> {
+            return db.updateBy(updateObject, whereProperties,
+                    updateProperties, includeNull);
+        }, pollName);
+    }
+
+    public static <T> int[] updateBy(String pollName, T[] objects, Object[] whereProperties, boolean includeNull) throws DbException {
+        return execute(db -> {
+            return db.updateBy(objects, whereProperties, includeNull);
+        }, pollName);
+    }
+
+    public static <T> int[] updateBy(String pollName, T[] objects, Object[] whereProperties,
+                                     Object[] updateProperties, boolean includeNull) throws DbException {
+        return execute(db -> {
+            return db.updateBy(objects, whereProperties, updateProperties, includeNull);
         }, pollName);
     }
 

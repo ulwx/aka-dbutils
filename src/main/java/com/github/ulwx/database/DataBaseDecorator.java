@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public abstract   class DataBaseDecorator implements DBObjectOperation, AutoCloseable, DataBase {
+public abstract  class DataBaseDecorator implements DBObjectOperation, AutoCloseable, DataBase {
 	protected DataBase db;
 
 	public DataBaseDecorator(DataBase db) {
@@ -193,124 +193,135 @@ public abstract   class DataBaseDecorator implements DBObjectOperation, AutoClos
 	public <T> long insertReturnKeyBy(T insertObject) throws DbException {
 		return db.insertReturnKeyBy(insertObject);
 	}
+
 	@Override
-	public <T> int insertBy(T insertObject, String[] properties) throws DbException {
-		return db.insertBy(insertObject, properties);
+	public <T> int insertBy(T insertObject, boolean includeNull) throws DbException {
+		return db.insertBy(insertObject, includeNull);
 	}
+
 	@Override
-	public <T> long insertReturnKeyBy(T insertObject, String[] properties) throws DbException {
-		return db.insertReturnKeyBy(insertObject, properties);
+	public <T> int insertBy(T insertObject, Object[] insertProperties) throws DbException {
+		return db.insertBy(insertObject, insertProperties);
 	}
+
+	@Override
+	public <T> int insertBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
+		return db.insertBy(insertObject, insertProperties, includeNull);
+	}
+
 	@Override
 	public <T> int[] insertBy(T[] objs) throws DbException {
 		return db.insertBy(objs);
 	}
+
 	@Override
-	public <T> int[] insertBy(T[] objs, String[] properties) throws DbException {
-		return db.insertBy(objs, properties);
+	public <T> int[] insertBy(T[] objs, boolean includeNull) throws DbException {
+		return db.insertBy(objs, includeNull);
 	}
+
 	@Override
-	public <T> int updateBy(T updateObject, String beanKey) throws DbException {
-		return db.updateBy(updateObject, beanKey);
+	public <T> int[] insertBy(T[] objs, Object[] insertProperties) throws DbException {
+		return db.insertBy(objs, insertProperties);
 	}
+
 	@Override
-	public <T> int updateBy(T updateObject, String beanKey, String[] properties) throws DbException {
-		return db.updateBy(updateObject, beanKey, properties);
+	public <T> int[] insertBy(T[] objs, Object[] insertProperties, boolean includeNull) throws DbException {
+		return db.insertBy(objs, insertProperties, includeNull);
 	}
+
 	@Override
-	public <T> int[] updateBy(T[] objects, String beanKey, String[] properties) throws DbException {
-		return db.updateBy(objects, beanKey, properties);
+	public <T> long insertReturnKeyBy(T insertObject, boolean includeNull) throws DbException {
+		return db.insertReturnKeyBy(insertObject, includeNull);
 	}
+
 	@Override
-	public <T> int[] updateBy(T[] objects, String beanKey) throws DbException {
-		return db.updateBy(objects, beanKey);
+	public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties) throws DbException {
+		return db.insertReturnKeyBy(insertObject, insertProperties);
 	}
+
 	@Override
-	public <T> int[] updateBy(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-		return db.updateBy(objects, beanKeys, properties);
+	public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
+		return db.insertReturnKeyBy(insertObject, insertProperties, includeNull);
 	}
+
 	@Override
-	public <T> T queryOneBy(T selectObject, String selectProperties) throws DbException {
-		return db.queryOneBy(selectObject, selectProperties);
+	public <T> int updateBy(T updateObject, Object[] whereProperteis) throws DbException {
+		return db.updateBy(updateObject, whereProperteis);
 	}
+
 	@Override
-	public <T> List<T> queryListBy(T selectObject, String selectProperties) throws DbException {
-		return db.queryListBy(selectObject, selectProperties);
+	public <T> int updateBy(T updateObject, Object[] whereProperties, boolean includeNull) throws DbException {
+		return db.updateBy(updateObject, whereProperties, includeNull);
 	}
+
 	@Override
-	public <T> List<T> queryListBy(T selectObject, String selectProperties, int page, int perPage, PageBean pb)
-			throws DbException {
-		return db.queryListBy(selectObject, selectProperties, page, perPage, pb);
+	public <T> int updateBy(T updateObject, Object[] whereProperteis, Object[] updateProperties) throws DbException {
+		return db.updateBy(updateObject, whereProperteis, updateProperties);
 	}
+
 	@Override
-	public <T> List<T> queryListBy(T selectObject, int page, int perPage, PageBean pb) throws DbException {
-		return db.queryListBy(selectObject, page, perPage, pb);
+	public <T> int updateBy(T updateObject, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
+		return db.updateBy(updateObject, whereProperties, updateProperties, includeNull);
 	}
+
 	@Override
-	public <T> List<T> queryListBy(T selectObject) throws DbException {
-		return db.queryListBy(selectObject);
+	public <T> int[] updateBy(T[] updateObjects, Object[] whereProperteis, Object[] updateProperties) throws DbException {
+		return db.updateBy(updateObjects, whereProperteis, updateProperties);
 	}
+
+	@Override
+	public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
+		return db.updateBy(updateObjects, whereProperties, updateProperties, includeNull);
+	}
+
+	@Override
+	public <T> int[] updateBy(T[] updateObjects, Object[] whereProperteis) throws DbException {
+		return db.updateBy(updateObjects, whereProperteis);
+	}
+
+	@Override
+	public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, boolean includeNull) throws DbException {
+		return db.updateBy(updateObjects, whereProperties, includeNull);
+	}
+
 	@Override
 	public <T> T queryOneBy(T selectObject) throws DbException {
 		return db.queryOneBy(selectObject);
 	}
+
 	@Override
-	public <T> int delBy(T deleteObject, String deleteProperteis) throws DbException {
-		return db.delBy(deleteObject, deleteProperteis);
-	}
-	@Override
-	public <T> int[] delBy(T[] deleteObjects, String deleteProperteis) throws DbException {
-		return db.delBy(deleteObjects, deleteProperteis);
-	}
-	@Override
-	public <T> int[] delBy(Object[] deleteObjects, String[] deletePropertiesArray) throws DbException {
-		return db.delBy(deleteObjects, deletePropertiesArray);
-	}
-	@Override
-	public <T> int insertWholeBy(T insertObject) throws DbException {
-		return db.insertWholeBy(insertObject);
+	public <T> T queryOneBy(T selectObject, Object[] whereProperteis) throws DbException {
+		return db.queryOneBy(selectObject, whereProperteis);
 	}
 
 	@Override
-	public <T> long insertWholeReturnKeyBy(T insertObject) throws DbException {
-		return db.insertWholeReturnKeyBy(insertObject);
+	public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis) throws DbException {
+		return db.queryListBy(selectObject, whereProperteis);
 	}
 
 	@Override
-	public <T> int insertWholeBy(T insertObject, String[] properties) throws DbException {
-		return db.insertWholeBy(insertObject, properties);
+	public <T> List<T> queryListBy(T selectObject) throws DbException {
+		return db.queryListBy(selectObject);
 	}
+
 	@Override
-	public <T> long insertWholeReturnKeyBy(T insertObject, String[] properties) throws DbException {
-		return db.insertWholeReturnKeyBy(insertObject, properties);
+	public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis, int page, int perPage, PageBean pb) throws DbException {
+		return db.queryListBy(selectObject, whereProperteis, page, perPage, pb);
 	}
+
 	@Override
-	public <T> int[] insertWholeBy(T[] objs) throws DbException {
-		return db.insertWholeBy(objs);
+	public <T> List<T> queryListBy(T selectObject, int page, int perPage, PageBean pb) throws DbException {
+		return db.queryListBy(selectObject, page, perPage, pb);
 	}
+
 	@Override
-	public <T> int[] insertWholeBy(T[] objs, String[] properties) throws DbException {
-		return db.insertWholeBy(objs, properties);
+	public <T> int delBy(T deleteObject, Object[] whereProperteis) throws DbException {
+		return db.delBy(deleteObject, whereProperteis);
 	}
+
 	@Override
-	public <T> int updateWholeBy(T updateObject, String beanKey) throws DbException {
-		return db.updateWholeBy(updateObject, beanKey);
-	}
-	@Override
-	public <T> int updateWholeBy(T updateObject, String beanKey, String[] properties) throws DbException {
-		return db.updateWholeBy(updateObject, beanKey, properties);
-	}
-	@Override
-	public <T> int[] updateWholeBy(T[] objects, String beanKey, String[] properties) throws DbException {
-		return db.updateWholeBy(objects, beanKey, properties);
-	}
-	@Override
-	public <T> int[] updateWholeBy(T[] objects, String beanKey) throws DbException {
-		return db.updateWholeBy(objects, beanKey);
-	}
-	@Override
-	public <T> int[] updateWholeBy(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-		return db.updateWholeBy(objects, beanKeys, properties);
+	public <T> int[] delBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
+		return db.delBy(deleteObjects, whereProperteis);
 	}
 
 	@Override
@@ -322,5 +333,4 @@ public abstract   class DataBaseDecorator implements DBObjectOperation, AutoClos
 	public String exeScript(Reader reader) throws DbException {
 		return db.exeScript(reader);
 	}
-
 }

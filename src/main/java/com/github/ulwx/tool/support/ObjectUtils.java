@@ -178,6 +178,30 @@ public class ObjectUtils {
     public static boolean isEmpty(Object[] array) {
         return (array == null || array.length == 0);
     }
+    /**
+     * 搜索本类或所有父类里指定的属性 ，从本类开始找，再一级级搜索父类
+     *
+     * @param object         : javabean对象
+     * @param fieldName      : 属性名
+     * @param fromParentClass 从哪个基类开始查找
+     * @return 父类中的属性对象
+     */
+    public static Field getDeclaredField(Class srcClass, String fieldName, Class fromParentClass) {
+        Field field = null;
+        Class<?> clazz = srcClass;
+        for (; clazz != null && clazz != Object.class; clazz = clazz.getSuperclass()) {
+            if (fromParentClass != null && !clazz.isAssignableFrom(fromParentClass)) {
+                continue;
+            }
+            try {
+                field = clazz.getDeclaredField(fieldName);
+                return field;
+            } catch (Exception e) {
+            }
+
+        }
+        return null;
+    }
     public static String toJsonString(Object obj, boolean includeNull) {
         ObjectMapper mapper = new ObjectMapper();
         try {

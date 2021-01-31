@@ -1,6 +1,5 @@
 package com.github.ulwx.database;
 
-import com.github.ulwx.tool.support.*;
 import com.github.ulwx.database.cacherowset.com.sun.rowset.CachedRowSetImpl;
 import com.github.ulwx.database.dbpool.DBPoolFactory;
 import com.github.ulwx.database.page.interceptor.SQLHelp;
@@ -9,6 +8,9 @@ import com.github.ulwx.database.sql.BeanUtils;
 import com.github.ulwx.database.sql.SqlUtils;
 import com.github.ulwx.database.utils.DbConst;
 import com.github.ulwx.tool.PageBean;
+import com.github.ulwx.tool.support.*;
+import com.github.ulwx.tool.support.reflect.GetFun;
+import com.github.ulwx.tool.support.reflect.ReflectionUtil;
 import com.github.ulwx.tool.support.type.TInteger;
 import com.github.ulwx.tool.support.type.TResult2;
 import com.github.ulwx.tool.support.type.TString;
@@ -23,221 +25,7 @@ import java.io.Reader;
 import java.sql.*;
 import java.util.*;
 
-/**
- * <code>DataBase</code>类用于封装了执行数据库的一些操作，功能强大，具有从sql语句到对象的映射功能，<br/>
- * 如果使用对象映射功能的方法，所有的映射对象的类可以通过 {@link SqlUtils}类的
- * exportTables方法生成 <br/>
- * <p>
- * DataBase对象不是线程安全的，这就意味着多个线程通常使用一个DataBase对象会出现不安全隐患。记住，你要自己处理线程
- * 安全问题，你可以通过ThreadLocal或线程同步来解决多个线程访问一个DataBase对象
- * </p>
- * <br/>
- * <p>
- * 用法1：
- * <p>
- * <blockquote>
- *
- * <pre>
- * String sql = &quot;select * from photos p where p.newsid = ?&quot; + &quot; and (p.audi_stat = ? or p.audi_stat = ?)&quot;;
- *
- * List list = new ArrayList();
- *
- * try {
- * 	Map&lt;Integer, Object&gt; args = new HashMap&lt;Integer, Object&gt;();
- * 	args.put(1, newsid);
- * 	args.put(2, 1);
- * 	args.put(3, 4);
- * 	list = db.doQueryClass(Photos.class, sql, args);
- * } catch (DbException e) {
- * 	//
- * 	log.error(&quot;&quot;, e);
- * }
- * </pre>
- *
- * </blockquote>
- * </p>
- * 用法2：
- * <p>
- * <blockquote>
- *
- * <pre>
- * DataBase db = DataBaseFactory.getDataBase();
- * String sql = "select * from news n where n.type =? and id=? and audi=1 order by n.id desc ";
- *
- * Map<Integer, Object> args = new HashMap<Integer, Object>();
- *
- * args.put(1, Integer.valueOf(100));
- * args.put(2, 234);
- * int page=2//当前第几页
- * int perpage=20//每页20条
- * PageBean pageBean = new PageBean();//用于存放分页信息，包括总页数，当前多少页，总共多少行等
- * list = db.doPageQueryClass(News.class, sql, args, page, perpage, pageBean, null);
- * int maxPage=pageBean.getMaxPage();//最大页
- * int curPage =pageBean.getPage();//当前页
- * int prePage =pageBean.getPrevPage();//前一页
- * </pre>
- *
- * </blockquote>
- * </p>
- * 用法3:
- * <p>
- * <blockquote>
- *
- * <pre>
- * DataBase db = DataBaseFactory.getDataBase();
- * String sqlx = &quot;select * from news where id=? and name=?&quot;;
- * Map&lt;Integer, Object&gt; vparms = new HashMap&lt;Integer, Object&gt;();
- * vparms.put(1, 23);
- * vparms.put(2, &quot;娱乐&quot;);
- * PageBean pageBean = new PageBean();// 用于存放分页信息，包括总页数，当前多少页，总共多少行等
- * int page = 2;// 当前页
- * int perPage = 20;// 每页多少行
- * DataBaseSet rs = db.doCachedPageQuery(sqlx, vparms, page, perPage, pageBean, null);
- *
- * while (rs.next()) {
- * 	String name = rs.getString(&quot;name&quot;);
- * }
- * int maxPage = pageBean.getMaxPage();// 最大页
- * int curPage = pageBean.getPage();// 当前页
- * int prePage = pageBean.getPrevPage();// 前一页
- * </pre>
- *
- * </blockquote>
- * </p>
- * 用法4:
- * <p>
- * <blockquote>
- *
- * <pre>
- * String sql = &quot;update product_version set action=? where id=?&quot;;
- * DataBase db = null;
- *
- * db = DataBaseFactory.getDataBase();
- * List&lt;Map&lt;Integer, Object&gt;&gt; list = new ArrayList&lt;Map&lt;Integer, Object&gt;&gt;();
- * for (int i = 0; i &lt; ids.length; i++) {
- * 	Map&lt;Integer, Object&gt; map = new HashMap&lt;Integer, Object&gt;();
- * 	map.put(1, action);
- * 	map.put(2, ids[i]);
- * 	list.add(map);
- * }
- * int[] results = db.executeBindBatch(sql, list);
- *
- * </pre>
- *
- * </blockquote>
- * </p>
- * 用法5:
- * <p>
- * <blockquote>
- *
- * <pre>
- * public static int deleteBy(int[] ids) {
- *
- * 	StringBuilder sql = new StringBuilder(
- * 			&quot;delete from platform where id=? and id not in (select platformid &quot; + &quot; from productinfo)&quot;);
- * 	DataBase db = null;
- *
- * 	try {
- * 		List&lt;Map&lt;Integer, Object&gt;&gt; vParametersList = new ArrayList&lt;Map&lt;Integer, Object&gt;&gt;();
- *
- * 		for (int i = 0; i &lt; ids.length; i++) {
- * 			Map&lt;Integer, Object&gt; args = new HashMap&lt;Integer, Object&gt;();
- * 			args.put(1, ids[i]);
- * 			vParametersList.add(args);
- *        }
- * 		db = DataBaseFactory.getDataBase();
- * 		int[] is = db.executeBindBatch(sql.toString(), vParametersList);
- * 		if (is == null) {
- * 			return 0;
- *        } else {
- * 			for (int i = 0; i &lt; is.length; i++) {
- * 				if (is[i] == 0) {
- * 					return 0;
- *                }
- *            }
- *        }
- * 		return 1;
- *
- *    } catch (DbException e) {
- * 		//
- * 		// e.printStackTrace();
- * 		log.error(&quot;&quot;, e);
- *    }
- * 	return 0;
- * }
- * </pre>
- *
- * </blockquote>
- * </p>
- * 用法6: <br/>
- * 如果涉及到事务性操作，可以设置db.setAutoCommit(false)见下面的例子，用户可以显式控制事务性操作，事务性操作完成后一定要在最后通过db
- * .close()关闭数据库连接，<br/>
- * 否则会用完连接；如果不是事务性操作，不需要通过db.close()，因为每次调用后都
- * <p>
- * <blockquote>
- *
- * <pre>
- * public static int add(Version p) {
- *
- * 	String sql = &quot;insert into versions(version) values(?)&quot;;
- * 	Map&lt;Integer, Object&gt; args = new HashMap&lt;Integer, Object&gt;();
- * 	args.put(1, p.getVersion());
- * 	DataBase db = null;
- * 	try {
- * 		db = DataBaseFactory.getDataBase();
- * 		db.setAutoCommit(false);
- * 		int i = db.executeBindInsert(sql, args);
- * 		String sql1 = &quot;update versions set bakid=&quot; + i + &quot; where id=&quot; + i;
- * 		i = db.executeBindUpdate(sql1, null);
- * 		db.commit();
- * 		return i;
- *    } catch (DbException e) {
- * 		//
- * 		e.printStackTrace();
- * 		try {
- * 			db.rollback();
- *        } catch (DbException e1) {
- *        }
- * 		log.error(&quot;&quot;, e);
- *    } finally {
- * 		db.close();
- *    }
- * 	return 0;
- * }
- * </pre>
- *
- * </blockquote>
- * </p>
- * 用法7:<br/>
- * <p>
- * <blockquote>
- *
- * <pre>
- * try {
- *
- * 	String sql = &quot;select n.*,p.*,a.* from news n left outer join photos p&quot;
- * 			+ &quot; on   n.id=p.newsid  left outer join archives a &quot;
- * 			+ &quot; on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc&quot;;
- *
- * 	Map&lt;Integer, Object&gt; vParameters = new HashMap&lt;Integer, Object&gt;();
- * 	vParameters.put(1, 1232);
- * 	DataBase db = DataBaseFactory.getDataBase();
- * 	QueryMapNestOne2Many query1 = new QueryMapNestOne2Many();
- * 	query1.set(Photos.class, &quot;photosList&quot;, &quot;id&quot;, &quot;p.&quot;, null);
- * 	QueryMapNestOne2Many query2 = new QueryMapNestOne2Many();
- * 	query2.set(Archives.class, &quot;archivesList&quot;, &quot;id&quot;, &quot;a.&quot;, null);
- *
- * 	list = db.doQueryClassOne2Many(News.class, &quot;n.&quot;, &quot;id&quot;, sql, vParameters,
- * 			new QueryMapNestOne2Many[] { query1, query2 });
- *
- * } catch (Exception ex) {
- * 	ex.printStackTrace();
- * }
- * </pre>
- *
- * </blockquote>
- * </p>
- */
+
 public class DataBaseImpl implements DataBase {
     private static Logger log = LoggerFactory.getLogger(DataBase.class);
     private Connection conn = null;
@@ -255,15 +43,114 @@ public class DataBaseImpl implements DataBase {
     private boolean externalControlConClose = false;
     private ConnectType connectType = null;
 
+    public DataBaseImpl() {
+    }
+
+    private static Map<Integer, Object> toMap(Object... vParameters) {
+
+        Map<Integer, Object> map = new HashMap<Integer, Object>();
+        for (int i = 0; i < vParameters.length; i++) {
+            map.put(i, vParameters[i]);
+        }
+        return map;
+
+    }
+
+    private static String getOnePName(Object p) {
+        if (p == null) return null;
+        if (p instanceof String) {
+            return p.toString();
+        } else if (p instanceof GetFun) {
+            return ReflectionUtil.getFieldName((GetFun) p);
+        } else {
+            throw new DbException("参数[" + p + "]只支持String类型和GetFun类型");
+        }
+    }
+
+    private static String[] getPNames(Object[] ps) {
+        if (ps == null) {
+            return null;
+        }
+        if (ps.length == 0) {
+            if (ps.getClass().getComponentType() == String.class
+                    || ps.getClass().getComponentType() == GetFun.class) {
+                return new String[0];
+            }
+            throw new DbException("参数[" + ps + "]只支持String类型和GetFun类型");
+        }
+        String[] strs = new String[ps.length];
+        for (int i = 0; i < ps.length; i++) {
+            strs[i] = getOnePName(ps[i]);
+        }
+        return strs;
+    }
+
+    private static String[][] getPNamess(Object[][] ps) {
+        if (ps == null) {
+            return null;
+        }
+        String[][] strs = new String[ps.length][];
+        for (int i = 0; i < ps.length; i++) {
+            strs[i] = getPNames(ps[i]);
+        }
+        return strs;
+    }
+
+    public static String getCallerInf() {
+        // 3, 10, DbConst.filter, 1
+        int fromLevel = 3, maxLevel = 20, upLevelNum = 2;
+        String filterStrEndsWith = DbConst.filter;
+
+        StackTraceElement stack[] = Thread.currentThread().getStackTrace();// (new Throwable()).getStackTrace();
+        // 获取线程运行栈信息
+        if (stack.length > fromLevel) {
+            for (int i = fromLevel; i < maxLevel && i < stack.length; i++) {
+                if (stack[i].getClassName().endsWith("BaseDao")) {// BaseDao
+                    continue;
+                }
+                if (stack[i].getClassName().endsWith(filterStrEndsWith)) {
+
+                    String str = getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(:"
+                            + stack[i].getLineNumber() + ")";
+                    if (upLevelNum > 0 && stack.length > (i + upLevelNum) && maxLevel > (i + upLevelNum)) {
+                        for (int n = 1; n <= upLevelNum; n++) {
+                            str = getLastTwoClassName(stack[i + n].getClassName()) + "." + stack[i + n].getMethodName()
+                                    + "(:" + stack[i + n].getLineNumber() + ")" + "=>" + str;
+                        }
+                        return str;
+                    } else {
+                        return str;
+                    }
+
+                }
+
+            }
+        }
+        return "";
+    }
+
+    public static String getLastTwoClassName(String srcClassName) {
+        String className = srcClassName;
+        int lastIndex = className.lastIndexOf(".");
+        if (lastIndex < 0) {
+            lastIndex = 0;
+        } else {
+            if (lastIndex - 1 >= 0) {
+                int lastSecIndex = className.lastIndexOf(".", lastIndex - 1);
+                if (lastSecIndex >= 0) {
+                    lastIndex = lastSecIndex;
+                } else {
+                    lastIndex = 0;
+                }
+            }
+        }
+        className = className.substring(lastIndex);
+        return className;
+    }
+
     @Override
     public String getDbPoolName() {
         return dbPoolName;
-    }
-    /*
-     * POOL：从连接池里获得连接
-     */
-    public static enum ConnectType {
-        POOL, DATASOURCE, CONNECTION
     }
 
     @Override
@@ -280,15 +167,6 @@ public class DataBaseImpl implements DataBase {
         return this.mainSlaveModeConnectMode;
     }
 
-    private void setInternalConnectionAutoCommit(boolean autoCommit) throws DbException {
-        try {
-
-            this.conn.setAutoCommit(autoCommit);
-        } catch (Exception ex) {
-            throw new DbException(ex);
-        }
-    }
-
     @Override
     public boolean getInternalConnectionAutoCommit() throws DbException {
         try {
@@ -299,9 +177,14 @@ public class DataBaseImpl implements DataBase {
         }
     }
 
-    public DataBaseImpl() {
-    }
+    private void setInternalConnectionAutoCommit(boolean autoCommit) throws DbException {
+        try {
 
+            this.conn.setAutoCommit(autoCommit);
+        } catch (Exception ex) {
+            throw new DbException(ex);
+        }
+    }
 
     @Override
     public String getDataBaseType() {
@@ -411,40 +294,40 @@ public class DataBaseImpl implements DataBase {
         long start0 = System.currentTimeMillis();
         String msg = "";
         try {
-            if(!this.isColsed()){
+            if (!this.isColsed()) {
                 return;
             }
             if (this.connectType == ConnectType.POOL) {
                 if (this.mainSlaveMode) {
-                    if ( mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是主从模式，并将是连接从库
-                        if(!this.getAutoCommit()){//事务性操作
+                    if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是主从模式，并将是连接从库
+                        if (!this.getAutoCommit()) {//事务性操作
                             throw new DbException("当前操作为事务性，不能在从库上执行，您需要设置setAutoCommit(false)!!");
                         }
-                        if(this.sqlType!=SQLType.SELECT){
+                        if (this.sqlType != SQLType.SELECT) {
                             throw new DbException("从库只能执行select语句执行！");
                         }
                         msg = "获得从库链接";
                         DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName);
                         this.dataSource = ds;
 
-                    } else if(mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer){
+                    } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
                         msg = "获得主库链接";
                         DataSource datasource = this.getDataSourceFromPool(dbPoolName);
                         this.dataSource = datasource;
-                    }else{ //Connect_Auto
-                        if(this.sqlType==SQLType.SELECT){
-                            if(!this.getAutoCommit()){//事务性操作
+                    } else { //Connect_Auto
+                        if (this.sqlType == SQLType.SELECT) {
+                            if (!this.getAutoCommit()) {//事务性操作
                                 msg = "获得主库链接";
-                                DataSource ds= this.getDataSourceFromPool(dbPoolName);
+                                DataSource ds = this.getDataSourceFromPool(dbPoolName);
                                 this.dataSource = ds;
-                            }else{
+                            } else {
                                 msg = "获得从库链接";
                                 DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName);
                                 this.dataSource = ds;
                             }
-                        }else{ //update、delete、存储过程,脚本在主库上执行
+                        } else { //update、delete、存储过程,脚本在主库上执行
                             msg = "获得主库链接";
-                            DataSource  ds= this.getDataSourceFromPool(dbPoolName);
+                            DataSource ds = this.getDataSourceFromPool(dbPoolName);
                             this.dataSource = ds;
                         }
 
@@ -458,23 +341,23 @@ public class DataBaseImpl implements DataBase {
 
             } else if (this.connectType == ConnectType.CONNECTION) {
                 if (this.conn == null || this.conn.isClosed()) {
-                    msg = "获得数据库库链接"+conn;
+                    msg = "获得数据库库链接" + conn;
                     throw new DbException("数据库连接为空或已经关闭！");
                 }
             } else if (this.connectType == ConnectType.DATASOURCE) {
                 msg = "获得数据库库链接";
                 conn = dataSource.getConnection();
             } else {
-                throw new DbException("不支持的连接方式！"+this.connectType );
+                throw new DbException("不支持的连接方式！" + this.connectType);
             }
-            if(!this.getAutoCommit()){//事务性操作
+            if (!this.getAutoCommit()) {//事务性操作
                 this.setInternalConnectionAutoCommit(false);
             }
             this.setDataBaseType(conn);
 
             log.debug(Thread.currentThread().getId() + ":create a new db[" + this.dbPoolName + "]connect:" + msg + ",connect time:"
                     + (System.currentTimeMillis() - start0) + " 毫秒");
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new DbException(e);
         }
     }
@@ -504,7 +387,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用DataBase.close()方法关闭
+     * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭
      *
      * @param sqlQuery    sql语句
      * @param vParameters 参数
@@ -517,18 +400,8 @@ public class DataBaseImpl implements DataBase {
         return new DataBaseSet(doCachedQuery(sqlQuery, args));
     }
 
-    private static Map<Integer, Object> toMap(Object... vParameters) {
-
-        Map<Integer, Object> map = new HashMap<Integer, Object>();
-        for (int i = 0; i < vParameters.length; i++) {
-            map.put(i, vParameters[i]);
-        }
-        return map;
-
-    }
-
     /**
-     * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用DataBase.close()方法关闭 连接
+     * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭 连接
      *
      * @param sqlQuery
      * @param vParameters
@@ -546,7 +419,7 @@ public class DataBaseImpl implements DataBase {
 
         Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
         return new DataBaseSet(
-                this.doCachedPageQuery(sqlQuery, args, page, perPage, pageBean,  countSql));
+                this.doCachedPageQuery(sqlQuery, args, page, perPage, pageBean, countSql));
     }
 
     @Override
@@ -555,9 +428,8 @@ public class DataBaseImpl implements DataBase {
         return new DataBaseSet(doCachedQuery(sqlQuery, args));
     }
 
-
     /**
-     * 此方法操作完成后，会默认自动关闭底层连接，不需要调用DataBase.close()方法关闭 连接
+     * 此方法操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭 连接
      *
      * @param <T>       需映射的类
      * @param sqlQuery  sql查询语句
@@ -614,7 +486,6 @@ public class DataBaseImpl implements DataBase {
         return this.doPageQueryMap(sqlQuery, args, page, perPage, pageBean, countSql);
     }
 
-
     private CachedRowSet doCachedPageQuery(String sqlQuery, Collection<Object> vParameters, int page, int perPage,
                                            PageBean pageBean, String countSql) throws DbException {
 
@@ -657,15 +528,15 @@ public class DataBaseImpl implements DataBase {
             throws DbException {
         return this.doCachedQuery(sqlQuery, vParameters, false);
     }
+
     /**
-     *
      * @param sqlQuery
      * @param vParameters
      * @param internalUse:是否是内部使用，如果是内部使用则不关闭连接
      * @return
      * @throws DbException
      */
-        private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters,boolean internalUse)
+    private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters, boolean internalUse)
             throws DbException {
 
         CachedRowSet crs = null;
@@ -684,9 +555,9 @@ public class DataBaseImpl implements DataBase {
         } finally {
             try {
                 if (this.conn != null) {
-                    if(internalUse){
+                    if (internalUse) {
                         this.closer();
-                    }else {
+                    } else {
                         if (this.getAutoCommit()) {
                             this.close();
                         } else {
@@ -703,7 +574,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 调用此方法不会关闭底层连接和结果集,需要调用DataBase.close()方法关闭它们
+     * 调用此方法不会关闭底层连接和结果集,需要手动调用close()方法关闭
      *
      * @param sqlQuery    sql语句
      * @param vParameters 参数
@@ -726,7 +597,6 @@ public class DataBaseImpl implements DataBase {
 
     private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters)
             throws DbException {
-
         return this.doQueryClassOne2One(clazz, null, sqlQuery, vParameters, (QueryMapNestOne2One[]) null);
 
     }
@@ -753,8 +623,7 @@ public class DataBaseImpl implements DataBase {
         return this.doQueryClassOne(clazz, sqlQuery, vParameters);
     }
 
-
-    private <T> List<T> doQueryClassForObject(Class<T> clazz, T selectObject, String selectProperties) throws DbException {
+    private <T> List<T> doQueryClassForObject(Class<T> clazz, T selectObject, String[] whereProperteis) throws DbException {
         String sql = "";
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
@@ -763,7 +632,7 @@ public class DataBaseImpl implements DataBase {
             if (handClassList != null && handClassList.length > 0) {
                 reflectClass = handClassList[0];
             }
-            sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass, selectProperties, vParameters,
+            sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass, whereProperteis, vParameters,
                     DataBaseKeyMap.getMap(), this.getDataBaseType());
             DbContext.clearReflectClass();
         } catch (Exception e) {
@@ -792,33 +661,24 @@ public class DataBaseImpl implements DataBase {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> List<T> doQueryClassForObject(T selectObject, String selectProperties) throws DbException {
+    private <T> List<T> doQueryClassForObject(T selectObject, String[] whereProperteis) throws DbException {
 
-        return this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, selectProperties);
+        return this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, whereProperteis);
     }
 
     /**
-     * 一到一关联映射查询，调用此方法会默认自动关闭底层数据库连接，
+     * 一到一关联映射查询，调用此方法会默认自动关闭底层数据库连接
+     * <blockquote><pre>
+     * String sql = "select n.*,p.*,a.* from news n left outer join photos p on  n.id=p.newsid  left outer join archives a  on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc";
+     * </pre></blockquote>
+     * 如果sqlPrefix指定n.，clazz指定New.class，则对n.*所属的字段会映射到New类对象
      *
-     * @param <T>              需映射的主类的Class对象
-     * @param clazz            需映射到类的Class对象
-     * @param sqlPrefix        sql前缀
-     *                         <p>
-     *                         <blockquote>
-     *
-     *                         <pre>
-     *                                                                         String sql = &quot;select n.*,p.*,a.* from news n left outer join photos p&quot;
-     *                                                                         		+ &quot; on   n.id=p.newsid  left outer join archives a &quot;
-     *                                                                         		+ &quot; on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc&quot;;
-     *                                                                         </pre>
-     *
-     *                         </blockquote>
-     *                         </p>
-     *                         <br/>
-     *                         如果主类对应于n表(news)，那么sql前缀为"n."
+     * @param clazz            指定映射父对象所属的类
+     * @param sqlPrefix        sql前缀所属的字段都会映射到属于clazz类的对象
      * @param sqlQuery         sql语句
      * @param vParameters      参数
      * @param queryMapNestList 一到一映射关系，可以有多个映射关系，一个映射关系对应一个QueryMapNestOne2One对象
+     * @param <T>
      * @return 返回查询到的列表
      * @throws DbException
      */
@@ -836,9 +696,9 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 此方法操作完成后，会默认自动关闭底层连接，不需要调用DataBase.close()方法关闭 连接
+     * 此方法操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭连接
      *
-     * @param clazz       需映射类的Class对象
+     * @param clazz       指定映射父对象所属的类
      * @param sqlQuery    sql语句
      * @param vParameters 参数
      * @param page        当前页，从第一页开始
@@ -862,10 +722,10 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 此方法操作完成后，会默认自动关闭底层连接，不需要调用DataBase.close()方法关闭 连接
+     * 此方法操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭 连接
      *
      * @param <T>
-     * @param clazz            需映射主类的Class对象
+     * @param clazz            指定映射父对象所属的类
      * @param sqlPrefix        主类对应的sql前缀
      * @param sqlQuery         sql语句
      * @param vParameters      参数
@@ -903,10 +763,10 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 此方法操作完成后，会默认自动关闭底层连接，不需要调用DataBase.close()方法关闭 连接
+     * 此方法操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭 连接
      *
      * @param <T>
-     * @param clazz            需映射主类的Class对象
+     * @param clazz            指定映射父对象所属的类
      * @param sqlPrefix        主类对应的sql前缀
      * @param sqlQuery         sql语句
      * @param vParameters      参数
@@ -929,26 +789,12 @@ public class DataBaseImpl implements DataBase {
 
     /**
      * 一到多关联映射查询。
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
-     * @param clazz            需映射的主类Class对象
+     * @param clazz            指定映射父对象所属的类
      * @param sqlPrefix        sql前缀
-     * @param beanKey          为主类对应的主键属性名， 如果主键为复合主键，以英文逗号隔开。
+     * @param beanKey          父对象对应的主键属性名， 如果主键为复合主键，以英文逗号隔开。
      * @param sqlQuery         sql语句
-     *                         <p>
-     *                         <blockquote>
-     *
-     *                         <pre>
-     *                                                                         String sql = &quot;select n.*,p.*,a.* from news n left outer join photos p&quot;
-     *                                                                         		+ &quot; on   n.id=p.newsid  left outer join archives a &quot;
-     *                                                                         		+ &quot; on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc&quot;;
-     *                                                                         </pre>
-     *
-     *                         </blockquote>
-     *                         </p>
-     *                         <br/>
-     *                         如果主类对应于n表(news)，那么sql前缀为"n."
      * @param vParameters      参数
      * @param queryMapNestList 关联子类关系
      * @return 返回查询结果
@@ -1044,9 +890,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 自定义映射查询
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 自定义映射查询。此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>       需映射的类
      * @param sqlQuery  sql语句
@@ -1454,7 +1298,7 @@ public class DataBaseImpl implements DataBase {
                     maxSql = this.trimTailOrderBy(maxSql, new TString());
                 }
 
-                RowSet rs = this.doCachedQuery(maxSql, vParameters,true);// 不关闭数据库连接
+                RowSet rs = this.doCachedQuery(maxSql, vParameters, true);// 不关闭数据库连接
 
                 while (rs != null && rs.next()) {
                     total = rs.getInt(1);
@@ -1657,8 +1501,8 @@ public class DataBaseImpl implements DataBase {
     private int executeBindUpdate(String sqltext, Map<Integer, Object> vParameters) throws DbException {
 
         Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
-        long[] ret= this.executeBindUpdate(sqltext, args);
-        return (int)ret[0];
+        long[] ret = this.executeBindUpdate(sqltext, args);
+        return (int) ret[0];
 
     }
 
@@ -1669,29 +1513,27 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 调用存储过程
+     * 调用存储过程，用法如下：
+     * <code><pre>
+     * //parms参数可以按如下形式添加
+     * parms.put("1","中");//默认为in类型
+     * parms.put("2:in","国");
+     * parms.put("3:in",new Integer(3));
+     * parms.put("4:out",int.class);
+     * parms.put("5:out",java.util.data.class);
+     * parms.put("6:inout",new Long(44));
+     *
+     * //outPramsValues存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应，
+     * //上面的例子产生的输出参数如下：
+     * {
+     *   4:45556,
+     *   5:"2015-09-23 12:34:56"
+     *   6:34456
+     * }</pre></code>
      *
      * @param sqltext            sql语句
-     * @param parms              用法举例如下： <code>
-     *                           <pre>
-     *                                                     用法：
-     *                                                     parms.put("1","中");//默认为in类型
-     *                                                     parms.put("2:in","孙");
-     *                                                     parms.put("3:in",new Integer(3));
-     *                                                     parms.put("4:out",int.class);
-     *                                                     parms.put("5:out",java.util.data.class);
-     *                                                     parms.put("6:inout",new Long(44));
-     *                                                     </pre>
-     *                           </code>
-     * @param outPramsValues     存放输出参数的返回值，根据parms(输入法参数)里的out,inout对应，如果输入参数为上面的例子所示，那么outPramsValues可能输入如下：
-     *
-     *                           <pre>
-     *                                                       {
-     *                                                         4:45556,
-     *                                                         5:"2015-09-23 12:34:56"
-     *                                                         6:34456
-     *                                                        }
-     *                                                                               </pre>
+     * @param parms              用法举例如下：
+     * @param outPramsValues     存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应
      * @param returnDataBaseSets 需返回值的结果集
      * @return
      * @throws DbException
@@ -1817,7 +1659,32 @@ public class DataBaseImpl implements DataBase {
         }
         return 0;
     }
-
+    /**
+     * 调用存储过程，用法如下：
+     * <code><pre>
+     * //parms参数可以按如下形式添加
+     * parms.put("1","中");//默认为in类型
+     * parms.put("2:in","国");
+     * parms.put("3:in",new Integer(3));
+     * parms.put("4:out",int.class);
+     * parms.put("5:out",java.util.data.class);
+     * parms.put("6:inout",new Long(44));
+     *
+     * //outPramsValues存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应，
+     * //上面的例子产生的输出参数如下：
+     * {
+     *   4:45556,
+     *   5:"2015-09-23 12:34:56"
+     *   6:34456
+     * }</pre></code>
+     *
+     * @param sqltext            sql语句
+     * @param parms              用法举例如下：
+     * @param outPramsValues     存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应
+     * @param returnDataBaseSets 需返回值的结果集
+     * @return
+     * @throws DbException
+     */
     @Override
     public int callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
                              List<DataBaseSet> returnDataBaseSets) throws DbException {
@@ -1825,18 +1692,21 @@ public class DataBaseImpl implements DataBase {
         return this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
 
     }
+
     private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters) throws DbException {
         return this.executeBindUpdate(sqltext, vParameters, false);
     }
+
     /**
      * 执行更新操作
+     *
      * @param sqltext
      * @param vParameters
-     * @param innerUse 是否是内部使用，如果是内部使用，则不需要关闭连接
+     * @param innerUse    是否是内部使用，如果是内部使用，则不需要关闭连接
      * @return 返回两个元素的数组，0位置的元素为更新的个数，1位置的元素为主键（如果存在，否则为-1）
      * @throws DbException
      */
-    private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters,boolean innerUse) throws DbException {
+    private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters, boolean innerUse) throws DbException {
 
         int count = 0;
         long[] twoInt = new long[]{-1, -1};
@@ -1898,9 +1768,9 @@ public class DataBaseImpl implements DataBase {
         } finally {
             try {
                 if (this.conn != null) {
-                    if(innerUse){
+                    if (innerUse) {
                         this.closer();
-                    }else {
+                    } else {
                         if (this.getAutoCommit()) {
                             this.close();
                         } else {
@@ -1918,7 +1788,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 返回插入记录的行数
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param sqltext     sql语句
      * @param vParameters 参数
@@ -1939,7 +1809,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 使insertObject对象的所有属性插入到数据库，不会忽略为NULL的属性。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法。
      *
      * @param <T>
      * @param insertObject 要插入的对象
@@ -1955,7 +1825,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 使insertObject对象的所有属性插入到数据库，如果insertObject的对象某个属性值为null， 那么会忽略此属性，不会插入空值到数据库。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param insertObject 要插入的对象
@@ -1972,7 +1842,7 @@ public class DataBaseImpl implements DataBase {
      * 向数据库插入在insertObject里properties数组指定的属性，如果在properties中的某
      * 个属性对应insertObject属性值为空，那么会忽略此属性，不会插入空值到数据库。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param insertObject
@@ -2006,11 +1876,11 @@ public class DataBaseImpl implements DataBase {
     /**
      * 向数据库插入在insertObject里properties数组指定的属性，如果属性的值为空，也会插入到数据库。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param insertObject
-     * @param properties   指定insertObject里需插入的属性，不会忽略为NULL的属性
+     * @param properties   指定insertObject里需插入的属性，不会忽略为值为NULL的属性
      * @return
      * @throws DbException
      */
@@ -2037,12 +1907,11 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 把某对象的指定的属性插入到数据库到数据库，并返回主键，有些数据库的驱动程序不会返回主键，所以 要根据具体数据库而言，mysql数据可以返回主键。
+     * 把某对象的指定的属性插入到数据库到数据库，并返回主键，有些数据库的驱动程序不会返回主键，所以要根据具体数据库而言，如mysql数据库可以返回主键。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
-     * @param type
      * @param insertObject
      * @return 返回插入的主键
      * @throws DbException
@@ -2073,7 +1942,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 把某对象的指定的属性插入到数据库到数据库，并返回主键，有些数据库的驱动程序不会返回主键，所以 要根据具体数据库而言，mysql数据可以返回主键。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param insertObject
@@ -2106,7 +1975,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param insertObject 要插入的对象
@@ -2120,7 +1989,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法，不会忽略为null的属性
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法，不会忽略为null的属性
      *
      * @param <T>
      * @param insertObject 要插入的对象
@@ -2136,7 +2005,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 插入多个对象的指定属性,此方法必须保证insertObjects是相同的类型
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param insertObjects 待插入的对象
@@ -2154,7 +2023,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 插入多个对象的指定属性,此方法必须保证insertObjects是相同的类型,并且不会忽略为NULL的属性
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param insertObjects 待插入的对象
@@ -2172,7 +2041,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 插入多个对象指定的属性到数据库，insertObjects里的每个对象对应一个属性数组，所以为二维数组，每个对象里的属性值为null的会忽略
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param insertObjects：待插入的对象数组
      * @param properties：属性数组，每个待插入对象对应一个属性数组，表示要插入此对象的哪些属性
@@ -2187,7 +2056,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 插入多个对象指定的属性到数据库，insertObjects里的每个对象对应一个属性数组，所以为二维数组，不忽略为null的属性
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param insertObjects：待插入数据库的对象数组
      * @param properties：属性数组，用于指定对象的哪些属性需要插入数据库；每个对象对应一个属性数组
@@ -2270,7 +2139,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 插入多个对象的所有属性到数据库，如果对象里某个属性为空，会忽略此属性
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param insertObjects 待插入的对象，可以为不同类型的类
      * @return
@@ -2283,7 +2152,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 插入多个对象的所有属性到数据库，不忽略为null的属性
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param insertObjects 待插入的对象，可以为不同类型的类
      * @return
@@ -2296,7 +2165,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 插入多个对象到数据库，如果对象里某个属性为空，会忽略此属性
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param objs 待插入的对象，所有对象的类型必须相同
@@ -2310,7 +2179,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 插入多个对象到数据库，不会忽略为NULL的属性
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
      * @param objs 待插入的对象，所有对象的类型必须相同
@@ -2325,16 +2194,16 @@ public class DataBaseImpl implements DataBase {
     /**
      * 更新对象
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
-     * @param updateObject 待更新的对象
-     * @param beanKey      待更新对象的主键属性名称，复合主键属性用逗号隔开
-     * @param properties   待插入的属性， 如果指定的属性在upateObject对象里的值为null，则忽略
+     * @param updateObject       待更新的对象
+     * @param whereForProperties 待更新对象的主键属性名称，复合主键属性用逗号隔开
+     * @param properties         待插入的属性， 如果指定的属性在upateObject对象里的值为null，则忽略
      * @return
      * @throws DbException
      */
-    private <T> int excuteUpdateClass(T updateObject, String beanKey, String[] properties) throws DbException {
+    private <T> int excuteUpdateClass(T updateObject, String[] whereForProperties, String[] properties) throws DbException {
 
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
@@ -2344,7 +2213,7 @@ public class DataBaseImpl implements DataBase {
                 reflectClass = handClassList[0];
             }
             String sqltext = SqlUtils.generateUpdateSql(this.dbPoolName, properties, updateObject, reflectClass,
-                    beanKey, vParameters, DataBaseKeyMap.getMap(), true, this.getDataBaseType());
+                    whereForProperties, vParameters, DataBaseKeyMap.getMap(), true, this.getDataBaseType());
             DbContext.clearReflectClass();
             return this.executeBindUpdate(sqltext, vParameters);
 
@@ -2357,16 +2226,16 @@ public class DataBaseImpl implements DataBase {
     /**
      * 更新对象
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
-     * @param updateObject 待更新的对象
-     * @param beanKey      待更新对象的主键属性名称，复合主键属性用逗号隔开
-     * @param properties   待插入的属性，不会忽略为NULL的属性
+     * @param updateObject       待更新的对象
+     * @param whereForProperties 待更新对象的主键属性名称，复合主键属性用逗号隔开
+     * @param properties         待插入的属性，不会忽略为NULL的属性
      * @return
      * @throws DbException
      */
-    private <T> int excuteUpdateWholeClass(T updateObject, String beanKey, String[] properties) throws DbException {
+    private <T> int excuteUpdateWholeClass(T updateObject, String[] whereForProperties, String[] properties) throws DbException {
 
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
@@ -2376,7 +2245,7 @@ public class DataBaseImpl implements DataBase {
                 reflectClass = handClassList[0];
             }
             String sqltext = SqlUtils.generateUpdateSql(this.dbPoolName, properties, updateObject, reflectClass,
-                    beanKey, vParameters, DataBaseKeyMap.getMap(), false, this.getDataBaseType());
+                    whereForProperties, vParameters, DataBaseKeyMap.getMap(), false, this.getDataBaseType());
             DbContext.clearReflectClass();
 
             return this.executeBindUpdate(sqltext, vParameters);
@@ -2388,38 +2257,33 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 删除多个对象，所有对象都以deleteProperteis里指定的属性的值来定位删除
+     * 删除多个对象，所有对象都以whereProperteis里指定的属性的值来定位删除
      *
      * @param <T>
      * @param deleteObject
-     * @param deleteProperteis 复合属性（即以英文逗号隔开的属性）
-     *                         待删除对象根据deleteProperteis字符串里的属性来定位删除。
-     *                         deleteProperteis可以为多个属性，以英文逗号隔开
-     *                         ，例如deleteProperteis为"name,id,age"，将会生产 "where name=?
-     *                         and id=? and age=?"条件。
+     * @param whereProperteis 指定的多个属性组成where的条件，各个条件是and关系，例如whereProperteis为[name,id,age]，
+     *                        则产生的where部分内容为<code>where name=? and id=? and age=?</code>
      * @return 返回int数组里每个元素值对应于删除每个对象时实际删除的行数， 如果数组元素的值为-1表示删除失败。 如果返回为null，表示执行失败
      * @throws DbException
      */
-    private <T> int[] excuteDeleteClass(T[] deleteObject, String deleteProperteis) throws DbException {
-        String[] strArray = new String[deleteObject.length];
-        strArray = ArrayUtils.fill(strArray, deleteProperteis);
+    private <T> int[] excuteDeleteClass(T[] deleteObject, String[] whereProperteis) throws DbException {
+        String[][] strArray = new String[deleteObject.length][];
+        strArray = ArrayUtils.fill(strArray, whereProperteis);
         return this.excuteDeleteObjects(deleteObject, strArray);
 
     }
 
     /**
-     * 删除一个对象，所有对象都以deleteProperteis属性的值来定位删除
+     * 删除一个对象，所有对象都以whereProperteis属性的值来定位删除
      *
      * @param <T>
-     * @param deleteObject     待删除的对象
-     * @param deleteProperteis 待删除对象根据deleteProperteis里的属性来定位删除。
-     *                         deleteProperteis可以为多个属性，以英文逗号隔开
-     *                         ，例如deleteProperteis为"name,id,age"，将会生产 "where name=?
-     *                         and id=? and age=?"条件。
+     * @param deleteObject    待删除的对象
+     * @param whereProperteis 指定的多个属性组成where的条件，各个条件是and关系，例如whereProperteis为[name,id,age]，
+     *                        则产生的where部分内容为<code>where name=? and id=? and age=?</code>
      * @return 返回实际更新的行数
      * @throws DbException
      */
-    private <T> int excuteDeleteClass(T deleteObject, String deleteProperteis) throws DbException {
+    private <T> int excuteDeleteClass(T deleteObject, String[] whereProperteis) throws DbException {
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
             Class<?>[] handClassList = DbContext.getReflectClass();
@@ -2427,7 +2291,7 @@ public class DataBaseImpl implements DataBase {
             if (handClassList != null && handClassList.length > 0) {
                 reflectClass = handClassList[0];
             }
-            String sql = SqlUtils.generateDeleteSql(this.dbPoolName, deleteObject, reflectClass, deleteProperteis,
+            String sql = SqlUtils.generateDeleteSql(this.dbPoolName, deleteObject, reflectClass, whereProperteis,
                     vParameters, DataBaseKeyMap.getMap(), this.getDataBaseType());
             DbContext.clearReflectClass();
             return this.executeBindDelete(sql, vParameters);
@@ -2465,171 +2329,143 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 把对象所有属性更新到数据库，如果某个属性值为null，则忽略
+     * 把对象所有属性更新到数据库，如果某个属性值为null，则忽略。
      * <p>
-     * beanKey为对象主键属性（复合主键属性以逗号分开）
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
-     * @param updateObject 待更新到数据库的对象
-     * @param beanKey      updateObject对象的主键属性，复合主键属性以英文逗号隔开
+     * @param updateObject       待更新到数据库的对象
+     * @param whereForProperties 指定的多个属性组成where的条件，各个条件是and关系，例如whereProperteis为[name,id,age]，
+     *                           则产生的where部分内容为<code>where name=? and id=? and age=?</code>
      * @return
      * @throws DbException
      */
-    private <T> int excuteUpdateClass(T updateObject, String beanKey) throws DbException {
-        return this.excuteUpdateClass(updateObject, beanKey, (String[]) null);
+    private <T> int excuteUpdateClass(T updateObject, String[] whereForProperties) throws DbException {
+        return this.excuteUpdateClass(updateObject, whereForProperties, (String[]) null);
     }
 
     /**
      * 把对象所有属性更新到数据库，不会忽略为null的属性
      * <p>
-     * beanKey为对象主键属性（复合主键属性以逗号分开）
+     * whereForProperties为对象主键属性（复合主键属性以逗号分开）
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
-     * @param updateObject 待更新到数据库的对象
-     * @param beanKey      updateObject对象的主键属性，复合主键属性以英文逗号隔开
+     * @param updateObject       待更新到数据库的对象
+     * @param whereForProperties 指定的多个属性组成where的条件，各个条件是and关系，例如whereProperteis为[name,id,age]，
+     *                           则产生的where部分内容为<code>where name=? and id=? and age=?</code>
      * @return
      * @throws DbException
      */
-    private <T> int excuteUpdateWholeClass(T updateObject, String beanKey) throws DbException {
-        return this.excuteUpdateWholeClass(updateObject, beanKey, (String[]) null);
+    private <T> int excuteUpdateWholeClass(T updateObject, String[] whereForProperties) throws DbException {
+        return this.excuteUpdateWholeClass(updateObject, whereForProperties, (String[]) null);
     }
 
-    private <T> int[] excuteUpdateClass(T[] updateObject, String beanKey) throws DbException {
-        return this.excuteUpdateClass(updateObject, beanKey, (String[]) null);
+    private <T> int[] excuteUpdateClass(T[] updateObject, String[] whereForProperties) throws DbException {
+        return this.excuteUpdateClass(updateObject, whereForProperties, (String[]) null);
     }
 
-    private <T> int[] excuteUpdateWholeClass(T[] updateObject, String beanKey) throws DbException {
-        return this.excuteUpdateWholeClass(updateObject, beanKey, (String[]) null);
+    private <T> int[] excuteUpdateWholeClass(T[] updateObject, String[] whereForProperties) throws DbException {
+        return this.excuteUpdateWholeClass(updateObject, whereForProperties, (String[]) null);
     }
 
     /**
      * 把对象指定属性更新到数据库
      * <p>
-     * beanKey为对象主键属性（复合主键属性以逗号分开）
+     * whereForProperties为对象主键属性（复合主键属性以逗号分开）
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
-     * @param objects    待更新到数据库的对象，对象数组里的类型必须一致，每个对象对应相同的properties数组
-     * @param beanKey    objects对象的主键属性，复合主键属性以英文逗号隔开
-     * @param properties 指定需更新的属性，如果指定的某个属性在对应对象里值为null，则忽略
+     * @param objects            待更新到数据库的对象，对象数组里的类型必须一致，每个对象对应相同的properties数组。
+     * @param whereForProperties 指定的多个属性组成where的条件，各个条件是and关系，例如whereProperteis为[name,id,age]，
+     *                           则产生的where部分内容为<code>where name=? and id=? and age=?</code>。
+     * @param updateProperties         指定需更新的属性，如果指定的某个属性在对应对象里值为null，则忽略。
      * @return
      * @throws DbException
      */
-    private <T> int[] excuteUpdateClass(T[] objects, String beanKey, String[] properties) throws DbException {
+    private <T> int[] excuteUpdateClass(T[] objects, String[] whereForProperties, String[] updateProperties) throws DbException {
 
         int length = objects.length;
-        String[] beanKeys = new String[length];
-        ArrayUtils.fill(beanKeys, beanKey);
+        String[][] whereProperteis = new String[length][];
+        ArrayUtils.fill(whereProperteis, whereForProperties);
         String[][] pros = new String[length][];
-        ArrayUtils.fill(pros, properties);
-        return this.excuteUpdateObjects(objects, beanKeys, pros);
+        ArrayUtils.fill(pros, updateProperties);
+        return excuteUpdateObjects(objects, whereProperteis, pros, true);
 
     }
 
     /**
      * 把对象指定属性更新到数据库,不会忽略为NULL的属性
      * <p>
-     * beanKey为对象主键属性（复合主键属性以逗号分开）
+     * whereForProperties为对象主键属性（复合主键属性以逗号分开）
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param <T>
-     * @param objects    待更新到数据库的对象，对象数组里的类型必须一致，每个对象对应相同的properties数组
-     * @param beanKey    objects对象的主键属性，复合主键属性以英文逗号隔开
-     * @param properties 指定需更新的属性，不会忽略为NULL的属性
+     * @param objects            待更新到数据库的对象，对象数组里的类型必须一致，每个对象对应相同的properties数组
+     * @param whereForProperties 指定的多个属性组成where的条件，各个条件是and关系，例如whereProperteis为[name,id,age]，
+     *                           则产生的where部分内容为<code>where name=? and id=? and age=?</code>。
+     * @param properties         指定需更新的属性，不会忽略为NULL的属性
      * @return
      * @throws DbException
      */
-    private <T> int[] excuteUpdateWholeClass(T[] objects, String beanKey, String[] properties) throws DbException {
+    private <T> int[] excuteUpdateWholeClass(T[] objects, String[] whereForProperties, String[] properties) throws DbException {
 
         int length = objects.length;
-        String[] beanKeys = new String[length];
-        ArrayUtils.fill(beanKeys, beanKey);
+        String[][] whereProperteis = new String[length][];
+        ArrayUtils.fill(whereProperteis, whereForProperties);
         String[][] pros = new String[length][];
         ArrayUtils.fill(pros, properties);
-        return this.excuteUpdateObjects(objects, beanKeys, pros, false);
+        return this.excuteUpdateObjects(objects, whereProperteis, pros, false);
 
     }
 
-    /**
-     * 把多个对象插入数据库，各个对象的类型可以不一样,忽略为null的属性
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
-     *
-     * @param objects  待更新到数据库的多个对象
-     * @param beanKeys 每个对象分别对应主键属性名
-     * @return
-     * @throws DbException
-     */
-    private int[] excuteUpdateObjects(Object[] objects, String[] beanKeys) throws DbException {
-
-        return excuteUpdateObjects(objects, beanKeys, null, true);
-    }
 
     /**
      * 把多个对象插入数据库，各个对象的类型可以不一样
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
-     * @param objects    待更新到数据库的多个对象
-     * @param beanKeys   每个对象分别对应主键属性名
-     * @param properties 每个对象分别对应的待更新的属性，是个二维数组，每个对象对应一个数组，表明此对象需要更新的属性，
-     *                   如果指定的某个属性在对应对象里值为null，则忽略。
+     * @param objects         待更新到数据库的多个对象
+     * @param whereProperteis 指定的多个属性组成where的条件，各个条件是and关系，例如whereProperteis为[name,id,age]，
+     *                        则产生的where部分内容为<code>where name=? and id=? and age=?</code>。
+     * @param updateProperties      每个对象分别对应的待更新的属性，是个二维数组，每个对象对应一个数组，表明此对象需要更新的属性，
+     *                        不忽略为null的属性。
      * @return
      * @throws DbException
      */
-    private int[] excuteUpdateObjects(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-
-        return excuteUpdateObjects(objects, beanKeys, properties, true);
-    }
-
-    /**
-     * 把多个对象插入数据库，各个对象的类型可以不一样
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
-     *
-     * @param objects    待更新到数据库的多个对象
-     * @param beanKeys   每个对象分别对应主键属性名
-     * @param properties 每个对象分别对应的待更新的属性，是个二维数组，每个对象对应一个数组，表明此对象需要更新的属性，
-     *                   不忽略为null的属性。
-     * @return
-     * @throws DbException
-     */
-    private int[] excuteUpdateWholeObjects(Object[] objects, String[] beanKeys, String[][] properties)
+    private int[] excuteUpdateWholeObjects(Object[] objects, String[][] whereProperteis, String[][] updateProperties)
             throws DbException {
 
-        return excuteUpdateObjects(objects, beanKeys, properties, false);
+        return excuteUpdateObjects(objects, whereProperteis, updateProperties, false);
     }
 
     /**
      * 把多个对象插入数据库，各个对象的类型可以不一样，不会忽略为null的属性
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
-     * @param objects  待更新到数据库的多个对象
-     * @param beanKeys 每个对象分别对应主键属性名
+     * @param objects         待更新到数据库的多个对象
+     * @param whereProperteis 生成where条件的对象属性
      * @return
      * @throws DbException
      */
-    private int[] excuteUpdateWholeObjects(Object[] objects, String[] beanKeys) throws DbException {
+    private int[] excuteUpdateWholeObjects(Object[] objects, String[][] whereProperteis) throws DbException {
 
-        return excuteUpdateObjects(objects, beanKeys, null, false);
+        return excuteUpdateObjects(objects, whereProperteis, null, false);
     }
 
     /**
-     * @param objects    待更新的对象
-     * @param beanKeys   生成where语句的key
-     * @param properties 待更新的属性，可以为空，表明更新主键以外的属性
-     * @param ignoreNull 是否忽略空
+     * @param objects         待更新的对象
+     * @param whereProperteis 生成where条件的对象属性
+     * @param properties      待更新的属性，可以为空，表明更新主键以外的属性
+     * @param ignoreNull      是否忽略空
      * @return
      * @throws DbException
      */
-    private int[] excuteUpdateObjects(Object[] objects, String[] beanKeys, String[][] properties, boolean ignoreNull)
+    private int[] excuteUpdateObjects(Object[] objects, String[][] whereProperteis, String[][] properties, boolean ignoreNull)
             throws DbException {
         int length = objects.length;
         Map[] maps = new HashMap[length];
@@ -2640,7 +2476,7 @@ public class DataBaseImpl implements DataBase {
             for (int i = 0; i < maps.length; i++) {
                 Object obj = objects[i];
 
-                String key = beanKeys[i];
+                String[] whereps = whereProperteis[i];
                 Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
                 String[] pros = null;
                 if (properties != null)
@@ -2654,7 +2490,7 @@ public class DataBaseImpl implements DataBase {
                         reflectClass = handClassList[i];
                     }
                 }
-                String sql = SqlUtils.generateUpdateSql(this.dbPoolName, pros, obj, reflectClass, key, vParameters,
+                String sql = SqlUtils.generateUpdateSql(this.dbPoolName, pros, obj, reflectClass, whereps, vParameters,
                         DataBaseKeyMap.getMap(), ignoreNull, this.getDataBaseType());
 
                 maps[i] = vParameters;
@@ -2691,12 +2527,12 @@ public class DataBaseImpl implements DataBase {
     /**
      * 删除多个对象
      *
-     * @param deleteObjects         待删除的多个对象，数组里的每个对象类型可以不相同
-     * @param deletePropertiesArray 每个对象对应一个复合属性，每个对象根据一个复合属性，来生产sql删除语句，每个复合属性以英文逗号隔开。
+     * @param deleteObjects   待删除的多个对象，数组里的每个对象类型可以不相同
+     * @param whereProperties 生成where条件的对象属性
      * @return 返回int数组里每个元素值对应于删除每个对象时实际删除的行数， 如果数组元素的值为-1表示删除失败。 如果返回为null，表示执行失败
      * @throws DbException
      */
-    private int[] excuteDeleteObjects(Object[] deleteObjects, String[] deletePropertiesArray) throws DbException {
+    private int[] excuteDeleteObjects(Object[] deleteObjects, String[][] whereProperties) throws DbException {
 
         int length = deleteObjects.length;
         Map[] maps = new HashMap[length];
@@ -2706,7 +2542,7 @@ public class DataBaseImpl implements DataBase {
             for (int i = 0; i < maps.length; i++) {
 
                 Object obj = deleteObjects[i];
-                String deleteProperties = deletePropertiesArray[i];
+                String[] oneWhereProperties = whereProperties[i];
                 Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
                 Class reflectClass = obj.getClass();
                 if (handClassList != null && handClassList.length > 0) {
@@ -2716,7 +2552,7 @@ public class DataBaseImpl implements DataBase {
                         reflectClass = handClassList[i];
                     }
                 }
-                String sql = SqlUtils.generateDeleteSql(this.dbPoolName, obj, reflectClass, deleteProperties,
+                String sql = SqlUtils.generateDeleteSql(this.dbPoolName, obj, reflectClass, oneWhereProperties,
                         vParameters, DataBaseKeyMap.getMap(), this.getDataBaseType());
 
                 maps[i] = vParameters;
@@ -2735,7 +2571,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 根据sql语句和参数，插入记录到数据库，返回插入记录的行数
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param sqltext
      * @param vParameters
@@ -2749,7 +2585,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 如果insert一条语句用此函数，并返回插入数据库后返回此记录的主键
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param sqltext
      * @param vParameters
@@ -2772,9 +2608,22 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 设置是否为事务操作，false表明为事务操作（事务分为常规事务和分布式事务），事务操作即多个语句功能一个数据库连接。通过DataBase.
-     * setAutoCommit()方法 可以设置是否为事务操作，如果为事务操作，那么DataBase里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
-     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过DataBase.close()方法关闭数据库连接
+     * 返回是否为事务操作，false表明为事务操作，事务操作即多个语句功能一个数据库连接。通过调用setAutoCommit(false)方法
+     * 可以设置为事务操作，如果为事物操作，那么DataBase里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
+     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
+     *
+     * @return
+     * @throws DbException
+     */
+    @Override
+    public boolean getAutoCommit() throws DbException {
+        return this.isAutoCommit;
+    }
+
+    /**
+     * 设置是否为事务操作，false表明为事务操作（事务分为常规事务和分布式事务），事务操作即多个语句功能一个数据库连接。通过
+     * setAutoCommit(false)方法可以设置为事务操作，如果为事务操作，那么DataBase里所有方法都不会自动关闭
+     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
      *
      * @return
      * @throws DbException
@@ -2783,20 +2632,6 @@ public class DataBaseImpl implements DataBase {
     public void setAutoCommit(boolean b) throws DbException {
         this.isAutoCommit = b;
 
-    }
-
-
-    /**
-     * 返回是否为事务操作，false表明为事务操作，事务操作即多个语句功能一个数据库连接。通过DataBase.setAutoCommit()方法
-     * 可以设置是否为事务操作，如果为事物操作，那么DataBase里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
-     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过DataBase.close()方法关闭数据库连接
-     *
-     * @return
-     * @throws DbException
-     */
-    @Override
-    public boolean getAutoCommit() throws DbException {
-        return this.isAutoCommit;
     }
 
     /**
@@ -2817,7 +2652,6 @@ public class DataBaseImpl implements DataBase {
             throw new DbException(e);
         }
     }
-
 
     /**
      * 判断资源和底层数据库连接是否关闭
@@ -2860,16 +2694,15 @@ public class DataBaseImpl implements DataBase {
     /**
      * @param sqltext
      * @param vParametersArray
-     * @param close            执行后是否关闭数据库
      * @return 返回每条语句更新记录的条数，执行错误，会抛出异常
      * @throws DbException
      */
     private int[] executeBindBatchBy(String sqltext, List<Collection<Object>> vParametersArray)
             throws DbException {
-        Boolean backAutoCommit=null;
+        Boolean backAutoCommit = null;
         int[] count = null;
         try {
-            backAutoCommit=this.getAutoCommit();
+            backAutoCommit = this.getAutoCommit();
             if (this.getAutoCommit()) {
                 this.setAutoCommit(false);//暂时设置为false，使之成为事务性操作
             }
@@ -2944,10 +2777,10 @@ public class DataBaseImpl implements DataBase {
     /**
      * 返回的数组里每个值对应返回对应sql语句执行后更新的行数，如果为null表明执行失败，内部会自动回滚。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
      *
      * @param sqltxts
-     * @param vParametersList
+     * @param vParametersArray
      * @return 如果为null表明执行失败
      * @throws DbException
      */
@@ -3036,7 +2869,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 批量更新操作（增，删，改），返回每条语句更新记录的行数
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用DataBase.close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要调用close()方法
      *
      * @param sqltxt          执行的sql语句
      * @param vParametersList 每条语句所携带的参数，每条语句对应一个Map，每个Map存放相应语句的参数
@@ -3214,7 +3047,6 @@ public class DataBaseImpl implements DataBase {
         }
     }
 
-
     @Override
     public Connection getConnection() {
         return this.conn;
@@ -3235,20 +3067,6 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> int insertBy(T insertObject, String[] properties) throws DbException {
-
-        return this.excuteInsertClass(insertObject, properties);
-
-    }
-
-    @Override
-    public <T> long insertReturnKeyBy(T insertObject, String[] properties) throws DbException {
-
-        return this.excuteInsertClassReturnKey(insertObject, properties);
-
-    }
-
-    @Override
     public <T> int[] insertBy(T[] objs) throws DbException {
 
         return this.excuteInsertClass(objs);
@@ -3256,41 +3074,136 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> int[] insertBy(T[] objs, String[] properties) throws DbException {
-
-        return this.excuteInsertClass(objs, properties);
+    public <T> int insertBy(T insertObject, Object[] insertProperties) throws DbException {
+        return this.excuteInsertClass(insertObject, getPNames(insertProperties));
 
     }
 
     @Override
-    public <T> int updateBy(T updateObject, String beanKey) throws DbException {
-        return this.excuteUpdateClass(updateObject, beanKey);
+    public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties) throws DbException {
+
+        return this.excuteInsertClassReturnKey(insertObject, getPNames(insertProperties));
+
     }
 
     @Override
-    public <T> int updateBy(T updateObject, String beanKey, String[] properties) throws DbException {
-        return this.excuteUpdateClass(updateObject, beanKey, properties);
+    public <T> int[] insertBy(T[] objs, Object[] insertProperties) throws DbException {
+
+        return this.excuteInsertClass(objs, getPNames(insertProperties));
+
     }
 
     @Override
-    public <T> int[] updateBy(T[] objects, String beanKey, String[] properties) throws DbException {
-        return this.excuteUpdateClass(objects, beanKey, properties);
+    public <T> long insertReturnKeyBy(T insertObject, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteInsertWholeClassReturnKey(insertObject);
+        } else {
+            return this.insertReturnKeyBy(insertObject);
+        }
+
     }
 
     @Override
-    public <T> int[] updateBy(T[] objects, String beanKey) throws DbException {
-        return this.excuteUpdateClass(objects, beanKey);
+    public <T> int insertBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteInsertWholeClass(insertObject, getPNames(insertProperties));
+        } else {
+            return this.insertBy(insertObject, insertProperties);
+        }
+
     }
 
     @Override
-    public <T> int[] updateBy(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-        return this.excuteUpdateObjects(objects, beanKeys, properties);
+    public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteInsertWholeClassReturnKey(insertObject, getPNames(insertProperties));
+        } else {
+            return this.insertReturnKeyBy(insertObject, insertProperties);
+        }
+
+
     }
 
     @Override
-    public <T> T queryOneBy(T selectObject, String selectProperties) throws DbException {
+    public <T> int[] insertBy(T[] objs, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteInsertWholeClass(objs);
+        } else {
+            return this.insertBy(objs);
+        }
 
-        List<T> list = this.doQueryClassForObject(selectObject, selectProperties);
+    }
+
+    @Override
+    public <T> int[] insertBy(T[] objs, Object[] insertProperties, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteInsertWholeClass(objs, getPNames(insertProperties));
+        } else {
+            return this.insertBy(objs, insertProperties);
+        }
+
+    }
+
+    @Override
+    public <T> int updateBy(T updateObject, Object[] whereProperteis) throws DbException {
+        return this.excuteUpdateClass(updateObject, getPNames(whereProperteis));
+    }
+
+    @Override
+    public <T> int updateBy(T updateObject, Object[] whereProperteis, Object[] properties) throws DbException {
+        return this.excuteUpdateClass(updateObject, getPNames(whereProperteis), getPNames(properties));
+    }
+
+    @Override
+    public <T> int[] updateBy(T[] objects, Object[] whereProperteis, Object[] properties) throws DbException {
+        return this.excuteUpdateClass(objects, getPNames(whereProperteis), getPNames(properties));
+    }
+
+    @Override
+    public <T> int[] updateBy(T[] objects, Object[] whereProperteis) throws DbException {
+        return this.excuteUpdateClass(objects, getPNames(whereProperteis));
+    }
+
+    @Override
+    public <T> int updateBy(T updateObject, Object[] whereProperties, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteUpdateWholeClass(updateObject, getPNames(whereProperties));
+        } else {
+            return this.updateBy(updateObject, whereProperties);
+        }
+    }
+
+    @Override
+    public <T> int updateBy(T updateObject, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteUpdateWholeClass(updateObject, getPNames(whereProperties), getPNames(updateProperties));
+        } else {
+            return this.updateBy(updateObject, whereProperties, updateProperties);
+        }
+    }
+
+    @Override
+    public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteUpdateWholeClass(updateObjects, getPNames(whereProperties), getPNames(updateProperties));
+        } else {
+            return this.updateBy(updateObjects, whereProperties, updateProperties);
+        }
+    }
+
+    @Override
+    public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteUpdateWholeClass(updateObjects, getPNames(whereProperties));
+        } else {
+            return this.updateBy(updateObjects, whereProperties);
+        }
+    }
+
+    @Override
+    public <T> T queryOneBy(T selectObject, Object[] whereProperteis) throws DbException {
+
+        List<T> list = this.doQueryClassForObject(selectObject, getPNames(whereProperteis));
         if (list.size() > 0) {
             return list.get(0);
         } else {
@@ -3300,13 +3213,13 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> List<T> queryListBy(T selectObject, String selectProperties) throws DbException {
+    public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis) throws DbException {
 
-        return this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, selectProperties);
+        return this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, getPNames(whereProperteis));
     }
 
     @Override
-    public <T> List<T> queryListBy(T selectObject, String selectProperties, int page, int perPage, PageBean pb)
+    public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis, int page, int perPage, PageBean pb)
             throws DbException {
         String sql = "";
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
@@ -3316,7 +3229,7 @@ public class DataBaseImpl implements DataBase {
             if (handClassList != null && handClassList.length > 0) {
                 reflectClass = handClassList[0];
             }
-            sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass, selectProperties, vParameters,
+            sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass, getPNames(whereProperteis), vParameters,
                     DataBaseKeyMap.getMap(), this.getDataBaseType());
             DbContext.clearReflectClass();
 
@@ -3347,8 +3260,6 @@ public class DataBaseImpl implements DataBase {
         return this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
     }
 
-    ;
-
     @Override
     public <T> List<T> queryListBy(T selectObject) throws DbException {
 
@@ -3368,141 +3279,24 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> int delBy(T deleteObject, String deleteProperteis) throws DbException {
-        return this.excuteDeleteClass(deleteObject, deleteProperteis);
-    }
-
-
-    @Override
-    public <T> int[] delBy(T[] deleteObjects, String deleteProperteis) throws DbException {
-        return this.excuteDeleteClass(deleteObjects, deleteProperteis);
-
+    public <T> int delBy(T deleteObject, Object[] whereProperteis) throws DbException {
+        return this.excuteDeleteClass(deleteObject, getPNames(whereProperteis));
     }
 
     @Override
-    public <T> int[] delBy(Object[] deleteObjects, String[] deletePropertiesArray) throws DbException {
-
-        return this.excuteDeleteObjects(deleteObjects, deletePropertiesArray);
+    public <T> int[] delBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
+        return this.excuteDeleteClass(deleteObjects, getPNames(whereProperteis));
 
     }
 
     @Override
-    public <T> int insertWholeBy(T insertObject) throws DbException {
-
-        return this.excuteInsertWholeClass(insertObject);
-
-    }
-
-    @Override
-    public <T> long insertWholeReturnKeyBy(T insertObject) throws DbException {
-
-        return this.excuteInsertWholeClassReturnKey(insertObject);
-
-    }
-
-    @Override
-    public <T> int insertWholeBy(T insertObject, String[] properties) throws DbException {
-
-        return this.excuteInsertWholeClass(insertObject, properties);
-
-    }
-
-    @Override
-    public <T> long insertWholeReturnKeyBy(T insertObject, String[] properties) throws DbException {
-
-        return this.excuteInsertWholeClassReturnKey(insertObject, properties);
-
-    }
-
-    @Override
-    public <T> int[] insertWholeBy(T[] objs) throws DbException {
-
-        return this.excuteInsertWholeClass(objs);
-
-    }
-
-    @Override
-    public <T> int[] insertWholeBy(T[] objs, String[] properties) throws DbException {
-
-        return this.excuteInsertWholeClass(objs, properties);
-
-    }
-
-    @Override
-    public <T> int updateWholeBy(T updateObject, String beanKey) throws DbException {
-        return this.excuteUpdateWholeClass(updateObject, beanKey);
-    }
-
-    @Override
-    public <T> int updateWholeBy(T updateObject, String beanKey, String[] properties) throws DbException {
-        return this.excuteUpdateWholeClass(updateObject, beanKey, properties);
-    }
-
-    @Override
-    public <T> int[] updateWholeBy(T[] objects, String beanKey, String[] properties) throws DbException {
-        return this.excuteUpdateWholeClass(objects, beanKey, properties);
-    }
-
-    @Override
-    public <T> int[] updateWholeBy(T[] objects, String beanKey) throws DbException {
-        return this.excuteUpdateWholeClass(objects, beanKey);
-    }
-
-    @Override
-    public <T> int[] updateWholeBy(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-        return this.excuteUpdateWholeObjects(objects, beanKeys, properties);
-    }
-
-    public static String getCallerInf() {
-        // 3, 10, DbConst.filter, 1
-        int fromLevel = 3, maxLevel = 20, upLevelNum = 2;
-        String filterStrEndsWith = DbConst.filter;
-
-        StackTraceElement stack[] = Thread.currentThread().getStackTrace();// (new Throwable()).getStackTrace();
-        // 获取线程运行栈信息
-        if (stack.length > fromLevel) {
-            for (int i = fromLevel; i < maxLevel && i < stack.length; i++) {
-                if (stack[i].getClassName().endsWith("BaseDao")) {// BaseDao
-                    continue;
-                }
-                if (stack[i].getClassName().endsWith(filterStrEndsWith)) {
-
-                    String str = getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(:"
-                            + stack[i].getLineNumber() + ")";
-                    if (upLevelNum > 0 && stack.length > (i + upLevelNum) && maxLevel > (i + upLevelNum)) {
-                        for (int n = 1; n <= upLevelNum; n++) {
-                            str = getLastTwoClassName(stack[i + n].getClassName()) + "." + stack[i + n].getMethodName()
-                                    + "(:" + stack[i + n].getLineNumber() + ")" + "=>" + str;
-                        }
-                        return str;
-                    } else {
-                        return str;
-                    }
-
-                }
-
-            }
-        }
-        return "";
-    }
-
-    public static String getLastTwoClassName(String srcClassName) {
-        String className = srcClassName;
-        int lastIndex = className.lastIndexOf(".");
-        if (lastIndex < 0) {
-            lastIndex = 0;
+    public <T> int insertBy(T insertObject, boolean includeNull) throws DbException {
+        if (includeNull) {
+            return this.excuteInsertWholeClass(insertObject);
         } else {
-            if (lastIndex - 1 >= 0) {
-                int lastSecIndex = className.lastIndexOf(".", lastIndex - 1);
-                if (lastSecIndex >= 0) {
-                    lastIndex = lastSecIndex;
-                } else {
-                    lastIndex = 0;
-                }
-            }
+            return this.insertBy(insertObject);
         }
-        className = className.substring(lastIndex);
-        return className;
+
     }
 
     @Override
@@ -3523,7 +3317,7 @@ public class DataBaseImpl implements DataBase {
 
         boolean close = this.getAutoCommit();
         try {
-            this.sqlType=SQLType.SCRIPT;
+            this.sqlType = SQLType.SCRIPT;
             this.fetchConnection();
             ScriptRunner scriptRunner = new ScriptRunner(this.getConnection());
             scriptRunner.setLogWriter(logWriter);
@@ -3554,6 +3348,13 @@ public class DataBaseImpl implements DataBase {
                 log.error("", e2);
             }
         }
+    }
+
+    /*
+     * POOL：从连接池里获得连接
+     */
+    public static enum ConnectType {
+        POOL, DATASOURCE, CONNECTION
     }
 
 }

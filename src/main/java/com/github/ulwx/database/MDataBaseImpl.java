@@ -248,31 +248,30 @@ public class MDataBaseImpl implements  MDataBase {
     }
 
     /**
-     * 调用存储过程
+     * 调用存储过程，用法如下：
+     * <code><pre>
+     * //parms参数可以按如下形式添加
+     * parms.put("1","中");//默认为in类型
+     * parms.put("2:in","国");
+     * parms.put("3:in",new Integer(3));
+     * parms.put("4:out",int.class);
+     * parms.put("5:out",java.util.data.class);
+     * parms.put("6:inout",new Long(44));
+     *
+     * //outPramsValues存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应，
+     * //上面的例子产生的输出参数如下：
+     * {
+     *   4:45556,
+     *   5:"2015-09-23 12:34:56"
+     *   6:34456
+     * }</pre></code>
      *
      * @param mdFullMethodName   在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
      *                           其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
      *                           冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
-     * @param parms              用法举例如下：
-     *                           <code>
-     *                           <pre>
-     *                                                                               用法：
-     *                                                                               parms.put("name","中");//默认为in类型
-     *                                                                               parms.put("sex:in","男");
-     *                                                                               parms.put("age:in",26);
-     *                                                                               parms.put("total:out",int.class);
-     *                                                                               parms.put("createTime:out",java.util.date.class);
-     *                                                                               parms.put("num:inout",new Long(44));
-     *                                                                               </pre>
-     *                           </code>
+     * @param parms              输入参数
      * @param outPramsValues     存放输出参数的返回值，根据parms(输入法参数)里的out,inout对应，如果输入参数为上面的例子所示，那么outPramsValues可能输入如下：
-     *                           <pre>
-     *                                                                                 {
-     *                                                                                   total:45556,
-     *                                                                                   createTime:"2015-09-23 12:34:56"
-     *                                                                                   num:34456
-     *                                                                                  }
-     *                                                                               </pre>
+     *
      * @param returnDataBaseSets 需返回值的结果集
      * @return
      * @throws DbException
@@ -409,82 +408,16 @@ public class MDataBaseImpl implements  MDataBase {
     }
 
     @Override
-    public <T> int insertBy(T insertObject, String[] properties) throws DbException {
-
-        return this.dataBase.insertBy(insertObject, properties);
-    }
-
-    @Override
-    public <T> long insertReturnKeyBy(T insertObject, String[] properties) throws DbException {
-
-        return this.dataBase.insertReturnKeyBy(insertObject, properties);
-    }
-
-    @Override
     public <T> int[] insertBy(T[] objs) throws DbException {
 
         return this.dataBase.insertBy(objs);
     }
 
-    @Override
-    public <T> int[] insertBy(T[] objs, String[] properties) throws DbException {
-
-        return this.dataBase.insertBy(objs, properties);
-    }
-
-    @Override
-    public <T> int updateBy(T updateObject, String beanKey) throws DbException {
-
-        return this.dataBase.updateBy(updateObject, beanKey);
-    }
-
-    @Override
-    public <T> int updateBy(T updateObject, String beanKey, String[] properties) throws DbException {
-
-        return this.dataBase.updateBy(updateObject, beanKey, properties);
-    }
-
-    @Override
-    public <T> int[] updateBy(T[] objects, String beanKey, String[] properties) throws DbException {
-
-        return this.dataBase.updateBy(objects, beanKey, properties);
-    }
-
-    @Override
-    public <T> int[] updateBy(T[] objects, String beanKey) throws DbException {
-
-        return this.dataBase.updateBy(objects, beanKey);
-    }
-
-    @Override
-    public <T> int[] updateBy(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-
-        return this.dataBase.updateBy(objects, beanKeys, properties);
-    }
-
-    @Override
-    public <T> T queryOneBy(T selectObject, String selectProperties) throws DbException {
-
-        return this.dataBase.queryOneBy(selectObject, selectProperties);
-    }
-
-    @Override
-    public <T> List<T> queryListBy(T selectObject, String selectProperties) throws DbException {
-
-        return this.dataBase.queryListBy(selectObject, selectProperties);
-    }
 
     @Override
     public <T> List<T> queryListBy(T selectObject) throws DbException {
 
         return this.dataBase.queryListBy(selectObject);
-    }
-
-    @Override
-    public <T> List<T> queryListBy(T selectObject, String selectProperties, int page, int perPage, PageBean pb)
-            throws DbException {
-
-        return this.dataBase.queryListBy(selectObject, selectProperties, page, perPage, pb);
     }
 
     @Override
@@ -498,92 +431,12 @@ public class MDataBaseImpl implements  MDataBase {
         return this.dataBase.queryOneBy(selectObject);
     }
 
-    @Override
-    public <T> int delBy(T deleteObject, String deleteProperteis) throws DbException {
-        return this.dataBase.delBy(deleteObject, deleteProperteis);
-    }
 
-    @Override
-    public <T> int[] delBy(T[] deleteObjects, String deleteProperteis) throws DbException {
-        return this.dataBase.delBy(deleteObjects, deleteProperteis);
-    }
-
-    @Override
-    public <T> int[] delBy(Object[] deleteObjects, String[] deletePropertiesArray) throws DbException {
-
-        return this.dataBase.delBy(deleteObjects, deletePropertiesArray);
-    }
-
-    @Override
-    public <T> int insertWholeBy(T insertObject) throws DbException {
-
-        return this.dataBase.insertWholeBy(insertObject);
-    }
-
-    @Override
-    public <T> long insertWholeReturnKeyBy(T insertObject) throws DbException {
-
-        return this.dataBase.insertWholeReturnKeyBy(insertObject);
-    }
-
-    @Override
-    public <T> int insertWholeBy(T insertObject, String[] properties) throws DbException {
-
-        return this.dataBase.insertWholeBy(insertObject, properties);
-    }
-
-    @Override
-    public <T> long insertWholeReturnKeyBy(T insertObject, String[] properties) throws DbException {
-
-        return this.dataBase.insertWholeReturnKeyBy(insertObject, properties);
-    }
-
-    @Override
-    public <T> int[] insertWholeBy(T[] objs) throws DbException {
-
-        return this.dataBase.insertWholeBy(objs);
-    }
-
-    @Override
-    public <T> int[] insertWholeBy(T[] objs, String[] properties) throws DbException {
-
-        return this.dataBase.insertWholeBy(objs, properties);
-    }
-
-    @Override
-    public <T> int updateWholeBy(T updateObject, String beanKey) throws DbException {
-
-        return this.dataBase.updateWholeBy(updateObject, beanKey);
-    }
-
-    @Override
-    public <T> int updateWholeBy(T updateObject, String beanKey, String[] properties) throws DbException {
-
-        return this.dataBase.updateWholeBy(updateObject, beanKey, properties);
-    }
-
-    @Override
-    public <T> int[] updateWholeBy(T[] objects, String beanKey, String[] properties) throws DbException {
-
-        return this.dataBase.updateWholeBy(objects, beanKey, properties);
-    }
-
-    @Override
-    public <T> int[] updateWholeBy(T[] objects, String beanKey) throws DbException {
-
-        return this.dataBase.updateWholeBy(objects, beanKey);
-    }
-
-    @Override
-    public <T> int[] updateWholeBy(Object[] objects, String[] beanKeys, String[][] properties) throws DbException {
-
-        return this.dataBase.updateWholeBy(objects, beanKeys, properties);
-    }
 
     /**
-     * 设置是否为事务操作，false表明为事务操作（事务分为常规事务和分布式事务），事务操作即多个语句功能一个数据库连接。通过DataBaseMd.setAutoCommit()方法
+     * 设置是否为事务操作，false表明为事务操作（事务分为常规事务和分布式事务），事务操作即多个语句功能一个数据库连接。通过setAutoCommit()方法
      * 可以设置是否为事务操作，如果为事物操作，那么DataBaseMd里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
-     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过DataBaseMd.close()方法关闭数据库连接
+     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
      *
      * @return
      * @throws DbException
@@ -596,9 +449,9 @@ public class MDataBaseImpl implements  MDataBase {
 
 
     /**
-     * 返回是否为事务操作，false表明为事务操作，事务操作即多个语句功能一个数据库连接。通过DataBaseMd.setAutoCommit()方法
+     * 返回是否为事务操作，false表明为事务操作，事务操作即多个语句功能一个数据库连接。通过setAutoCommit()方法
      * 可以设置是否为事务操作，如果为事物操作，那么DataBase里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
-     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过DataBaseMd.close()方法关闭数据库连接
+     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
      *
      * @return
      * @throws DbException
@@ -653,5 +506,113 @@ public class MDataBaseImpl implements  MDataBase {
         this.dataBase.close();
     }
 
+    @Override
+    public <T> int insertBy(T insertObject, boolean includeNull) throws DbException {
+        return dataBase.insertBy(insertObject, includeNull);
+    }
 
+    @Override
+    public <T> int insertBy(T insertObject, Object[] insertProperties) throws DbException {
+        return dataBase.insertBy(insertObject, insertProperties);
+    }
+
+    @Override
+    public <T> int insertBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
+        return dataBase.insertBy(insertObject, insertProperties, includeNull);
+    }
+
+    @Override
+    public <T> int[] insertBy(T[] objs, boolean includeNull) throws DbException {
+        return dataBase.insertBy(objs, includeNull);
+    }
+
+    @Override
+    public <T> int[] insertBy(T[] objs, Object[] insertProperties) throws DbException {
+        return dataBase.insertBy(objs, insertProperties);
+    }
+
+    @Override
+    public <T> int[] insertBy(T[] objs, Object[] insertProperties, boolean includeNull) throws DbException {
+        return dataBase.insertBy(objs, insertProperties, includeNull);
+    }
+
+    @Override
+    public <T> long insertReturnKeyBy(T insertObject, boolean includeNull) throws DbException {
+        return dataBase.insertReturnKeyBy(insertObject, includeNull);
+    }
+
+    @Override
+    public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties) throws DbException {
+        return dataBase.insertReturnKeyBy(insertObject, insertProperties);
+    }
+
+    @Override
+    public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
+        return dataBase.insertReturnKeyBy(insertObject, insertProperties, includeNull);
+    }
+
+    @Override
+    public <T> int updateBy(T updateObject, Object[] whereProperteis) throws DbException {
+        return dataBase.updateBy(updateObject, whereProperteis);
+    }
+
+    @Override
+    public <T> int updateBy(T updateObject, Object[] whereProperties, boolean includeNull) throws DbException {
+        return dataBase.updateBy(updateObject, whereProperties, includeNull);
+    }
+
+    @Override
+    public <T> int updateBy(T updateObject, Object[] whereProperteis, Object[] updateProperties) throws DbException {
+        return dataBase.updateBy(updateObject, whereProperteis, updateProperties);
+    }
+
+    @Override
+    public <T> int updateBy(T updateObject, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
+        return dataBase.updateBy(updateObject, whereProperties, updateProperties, includeNull);
+    }
+
+    @Override
+    public <T> int[] updateBy(T[] updateObjects, Object[] whereProperteis, Object[] updateProperties) throws DbException {
+        return dataBase.updateBy(updateObjects, whereProperteis, updateProperties);
+    }
+
+    @Override
+    public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
+        return dataBase.updateBy(updateObjects, whereProperties, updateProperties, includeNull);
+    }
+
+    @Override
+    public <T> int[] updateBy(T[] updateObjects, Object[] whereProperteis) throws DbException {
+        return dataBase.updateBy(updateObjects, whereProperteis);
+    }
+
+    @Override
+    public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, boolean includeNull) throws DbException {
+        return dataBase.updateBy(updateObjects, whereProperties, includeNull);
+    }
+
+    @Override
+    public <T> T queryOneBy(T selectObject, Object[] whereProperteis) throws DbException {
+        return dataBase.queryOneBy(selectObject, whereProperteis);
+    }
+
+    @Override
+    public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis) throws DbException {
+        return dataBase.queryListBy(selectObject, whereProperteis);
+    }
+
+    @Override
+    public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis, int page, int perPage, PageBean pb) throws DbException {
+        return dataBase.queryListBy(selectObject, whereProperteis, page, perPage, pb);
+    }
+
+    @Override
+    public <T> int delBy(T deleteObject, Object[] whereProperteis) throws DbException {
+        return dataBase.delBy(deleteObject, whereProperteis);
+    }
+
+    @Override
+    public <T> int[] delBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
+        return dataBase.delBy(deleteObjects, whereProperteis);
+    }
 }

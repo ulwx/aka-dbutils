@@ -14,8 +14,8 @@ public class QueryMapNestOne2One extends MapNest {
 	 * 
 	 * @param toBeanPros
 	 *            存放子关联类需要映射的属性名，如果为空，表明全映射
-	 * @param nestedBeanName
-	 *             对子关联类属性名
+	 * @param toPropertyName
+	 *             对子关联类的属性名
 	 * @param sqlPrefix
 	 *            sql前缀
 	 */
@@ -32,7 +32,7 @@ public class QueryMapNestOne2One extends MapNest {
 	 * 
 	 * @param toBeanPros
 	 *            存放子关联类需要映射的属性名，如果为空，表明全映射
-	 * @param nestedBeanName
+	 * @param toPropertyName
 	 *             对应子关联类属性名
 	 * @param sqlPrefix
 	 *            sql前缀
