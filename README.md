@@ -1,17 +1,17 @@
-# common-dbutils
+# ulwx-dbutils
 
- common-dbutils是一个**轻量级的**、**强大的**数据库访问工具类。common-dbutils的设计的初衷就是为了使事情更简单，你只需要30分钟就可以完全掌握common-dbutils的所有用法。如果你不了解common-dbutils，你可以把它想象成类似于mybatis，但common-dbutils能覆盖所有mybatis的功能，但却比mybatis使用起来更简单和高效，你不需要在mapper xml里写烦人的xml，也不需要为保持命名空间的一致性而苦恼。甚至针对于单对象的增删改查操作，你不需要写任何sql语句，因为 common-dbutils天然就支持对单对象增删改查操作方法。
+ ulwx-dbutils是一个**轻量级的**、**强大的**数据库访问工具类。ulwx-dbutils的设计的初衷就是为了使事情更简单，你只需要30分钟就可以完全掌握ulwx-dbutils的所有用法。如果你不了解ulwx-dbutils，你可以把它想象成类似于mybatis，但ulwx-dbutils能覆盖所有mybatis的功能，但却比mybatis使用起来更简单和高效，你不需要在mapper xml里写烦人的xml，也不需要为保持命名空间的一致性而苦恼。甚至针对于单对象的增删改查操作，你不需要写任何sql语句，因为 ulwx-dbutils天然就支持对单对象增删改查操作方法。
 
-common-dbutils就跟它的名字一样，它是一个访问数据库的工具库，它专注于处理数据库的访问。掌握common-dbutils你不需要了解任何其它技术，，你只需要了解SQL和基本的java语法，它特别适合喜欢轻量级集成方案的朋友。
+ulwx-dbutils就跟它的名字一样，它是一个访问数据库的工具库，它专注于处理数据库的访问。掌握ulwx-dbutils你不需要了解任何其它技术，，你只需要了解SQL和基本的java语法，它特别适合喜欢轻量级集成方案的朋友。
 
-common-dbutils功能点如下：
+ulwx-dbutils功能点如下：
 
 - 单对象的增删改查不需要SQL，动态通过反射生成SQL语句。
 - 天然支持分页查询，多种分页策略可供选择。
 - 针对复杂的SQL语句，可为相应的dao方法编写对应md文件，md文件里编写SQL语句的规则非常简洁。同时md文件会转换为java文件并实时编译成java  class文件，所以可以在md文件访问任何java类、对象和方法，非常的强大。
 - 提供对象查询的一对一和一对多映射。
 - 天然支持事务管理机制，如事务传播，类似于spring。
-- 你可以把它集成到spring、spingboot，这通过common-dbutils-spring，或common-dbutils-spring-starter。
+- 你可以把它集成到spring、spingboot，这通过ulwx-dbutils-spring，或ulwx-dbutils-spring-starter。
 - 支持多种数据库，如mysql、microsoft sql server、oracle、db2、h2、hsql、postgre、sybase、sqlite。
 - 支持主从数据库，事务内的语句和更新的语句在主库上执行，非事务性查询语句在从库执行。
 - 集成tomcat-jdbc连接池。
@@ -25,7 +25,7 @@ common-dbutils功能点如下：
 
 		<dependency>
 			<groupId>com.github.ulwx</groupId>
-			<artifactId>common-dbutils</artifactId>
+			<artifactId>ulwx-dbutils</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 
@@ -91,7 +91,7 @@ common-dbutils功能点如下：
 
 ### 从数据库生成javaBean
 
-由于数据库的表，对应的javaBean对象，自己手工编写非常麻烦，可以通过 common-dbutils提供的工具方法SqlUtils.exportTables()来生成。
+由于数据库的表，对应的javaBean对象，自己手工编写非常麻烦，可以通过 ulwx-dbutils提供的工具方法SqlUtils.exportTables()来生成。
 
 ```java
 public static void exportTables(
@@ -217,7 +217,7 @@ public class CourseDao {
 
 ```
 
-CourseDao的delAll()和queryListFromMdFile()方法用到了md文件来指定其SQL语句。**md文件要存放于和CourseDao同级目录下**（com.hithub.ulwx.demo.dao），而且md文件名必须为CourseDao.md，即.md前面部分需与CourseDao类名一致，CourseDao.md内容如下：
+CourseDao的delAll()和queryListFromMdFile()方法用md文件指定SQL语句。**md文件要存放于和CourseDao同级目录下**（com.hithub.ulwx.demo.dao），即.md前面部分需与CourseDao类名一致，CourseDao.md内容如下：
 
 **//CourseDao.md**
 
@@ -237,25 +237,25 @@ select * from course where 1=1
 @}
 ```
 
-> common-dbutils在执行数据库操作时会把md文件实时转换成java类文件，并在内存里实时编译成class并加载到jvm。
+> ulwx-dbutils在执行数据库操作时会把md文件实时转换成java类文件，并在内存里实时编译成class并加载到jvm。
 
 下面针对CourseDao.java里标记的序号分别进行解释。
 
 **①  MDbUtils.del(DbPoolName, MD.md(), null)**：删除操作
 
-MDbUtils.del()的第一个参数需传入一个数据源名称，表明是从哪个数据源执行删除操作。这里传入变量DbPoolName的值为"dbutils-demo"，它对应**dbpool.xml**（前面提到的）文件里的①处里的name属性值（<dbpool name="dbutils-demo">）。后面你会看到MDbUtils里的所有方法都得指定数据源。
-
-MDbUtils.del()的第二个参数指定**md方法地址**，**md方法地址**由**md文件地址**和**md方法名**组成，例如"com.hithub.ulwx.demo.dao.CourseDao.md:delAll"，其中com.hithub.ulwx.demo.dao.CourseDao.md为**md文件地址**，它包含md文件所在的完整包路径com.hithub.ulwx.demo.dao，其中CourseDao.md的文件名.md的前面部分要和数据访问类CourseDao的类名保持一致，这里为"CourseDao"。
-
-md文件的内容由多个**md方法**组成，每个**md方法**由两部分组成，即**md方法名**和**md方法体**，在=\=\==上方定义**md方法名**，在\=\=\=\=下方定义**md方法体**，md方法体里编写相应的SQL语句。如CourseDao.md里的定义了两个方法，分别为delAll方法和queryListFromMdFile方法。**md方法名必须和数据库访问类的方法名一致**，在本例中，CourseDao.md:delAll要和CourseDao.delAll()（CourseDao.java里①-1处）方法名一致，既都为delAll。在本例中在第二个参数处并没有显示传入md方法地址，而是通过MD.md()这是个工具方法，MD.md()内部会识别出哪个类的方法调用了MDbUtils.del()，这里识别出了CourseDao.delAll()方法调用了MDbUtils.del()，MD.md()会根据这些信息（CourseDao.delAll()和CourseDao所在的包）最终生成了**md方法地址**：com.hithub.ulwx.demo.dao.CourseDao.md:delAll。common-dbutils会根据**md方法地址**定位到md文件里md方法体找到相应的SQL。
-
-MDbUtils.del()的第三个参数为Map<String, Object> 类型的参数，用于传递md方法体所需的参数，后面会介绍。这里传null，表明CourseDao.md:delAll方法体（CourseDao.md的②处）不需要参数。
+> MDbUtils.del()的第一个参数需传入一个数据源名称，表明是从哪个数据源执行删除操作。这里传入变量DbPoolName的值为"dbutils-demo"，它对应**dbpool.xml**（前面提到的）文件里的①处里的name属性值（<dbpool name="dbutils-demo">）。后面你会看到MDbUtils里的所有方法都得指定数据源。
+>
+> MDbUtils.del()的第二个参数指定**md方法地址**，**md方法地址**由**md文件地址**和**md方法名**组成，例如"com.hithub.ulwx.demo.dao.CourseDao.md:delAll"，其中com.hithub.ulwx.demo.dao.CourseDao.md为**md文件地址**，它包含md文件所在的完整包路径com.hithub.ulwx.demo.dao，其中CourseDao.md的文件名.md的前面部分要和数据访问类CourseDao的类名保持一致，这里为"CourseDao"。
+>
+> md文件的内容由多个**md方法**组成，每个**md方法**由两部分组成，即**md方法名**和**md方法体**，在=\=\==上方定义**md方法名**，在\=\=\=\=下方定义**md方法体**，md方法体里编写相应的SQL语句。如CourseDao.md里的定义了两个方法，分别为delAll方法和queryListFromMdFile方法。**md方法名必须和数据库访问类的方法名一致**，在本例中，CourseDao.md:delAll要和CourseDao.delAll()（CourseDao.java里①-1处）方法名一致，既都为delAll。在本例中在第二个参数处并没有显示传入md方法地址，而是通过MD.md()这是个工具方法，MD.md()内部会识别出哪个类的方法调用了MDbUtils.del()，这里识别出了CourseDao.delAll()方法调用了MDbUtils.del()，MD.md()会根据这些信息（CourseDao.delAll()和CourseDao所在的包）最终生成了**md方法地址**：com.hithub.ulwx.demo.dao.CourseDao.md:delAll。ulwx-dbutils会根据**md方法地址**定位到md文件里md方法体找到相应的SQL。
+>
+> MDbUtils.del()的第三个参数为Map<String, Object> 类型的参数，用于传递md方法体所需的参数，后面会介绍。这里传null，表明CourseDao.md:delAll方法体（CourseDao.md的②处）不需要参数。
 
 **②  MDbUtils.insertReturnKeyBy(DbPoolName, course)** ：插入对象到数据表并返回自增id
 
 MDbUtils.insertReturnKeyBy()方法的第一个参数为数据源名称，对应dbpool.xml里的①处（<dbpool name="dbutils-demo">），指定数据源表明是在哪个数据源上执行操作。
 
-MDbUtils.insertReturnKeyBy()方法的第二个参数传入了一个对象course，common-dbutils会根据对象生成insert语句，这里只会考虑course对象不为空的属性，例如：
+MDbUtils.insertReturnKeyBy()方法的第二个参数传入了一个对象course，ulwx-dbutils会根据对象生成insert语句，这里只会考虑course对象不为空的属性，例如：
 
 ```java
 Course course1=new Course();
@@ -298,7 +298,7 @@ courseDao.update(courseForUpdate);
 update course  set name='course33' where id=24
 ```
 
-可以看出，由于第三个参数传入了courseForUpdate对象的"id"，表明要根据id查询，既组成了"where id=24"，courseForUpdate对象剩余的不为空的属性组成了update的set部分。需要特别说明的是MDbUtils.updateBy()第三个参数传入的为对象的属性名称，不能为对应的表（course）字段的名称，虽然这里它们是一样的，common-dbutils会在生成SQL语句时把对象的属性名称转换为对应表的字段，转换的规则根据dbpool.xml里的<dbpool name="dbutils-demo">的属性 table-colum-rule，这里是underline_to_camel，既下划线转驼峰，还有其它规则，解释见dbpool.xml里的<setting>元素下的子元素<table-colum-rule>。
+可以看出，由于第三个参数传入了courseForUpdate对象的"id"，表明要根据id查询，既组成了"where id=24"，courseForUpdate对象剩余的不为空的属性组成了update的set部分。需要特别说明的是MDbUtils.updateBy()第三个参数传入的为对象的属性名称，不能为对应的表（course）字段的名称，虽然这里它们是一样的，ulwx-dbutils会在生成SQL语句时把对象的属性名称转换为对应表的字段，转换的规则根据dbpool.xml里的<dbpool name="dbutils-demo">的属性 table-colum-rule，这里是underline_to_camel，既下划线转驼峰，还有其它规则，解释见dbpool.xml里的<setting>元素下的子元素<table-colum-rule>。
 
 **④ MDbUtils.queryOneBy(DbPoolName, course)** ：根据对象里的信息查询一条记录并填充到返回的对象。
 
@@ -318,7 +318,6 @@ select * from course  where name='course33' and class_hours=13
 ```
 
 MDbUtils.queryOneBy()方法根据不为null的属性生成select语句的where条件部分，属性构成的条件为and关系。
-
 
 
 
