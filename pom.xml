@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>common-dbutils</artifactId>
+	<artifactId>aka-dbutils</artifactId>
 	<groupId>com.github.ulwx</groupId>
 	<version>1.0.0-SNAPSHOT</version>
 	<parent>
 		<groupId>com.github.ulwx</groupId>
-		<artifactId>common-dbutils-parent</artifactId>
+		<artifactId>aka-dbutils-parent</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
-		<relativePath>../common-dbutils-parent/pom.xml</relativePath>
+		<relativePath>../aka-dbutils-parent/pom.xml</relativePath>
 	</parent>
 	<dependencies>
 		<dependency>
@@ -41,13 +41,23 @@
 			<artifactId>tomcat-jdbc</artifactId>
 			<version>8.5.15</version>
 		</dependency>
+<!--		<dependency>-->
+<!--		    <groupId>mysql</groupId>-->
+<!--		    <artifactId>mysql-connector-java</artifactId>-->
+<!--		    <version>5.1.43</version>-->
+<!--			<scope>provided</scope>-->
+<!--		</dependency>-->
 		<dependency>
-		    <groupId>mysql</groupId>
-		    <artifactId>mysql-connector-java</artifactId>
-		    <version>5.1.43</version>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.23</version>
 			<scope>provided</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>org.owasp.esapi</groupId>
+			<artifactId>esapi</artifactId>
+			<version>2.2.2.0</version>
+		</dependency>
 	</dependencies>
 
 
