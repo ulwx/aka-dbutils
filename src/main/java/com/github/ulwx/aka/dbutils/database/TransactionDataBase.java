@@ -29,7 +29,8 @@ public class TransactionDataBase extends DataBaseDecorator {
 		if (stack != null) {
 			Map<String, DataBaseDecorator> context = DbContext.getTransactionContextStackTopContext(stack);
 			if (context != null) {// 如果在事务上下文中,则新建的数据库实例放入当前上下文中
-				DataBaseDecorator contextDb = DbContext.findDataBaseInTransactionContextStack(dbPoolName);
+				DataBaseDecorator contextDb =
+						DbContext.findDataBaseInTransactionContextStack(dbPoolName);
 				if (contextDb != null) {
 					this.db=contextDb.db;
 					log.debug(dbPoolName+"：db from context stack!");
@@ -39,8 +40,8 @@ public class TransactionDataBase extends DataBaseDecorator {
 							+ ObjectUtils.toJsonString(context.keySet())+":level="+level);
 					return;
 				} else {
-					db.connectDb(dbPoolName, mainSlaveModeConnectMode);
-					db.setAutoCommit(false);
+					this.db.connectDb(dbPoolName, mainSlaveModeConnectMode);
+					this.db.setAutoCommit(false);
 					log.debug(dbPoolName+": a new db is created and put into context stack!");
 				}
 				context.put(dbPoolName, this);

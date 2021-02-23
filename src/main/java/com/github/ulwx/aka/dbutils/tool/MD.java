@@ -24,7 +24,7 @@ public class MD {
         String methodName=ste.getMethodName();
         return className+".md:"+methodName;
     }
-    public static Object[] o(Object... args){
+    public static Object[] objs(Object... args){
         return args;
     }
     public static String[] of(String... args){

@@ -28,7 +28,6 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.sql.*;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -185,6 +184,7 @@ public class DataBaseImpl implements DataBase {
 
             return this.conn.getAutoCommit();
         } catch (Exception ex) {
+            if(ex instanceof  DbException) throw (DbException)ex;
             throw new DbException(ex);
         }
     }
@@ -194,6 +194,7 @@ public class DataBaseImpl implements DataBase {
 
             this.conn.setAutoCommit(autoCommit);
         } catch (Exception ex) {
+            if(ex instanceof  DbException) throw (DbException)ex;
             throw new DbException(ex);
         }
     }
@@ -224,6 +225,7 @@ public class DataBaseImpl implements DataBase {
             this.dataBaseType = DialectClient.decideDialect(driverName, databaseName, majorVersion, minorVersion);
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException("get pool connection error!", e);
         }
     }
@@ -251,7 +253,6 @@ public class DataBaseImpl implements DataBase {
         this.dataSource = null;
         this.dbPoolName = "";
         this.setDataBaseType(conn);
-
     }
 
     @Override
@@ -271,6 +272,7 @@ public class DataBaseImpl implements DataBase {
             this.dbPoolName = "";
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException("get pool connection error!", e);
         }
     }
@@ -346,10 +348,12 @@ public class DataBaseImpl implements DataBase {
             }
             this.setInternalConnectionAutoCommit(this.getAutoCommit());
             this.setDataBaseType(conn);
-            log.debug(Thread.currentThread().getId() + ":create a new db[" + this.dbPoolName + "]connect:" + msg + ",connect time:"
+            log.debug(Thread.currentThread().getId() + ":create a new db connection[" + this.dbPoolName + "]connect:" + msg + ",connect time:"
                     + (System.currentTimeMillis() - start0) + " 毫秒");
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
+
         }
     }
 
@@ -372,6 +376,7 @@ public class DataBaseImpl implements DataBase {
             this.mainSlaveModeConnectMode = mainSlaveModeConnectMode;
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException("get pool connection error!", e);
         }
 
@@ -497,6 +502,7 @@ public class DataBaseImpl implements DataBase {
         } catch (Exception e) {
             // log.error("", e);
             crs = null;
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         } finally {
             try {
@@ -629,6 +635,7 @@ public class DataBaseImpl implements DataBase {
                     queryOptions, this.getDataBaseType());
             DbContext.clearReflectClass();
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
         return doQueryClass(clazz, sql, vParameters);
@@ -868,7 +875,7 @@ public class DataBaseImpl implements DataBase {
             }
             return results;
         } catch (Exception e) {
-            // log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         } finally {
             try {
@@ -1027,14 +1034,14 @@ public class DataBaseImpl implements DataBase {
                     }
 
                 } catch (Exception e) {
-                    // log.error("", e);
+                    if(e instanceof  DbException) throw (DbException)e;
                     throw new DbException(e);
 
                 }
             } // while
 
         } catch (Exception e) {
-            // log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
 
         } finally {
@@ -1166,13 +1173,13 @@ public class DataBaseImpl implements DataBase {
                     }
 
                 } catch (Exception e) {
-                    // log.error("", e);
+                    if(e instanceof  DbException) throw (DbException)e;
                     throw new DbException(e);
 
                 }
             } // while
         } catch (Exception e) {
-            // log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
 
         } finally {
@@ -1315,7 +1322,7 @@ public class DataBaseImpl implements DataBase {
             return sql;
 
         } catch (Exception e) {
-            // log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
     }
@@ -1340,9 +1347,7 @@ public class DataBaseImpl implements DataBase {
     private DataBaseSet getResultSet(String sqlQuery, Collection<Object> vParameters) throws Exception {
 
         PreparedStatement preStmt = this.getPreparedStatement(sqlQuery);
-
         String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
-
         if (log.isDebugEnabled()) {
             String line = System.getProperty("line.separator");
             // log.debug("sql [" + sqlQuery + "]" + " sql param[ " + paramStr + " ]");
@@ -1458,7 +1463,7 @@ public class DataBaseImpl implements DataBase {
      * @throws DbException
      */
 
-    private int executeStoredProcedure(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
+    private void executeStoredProcedure(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
                                        List<DataBaseSet> returnDataBaseSets) throws DbException {
         boolean close = true;
         try {
@@ -1551,7 +1556,6 @@ public class DataBaseImpl implements DataBase {
                         continue;
                         // 是结果集,处理完成后应该移动到下一行
                     }
-                    // 如果到了这里,说明updateCount == -1 && rs == null,什么也没的了
 
                 } while (!(updateCount == -1 && rs == null));
             }
@@ -1561,7 +1565,7 @@ public class DataBaseImpl implements DataBase {
             SqlUtils.getValueFromCallableStatement(cs, outParms, outPramsValues);
 
         } catch (Exception e) {
-            log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         } finally {
             try {
@@ -1576,7 +1580,6 @@ public class DataBaseImpl implements DataBase {
                 log.error("", e2);
             }
         }
-        return 0;
     }
 
     /**
@@ -1606,10 +1609,10 @@ public class DataBaseImpl implements DataBase {
      * @throws DbException
      */
     @Override
-    public int callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
+    public void callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
                              List<DataBaseSet> returnDataBaseSets) throws DbException {
 
-        return this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
+         this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
 
     }
 
@@ -1634,6 +1637,7 @@ public class DataBaseImpl implements DataBase {
         try {
             sqltext = sqltext.trim();
             PreparedStatement preStmt = this.getPreparedStatement(sqltext);
+
             String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
 
             if (log.isDebugEnabled()) {
@@ -1671,8 +1675,7 @@ public class DataBaseImpl implements DataBase {
         } catch (Exception e) {
             twoInt[0] = -1;
             twoInt[1] = -1;
-            // log.error("", e);
-
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
 
         } finally {
@@ -1764,6 +1767,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindInsert(sqltext, vParameters);
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
 
@@ -1801,7 +1805,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindInsertReturnKey(sqltext, vParameters);
 
         } catch (Exception e) {
-            // log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
 
@@ -1922,7 +1926,7 @@ public class DataBaseImpl implements DataBase {
             }
 
         } catch (Exception e) {
-            // log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
 
@@ -1998,6 +2002,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindUpdate(sqltext, vParameters);
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
 
@@ -2034,6 +2039,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindUpdate(sqltext, vParameters);
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
 
@@ -2082,6 +2088,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindDelete(sql, vParameters);
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
     }
@@ -2111,6 +2118,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindDelete(sql, vParameters);
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
     }
@@ -2308,7 +2316,7 @@ public class DataBaseImpl implements DataBase {
             }
 
         } catch (Exception e) {
-            // log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
     }
@@ -2369,7 +2377,7 @@ public class DataBaseImpl implements DataBase {
             }
 
         } catch (Exception e) {
-            // log.error("", e);
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
     }
@@ -2441,8 +2449,9 @@ public class DataBaseImpl implements DataBase {
             if (this.conn != null && !this.conn.isClosed()) {
                 this.setInternalConnectionAutoCommit(b);
             }
-        } catch (SQLException throwables) {
-            throw new DbException(throwables);
+        } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
+            throw new DbException(e);
         }
 
     }
@@ -2460,8 +2469,8 @@ public class DataBaseImpl implements DataBase {
                 conn.rollback();
                 log.debug(Thread.currentThread().getId() + ":" + this.dbPoolName + ":rollback..");
             }
-        } catch (SQLException e) {
-            // log.error("", e);
+        } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
     }
@@ -2480,6 +2489,7 @@ public class DataBaseImpl implements DataBase {
                 return true;
             }
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException("error in isClosed!");
         }
         return result;
@@ -2498,8 +2508,8 @@ public class DataBaseImpl implements DataBase {
                 conn.commit();
                 log.debug(Thread.currentThread().getId() + ":" + this.dbPoolName + ":commit...");
             }
-        } catch (SQLException e) {
-            // log.error("", e);
+        } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
     }
@@ -2565,6 +2575,7 @@ public class DataBaseImpl implements DataBase {
             if (backAutoCommit) {
                 this.rollback();
             }
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
 
         } finally {
@@ -2643,9 +2654,8 @@ public class DataBaseImpl implements DataBase {
                     this.rollback();
                 }
             } catch (DbException e) {
-                //
-                // log.error("", e);
             }
+            if(ex instanceof  DbException) throw (DbException)ex;
             throw new DbException(ex);
 
         } finally {
@@ -2745,9 +2755,9 @@ public class DataBaseImpl implements DataBase {
         return this.cs;
 
     }
-
     private PreparedStatement getPreparedStatement(String sqltxt) throws DbException {
         try {
+
             if (StringUtils.startsWithIgnoreCase(sqltxt.trim(), "select")) {
                 try {
                     this.sqlType = SQLType.SELECT;
@@ -2775,13 +2785,13 @@ public class DataBaseImpl implements DataBase {
                 this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt);
             } else {
-                this.sqlType = SQLType.OTHER;
                 this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt);
 
             }
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
         return ps;
@@ -2808,8 +2818,8 @@ public class DataBaseImpl implements DataBase {
 
             }
 
-        } catch (SQLException e) {
-            // log.error("", e);
+        } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
     }
@@ -3039,6 +3049,7 @@ public class DataBaseImpl implements DataBase {
             DbContext.clearReflectClass();
 
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
         return this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
@@ -3070,6 +3081,7 @@ public class DataBaseImpl implements DataBase {
 
             DbContext.clearReflectClass();
         } catch (Exception e) {
+            if(e instanceof  DbException) throw (DbException)e;
             throw new DbException(e);
         }
         return this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
@@ -3112,7 +3124,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public String exeScript(Reader reader, boolean throwWarning,Map<String, Object> args) throws DbException {
+    public String exeScript(Reader reader, boolean throwWarning, Map<String, Object> args) throws DbException {
 
         String ret = this.exeBatchSQLTemplate(() -> {
             try {
@@ -3124,6 +3136,7 @@ public class DataBaseImpl implements DataBase {
                 scriptRunner.setArgs(args);
                 return scriptRunner.runScriptByLine(reader);
             } catch (Exception e) {
+                if(e instanceof  DbException) throw (DbException)e;
                 throw new DbException(e);
             } finally {
                 try {
@@ -3186,7 +3199,7 @@ public class DataBaseImpl implements DataBase {
         private final String LINE_SEPARATOR = System.getProperty("line.separator", "\n");
 
         private final String DEFAULT_DELIMITER = ";";
-        private final String DELIMITER_LINE_START="DELIMITER ";
+        private final String DELIMITER_LINE_START = "DELIMITER ";
         private final Pattern DELIMITER_PATTERN = Pattern
                 .compile("^\\s*((--)|(//))?\\s*(//)?\\s*@DELIMITER\\s+([^\\s]+)", Pattern.CASE_INSENSITIVE);
 
@@ -3197,12 +3210,13 @@ public class DataBaseImpl implements DataBase {
 
         private StringWriter resultWriter = new StringWriter();
         private PrintWriter resultPrintWriter = new PrintWriter(resultWriter);
-
-        private  Map<String, Object> args=null;
+        private String transactionId="";
+        private Map<String, Object> args = null;
         private String delimiter = DEFAULT_DELIMITER;
 
         public ScriptRunner(Connection connection) {
             this.connection = connection;
+            this.transactionId=System.currentTimeMillis()+"-"+RandomUtils.getRandomNumberString(6);
         }
 
         public Map<String, Object> getArgs() {
@@ -3247,8 +3261,7 @@ public class DataBaseImpl implements DataBase {
                 checkForMissingLineTerminator(command);
                 return this.resultWriter.toString();
             } catch (Exception e) {
-               // String message = "Error executing: " + command + ".  Cause: " + e;
-                throw new RuntimeSqlException( e);
+                throw new DbException(e);
             }
         }
 
@@ -3265,11 +3278,11 @@ public class DataBaseImpl implements DataBase {
                 if (matcher.find()) {
                     delimiter = matcher.group(5);
                 }
-            }else if(delimiterLine(trimmedLine)){
-                String delimiterStr=StringUtils.substring(trimmedLine,DELIMITER_LINE_START.length()).trim();
-                this.delimiter=delimiterStr;
+            } else if (delimiterLine(trimmedLine)) {
+                String delimiterStr = StringUtils.substring(trimmedLine, DELIMITER_LINE_START.length()).trim();
+                this.delimiter = delimiterStr;
             } else if (commandReadyToExecute(trimmedLine)) {
-                int lastDelimiterPos=line.lastIndexOf(delimiter);
+                int lastDelimiterPos = line.lastIndexOf(delimiter);
                 command.append(line.substring(0, lastDelimiterPos));
                 command.append(LINE_SEPARATOR);
                 executePreparedStatement(command.toString());
@@ -3285,64 +3298,75 @@ public class DataBaseImpl implements DataBase {
         }
 
         private boolean delimiterLine(String trimmedLine) {
-            if(DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
+            if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
                 return StringUtils.startsWithIgnoreCase(trimmedLine, DELIMITER_LINE_START);
-            }else{
+            } else {
                 return false;
             }
 
         }
+
         private boolean commandReadyToExecute(String trimmedLine) {
             if (trimmedLine.endsWith(delimiter)) return true;
             return false;
         }
+
         private void executePreparedStatement(String command) throws Exception {
 
             PreparedStatement statement = null;
             try {
+                boolean handArgs=false;
+                String source="";
                 String sqltext = command.trim();
                 if (removeCRs) {
                     sqltext = sqltext.replaceAll("\r\n", "\n");
                 }
-                try {
 
-                    String preparedSql=sqltext;
-                    NSQL nsql=null;
-                    if(this.args!=null && args.size()>0){
-                        nsql=NSQL.getNSQL(sqltext, "", this.args, false);
-                        preparedSql=nsql.getExeSql();
-                    }
-                    statement = DataBaseImpl.this.getPreparedStatement(preparedSql);
-                    if(this.args!=null && args.size()>0){
-                        String paramStr = SqlUtils.setToPreStatment(nsql.getArgs(), statement);
-                    }
-
-                    statement.setEscapeProcessing(escapeProcessing);
-                    if (log.isDebugEnabled()) {
-                        if (this.args != null && args.size() > 0) {
-                            Collection<Object> vParameters = CollectionUtils.getSortedValues(nsql.getArgs());
-                            log.debug("debugSql[" + SqlUtils.generateDebugSql(preparedSql, vParameters) + "]");
-                        }else{
-                            log.debug("debugSql[" + preparedSql + "]");
+                if (this.args != null && args.size() > 0) {
+                    ScriptOption scriptOption = (ScriptOption)this.args.get(ScriptOption.class.getName());
+                    if(scriptOption!=null){
+                        source=scriptOption.getSource();
+                        if(scriptOption.isFromMDMethod()){
+                            handArgs=true;
                         }
                     }
-                    long start = System.currentTimeMillis();
-
-                    boolean hasResults = statement.execute();
-                    if (log.isDebugEnabled()) {
-                        log.debug("sql执行:" + (System.currentTimeMillis() - start));
-                    }
-                    while (!(!hasResults && statement.getUpdateCount() == -1)) {
-                        checkWarnings(statement);
-                        printResults(statement, hasResults);
-                        hasResults = statement.getMoreResults();
-                    }
-
-                } catch (SQLWarning e) {
-                    throw e;
-                } catch (SQLException e) {
-                    throw e;
                 }
+                String preparedSql = sqltext;
+                NSQL nsql = null;
+                if (handArgs) {
+                    nsql = NSQL.getNSQL(sqltext, source, this.args, false);
+                    preparedSql = nsql.getExeSql();
+                }
+                statement = DataBaseImpl.this.getPreparedStatement(preparedSql);
+                if (handArgs) {
+                    String paramStr = SqlUtils.setToPreStatment(nsql.getArgs(), statement);
+                }
+
+                statement.setEscapeProcessing(escapeProcessing);
+                if (log.isDebugEnabled()) {
+                    if (handArgs) {
+                        Collection<Object> vParameters = CollectionUtils.getSortedValues(nsql.getArgs());
+                        log.debug("transactionId:"+transactionId+":debugSql[" + SqlUtils.generateDebugSql(preparedSql, vParameters) + "]");
+                    } else {
+                        log.debug(transactionId+":debugSql[" + preparedSql + "]");
+                    }
+                }
+                long start = System.currentTimeMillis();
+
+                boolean hasResults = statement.execute();
+                if (log.isDebugEnabled()) {
+                    log.debug("sql执行:" + (System.currentTimeMillis() - start));
+                }
+                while (!(!hasResults && statement.getUpdateCount() == -1)) {
+                    checkWarnings(statement);
+                    printResults(statement, hasResults);
+                    hasResults = statement.getMoreResults();
+                }
+
+            } catch (SQLWarning e) {
+                throw e;
+            } catch (SQLException e) {
+                throw e;
             } finally {
                 try {
                     if (statement != null) {
@@ -3390,8 +3414,8 @@ public class DataBaseImpl implements DataBase {
                     }
                     resultPrintln("");
                 }
-            } catch (SQLException e) {
-                throw new RuntimeSqlException("Error printing results: " + e, e);
+            } catch (Exception e) {
+                throw new DbException("Error printing results: " + e, e);
             }
         }
 

@@ -7,7 +7,10 @@ import com.github.ulwx.aka.dbutils.tool.PageBean;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,11 +51,17 @@ public class MDataBaseImpl implements  MDataBase {
     public String exeScript(String packageFullName, String sqlFileName, boolean throwWarning) throws DbException {
 
         packageFullName = packageFullName.replace(".", "/");
-        InputStream in = this.getClass().getResourceAsStream("/" + packageFullName + "/" + sqlFileName);
+        String source="/" + packageFullName + "/" + sqlFileName;
+        InputStream in = this.getClass().getResourceAsStream(source);
         BufferedReader bufReader = null;
         try {
             bufReader = new BufferedReader(new InputStreamReader(in, "utf-8"));
-            return this.dataBase.exeScript(bufReader, throwWarning,null);
+            Map<String, Object> args=new HashMap<>();
+            ScriptOption scriptOption=new ScriptOption();
+            scriptOption.setSource(source);
+            scriptOption.setFromMDMethod(false);
+            args.put(ScriptOption.class.getName(),scriptOption);
+            return this.dataBase.exeScript(bufReader, throwWarning,args);
         } catch (Exception e) {
             if(e instanceof DbException){
                 throw (DbException)e;
@@ -80,6 +89,10 @@ public class MDataBaseImpl implements  MDataBase {
         }
 
         StringReader sr = new StringReader(sql);
+        ScriptOption scriptOption=new ScriptOption();
+        scriptOption.setSource(mdFullMethodName);
+        scriptOption.setFromMDMethod(true);
+        args.put(ScriptOption.class.getName(),scriptOption);
         return this.dataBase.exeScript(sr,false,args);
 
     }
@@ -252,7 +265,7 @@ public class MDataBaseImpl implements  MDataBase {
      */
 
     @Override
-    public int callStoredPro(String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues,
+    public void callStoredPro(String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues,
                              List<DataBaseSet> returnDataBaseSets) throws DbException {
 
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, parms, true);
@@ -260,17 +273,16 @@ public class MDataBaseImpl implements  MDataBase {
         Map<String, Object> argsNew = new HashMap<String, Object>();
         for (Integer key : args.keySet()) {
             TResult2<String, Object> val = (TResult2<String, Object>) args.get(key);
-            argsNew.put(key + val.getFirstValue(), val.getSecondValue());
+            argsNew.put(key +":"+ val.getFirstValue(), val.getSecondValue());
         }
         Map<Integer, Object> outPramsValuesNew = new HashMap<Integer, Object>();
-        int ret = this.dataBase.callStoredPro(nsql.getExeSql(), argsNew, outPramsValuesNew, returnDataBaseSets);
+        this.dataBase.callStoredPro(nsql.getExeSql(), argsNew, outPramsValuesNew, returnDataBaseSets);
         Map<Integer, String> argsToKey = nsql.getArgsToKey();
         for (Integer key : outPramsValuesNew.keySet()) {
             Object val = outPramsValuesNew.get(key);
             outPramsValues.put(argsToKey.get(key), val);
         }
 
-        return ret;
 
     }
 

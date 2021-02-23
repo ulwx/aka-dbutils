@@ -42,6 +42,8 @@ public final class MDTemplate {
 		sb.append("\npackage " + packageName + ";\n");
 		sb.append("import java.util.Map;\n");
 		sb.append("import " + importPackageName + ".NFunction;\n");
+		sb.append("import " + importPackageName + ".MDTemplate;\n");
+		sb.append("import " + importPackageName + ".MDMehtodOptions;\n");
 		sb.append("import static " +importPackageName +".NFunction.*;\n");
 		sb.append("public class " + className + " {\n");
 		tabNum.setValue(tabNum.getValue() + 1);
@@ -53,11 +55,14 @@ public final class MDTemplate {
 
 	}
 
-	public static void startMethod(StringBuilder sb, String curMethodName, TInteger tabNum) {
+	public static void startMethod(StringBuilder sb,String className, String curMethodName, TInteger tabNum) {
 		sb.append(TAB(tabNum.getValue()) + "public static String " + curMethodName
 				+ "(Map<String, Object> args)throws Exception{\n");
 		tabNum.setValue(tabNum.getValue() + 1);
 		sb.append(TAB(tabNum.getValue()) + "String retString=\"\";\n");
+		sb.append(TAB(tabNum.getValue()) + "MDMehtodOptions options = new MDMehtodOptions();\n");
+		sb.append(TAB(tabNum.getValue()) +"options.setSource(trimRight(\"" +className + "\",2)+\".md:" +
+				curMethodName + "\");\n");
 	}
 
 	public static void figureTabNumForNextLine(String s, TBoolean LeftBruce, TBoolean RightBruce) {
@@ -127,25 +132,27 @@ public final class MDTemplate {
 	public static void handerString(StringBuilder sb, String handLine, TInteger tabNum, String packageName,
 			String className) {
 		// 判断handLine里是否有${}，表名是java表达式
-
 		handLine = StringUtils.replaceAll(handLine, "\\$\\{(" + javaExpressReg + ")}", 1, new GroupHandler() {
 			@Override
 			public String handler(String groupStr) {
-				String str = StringUtils.trim(groupStr);
-				if (str.startsWith("=")) {
-					return "\"+(" + str.substring(1) + ")+\"";
-				} else if (str.startsWith("&")) {
+				String key = StringUtils.trim(groupStr);
+				if (key.startsWith("=")) {
+					return "\"+(" + key.substring(1) + ")+\"";
+				} else if (key.startsWith("&")) {
+					// ${&getDataCount2}
 					// ${&com.github.ulwx.database.test.TestDao.md:getDataCount2}
-					String tempStr = str.substring(1);
+					String tempStr = key.substring(1);
 					String[] strs = tempStr.split(":");
 					if (strs.length == 1) {
+
 						strs = new String[] { packageName + "." + StringUtils.trimTailString(className, "Md") + ".md",
 								strs[0] };
 					}
-					return "\"+(" + MDTemplate.class.getName()+ ".getResultString(\"" + strs[0].trim() + "\", \""
+					return "\"+(" + MDTemplate.class.getSimpleName()+ ".getResultString(\"" + strs[0].trim() + "\", \""
 							+ strs[1].trim() + "\", args)" + ")+\"";
 				} else {
-					return "\"+(" + "args.get(\"" + groupStr + "\") " + ")+\"";
+
+					return "\"+(" + NFunction.class.getSimpleName()+".argValue(\"" + groupStr + "\",args,\",\",options)" + ")+\"";
 				}
 
 			}
@@ -190,7 +197,7 @@ public final class MDTemplate {
 						if (StringUtils.hasText(preMethodName)) {
 							endMethod(sb, tabNum);
 						}
-						startMethod(sb, curMethodName, tabNum);
+						startMethod(sb, className,curMethodName, tabNum);
 					} else {
 						throw new NSQLException("===上没有方法名");
 					}
@@ -207,7 +214,7 @@ public final class MDTemplate {
 									if (StringUtils.hasText(preMethodName)) {
 										endMethod(sb, tabNum);
 									}
-									startMethod(sb, curMethodName, tabNum);
+									startMethod(sb,className, curMethodName, tabNum);
 								} else {
 									throw new NSQLException("===上没有方法名");
 								}
@@ -270,7 +277,7 @@ public final class MDTemplate {
 		String filePahtMd = packageName.replace(".", "/");
 		filePahtMd = filePahtMd + "/" + StringUtils.trimTailString(className, "Md") + ".md";
 		// 查找对应的sql语句
-		log.debug("md path:"+filePahtMd);
+		log.debug("convert to java source from  md-file-path:"+filePahtMd+" ");
 		InputStream in = MDTemplate.class.getResourceAsStream("/" + filePahtMd);
 
 		BufferedReader bufReader = null;
@@ -322,12 +329,13 @@ public final class MDTemplate {
 
 		Class<?> clazz = CompilerTask.preCompileSingle(mdPath);
 		if (log.isDebugEnabled()) {
-			log.debug("mdPath=" + mdPath + ",methodName=" + methodName + ",args=" + ObjectUtils.toString(args));
+			log.debug("mdPath=" + mdPath + ",methodName=" + methodName + ",args=" + ObjectUtils.toString(args)+",class="+clazz);
 		}
-		log.debug("class="+clazz);
 		Method method = clazz.getMethod(methodName, Map.class);
 		String resultStr = (String) method.invoke(null, args);
-
+		if (log.isDebugEnabled()) {
+			log.debug("mdmethod call and return sql="+resultStr);
+		}
 		return resultStr;
 	}
 

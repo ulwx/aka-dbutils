@@ -2,7 +2,6 @@ package com.github.ulwx.aka.dbutils.database;
 
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +47,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable{
 
     int del(String mdFullMethodName, Map<String, Object> args) throws DbException;
 
-    int callStoredPro(String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues,
+    void callStoredPro(String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues,
                       List<DataBaseSet> returnDataBaseSets) throws DbException;
 
     int insert(String mdFullMethodName, Map<String, Object> args) throws DbException;

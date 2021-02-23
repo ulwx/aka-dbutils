@@ -2,7 +2,6 @@ package com.github.ulwx.aka.dbutils.tool;
 
 import com.github.ulwx.aka.dbutils.database.*;
 
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,9 +94,10 @@ public class DbUtils extends BaseDao {
         }, dbpoolName);
     }
 
-    public static int callStoredPro(String dbpoolName, String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues, List<DataBaseSet> returnDataBaseSets) throws DbException {
-        return execute(db -> {
-            return db.callStoredPro(sqltext, parms, outPramsValues, returnDataBaseSets);
+    public static void callStoredPro(String dbpoolName, String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues, List<DataBaseSet> returnDataBaseSets) throws DbException {
+         execute(db -> {
+             db.callStoredPro(sqltext, parms, outPramsValues, returnDataBaseSets);
+             return 1;
         }, dbpoolName);
     }
 

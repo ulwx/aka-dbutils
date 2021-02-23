@@ -63,7 +63,7 @@ public class CompilerTask {
 
             }
         }
-        log.debug(ObjectUtils.toString(mdPathList));
+        log.debug("to compile--"+ObjectUtils.toString(mdPathList));
 
         for (int i = 0; i < mdPathList.size(); i++) {
             preCompileSingle(mdPathList.get(i));
@@ -87,7 +87,10 @@ public class CompilerTask {
                 if (clazz == null) {
                     String source = MDTemplate.parseFromMdFileToJavaSource(packageName, className);
                     if (log.isDebugEnabled()) {
-                        log.debug("compile-" + source);
+                        log.debug("to compile-"
+                                + classFullName
+                                +" ;source="+source
+                        );
                     }
                     clazz = CompilerTask.compileAndLoadClass(classFullName, source);
                 }

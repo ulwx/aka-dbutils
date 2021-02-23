@@ -10,7 +10,6 @@ public class NSQLException extends Exception {
 
 	public NSQLException(Throwable cause) {
 		super(cause);
-		//causes.add(cause);
 	}
 
 	public NSQLException(String msg,Throwable cause) {

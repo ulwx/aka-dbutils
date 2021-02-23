@@ -3,7 +3,6 @@ package com.github.ulwx.aka.dbutils.tool;
 import com.github.ulwx.aka.dbutils.database.*;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,12 +30,11 @@ public class MDbUtils extends BaseDao {
     /**
      * 执行sql脚本，packageFullName指定SQL脚本所在的包（全路径），sqlFileName为脚本文件的名称，脚本文件里存放的是SQL脚本，
      * 整个脚本的执行在一个事务里，如果执行过程中出错则抛出异常并回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
-     * 也可以指定脚本是一次执行还是一行一行执行（根据英文分号判定一行）
+     * 脚本是按每个语句依次执行，脚本里每个语句的分界是根据英文分号和回车换行共同判定，即 ";\r\n"
      * @param dbpoolName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param packageFullName 指定SQL脚本所在的包（全路径）
      * @param sqlFileName 为脚本文件的名称，脚本文件里存放的是SQL脚本
      * @param throwWarning 脚本执行时如果出现warning时是否抛出异常并回滚
-     * @param args 脚本内容里所用到的参数
      * @return  返回执行脚本的结果
      * @throws DbException
      */
@@ -48,10 +46,11 @@ public class MDbUtils extends BaseDao {
     }
 
     /**
-     * 执行md方法地址指定的脚本，并且可以传入参数
+     * 执行md方法地址指定的脚本，并且可以传入参数,脚本里执行时按每个SQL语句执行，执行的时候利用的是jdbc的PrepareStatement，能有效防止注入式攻击
      * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param mdFullMethodName md方法地址
      * @param args  传入md方法的参数
+     * @param delimiters 指定每个SQL语句的分界，例如";"
      * @return  返回脚本执行的结果
      * @throws DbException
      */
@@ -497,9 +496,42 @@ public class MDbUtils extends BaseDao {
     }
 
 
-    public static  int callStoredPro(String dbpoolName, String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues, List<DataBaseSet> returnDataBaseSets) throws DbException {
-        return mdbExecute(mdb -> {
-            return mdb.callStoredPro(mdFullMethodName, parms, outPramsValues, returnDataBaseSets);
+    /**
+     * 执行存储过程，可传入参数，得到输出参数和返回的结果集，
+     * 传入参数的用法如下：
+     * <blockquote><pre>
+     * //parms参数可以按如下形式添加
+     * parms.put("country","U.S.A");//默认为in类型
+     * parms.put("province:in","New York");
+     * parms.put("count:in",new Integer(3));
+     * parms.put("oSumCnt:out",int.class); //①
+     * //parms.put("oSumCnt:out",3); //和①处的效果一样，但用的是Integer类型
+     * parms.put("oData:out",java.util.date.class);
+     * parms.put("ioQuantity:inout",new Long(44));//使用的是Long类型
+     *
+     * 如果参数是out类型（key里含有:out），则既可以给value里指定一个类型（①处），也可以指定一个具体的值（aka-dbutils可以根据值获取输出的类型）
+     * 如果参数是inout类型（key里含有:inout)，则可以指定具体值
+     *
+     * //outPramsValues存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应，
+     * //上面的例子产生的输出参数如下：
+     * {
+     *   oSumCnt:45556,
+     *   oData:"2015-09-23 12:34:56"
+     *   ioQuantity:34456
+     * }</blockquote></pre>
+     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName md方法地址
+     * @param parms  传入的参数
+     * @param outPramsValues   输出参数
+     * @param returnDataBaseSets  返回的结果集
+     * @return
+     * @throws DbException
+     */
+    public static  void callStoredPro(String dbpoolName, String mdFullMethodName, Map<String, Object> parms,
+                                     Map<String, Object> outPramsValues, List<DataBaseSet> returnDataBaseSets) throws DbException {
+         mdbExecute(mdb -> {
+             mdb.callStoredPro(mdFullMethodName, parms, outPramsValues, returnDataBaseSets);
+             return 1;
         }, dbpoolName);
     }
     /**

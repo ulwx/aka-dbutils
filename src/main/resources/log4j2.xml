@@ -37,7 +37,10 @@
 	  <AppenderRef ref="A1"/>
 	   <AppenderRef ref="STDOUT"/>
 	</logger>
-	
+	  <logger name="com.github.ulwx.aka.dbutils.database.nsql" additivity="false" level="ERROR">
+		  <AppenderRef ref="A1"/>
+		  <AppenderRef ref="STDOUT"/>
+	  </logger>
     <Root level="trace">
       <AppenderRef ref="STDOUT"/>
     </Root>

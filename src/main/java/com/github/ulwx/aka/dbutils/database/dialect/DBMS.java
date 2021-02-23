@@ -1,6 +1,7 @@
 package com.github.ulwx.aka.dbutils.database.dialect;
 
 import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.dialect.codes.*;
 import com.github.ulwx.aka.dbutils.database.dialect.page.DialectPageSqlTemplate;
 import com.github.ulwx.aka.dbutils.tool.support.Assert;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
@@ -100,6 +101,7 @@ public enum DBMS {
     private String sqlTemplate = null;
     private String topLimitTemplate = null;
     private DBType dbType=null;
+    private Codec codec=new CommonDBCodec();
     static {
         for (DBMS d : DBMS.values()) {
             d.sqlTemplate = DialectPageSqlTemplate.initializePaginSQLTemplate(d);
@@ -115,20 +117,24 @@ public enum DBMS {
     private void decideDBType(){
         if(isMySqlFamily()){
             dbType=DBType.MYSQL;
+            codec=new MySQLCodec(MySQLCodec.Mode.STANDARD);
         }else if(isInfomixFamily()){
             dbType=DBType.INFOMIX;
         }else if(isOracleFamily()){
             dbType=DBType.ORACLE;
+            codec=new OracleCodec();
         }else if(isSQLServerFamily()){
             dbType=DBType.MS_SQL_SERVER;
         }else if(isH2Family()){
             dbType=DBType.H2;
         }else if(isPostgresFamily()){
             dbType=DBType.POSTGRE;
+            codec=new OracleCodec();
         }else if(isSybaseFamily()){
             dbType=DBType.SYBASE;
         }else if(isDB2Family()){
             dbType=DBType.DB2;
+            codec=new DB2Codec();
         }else if(isDerbyFamily()){
             dbType=DBType.DERBY;
         }else if (isSQLiteFamily()){
@@ -138,6 +144,14 @@ public enum DBMS {
         }else{
             dbType=DBType.OTHER;
         }
+    }
+
+    public String encodeForSQL(String str){
+        if(codec!=null){
+            char[] IMMUNE_SQL = { ' ' };
+           return  codec.encode(IMMUNE_SQL, str);
+        }
+        return str;
     }
     /**
      * @return true if is MySql family

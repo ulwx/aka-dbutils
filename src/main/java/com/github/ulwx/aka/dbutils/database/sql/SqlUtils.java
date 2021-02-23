@@ -769,24 +769,22 @@ public class SqlUtils {
 			}
 			where = StringUtils.trim(where);
 			where = StringUtils.trimTailString(where, "and");
-			if (where.equals("where")) {
-				//
-			}else {
+			if (!where.equals("where")) {
 				sql = sql + " " + where + " ";
-				if (selectObject instanceof MdbOptions) {
-					MdbOptions mm = (MdbOptions) selectObject;
-					if(mm.selectOptions()!=null) {
-						String tailPartString = handTailPartString(mm.selectOptions(), dbpoolName, dataBaseType);
-						if (!tailPartString.isEmpty()) {
-							sql = sql + tailPartString;
-						}
-						if(mm.selectOptions().limit()!=null && mm.selectOptions().limit()>=0){
-							sql=dataBaseType.pageSQL(sql,1,mm.selectOptions().limit());
+			}
+			if (selectObject instanceof MdbOptions) {
+				MdbOptions mm = (MdbOptions) selectObject;
+				if(mm.selectOptions()!=null) {
+					String tailPartString = handTailPartString(mm.selectOptions(), dbpoolName, dataBaseType);
+					if (!tailPartString.isEmpty()) {
+						sql = sql + tailPartString;
+					}
+					if(mm.selectOptions().limit()!=null && mm.selectOptions().limit()>=0){
+						sql=dataBaseType.pageSQL(sql,1,mm.selectOptions().limit());
 
-						}else{
-							if(options!=null && options.isLimitOne()){
-								sql=dataBaseType.pageSQL(sql,1,1);
-							}
+					}else{
+						if(options!=null && options.isLimitOne()){
+							sql=dataBaseType.pageSQL(sql,1,1);
 						}
 					}
 				}
@@ -1266,7 +1264,7 @@ public class SqlUtils {
 				Object obj = vParameters.get(key);
 				if (obj instanceof Character) {
 					preStmt.setString(key, (String)obj);
-					paramStr = paramStr + "[" + key + ":" + (String)obj + "]";
+					paramStr = paramStr + "[" + key + ":\"" + (String)obj + "\"]";
 				}else if (obj instanceof Boolean) {
 					preStmt.setBoolean(key, (Boolean)obj);
 					paramStr = paramStr + "[" + key + ":"
@@ -1274,7 +1272,7 @@ public class SqlUtils {
 				}  else if (obj instanceof String) {
 					// preStmt.setString(j, (String) obj);
 					preStmt.setString(key, (String)obj);
-					paramStr = paramStr + "[" + key + ":" + (String)obj + "]";
+					paramStr = paramStr + "[" + key + ":\"" + (String)obj + "\"]";
 				} else if (obj instanceof Integer) {
 					preStmt.setInt(key, ((Integer)obj).intValue());
 					paramStr = paramStr + "[" + key + ":"
@@ -1583,7 +1581,12 @@ public class SqlUtils {
 		return null;
 
 	}
-
+	public static String encodeSQLStr(String sqlStr){
+		if (sqlStr == null) {
+			return null;
+		}
+		return StringUtils.replace(sqlStr, "'", "''");
+	}
 	
 
 }

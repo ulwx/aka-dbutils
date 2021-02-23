@@ -4,7 +4,6 @@ import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
 import javax.sql.DataSource;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -147,9 +146,9 @@ public abstract  class DataBaseDecorator implements DBObjectOperation, AutoClose
 		return db.update(sqltext, vParameters);
 	}
 	@Override
-	public int callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
+	public void callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
 			List<DataBaseSet> returnDataBaseSets) throws DbException {
-		return db.callStoredPro(sqltext, parms, outPramsValues, returnDataBaseSets);
+		 db.callStoredPro(sqltext, parms, outPramsValues, returnDataBaseSets);
 	}
 	@Override
 	public int insert(String sqltext, Map<Integer, Object> vParameters) throws DbException {

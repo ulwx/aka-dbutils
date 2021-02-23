@@ -1,6 +1,7 @@
 package com.github.ulwx.aka.dbutils.database;
 
 import com.github.ulwx.aka.dbutils.database.spring.DBTransInfo;
+import com.github.ulwx.aka.dbutils.tool.support.Assert;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -64,8 +65,8 @@ public class DbContext implements Serializable {
 	}
 	public static int getTransactionLevel(Map<String, DataBaseDecorator> context){
 		int level=0;
-		if(context.get(MDbTransactionManager._children_transaction)!=null) {
-			level=((TransactionDataBaseTrace)context.get(MDbTransactionManager._children_transaction)).getLevel();
+		if(context.get(MDbTransactionManager._transaction_start)!=null) {
+			level=((TransactionDataBaseTrace)context.get(MDbTransactionManager._transaction_start)).getLevel();
 		}else {//说明是顶级
 			level=0;
 		}
@@ -77,18 +78,23 @@ public class DbContext implements Serializable {
 		for (int i = stack.size() - 1; i >= 0; i--) {
 			Map<String, DataBaseDecorator> tempContext = stack.get(i);
 			DataBaseDecorator db = tempContext.get(dbPoolName);
-			if (tempContext.get(MDbTransactionManager._children_transaction) != null) {
-				if (db != null) {
-					return db;
-				} else {
-					// 继续向上查找
+			TransactionDataBaseTrace transactionStart=(TransactionDataBaseTrace)tempContext.get(MDbTransactionManager._transaction_start);
+			if (transactionStart != null) {
+				if(transactionStart.getLevel()>0){//
+					if (db != null) {
+						return db;
+					} else {
+						//继续向上查找
+					}
+				}else{  //截止查找
+					if(db!=null){
+						return db;
+					}
+					break;
 				}
 
 			} else {// 截止点
-				if (db != null) {
-					return db;
-				}
-				break;
+				Assert.notNull(transactionStart);
 			}
 			
 		}

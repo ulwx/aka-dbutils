@@ -4,7 +4,6 @@ import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
 import javax.sql.DataSource;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
         // 如果是主从模式，并且是非事务性操作，如果是这种模式，则只去获取从库连接
         Connect_SlaveServer,
         // 根据语句或是否含有事务来判断自动获取主库连接还是从宽连接。如果是执行语句包含在事务里或者是insert，update，delete语句，则获取主库连接;
-        // 如果为查询语句，并且不包含在事务里，在获取从库连接
+        // 如果为查询语句，并且不包含在事务里，会在从库里获取连接
         Connect_Auto
     }
 
@@ -99,7 +98,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     int update(String sqltext, Map<Integer, Object> vParameters) throws DbException;
 
-    int callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
+    void callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
                       List<DataBaseSet> returnDataBaseSets) throws DbException;
 
     int insert(String sqltext, Map<Integer, Object> vParameters) throws DbException;
