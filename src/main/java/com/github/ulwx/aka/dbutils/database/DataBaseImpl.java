@@ -8,14 +8,18 @@ import com.github.ulwx.aka.dbutils.database.nsql.NSQL;
 import com.github.ulwx.aka.dbutils.database.sql.BeanUtils;
 import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
 import com.github.ulwx.aka.dbutils.database.utils.DbConst;
+import com.github.ulwx.aka.dbutils.tool.BaseDao;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 import com.github.ulwx.aka.dbutils.tool.support.*;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.CGetFun;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.GetFun;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.ReflectionUtil;
 import com.github.ulwx.aka.dbutils.tool.support.type.TInteger;
+import com.github.ulwx.aka.dbutils.tool.support.type.TResult;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
 import com.github.ulwx.aka.dbutils.tool.support.type.TString;
+import com.mysql.cj.xdevapi.DatabaseObject;
+import org.apache.logging.log4j.core.appender.rolling.SizeBasedTriggeringPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,35 +113,35 @@ public class DataBaseImpl implements DataBase {
 
     public static String getCallerInf() {
         // 3, 10, DbConst.filter, 1
-        int fromLevel = 3, maxLevel = 20, upLevelNum = 2;
-        String filterStrEndsWith = DbConst.filter;
+        int fromLevel = 3,  upLevelNum = 0;
 
-        StackTraceElement stack[] = Thread.currentThread().getStackTrace();// (new Throwable()).getStackTrace();
+        StackTraceElement stack[] = (new Throwable()).getStackTrace();// ;
         // 获取线程运行栈信息
+        String str="";
         if (stack.length > fromLevel) {
-            for (int i = fromLevel; i < maxLevel && i < stack.length; i++) {
-                if (stack[i].getClassName().endsWith("BaseDao")) {// BaseDao
+            //com.github.ulwx.aka.dbutils.tool.MDbUtils.queryList(MDbUtils.java:107)
+            for (int i = fromLevel;  i < stack.length; i++) {
+                if (stack[i].getClassName().startsWith(DataBase.class.getPackage().getName())
+                      || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
+
                     continue;
                 }
-                if (stack[i].getClassName().endsWith(filterStrEndsWith)) {
-
-                    String str = getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(:"
-                            + stack[i].getLineNumber() + ")";
-                    if (upLevelNum > 0 && stack.length > (i + upLevelNum) && maxLevel > (i + upLevelNum)) {
-                        for (int n = 1; n <= upLevelNum; n++) {
-                            str = getLastTwoClassName(stack[i + n].getClassName()) + "." + stack[i + n].getMethodName()
-                                    + "(:" + stack[i + n].getLineNumber() + ")" + "=>" + str;
-                        }
-                        return str;
-                    } else {
-                        return str;
+                String tempInfo=getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(:"
+                        + stack[i].getLineNumber() + ")";
+                if(upLevelNum==0) {
+                    str= tempInfo;
+                }else {
+                    if (upLevelNum < 3) {
+                        str = tempInfo + "=>" + str;
+                    } else{
+                        break;
                     }
-
                 }
+                upLevelNum++;
 
             }
         }
-        return "";
+        return str;
     }
 
     public static String getLastTwoClassName(String srcClassName) {
@@ -184,7 +188,7 @@ public class DataBaseImpl implements DataBase {
 
             return this.conn.getAutoCommit();
         } catch (Exception ex) {
-            if(ex instanceof  DbException) throw (DbException)ex;
+            if (ex instanceof DbException) throw (DbException) ex;
             throw new DbException(ex);
         }
     }
@@ -194,7 +198,7 @@ public class DataBaseImpl implements DataBase {
 
             this.conn.setAutoCommit(autoCommit);
         } catch (Exception ex) {
-            if(ex instanceof  DbException) throw (DbException)ex;
+            if (ex instanceof DbException) throw (DbException) ex;
             throw new DbException(ex);
         }
     }
@@ -219,13 +223,14 @@ public class DataBaseImpl implements DataBase {
                 minorVersion = meta.getDatabaseMinorVersion();
                 this.dataBaseMajorVersion = majorVersion;
                 this.dataBaseMiniVersion = minorVersion;
-            } catch (SQLException e) {
+            } catch (Exception e) {
+                if (e instanceof DbException) throw (DbException) e;
                 throw new DbException(e);
             }
             this.dataBaseType = DialectClient.decideDialect(driverName, databaseName, majorVersion, minorVersion);
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException("get pool connection error!", e);
         }
     }
@@ -272,15 +277,11 @@ public class DataBaseImpl implements DataBase {
             this.dbPoolName = "";
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException("get pool connection error!", e);
         }
     }
 
-    @Override
-    public void connectDb(String dbPoolName) throws DbException {
-        this.connectDb(dbPoolName, MainSlaveModeConnectMode.Connect_MainServer);
-    }
 
     public ConnectType getConnectionType() {
         return this.connectType;
@@ -292,6 +293,8 @@ public class DataBaseImpl implements DataBase {
         try {
             if (!this.isColsed()) {
                 return;
+            } else {
+                conn = null;
             }
             if (this.connectType == ConnectType.POOL) {
                 if (this.mainSlaveMode) {
@@ -303,7 +306,10 @@ public class DataBaseImpl implements DataBase {
                             throw new DbException("从库只能执行select语句执行！");
                         }
                         msg = "获得从库链接";
-                        DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName);
+                        TResult<Connection> tResult = new TResult<>();
+                        DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
+                        this.conn = tResult.getValue();
+                        ;
                         this.dataSource = ds;
 
                     } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
@@ -318,8 +324,12 @@ public class DataBaseImpl implements DataBase {
                                 this.dataSource = ds;
                             } else {
                                 msg = "获得从库链接";
-                                DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName);
+                                TResult<Connection> tResult = new TResult<>();
+                                DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
+                                this.conn = tResult.getValue();
+                                ;
                                 this.dataSource = ds;
+                                ///
                             }
                         } else { //update、delete、存储过程,脚本在主库上执行
                             msg = "获得主库链接";
@@ -333,7 +343,9 @@ public class DataBaseImpl implements DataBase {
                     DataSource datasource = this.getDataSourceFromPool(dbPoolName);
                     this.dataSource = datasource;
                 }
-                conn = this.dataSource.getConnection();
+                if (this.isColsed()) {
+                    conn = this.dataSource.getConnection();
+                }
 
             } else if (this.connectType == ConnectType.CONNECTION) {
                 if (this.conn == null || this.conn.isClosed()) {
@@ -348,10 +360,12 @@ public class DataBaseImpl implements DataBase {
             }
             this.setInternalConnectionAutoCommit(this.getAutoCommit());
             this.setDataBaseType(conn);
-            log.debug(Thread.currentThread().getId() + ":create a new db connection[" + this.dbPoolName + "]connect:" + msg + ",connect time:"
-                    + (System.currentTimeMillis() - start0) + " 毫秒");
+            if (DbContext.permitDebugLog()) {
+                log.debug(Thread.currentThread().getId() + ":create a new db connection[" + this.dbPoolName + "]connect:" + msg + ",connect time:"
+                        + (System.currentTimeMillis() - start0) + " 毫秒");
+            }
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
 
         }
@@ -364,7 +378,7 @@ public class DataBaseImpl implements DataBase {
      * @throws DbException
      */
     @Override
-    public void connectDb(String dbPoolName, MainSlaveModeConnectMode mainSlaveModeConnectMode) throws DbException {
+    public void connectDb(String dbPoolName) throws DbException {
 
         this.connectType = ConnectType.POOL;
         this.dbPoolName = dbPoolName;
@@ -373,10 +387,10 @@ public class DataBaseImpl implements DataBase {
                 return;
             // 设置是否是主从模式
             this.setMainSlaveMode(DBPoolFactory.getInstance().isMainSlaveMode(dbPoolName));
-            this.mainSlaveModeConnectMode = mainSlaveModeConnectMode;
+            this.mainSlaveModeConnectMode = DbContext.getMainSlaveModeConnectMode();
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException("get pool connection error!", e);
         }
 
@@ -502,7 +516,7 @@ public class DataBaseImpl implements DataBase {
         } catch (Exception e) {
             // log.error("", e);
             crs = null;
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
             try {
@@ -548,6 +562,7 @@ public class DataBaseImpl implements DataBase {
         } catch (Exception e) {
             // log.error("", e);
             crs = null;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
             try {
@@ -635,7 +650,7 @@ public class DataBaseImpl implements DataBase {
                     queryOptions, this.getDataBaseType());
             DbContext.clearReflectClass();
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
         return doQueryClass(clazz, sql, vParameters);
@@ -657,6 +672,7 @@ public class DataBaseImpl implements DataBase {
                     options, this.getDataBaseType());
             DbContext.clearReflectClass();
         } catch (Exception e) {
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
         return doQueryClass((Class<T>) selectObject.getClass(), sql, vParameters);
@@ -875,7 +891,7 @@ public class DataBaseImpl implements DataBase {
             }
             return results;
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
             try {
@@ -1034,14 +1050,14 @@ public class DataBaseImpl implements DataBase {
                     }
 
                 } catch (Exception e) {
-                    if(e instanceof  DbException) throw (DbException)e;
+                    if (e instanceof DbException) throw (DbException) e;
                     throw new DbException(e);
 
                 }
             } // while
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
 
         } finally {
@@ -1173,13 +1189,13 @@ public class DataBaseImpl implements DataBase {
                     }
 
                 } catch (Exception e) {
-                    if(e instanceof  DbException) throw (DbException)e;
+                    if (e instanceof DbException) throw (DbException) e;
                     throw new DbException(e);
 
                 }
             } // while
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
 
         } finally {
@@ -1322,7 +1338,7 @@ public class DataBaseImpl implements DataBase {
             return sql;
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
@@ -1348,26 +1364,33 @@ public class DataBaseImpl implements DataBase {
 
         PreparedStatement preStmt = this.getPreparedStatement(sqlQuery);
         String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
             String line = System.getProperty("line.separator");
-            // log.debug("sql [" + sqlQuery + "]" + " sql param[ " + paramStr + " ]");
-            String poolName = this.dbPoolName;
-            if (poolName == null) {
-                poolName = "";
-            }
-            log.debug("[" + poolName + "][" + getCallerInf() + "]");
+
+            log.debug("call info[" + getConnectInfo()+ "][" + getCallerInf() + "]");
             log.debug("debugSql[" + SqlUtils.generateDebugSql(sqlQuery, vParameters) + "]");
 
         }
         long start = System.currentTimeMillis();
         this.rs = preStmt.executeQuery();
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
             log.debug("sql执行:" + (System.currentTimeMillis() - start));
         }
 
         return new DataBaseSet(this.rs);
     }
 
+    private String getConnectInfo(){
+        String connectInfo="";
+        if(this.connectType==ConnectType.CONNECTION){
+            connectInfo=ConnectType.CONNECTION+":";
+        }else if(this.connectType==ConnectType.DATASOURCE){
+            connectInfo=ConnectType.DATASOURCE+":"+this.dataSource+"";
+        }else if((this.connectType==ConnectType.POOL)){
+            connectInfo=ConnectType.POOL+":"+this.dbPoolName;
+        }
+        return connectInfo;
+    }
     /**
      * 不关闭底层数据库连接
      *
@@ -1384,8 +1407,8 @@ public class DataBaseImpl implements DataBase {
             result = this.getResultSet(sqlQuery, vParameters);
 
         } catch (Exception e) {
-            // log.error("", e);
             result = null;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
 
         } finally {
@@ -1463,8 +1486,9 @@ public class DataBaseImpl implements DataBase {
      * @throws DbException
      */
 
-    private void executeStoredProcedure(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
-                                       List<DataBaseSet> returnDataBaseSets) throws DbException {
+    private void executeStoredProcedure(String sqltext, Map<String, Object> parms,
+                                        Map<Integer, Object> outPramsValues,
+                                        List<DataBaseSet> returnDataBaseSets) throws DbException {
         boolean close = true;
         try {
 
@@ -1518,13 +1542,13 @@ public class DataBaseImpl implements DataBase {
 
             // 注册输出参数
             String outParamStr = SqlUtils.registForStoredProc(outParms, cs);
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                 String line = System.getProperty("line.separator");
                 log.debug(
                         "sql [" + sqltext + "]" + " in param[ " + inParamStr + " ]" + "out param[" + outParamStr + "]");
                 if (outParamStr.equals("")) {
                     Collection<Object> args = CollectionUtils.getSortedValues(inParms);
-                    log.debug("[" + this.dbPoolName + "][" + getCallerInf() + "]");
+                    log.debug("[" + getConnectInfo()+ "][" + getCallerInf() + "]");
                     log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, args) + "]");
                 }
 
@@ -1565,7 +1589,7 @@ public class DataBaseImpl implements DataBase {
             SqlUtils.getValueFromCallableStatement(cs, outParms, outPramsValues);
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
             try {
@@ -1610,9 +1634,9 @@ public class DataBaseImpl implements DataBase {
      */
     @Override
     public void callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
-                             List<DataBaseSet> returnDataBaseSets) throws DbException {
+                              List<DataBaseSet> returnDataBaseSets) throws DbException {
 
-         this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
+        this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
 
     }
 
@@ -1640,15 +1664,15 @@ public class DataBaseImpl implements DataBase {
 
             String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
 
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                 String line = System.getProperty("line.separator");
-                log.debug("[" + this.dbPoolName + "][" + getCallerInf() + "]");
+                log.debug("[" + getConnectInfo() + "][" + getCallerInf() + "]");
                 log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters) + "]");
 
             }
             long start = System.currentTimeMillis();
             count = preStmt.executeUpdate();
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                 log.debug("sql执行:" + (System.currentTimeMillis() - start));
             }
             twoInt[0] = count;
@@ -1675,7 +1699,7 @@ public class DataBaseImpl implements DataBase {
         } catch (Exception e) {
             twoInt[0] = -1;
             twoInt[1] = -1;
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
 
         } finally {
@@ -1767,7 +1791,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindInsert(sqltext, vParameters);
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
 
@@ -1805,7 +1829,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindInsertReturnKey(sqltext, vParameters);
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
 
@@ -1926,7 +1950,7 @@ public class DataBaseImpl implements DataBase {
             }
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
 
@@ -2002,7 +2026,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindUpdate(sqltext, vParameters);
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
 
@@ -2039,7 +2063,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindUpdate(sqltext, vParameters);
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
 
@@ -2088,7 +2112,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindDelete(sql, vParameters);
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
@@ -2118,7 +2142,7 @@ public class DataBaseImpl implements DataBase {
             return this.executeBindDelete(sql, vParameters);
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
@@ -2316,7 +2340,7 @@ public class DataBaseImpl implements DataBase {
             }
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
@@ -2377,7 +2401,7 @@ public class DataBaseImpl implements DataBase {
             }
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
@@ -2450,7 +2474,7 @@ public class DataBaseImpl implements DataBase {
                 this.setInternalConnectionAutoCommit(b);
             }
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
 
@@ -2467,10 +2491,11 @@ public class DataBaseImpl implements DataBase {
 
             if (conn != null) {
                 conn.rollback();
-                log.debug(Thread.currentThread().getId() + ":" + this.dbPoolName + ":rollback..");
+                if (DbContext.permitDebugLog())
+                    log.debug(Thread.currentThread().getId() + ":" + this.dbPoolName + ":rollback..");
             }
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
@@ -2489,7 +2514,7 @@ public class DataBaseImpl implements DataBase {
                 return true;
             }
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException("error in isClosed!");
         }
         return result;
@@ -2506,10 +2531,11 @@ public class DataBaseImpl implements DataBase {
         try {
             if (conn != null) {
                 conn.commit();
-                log.debug(Thread.currentThread().getId() + ":" + this.dbPoolName + ":commit...");
+                if (DbContext.permitDebugLog())
+                    log.debug(Thread.currentThread().getId() + ":" + this.dbPoolName + ":commit...");
             }
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
@@ -2537,14 +2563,14 @@ public class DataBaseImpl implements DataBase {
 
                 Collection<Object> vParameters = vParametersArray.get(m);
 
-                if (log.isDebugEnabled()) {
+                if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
 
                     log.debug("[" + this.dbPoolName + "][" + callInfo + "]");
                     log.debug("" + m + ".debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters) + "]");
                 }
 
                 String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
-                if (log.isDebugEnabled()) {
+                if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                     // log.debug(m + ".sql [" + sqltext + "] " + "sql param[ " + paramStr + " ]");
                 }
 
@@ -2575,7 +2601,7 @@ public class DataBaseImpl implements DataBase {
             if (backAutoCommit) {
                 this.rollback();
             }
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
 
         } finally {
@@ -2648,14 +2674,14 @@ public class DataBaseImpl implements DataBase {
             return res;
         } catch (Exception ex) {
             res = null;
-            log.error("", ex);
+            ;
             try {
                 if (bkCommit) {
                     this.rollback();
                 }
             } catch (DbException e) {
             }
-            if(ex instanceof  DbException) throw (DbException)ex;
+            if (ex instanceof DbException) throw (DbException) ex;
             throw new DbException(ex);
 
         } finally {
@@ -2755,6 +2781,7 @@ public class DataBaseImpl implements DataBase {
         return this.cs;
 
     }
+
     private PreparedStatement getPreparedStatement(String sqltxt) throws DbException {
         try {
 
@@ -2791,7 +2818,7 @@ public class DataBaseImpl implements DataBase {
             }
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
         return ps;
@@ -2819,7 +2846,7 @@ public class DataBaseImpl implements DataBase {
             }
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
@@ -2861,7 +2888,8 @@ public class DataBaseImpl implements DataBase {
                             this.setInternalConnectionAutoCommit(true);
                             conn.close();
                             conn = null;
-                            log.debug(Thread.currentThread().getId() + ":db=" + this.dbPoolName + ":closed!");
+                            if (DbContext.permitDebugLog())
+                                log.debug(Thread.currentThread().getId() + ":db=" + this.dbPoolName + ":closed!");
                         }
                     } catch (Exception ex) {
                         log.error(this.dbPoolName + ":close fail!", ex);
@@ -3049,7 +3077,7 @@ public class DataBaseImpl implements DataBase {
             DbContext.clearReflectClass();
 
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
         return this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
@@ -3081,7 +3109,7 @@ public class DataBaseImpl implements DataBase {
 
             DbContext.clearReflectClass();
         } catch (Exception e) {
-            if(e instanceof  DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
         return this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
@@ -3136,7 +3164,7 @@ public class DataBaseImpl implements DataBase {
                 scriptRunner.setArgs(args);
                 return scriptRunner.runScriptByLine(reader);
             } catch (Exception e) {
-                if(e instanceof  DbException) throw (DbException)e;
+                if (e instanceof DbException) throw (DbException) e;
                 throw new DbException(e);
             } finally {
                 try {
@@ -3210,13 +3238,13 @@ public class DataBaseImpl implements DataBase {
 
         private StringWriter resultWriter = new StringWriter();
         private PrintWriter resultPrintWriter = new PrintWriter(resultWriter);
-        private String transactionId="";
+        private String transactionId = "";
         private Map<String, Object> args = null;
         private String delimiter = DEFAULT_DELIMITER;
 
         public ScriptRunner(Connection connection) {
             this.connection = connection;
-            this.transactionId=System.currentTimeMillis()+"-"+RandomUtils.getRandomNumberString(6);
+            this.transactionId = System.currentTimeMillis() + "-" + RandomUtils.getRandomNumberString(6);
         }
 
         public Map<String, Object> getArgs() {
@@ -3261,13 +3289,14 @@ public class DataBaseImpl implements DataBase {
                 checkForMissingLineTerminator(command);
                 return this.resultWriter.toString();
             } catch (Exception e) {
+                if (e instanceof DbException) throw (DbException) e;
                 throw new DbException(e);
             }
         }
 
         private void checkForMissingLineTerminator(StringBuilder command) {
             if (command != null && command.toString().trim().length() > 0) {
-                throw new RuntimeSqlException("Line missing end-of-line terminator (" + delimiter + ") => " + command);
+                throw new DbException("Line missing end-of-line terminator (" + delimiter + ") => " + command);
             }
         }
 
@@ -3315,19 +3344,19 @@ public class DataBaseImpl implements DataBase {
 
             PreparedStatement statement = null;
             try {
-                boolean handArgs=false;
-                String source="";
+                boolean handArgs = false;
+                String source = "";
                 String sqltext = command.trim();
                 if (removeCRs) {
                     sqltext = sqltext.replaceAll("\r\n", "\n");
                 }
 
                 if (this.args != null && args.size() > 0) {
-                    ScriptOption scriptOption = (ScriptOption)this.args.get(ScriptOption.class.getName());
-                    if(scriptOption!=null){
-                        source=scriptOption.getSource();
-                        if(scriptOption.isFromMDMethod()){
-                            handArgs=true;
+                    ScriptOption scriptOption = (ScriptOption) this.args.get(ScriptOption.class.getName());
+                    if (scriptOption != null) {
+                        source = scriptOption.getSource();
+                        if (scriptOption.isFromMDMethod()) {
+                            handArgs = true;
                         }
                     }
                 }
@@ -3343,18 +3372,19 @@ public class DataBaseImpl implements DataBase {
                 }
 
                 statement.setEscapeProcessing(escapeProcessing);
-                if (log.isDebugEnabled()) {
+                if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                     if (handArgs) {
                         Collection<Object> vParameters = CollectionUtils.getSortedValues(nsql.getArgs());
-                        log.debug("transactionId:"+transactionId+":debugSql[" + SqlUtils.generateDebugSql(preparedSql, vParameters) + "]");
+                        log.debug("transactionId:" + transactionId + ":debugSql["
+                                + SqlUtils.generateDebugSql(preparedSql, vParameters) + "]");
                     } else {
-                        log.debug(transactionId+":debugSql[" + preparedSql + "]");
+                        log.debug(transactionId + ":debugSql[" + preparedSql + "]");
                     }
                 }
                 long start = System.currentTimeMillis();
 
                 boolean hasResults = statement.execute();
-                if (log.isDebugEnabled()) {
+                if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                     log.debug("sql执行:" + (System.currentTimeMillis() - start));
                 }
                 while (!(!hasResults && statement.getUpdateCount() == -1)) {
@@ -3415,6 +3445,7 @@ public class DataBaseImpl implements DataBase {
                     resultPrintln("");
                 }
             } catch (Exception e) {
+                if (e instanceof DbException) throw (DbException) e;
                 throw new DbException("Error printing results: " + e, e);
             }
         }

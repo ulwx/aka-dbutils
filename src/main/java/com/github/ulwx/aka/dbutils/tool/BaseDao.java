@@ -13,11 +13,7 @@ public class BaseDao {
     protected static <R> R execute(Function<DataBase, R> function, String dbpoolName) {
         DataBase db = null;
         try {
-            if (StringUtils.isEmpty(dbpoolName)) {
-                db = DataBaseFactory.getDataBase();
-            } else {
-                db = DataBaseFactory.getDataBase(dbpoolName);
-            }
+            db = DataBaseFactory.getDataBase(dbpoolName);
             return function.apply(db);
         } finally {
             if (db != null) {

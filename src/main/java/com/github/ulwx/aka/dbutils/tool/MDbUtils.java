@@ -13,11 +13,7 @@ public class MDbUtils extends BaseDao {
     private static <R> R mdbExecute(Function<MDataBase, R> function, String dbpoolName) {
         MDataBase mdb = null;
         try {
-            if (StringUtils.isEmpty(dbpoolName)) {
-                mdb = MDbManager.getDataBase();
-            } else {
-                mdb = MDbManager.getDataBase(dbpoolName);
-            }
+            mdb = MDbManager.getDataBase(dbpoolName);
             return function.apply(mdb);
         } finally {
             if (mdb != null) {

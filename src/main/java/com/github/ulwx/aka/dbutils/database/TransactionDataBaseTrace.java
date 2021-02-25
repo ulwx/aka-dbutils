@@ -36,10 +36,6 @@ public class TransactionDataBaseTrace extends DataBaseDecorator {
 
 	}
 	@Override
-	public void connectDb(String dbPoolName, MainSlaveModeConnectMode mainSlaveModeConnectMode) throws DbException {
-
-	}
-	@Override
 	public void setAutoCommit(boolean b) throws DbException {
 
 	}

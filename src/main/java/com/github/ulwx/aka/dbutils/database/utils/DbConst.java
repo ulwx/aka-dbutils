@@ -78,8 +78,6 @@ public class DbConst {
 		}
 		return str;
 	}
-	public static String filter="Dao";
-
 
 	public static void main(String[] args)throws Exception {
 		//System.out.println(CommonFrameProperty.getPoolName(CommonFrameProperty.Area));

@@ -17,13 +17,9 @@ public class TransactionDataBase extends DataBaseDecorator {
 		super(db);
 	}
 
-	@Override
-	public void connectDb(String dbPoolName) throws DbException {
-		this.connectDb(dbPoolName, MainSlaveModeConnectMode.Connect_MainServer);
-	}
 
 	@Override
-	public void connectDb(String dbPoolName, MainSlaveModeConnectMode mainSlaveModeConnectMode) throws DbException {
+	public void connectDb(String dbPoolName) throws DbException {
 
 		Stack<Map<String, DataBaseDecorator>> stack = DbContext.getTransactionContextStack();
 		if (stack != null) {
@@ -40,7 +36,7 @@ public class TransactionDataBase extends DataBaseDecorator {
 							+ ObjectUtils.toJsonString(context.keySet())+":level="+level);
 					return;
 				} else {
-					this.db.connectDb(dbPoolName, mainSlaveModeConnectMode);
+					this.db.connectDb(dbPoolName);
 					this.db.setAutoCommit(false);
 					log.debug(dbPoolName+": a new db is created and put into context stack!");
 				}
@@ -51,7 +47,7 @@ public class TransactionDataBase extends DataBaseDecorator {
 				return;
 			}
 		}
-		db.connectDb(dbPoolName, mainSlaveModeConnectMode);
+		db.connectDb(dbPoolName);
 	}
 	@Override
 	public void close() {

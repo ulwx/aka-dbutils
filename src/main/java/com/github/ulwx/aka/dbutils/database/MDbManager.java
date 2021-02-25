@@ -1,5 +1,6 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,34 +8,22 @@ public class MDbManager {
 
 	private static Logger log = LoggerFactory.getLogger(DataBase.class);
 
+
+	@SuppressWarnings("resource")
 	public static MDataBase getDataBase() throws DbException {
-		return getDataBase(DataBase.MainSlaveModeConnectMode.Connect_MainServer);
-
-	}
-	@SuppressWarnings("resource")
-	public static MDataBase getDataBase(DataBase.MainSlaveModeConnectMode mainSlaveModeConnectMode) throws DbException {
 		DataBase db = new TransactionDataBase();
-		db.connectDb(DataBaseFactory.DefaultDbpoolName, mainSlaveModeConnectMode);
+		db.connectDb(DataBaseFactory.DefaultDbpoolName);
 		return new MDataBaseImpl(db);
-
-	}
-
-	/**
-	 * 
-	 * @param dbPoolName 连接池的名字
-	 * @return
-	 * @throws DbException
-	 */
-	public static MDataBase getDataBase(String dbPoolName) throws DbException {
-		return getDataBase(dbPoolName, DataBase.MainSlaveModeConnectMode.Connect_MainServer);
-
 	}
 
 	@SuppressWarnings("resource")
-	public static MDataBase getDataBase(String dbPoolName, DataBase.MainSlaveModeConnectMode mainSlaveModeConnectMode)
+	public static MDataBase getDataBase(String dbPoolName)
 			throws DbException {
+		if (StringUtils.isEmpty(dbPoolName)) {
+			return  MDbManager.getDataBase();
+		}
 		DataBase db = new TransactionDataBase();
-		db.connectDb(dbPoolName, mainSlaveModeConnectMode);
+		db.connectDb(dbPoolName);
 		return new MDataBaseImpl(db);
 
 	}

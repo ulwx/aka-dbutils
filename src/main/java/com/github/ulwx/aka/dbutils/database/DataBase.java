@@ -52,14 +52,13 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     default boolean isExternalControlConClose() {
         return false;
     }
-    void connectDb(String dbPoolName) throws DbException;
     /**
      * 从dbpool.xml里设置的连接池获得连接
      *
      * @param dbPoolName 对应于dbpool.xml里的元素<dbpool>name属性值
      * @throws DbException
      */
-    void connectDb(String dbPoolName, MainSlaveModeConnectMode mainSlaveModeConnectMode) throws DbException;
+    void connectDb(String dbPoolName) throws DbException;
 
 
     DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage, PageBean pageUtils,

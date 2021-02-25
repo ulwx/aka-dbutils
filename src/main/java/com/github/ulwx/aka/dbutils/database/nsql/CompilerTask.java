@@ -1,5 +1,7 @@
 package com.github.ulwx.aka.dbutils.database.nsql;
 
+import com.github.ulwx.aka.dbutils.database.DbContext;
+import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.tool.support.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +65,7 @@ public class CompilerTask {
 
             }
         }
+        if( DbContext.permitDebugLog())
         log.debug("to compile--"+ObjectUtils.toString(mdPathList));
 
         for (int i = 0; i < mdPathList.size(); i++) {
@@ -86,10 +89,9 @@ public class CompilerTask {
                 clazz = CompilerTask.getCompiledClass(classFullName);
                 if (clazz == null) {
                     String source = MDTemplate.parseFromMdFileToJavaSource(packageName, className);
-                    if (log.isDebugEnabled()) {
-                        log.debug("to compile-"
-                                + classFullName
-                                +" ;source="+source
+                    if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
+                        log.debug("to compile java class source:" + classFullName
+                               // +" ;source="+source
                         );
                     }
                     clazz = CompilerTask.compileAndLoadClass(classFullName, source);
@@ -223,7 +225,7 @@ public class CompilerTask {
             for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
                 error = error + compilePrint(diagnostic);
             }
-            throw new NSQLException("编译出错！");
+            throw new DbException("编译出错！");
         }
 
     }

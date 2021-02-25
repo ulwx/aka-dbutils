@@ -102,6 +102,7 @@ public enum DBMS {
     private String topLimitTemplate = null;
     private DBType dbType=null;
     private Codec codec=new CommonDBCodec();
+    private String checkSql="select 1";
     static {
         for (DBMS d : DBMS.values()) {
             d.sqlTemplate = DialectPageSqlTemplate.initializePaginSQLTemplate(d);
@@ -113,7 +114,9 @@ public enum DBMS {
     public DBType getDbType() {
         return dbType;
     }
-
+    public String getCheckSql(){
+        return this.checkSql;
+    }
     private void decideDBType(){
         if(isMySqlFamily()){
             dbType=DBType.MYSQL;
@@ -123,6 +126,7 @@ public enum DBMS {
         }else if(isOracleFamily()){
             dbType=DBType.ORACLE;
             codec=new OracleCodec();
+            this.checkSql="select 1 from dual";
         }else if(isSQLServerFamily()){
             dbType=DBType.MS_SQL_SERVER;
         }else if(isH2Family()){
@@ -135,12 +139,15 @@ public enum DBMS {
         }else if(isDB2Family()){
             dbType=DBType.DB2;
             codec=new DB2Codec();
+            this.checkSql="select 1 from sysibm.sysdummy1";
         }else if(isDerbyFamily()){
             dbType=DBType.DERBY;
+            this.checkSql="select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
         }else if (isSQLiteFamily()){
             dbType=DBType.SQLITE;
         }else if(isHSQLFamily()) {
             dbType=DBType.HSQL;
+            this.checkSql="select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
         }else{
             dbType=DBType.OTHER;
         }

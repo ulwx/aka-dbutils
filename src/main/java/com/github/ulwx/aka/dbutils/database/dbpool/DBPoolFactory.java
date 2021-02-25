@@ -1,17 +1,20 @@
 package com.github.ulwx.aka.dbutils.database.dbpool;
 
-import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.*;
 import com.github.ulwx.aka.dbutils.tool.support.EncryptUtil;
 import com.github.ulwx.aka.dbutils.tool.support.RandomUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
+import com.github.ulwx.aka.dbutils.tool.support.type.TResult;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DBPoolFactory {
 	private volatile static Logger log = LoggerFactory.getLogger(DBPoolFactory.class);
@@ -28,7 +31,7 @@ public class DBPoolFactory {
 	/**
 	 * 主库和从库的关系
 	 */
-	private volatile Map<String, Map<String, DataSource>> poolSlaveList = new ConcurrentHashMap<String, Map<String, DataSource>>();
+	private volatile Map<String, ConcurrentHashMap<String, DataSource>> poolSlaveList = new ConcurrentHashMap<String, ConcurrentHashMap<String, DataSource>>();
 
 	private static volatile DBPoolFactory dbpoolFactory = new DBPoolFactory();
 
@@ -102,16 +105,14 @@ public class DBPoolFactory {
 					String maxIdleTime = StringUtils.trim(map.get("maxIdleTime"), "600");// 以秒为单位，默认空隙600秒后回收
 					String maxPoolSize = StringUtils.trim(map.get("maxPoolSize"), "30");// 默认30个
 					String minPoolSize = StringUtils.trim(map.get("minPoolSize"), "10");// 默认20个
-
 					Class.forName(driverClassName);
 
 					DataSource ds = null;
-					Map<String, DataSource> slaveDataSources = new HashMap<String, DataSource>();
-
+					ConcurrentHashMap<String, DataSource> slaveDataSources = new ConcurrentHashMap<String, DataSource>();
 					if (type.equals(PoolType.TOMCAT_DB_POOL)) {
 					ds = getDataSourceFromTomcatDb(url, user, password, checkoutTimeout, maxPoolSize, minPoolSize,
 								maxStatements, maxIdleTime, idleConnectionTestPeriod, driverClassName);
-						// 判断ds是否可以获得连接
+						//判断ds是否可以获得连接
 						boolean res = DBPoolFactory.startDataSource(ds);
 						if (!res) {
 							continue;
@@ -122,8 +123,6 @@ public class DBPoolFactory {
 					poollist.put(poolName, ds);
 					poolSlaveList.put(poolName, slaveDataSources);
 				} catch (Exception ex) {
-					// TODO Auto-generated catch block
-					log.error("", ex);
 					throw ex;
 				}
 			} // while
@@ -138,13 +137,12 @@ public class DBPoolFactory {
 		} finally {
 
 		}
-
 	}
 
-	public Map<String, DataSource> getSlaveServerConfig(Map<String, Map<String, String>> slaveServer, String poolType,
+	public ConcurrentHashMap<String, DataSource> getSlaveServerConfig(Map<String, Map<String, String>> slaveServer, String poolType,
 			String driverClassName) throws Exception {
 
-		Map<String, DataSource> slaveDataSources = new HashMap<String, DataSource>();
+		ConcurrentHashMap<String, DataSource> slaveDataSources = new ConcurrentHashMap<String, DataSource>();
 		if (slaveServer != null) {
 			for (String slaveServerName : slaveServer.keySet()) {
 				Map<String, String> slaveConfig = slaveServer.get(slaveServerName);
@@ -224,7 +222,6 @@ public class DBPoolFactory {
 				+ "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
 		org.apache.tomcat.jdbc.pool.DataSource datasource = new org.apache.tomcat.jdbc.pool.DataSource();
 		datasource.setPoolProperties(p);
-
 		DataSource ds = datasource;
 
 		return ds;
@@ -236,17 +233,17 @@ public class DBPoolFactory {
 	public static boolean startDataSource(DataSource ds) {
 		Connection con = null;
 		try {
-			ds.setLoginTimeout(60);
+			ds.setLoginTimeout(20);
 			ds.getConnection();
 		} catch (Exception e) {
-			log.error("", e);
+			log.error(""+e, e);
 			return false;
 		} finally {
 			if (con != null) {
 				try {
 					con.close();
 				} catch (Exception ex) {
-					log.error("", ex);
+					log.error(""+ex, ex);
 				}
 			}
 		}
@@ -259,14 +256,7 @@ public class DBPoolFactory {
 		try {
 
 			this.setPoollist();
-//			// 初始化poolSlaveLiveTimes
-//			for (String poolName : poolSlaveList.keySet()) {
-//				Map<String, Date> curmap = new ConcurrentHashMap<String, Date>();
-//
-//				Map<String, DataSource> dss = poolSlaveList.get(poolName);
-//
-//			}
-
+			checkSlaveDataSourceAlive();
 		} catch (Exception e) {
 			log.error("", e);
 			new Exception("add database pool error!", e);
@@ -297,35 +287,151 @@ public class DBPoolFactory {
 
 			return ds;
 		} catch (Exception e) {
+			if(e instanceof  DbException) throw (DbException)e;
 			throw new DbException(e);
 		}
 	}
 
+
+	public static class DataSourceStat{
+		private long lastCheckTime;
+		private int errCnt;
+
+		public long getLastCheckTime() {
+			return lastCheckTime;
+		}
+
+		public void setLastCheckTime(long lastCheckTime) {
+			this.lastCheckTime = lastCheckTime;
+		}
+
+		public int getErrCnt() {
+			return errCnt;
+		}
+
+		public void setErrCnt(int errCnt) {
+			this.errCnt = errCnt;
+		}
+	}
+	public  volatile  Map<DataSource,DataSourceStat> errorDataSourceStat=new ConcurrentHashMap<>();
+
+	public boolean checkIsNormalDataSource(DataSource dss){
+		DataBaseImpl dataBase = new DataBaseImpl();
+		try {
+			Connection connection = dss.getConnection();
+			DbContext.permitDebugLog(false);
+			dataBase.connectDb(connection, false);
+			dataBase.queryForResultSet(dataBase.getDataBaseType().getCheckSql(),null);
+		}catch(Exception e) {
+			log.error(""+e,e);
+			return false;
+		}finally{
+			dataBase.close();
+		}
+		return true;
+	}
+
+	public  void checkSlaveDataSourceAlive(){
+		for(String poolName:poolSlaveList.keySet()){
+			Map<String, DataSource> slaveDss = poolSlaveList.get(poolName);
+			if(slaveDss.size()>0) {
+				Thread thread = new Thread(() -> {
+					while(true) {
+						for (String slaveServerName : slaveDss.keySet()) {
+							try {
+								DataSource slaveDataSource = slaveDss.get(slaveServerName);
+								if (slaveDataSource instanceof org.apache.tomcat.jdbc.pool.DataSource) {
+									org.apache.tomcat.jdbc.pool.DataSource dss =
+											(org.apache.tomcat.jdbc.pool.DataSource) slaveDataSource;
+									int errCnt = 0;
+									do {
+										boolean ret = checkIsNormalDataSource(dss);
+										if (!ret) {
+											errCnt++;
+										} else {
+											errCnt = 0;
+											break;
+										}
+										Thread.sleep(2000);
+									} while (errCnt >= 3);
+									if (errCnt >= 3) { //说明存在错误
+										DataSourceStat dataSourceStat = new DataSourceStat();
+										dataSourceStat.setErrCnt(errCnt);
+										dataSourceStat.setLastCheckTime(System.currentTimeMillis());
+										errorDataSourceStat.put(slaveDataSource, dataSourceStat);
+									} else {
+										errorDataSourceStat.remove(slaveDataSource);
+									}
+
+								}
+							} catch (Exception exception) {
+								log.error(exception + "", exception);
+							}
+
+						}
+						try {
+							Thread.sleep(30000);
+						} catch (InterruptedException e) {
+
+						}
+					}
+				});
+				thread.setDaemon(true);
+				thread.setName("dataSource-check-thread["+poolName+"]");
+				thread.start();
+			}
+		}
+	}
 	/**
 	 * 根据连接池的名称选择从库
-	 * 
 	 * @param poolName
 	 * @return
 	 */
-	public DataSource getSlaveDbPool(String poolName) {
+	public DataSource getSlaveDbPool(String poolName, TResult<Connection> result) {
 		Map<String, DataSource> slaveDss = poolSlaveList.get(poolName);
-
 		List<DataSource> availableDss = new ArrayList<DataSource>();
 		// 选取
 		for (String slaveServerName : slaveDss.keySet()) {
-
-			availableDss.add(slaveDss.get(slaveServerName));
+			DataSource dataSource = slaveDss.get(slaveServerName);
+			if(errorDataSourceStat.get(dataSource)==null) {
+				availableDss.add(dataSource);
+			}
 		}
-
 		// 随机选一条
 		if (availableDss.size() > 0) {
 			int index = RandomUtils.nextInt(availableDss.size());
-			log.debug("slave server.size:" + availableDss.size() + ",select[" + index + "]");
-			return availableDss.get(index);
+			int cnt=0;
+			while(true) {
+				if(index>=availableDss.size()){ //说明所有可用数据源都不能获取连接，则退出
+					throw new DbException("所有可用数据源都不能获取连接！");
+				}
+				if( DbContext.permitDebugLog())
+				log.debug("slave server.size=" + availableDss.size() + ",select[" + index + "]");
+				DataSource dss = availableDss.get(index);
+				if(errorDataSourceStat.get(dss)!=null) { //说明是错误数据源
+					index++;
+					continue;
+				}
+				try {
+					Connection connection = dss.getConnection();
+					result.setValue(connection);
+					return dss;
+				} catch (Exception exception) {
+					log.error("获取从库连接失败！继续选择其它从库！",exception);
+					index++;
+				}
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {
+					log.error(""+e,e);
+				}
+			}
+		}else{
+			throw new DbException("所有从库连接无法获取，可能从库出现故障！");
 		}
-		return null;
 
 	}
+
 
 	public static void main(String[] args) {
 	}

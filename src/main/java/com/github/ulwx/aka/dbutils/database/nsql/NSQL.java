@@ -1,5 +1,6 @@
 package com.github.ulwx.aka.dbutils.database.nsql;
 
+import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
@@ -133,7 +134,7 @@ public final class NSQL {
         nsql.setMethodFullName(methodFullName);
         nsql = parseSql(sql, args, isStoredProc, nsql);
 
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled() &&  DbContext.permitDebugLog()) {
             log.debug("nsql:"+ObjectUtils.toString(nsql));
         }
         return nsql;
