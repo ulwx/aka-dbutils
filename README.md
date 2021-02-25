@@ -107,8 +107,12 @@ public static void exportTables(
 **举例如下**：
 
 ```java
-SqlUtils.exportTables("dbutils-demo", "dbutils_demo", "c:/dbutils_demo",
-                                                                            "com.github.ulwx.aka.dbutils.demo.dao","utf-8",true);
+SqlUtils.exportTables("dbutils-demo", 
+        "dbutils_demo", 
+        "c:/dbutils_demo",
+        "com.github.ulwx.aka.dbutils.demo.dao",
+        "utf-8",
+        true);
 ```
 
 假设数据库里存在course表（假设为mysql）
@@ -260,14 +264,14 @@ select * from course where 1=1
 > public class CourseDaoMd {
 > 	public static String delAll(Map<String, Object> args)throws Exception{
 > 		String retString="";
->      	MDMehtodOptions options = new MDMehtodOptions();
+> 		MDMehtodOptions options = new MDMehtodOptions();
 > 		options.setSource(trimRight("CourseDaoMd",2)+".md:delAll");
 > 		retString=retString+" delete from course";
 > 		return retString;
 > 	}
 > 	public static String queryListFromMdFile(Map<String, Object> args)throws Exception{
 > 		String retString="";
->      	MDMehtodOptions options = new MDMehtodOptions();
+> 		MDMehtodOptions options = new MDMehtodOptions();
 > 		options.setSource(trimRight("CourseDaoMd",2)+".md:queryListFromMdFile");
 > 		retString=retString+" select * from course where 1=1";
 > 		if(  NFunction.isNotEmpty(args.get("myName"))  ){
