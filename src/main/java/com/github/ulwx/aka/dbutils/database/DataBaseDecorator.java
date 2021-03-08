@@ -108,9 +108,9 @@ public abstract  class DataBaseDecorator implements DBObjectOperation, AutoClose
 		return db.queryOne(clazz, sqlQuery, vParameters);
 	}
 	@Override
-	public <T> List<T> queryListByOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
+	public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
 			QueryMapNestOne2One[] queryMapNestList) throws DbException {
-		return db.queryListByOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList);
+		return db.queryListOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList);
 	}
 	@Override
 	public <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
@@ -118,16 +118,16 @@ public abstract  class DataBaseDecorator implements DBObjectOperation, AutoClose
 		return db.queryList(clazz, sqlQuery, vParameters, page, perPage, pageUtils, countSql);
 	}
 	@Override
-	public <T> List<T> queryListByOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
+	public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
 			QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageUtils, String countSql)
 			throws DbException {
-		return db.queryListByOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage, pageUtils, countSql);
+		return db.queryListOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage, pageUtils, countSql);
 	}
 
 	@Override
-	public <T> List<T> queryListByOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery,
+	public <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery,
 			Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
-		return db.queryListByOne2Many(clazz, sqlPrefix, parentBeanKeys, sqlQuery, vParameters, queryMapNestList);
+		return db.queryListOne2Many(clazz, sqlPrefix, parentBeanKeys, sqlQuery, vParameters, queryMapNestList);
 	}
 	@Override
 	public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException {

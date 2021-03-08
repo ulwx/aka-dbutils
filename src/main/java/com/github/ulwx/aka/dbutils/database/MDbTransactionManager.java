@@ -151,7 +151,7 @@ public class MDbTransactionManager {
         }
         curContext.put(_transaction_start, new TransactionDataBaseTrace(callMethodInfo, level));
 
-        log.debug(Thread.currentThread().getId() + ":trans-start:context："
+        log.debug( "trans-start:context："
                 + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + level);
 
     }
@@ -186,7 +186,7 @@ public class MDbTransactionManager {
             db.getContentDataBase().commit();
 
         }
-        log.debug(Thread.currentThread().getId() + ":trans-commit:context:"
+        log.debug("trans-commit:context:"
                 + ObjectUtils.toJsonString(curContext.keySet())+":level="+transactonStartDbTrace.getLevel());
     }
 
@@ -274,7 +274,7 @@ public class MDbTransactionManager {
             }
             curContext = stack.pop();// 弹出
             String popKeys = ObjectUtils.toJsonString(curContext.keySet());
-            log.debug(Thread.currentThread().getId() + ":trans-end:context:" + popKeys + ":level=" + curlLevel);
+            log.debug( "trans-end:context:" + popKeys + ":level=" + curlLevel);
             curContext.clear();
         }
     }

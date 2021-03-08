@@ -1,7 +1,6 @@
 package com.github.ulwx.aka.dbutils.database;
 
 
-import com.github.ulwx.aka.dbutils.database.DataBase.MainSlaveModeConnectMode;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 
 public class DataBaseFactory {

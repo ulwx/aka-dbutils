@@ -1,6 +1,8 @@
 package com.github.ulwx.aka.dbutils.database.dbpool;
 
-import com.github.ulwx.aka.dbutils.database.*;
+import com.github.ulwx.aka.dbutils.database.DataBaseImpl;
+import com.github.ulwx.aka.dbutils.database.DbContext;
+import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.tool.support.EncryptUtil;
 import com.github.ulwx.aka.dbutils.tool.support.RandomUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
@@ -11,10 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class DBPoolFactory {
 	private volatile static Logger log = LoggerFactory.getLogger(DBPoolFactory.class);

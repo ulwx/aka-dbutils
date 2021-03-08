@@ -1,7 +1,6 @@
 package com.github.ulwx.aka.dbutils.tool;
 
 import com.github.ulwx.aka.dbutils.database.*;
-import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -344,11 +343,11 @@ public class MDbUtils extends BaseDao {
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListByOne2One(String dbpoolName, Class<T> clazz, String sqlPrefix,
+    public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz, String sqlPrefix,
                                          String mdFullMethodName, Map<String, Object> args,
                                          QueryMapNestOne2One[] queryMapNestList) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListByOne2One(clazz, sqlPrefix, mdFullMethodName, args, queryMapNestList);
+            return mdb.queryListOne2One(clazz, sqlPrefix, mdFullMethodName, args, queryMapNestList);
         }, dbpoolName);
     }
 
@@ -374,9 +373,9 @@ public class MDbUtils extends BaseDao {
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListByOne2One(String dbpoolName, Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args, QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
+    public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args, QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListByOne2One(clazz, sqlPrefix, mdFullMethodName, args, queryMapNestList, page, perPage, pageBean, countSqlMdFullMethodName);
+            return mdb.queryListOne2One(clazz, sqlPrefix, mdFullMethodName, args, queryMapNestList, page, perPage, pageBean, countSqlMdFullMethodName);
         }, dbpoolName);
     }
 
@@ -471,9 +470,9 @@ public class MDbUtils extends BaseDao {
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListByOne2Many(String dbpoolName, Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName, Map<String, Object> args, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
+    public static  <T> List<T> queryListOne2Many(String dbpoolName, Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName, Map<String, Object> args, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListByOne2Many(clazz, sqlPrefix, parentBeanKeys, mdFullMethodName, args, queryMapNestList);
+            return mdb.queryListOne2Many(clazz, sqlPrefix, parentBeanKeys, mdFullMethodName, args, queryMapNestList);
         }, dbpoolName);
     }
 
@@ -655,5 +654,19 @@ public class MDbUtils extends BaseDao {
         }, dbpoolName);
     }
 
+    /**
+     * 根据接口映射到md文件，接口里定义的方法对应md方法，接口和md文件要放到同一目录，
+     * 并且接口名称和md文件的名称相同（不含.md后缀）。
+     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param interfaceType  接口名称
+     * @param <T>
+     * @return  返回根据接口生成的动态代理
+     * @throws DbException
+     */
+    public static <T> T getMapper(String dbpoolName,Class<T> interfaceType) throws DbException {
+        return mdbExecute(mdb -> {
+            return mdb.getMapper( interfaceType);
+        }, dbpoolName);
+    }
 
 }

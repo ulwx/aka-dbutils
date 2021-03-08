@@ -1,10 +1,10 @@
 package com.github.ulwx.aka.dbutils.database.transactiontest;
 
 import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.MDbTransactionManager;
 import com.github.ulwx.aka.dbutils.database.transactiontest.bean.testb.T1;
 import com.github.ulwx.aka.dbutils.database.transactiontest.dao.Dao;
 import com.github.ulwx.aka.dbutils.database.transactiontest.dao.testb.T1Dao;
-import com.github.ulwx.aka.dbutils.database.MDbTransactionManager;
 import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 import org.junit.After;
 import org.junit.Assert;

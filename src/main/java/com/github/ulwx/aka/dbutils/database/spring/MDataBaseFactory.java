@@ -1,6 +1,5 @@
 package com.github.ulwx.aka.dbutils.database.spring;
 
-import com.github.ulwx.aka.dbutils.database.DataBase;
 import com.github.ulwx.aka.dbutils.database.DataBaseImpl;
 import com.github.ulwx.aka.dbutils.database.MDataBase;
 import com.github.ulwx.aka.dbutils.database.MDataBaseImpl;
@@ -39,7 +38,7 @@ public class MDataBaseFactory {
     }
 
     public MDataBase getDatabase(Connection connection, boolean autoCommit, boolean externalControlClose){
-        DataBase dataBase=new DataBaseImpl();
+        DataBaseImpl dataBase=new DataBaseImpl();
         dataBase.connectDb(connection,externalControlClose);
         dataBase.setAutoCommit(autoCommit);
         return new MDataBaseImpl(dataBase);

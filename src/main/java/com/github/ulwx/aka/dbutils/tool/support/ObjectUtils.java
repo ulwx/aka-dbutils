@@ -69,6 +69,14 @@ public class ObjectUtils {
         return map;
 
     }
+    public static boolean isDateType(Class type){
+        if(type==Date.class || type==LocalDate.class || type ==LocalDateTime.class||
+            type==LocalTime.class ){
+            return true;
+        }else{
+            return false;
+        }
+    }
     public static Object[] toObjectArray(Object source) {
         if (source instanceof Object[]) {
             return (Object[]) source;

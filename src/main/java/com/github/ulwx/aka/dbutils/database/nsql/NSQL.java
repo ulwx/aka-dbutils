@@ -1,7 +1,9 @@
 package com.github.ulwx.aka.dbutils.database.nsql;
 
+import com.github.ulwx.aka.dbutils.database.DataBase.SQLType;
 import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils.GroupHandler;
@@ -21,6 +23,7 @@ public final class NSQL {
     private String sql_naming;
     private String sql_execute;
     private String methodFullName;
+    private SQLType sqlType;
     private Map<Integer, Object> args = new HashMap<Integer, Object>();// 存放索引到值的关系
     private Map<Integer, String> argsToKey = new HashMap<Integer, String>(); // 存放索引到key的关系
     private static Logger log = LoggerFactory.getLogger(NSQL.class);
@@ -32,6 +35,14 @@ public final class NSQL {
 
     public String getMethodFullName() {
         return methodFullName;
+    }
+
+    public SQLType getSqlType() {
+        return sqlType;
+    }
+
+    public void setSqlType(SQLType sqlType) {
+        this.sqlType = sqlType;
     }
 
     public void setMethodFullName(String methodFullName) {
@@ -69,6 +80,7 @@ public final class NSQL {
         return sql_naming;
     }
 
+
     /**
      * 根据md文件里的方法名和参数，获取NSQL对象
      *
@@ -80,25 +92,10 @@ public final class NSQL {
      * @throws Exception
      */
     public static NSQL getNSQL(String mdPathMethodName, Object args) throws DbException {
-        return NSQL.getNSQL(mdPathMethodName, args, false);
-    }
-
-    /**
-     * 根据md文件里的方法名和参数，获取NSQL对象
-     *
-     * @param mdPathMethodName ：定位到md文件里的方法字符串，格式为：
-     *                         com.github.ulwx.database.test.SysRightDao.md:getDataCount,
-     *                         表示在com/ulwx/database/test/SysRightDao.md文件里查找getDataCount的方法
-     * @param args             ：存放参数的map或JavaBean
-     * @param isStoredProc     :是否为存储过程
-     * @return
-     * @throws Exception
-     */
-    public static NSQL getNSQL(String mdPathMethodName, Object args, boolean isStoredProc) throws DbException {
         String[] strs = mdPathMethodName.split(":");
 
         try {
-            return NSQL.getNSQL(strs[0], strs[1], args, isStoredProc);
+            return NSQL.getNSQL(strs[0], strs[1], args);
         } catch (Exception e) {
             if(e instanceof DbException) throw (DbException)e;
             throw new DbException(e.getMessage(), e);
@@ -111,11 +108,10 @@ public final class NSQL {
      * @param mdPath       ：md文件的包路径全名称，例如，格式为： com.github.ulwx.database.test.SysRightDao.md
      * @param methodName   ：md里对应的方法名，例如 getDataCount
      * @param args         ：存放参数的map或JavaBean
-     * @param isStoredProc :是否为存储过程
      * @return
      * @throws Exception
      */
-    public static NSQL getNSQL(String mdPath, String methodName, Object args, boolean isStoredProc) throws Exception {
+    public static NSQL getNSQL(String mdPath, String methodName, Object args) throws Exception {
 
         Map<String, Object> map = null;
         if (args instanceof Map) {
@@ -124,19 +120,20 @@ public final class NSQL {
             map = ObjectUtils.fromJavaBeanToMap(args);
         }
         String sql = MDTemplate.getResultString(mdPath, methodName, map);
-        return getNSQL(sql, mdPath + ":" + methodName, map, isStoredProc);
+        return getNSQL(sql, mdPath + ":" + methodName, map);
     }
 
     public static NSQL getNSQL(String sql, String methodFullName,
-                               Map<String, Object> args, boolean isStoredProc) throws Exception {
+                               Map<String, Object> args) throws Exception {
 
         NSQL nsql = new NSQL();
         nsql.setMethodFullName(methodFullName);
-        nsql = parseSql(sql, args, isStoredProc, nsql);
+        nsql = parseSql(sql, args,  nsql);
 
         if (log.isDebugEnabled() &&  DbContext.permitDebugLog()) {
             log.debug("nsql:"+ObjectUtils.toString(nsql));
         }
+
         return nsql;
     }
 
@@ -159,16 +156,21 @@ public final class NSQL {
      *
      *  }</blockquote></pre>
      *
-     * @param sql          sql语句
+     * @param sqltxt          sql语句
      * @param args         参数
-     * @param isStoredProc 是否为存储过程 。
      * @return
      */
-    public static NSQL parseSql(String sql, final Map<String, Object> args, final boolean isStoredProc, NSQL nsql) {
+    public static NSQL parseSql(String sqltxt, final Map<String, Object> args, NSQL nsql) {
 
-        if (sql == null)
-            throw new NullPointerException("SQL String is null");
-        if (isStoredProc) {
+        sqltxt=StringUtils.trim(sqltxt);
+        if (sqltxt.isEmpty()) {
+            throw new NullPointerException("SQL String is empty or null");
+        }
+        String sql=sqltxt;
+        //判断sql的类型
+       SQLType sqlType=SqlUtils.decideSqlType(sql);
+        //if(sql)
+        if (sqlType== SQLType.STORE_DPROCEDURE) {
             final Map<String, TResult2<String, Object>> newArgs = new HashMap<String, TResult2<String, Object>>();
             for (String key : args.keySet()) {
                 String[] strs = key.split(":");
@@ -329,7 +331,7 @@ public final class NSQL {
         NSQL dbsql = nsql;
         dbsql.sql_naming = sql;
         dbsql.sql_execute = exeSql;
-
+        dbsql.sqlType=sqlType;
         dbsql.args = indexToValue;
         dbsql.argsToKey = IndexToKey;
 

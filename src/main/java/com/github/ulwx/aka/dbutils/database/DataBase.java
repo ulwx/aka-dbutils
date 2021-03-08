@@ -24,7 +24,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
         Connect_MainServer,
         // 如果是主从模式，并且是非事务性操作，如果是这种模式，则只去获取从库连接
         Connect_SlaveServer,
-        // 根据语句或是否含有事务来判断自动获取主库连接还是从宽连接。如果是执行语句包含在事务里或者是insert，update，delete语句，则获取主库连接;
+        // 根据语句或是否含有事务来判断自动获取主库连接还是从库连接。如果是执行语句包含在事务里或者是insert，update，delete语句，则获取主库连接;
         // 如果为查询语句，并且不包含在事务里，会在从库里获取连接
         Connect_Auto
     }
@@ -61,16 +61,16 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     void connectDb(String dbPoolName) throws DbException;
 
 
-    DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage, PageBean pageUtils,
+    DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage, PageBean pageBean,
                                   String countSql) throws DbException;
 
     DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters) throws DbException;
 
-    <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageUtils,
+    <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageBean,
                           RowMapper<T> rowMapper, String countSql) throws DbException;
 
     List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
-                                       PageBean pageUtils, String countSql) throws DbException;
+                                       PageBean pageBean, String countSql) throws DbException;
 
     List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args) throws DbException;
 
@@ -78,17 +78,17 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     <T> T queryOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException;
 
-    <T> List<T> queryListByOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
+    <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
                           QueryMapNestOne2One[] queryMapNestList) throws DbException;
 
     <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
-                          PageBean pageUtils, String countSql) throws DbException;
+                          PageBean pageBean, String countSql) throws DbException;
 
-    <T> List<T> queryListByOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
-                          QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageUtils, String countSql)
+    <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
+                          QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageBean, String countSql)
             throws DbException;
 
-    <T> List<T> queryListByOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery,
+    <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery,
                           Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException;
 
     <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException;

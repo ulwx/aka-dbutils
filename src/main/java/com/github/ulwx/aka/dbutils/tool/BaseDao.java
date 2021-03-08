@@ -3,7 +3,6 @@ package com.github.ulwx.aka.dbutils.tool;
 import com.github.ulwx.aka.dbutils.database.DataBase;
 import com.github.ulwx.aka.dbutils.database.DataBaseFactory;
 import com.github.ulwx.aka.dbutils.database.DbException;
-import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 
 import java.util.List;
 import java.util.function.Function;

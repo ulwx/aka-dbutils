@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 
 import java.util.Map;
 
-
 public class DbConst {
 	private static Logger log = Logger.getLogger(DbConst.class);
 

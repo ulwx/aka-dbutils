@@ -1,5 +1,6 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
 import java.sql.Connection;
@@ -28,17 +29,17 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable{
 
     <T> T queryOne(Class<T> clazz, String mdFullMethodName, Map<String, Object> args) throws DbException;
 
-    <T> List<T> queryListByOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args,
+    <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args,
                           QueryMapNestOne2One[] queryMapNestList) throws DbException;
 
     <T> List<T> queryList(Class<T> clazz, String mdFullMethodName, Map<String, Object> args, int page,
                           int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException;
 
-    <T> List<T> queryListByOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName,
+    <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName,
                           Map<String, Object> args, QueryMapNestOne2One[] queryMapNestList, int page, int perPage,
                           PageBean pageBean, String countSqlMdFullMethodName) throws DbException;
 
-    <T> List<T> queryListByOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName,
+    <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName,
                           Map<String, Object> args, QueryMapNestOne2Many[] queryMapNestList) throws DbException;
 
     <T> List<T> queryList(String mdFullMethodName, Map<String, Object> args, RowMapper<T> rowMapper) throws DbException;
@@ -60,6 +61,14 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable{
     int[] update(String[] mdFullMethodNames, Map<String, Object>[] args) throws DbException;
     int[] update(ArrayList<String> mdFullMethodNames) throws DbException;
     int update(String mdFullMethodName, Map<String, Object> args) throws DbException;
+    /**
+     * 根据interfaceType指定的接口生成动态代理。interfaceType接口里的方法映射到对应的md方法，
+     * 接口名称与md文件名称相同（不包含.md后缀）
+     * @param interfaceType  指定接口，生成代理对象
+     * @param <T>
+     * @return 返回根据interfaceType接口生成的动态代理对象
+     */
+    <T> T getMapper(Class<T> interfaceType) throws DbException;
 
     Connection getConnection();
 
@@ -74,4 +83,6 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable{
     void commit() throws DbException;
 
     void close();
+
+    DBMS getDataBaseType();
 }

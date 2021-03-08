@@ -17,15 +17,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MDataBaseImpl implements  MDataBase {
+public class MDataBaseImpl implements MDataBase {
 
     private DataBase dataBase;
+
     public MDataBaseImpl() {
 
     }
+
     public MDataBaseImpl(DataBase dataBase) {
         this.dataBase = dataBase;
     }
+
     @Override
     public DataBase getDataBase() {
         return dataBase;
@@ -35,6 +38,7 @@ public class MDataBaseImpl implements  MDataBase {
         this.dataBase = dataBase;
     }
 
+    @Override
     public DBMS getDataBaseType() {
         return this.dataBase.getDataBaseType();
     }
@@ -42,8 +46,8 @@ public class MDataBaseImpl implements  MDataBase {
     /**
      * @param packageFullName :sql脚本所在都包，例如com.xx.yy
      * @param sqlFileName     ：sql脚本的文件名，例如 db.sql
-     * @param throwWarning 脚本执行时如果出现warning，是否退出并回滚
-     * @param vParameters 脚本里用到的参数
+     * @param throwWarning    脚本执行时如果出现warning，是否退出并回滚
+     * @param vParameters     脚本里用到的参数
      * @return 执行成功的结果 ，否则抛出异常
      * @throws DbException
      */
@@ -51,20 +55,20 @@ public class MDataBaseImpl implements  MDataBase {
     public String exeScript(String packageFullName, String sqlFileName, boolean throwWarning) throws DbException {
 
         packageFullName = packageFullName.replace(".", "/");
-        String source="/" + packageFullName + "/" + sqlFileName;
+        String source = "/" + packageFullName + "/" + sqlFileName;
         InputStream in = this.getClass().getResourceAsStream(source);
         BufferedReader bufReader = null;
         try {
             bufReader = new BufferedReader(new InputStreamReader(in, "utf-8"));
-            Map<String, Object> args=new HashMap<>();
-            ScriptOption scriptOption=new ScriptOption();
+            Map<String, Object> args = new HashMap<>();
+            ScriptOption scriptOption = new ScriptOption();
             scriptOption.setSource(source);
             scriptOption.setFromMDMethod(false);
-            args.put(ScriptOption.class.getName(),scriptOption);
-            return this.dataBase.exeScript(bufReader, throwWarning,args);
+            args.put(ScriptOption.class.getName(), scriptOption);
+            return this.dataBase.exeScript(bufReader, throwWarning, args);
         } catch (Exception e) {
-            if(e instanceof DbException){
-                throw (DbException)e;
+            if (e instanceof DbException) {
+                throw (DbException) e;
             }
             throw new DbException(e);
         }
@@ -72,34 +76,33 @@ public class MDataBaseImpl implements  MDataBase {
     }
 
 
-
     @Override
-    public String exeScript(String mdFullMethodName,String delimiters, Map<String, Object> args) throws DbException {
+    public String exeScript(String mdFullMethodName, String delimiters, Map<String, Object> args) throws DbException {
         String[] strs = mdFullMethodName.split(":");
-        String sql=null;
+        String sql = null;
         try {
             sql = MDTemplate.getResultString(strs[0], strs[1], args);
-            sql= sql.replace(delimiters, ";\n");
+            sql = sql.replace(delimiters, ";\n");
 
         } catch (Exception e) {
-            if(e instanceof DbException){
-                throw (DbException)e;
+            if (e instanceof DbException) {
+                throw (DbException) e;
             }
             throw new DbException(e);
         }
 
         StringReader sr = new StringReader(sql);
-        ScriptOption scriptOption=new ScriptOption();
+        ScriptOption scriptOption = new ScriptOption();
         scriptOption.setSource(mdFullMethodName);
         scriptOption.setFromMDMethod(true);
-        args.put(ScriptOption.class.getName(),scriptOption);
-        return this.dataBase.exeScript(sr,false,args);
+        args.put(ScriptOption.class.getName(), scriptOption);
+        return this.dataBase.exeScript(sr, false, args);
 
     }
 
-    private static String getCountSql(String countSqlMdFullMethodName, Map<String, Object> args) {
+    public static String getCountSql(String countSqlMdFullMethodName, Map<String, Object> args) {
         String countSql = null;
-        countSqlMdFullMethodName=StringUtils.trim(countSqlMdFullMethodName);
+        countSqlMdFullMethodName = StringUtils.trim(countSqlMdFullMethodName);
         if (StringUtils.hasText(countSqlMdFullMethodName)) {
             if (StringUtils.isNumber(countSqlMdFullMethodName)
                     || countSqlMdFullMethodName.equals("-1")) {
@@ -161,10 +164,10 @@ public class MDataBaseImpl implements  MDataBase {
 
 
     @Override
-    public <T> List<T> queryListByOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args,
-                                 QueryMapNestOne2One[] queryMapNestList) throws DbException {
+    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args,
+                                        QueryMapNestOne2One[] queryMapNestList) throws DbException {
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
-        return this.dataBase.queryListByOne2One(clazz, sqlPrefix, nsql.getExeSql(), nsql.getArgs(), queryMapNestList);
+        return this.dataBase.queryListOne2One(clazz, sqlPrefix, nsql.getExeSql(), nsql.getArgs(), queryMapNestList);
     }
 
 
@@ -178,21 +181,21 @@ public class MDataBaseImpl implements  MDataBase {
 
 
     @Override
-    public <T> List<T> queryListByOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName,
-                                 Map<String, Object> args, QueryMapNestOne2One[] queryMapNestList, int page, int perPage,
-                                 PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
+    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName,
+                                        Map<String, Object> args, QueryMapNestOne2One[] queryMapNestList, int page, int perPage,
+                                        PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
 
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
         String countSql = getCountSql(countSqlMdFullMethodName, args);
-        return this.dataBase.queryListByOne2One(clazz, sqlPrefix, nsql.getExeSql(), nsql.getArgs(), queryMapNestList, page, perPage, pageBean, countSql);
+        return this.dataBase.queryListOne2One(clazz, sqlPrefix, nsql.getExeSql(), nsql.getArgs(), queryMapNestList, page, perPage, pageBean, countSql);
     }
 
 
     @Override
-    public <T> List<T> queryListByOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName,
-                                 Map<String, Object> args, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
+    public <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName,
+                                         Map<String, Object> args, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
-        return this.dataBase.queryListByOne2Many(clazz, sqlPrefix, parentBeanKeys, nsql.getExeSql(), nsql.getArgs(), queryMapNestList);
+        return this.dataBase.queryListOne2Many(clazz, sqlPrefix, parentBeanKeys, nsql.getExeSql(), nsql.getArgs(), queryMapNestList);
     }
 
 
@@ -235,6 +238,19 @@ public class MDataBaseImpl implements  MDataBase {
     }
 
     /**
+     * 根据type指定的接口生成动态代理。type接口里的方法映射到名称相同的md方法
+     *
+     * @param type 指定接口，生成代理对象
+     * @param <T>
+     * @return 返回继承type接口的代理对象
+     */
+    @Override
+    public <T> T getMapper(Class<T> type) throws DbException {
+        return MapperFactory.getMapper(type, this);
+
+    }
+
+    /**
      * 调用存储过程，用法如下：
      * <code><pre>
      * //parms参数可以按如下形式添加
@@ -258,7 +274,6 @@ public class MDataBaseImpl implements  MDataBase {
      *                           冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
      * @param parms              输入参数
      * @param outPramsValues     存放输出参数的返回值，根据parms(输入法参数)里的out,inout对应，如果输入参数为上面的例子所示，那么outPramsValues可能输入如下：
-     *
      * @param returnDataBaseSets 需返回值的结果集
      * @return
      * @throws DbException
@@ -266,14 +281,14 @@ public class MDataBaseImpl implements  MDataBase {
 
     @Override
     public void callStoredPro(String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues,
-                             List<DataBaseSet> returnDataBaseSets) throws DbException {
+                              List<DataBaseSet> returnDataBaseSets) throws DbException {
 
-        NSQL nsql = NSQL.getNSQL(mdFullMethodName, parms, true);
+        NSQL nsql = NSQL.getNSQL(mdFullMethodName, parms);
         Map<Integer, Object> args = nsql.getArgs();
         Map<String, Object> argsNew = new HashMap<String, Object>();
         for (Integer key : args.keySet()) {
             TResult2<String, Object> val = (TResult2<String, Object>) args.get(key);
-            argsNew.put(key +":"+ val.getFirstValue(), val.getSecondValue());
+            argsNew.put(key + ":" + val.getFirstValue(), val.getSecondValue());
         }
         Map<Integer, Object> outPramsValuesNew = new HashMap<Integer, Object>();
         this.dataBase.callStoredPro(nsql.getExeSql(), argsNew, outPramsValuesNew, returnDataBaseSets);
@@ -376,6 +391,7 @@ public class MDataBaseImpl implements  MDataBase {
     }
 
 
+
     @Override
     public Connection getConnection() {
         return this.dataBase.getConnection();
@@ -418,7 +434,6 @@ public class MDataBaseImpl implements  MDataBase {
     }
 
 
-
     /**
      * 设置是否为事务操作，false表明为事务操作（事务分为常规事务和分布式事务），事务操作即多个语句功能一个数据库连接。通过setAutoCommit()方法
      * 可以设置是否为事务操作，如果为事物操作，那么DataBaseMd里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
@@ -431,7 +446,6 @@ public class MDataBaseImpl implements  MDataBase {
     public void setAutoCommit(boolean b) throws DbException {
         this.dataBase.setAutoCommit(b);
     }
-
 
 
     /**
@@ -457,7 +471,6 @@ public class MDataBaseImpl implements  MDataBase {
     public void rollback() throws DbException {
         this.dataBase.rollback();
     }
-
 
 
     /**

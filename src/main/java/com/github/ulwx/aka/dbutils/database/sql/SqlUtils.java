@@ -490,7 +490,9 @@ public class SqlUtils {
 
 
 	public static void main(String[] args) throws Exception {
-
+		String sqltxt="{call query_course_cnt_func(#{name})}";
+		System.out.println(
+				StringUtils.indexOf(sqltxt,"[{=]\\s*call\\s+",true));
 	}
 
 	/**
@@ -1587,6 +1589,25 @@ public class SqlUtils {
 		}
 		return StringUtils.replace(sqlStr, "'", "''");
 	}
-	
 
+
+	public static DataBase.SQLType decideSqlType(String sqltxt) throws DbException {
+		sqltxt=StringUtils.trim(sqltxt);
+		if (StringUtils.startsWithIgnoreCase(sqltxt, "select")) {
+			return DataBase.SQLType.SELECT;
+		} else if (StringUtils.startsWithIgnoreCase(sqltxt, "insert")) {
+			return DataBase.SQLType.INSERT;
+		} else if (StringUtils.startsWithIgnoreCase(sqltxt, "update")) {
+			return DataBase.SQLType.UPDATE;
+		} else if (StringUtils.startsWithIgnoreCase(sqltxt, "delete")) {
+			return DataBase.SQLType.DELETE;
+		} else if (StringUtils.startsWithIgnoreCase(sqltxt, "{")
+			&& StringUtils.endsWithIgnoreCase(sqltxt, "}")
+			&& StringUtils.indexOf(sqltxt,"[{=]\\s*call\\s+",true)>=0) {
+			return DataBase.SQLType.STORE_DPROCEDURE;
+
+		}else{
+			return DataBase.SQLType.OTHER;
+		}
+	}
 }

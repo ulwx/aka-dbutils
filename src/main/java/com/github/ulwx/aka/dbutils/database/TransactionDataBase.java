@@ -29,10 +29,10 @@ public class TransactionDataBase extends DataBaseDecorator {
 						DbContext.findDataBaseInTransactionContextStack(dbPoolName);
 				if (contextDb != null) {
 					this.db=contextDb.db;
-					log.debug(dbPoolName+"：db from context stack!");
+					log.debug("["+dbPoolName+"]db from context stack!");
 					context.put(dbPoolName, this);
 					int level=DbContext.getTransactionLevel(context);
-					log.debug(Thread.currentThread().getId() + ":context："
+					log.debug("context："
 							+ ObjectUtils.toJsonString(context.keySet())+":level="+level);
 					return;
 				} else {
@@ -42,7 +42,7 @@ public class TransactionDataBase extends DataBaseDecorator {
 				}
 				context.put(dbPoolName, this);
 				int level=DbContext.getTransactionLevel(context);
-				log.debug(Thread.currentThread().getId() + ":context："
+				log.debug("context："
 						+ ObjectUtils.toJsonString(context.keySet())+":level="+level);
 				return;
 			}

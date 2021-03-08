@@ -6,8 +6,8 @@ public class PageBean {
 	protected int end;// 结束行号，开区间，end不包含在内 ；
 	protected int perPage;// 每页多少行
 	protected int total;// 总记录行
-	protected int page;// 当前页
-	protected int maxPage;// 最大的页数
+	protected int page;// 当前页码，从第1页开始
+	protected int maxPage;// 最大的页数，即最大页码
 
 	public PageBean() {
 

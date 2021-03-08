@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 public class ReadConfig {
 
 	private Logger log = LoggerFactory.getLogger(ReadConfig.class);

@@ -13,7 +13,7 @@ public class NSQLTest {
 
 	@Test
 	public void testParseSqlWithStoredProc(){
-		String sql = "call #{ret}=#{ parm1 } and b=#{ parm2} #33 #{parm3 }";
+		String sql = "{call #{ret}=#{ parm1 } and b=#{ parm2} #33 #{parm3 }}";
 		// System.out.println(ObjectUtils.toString(NSQL.parse(sql)));
 		Map<String, Object> mp=new HashMap<String,Object>();
 		mp.put("ret:out", String.class);
@@ -21,7 +21,7 @@ public class NSQLTest {
 		mp.put("parm2:out", Integer.class);
 		mp.put("parm3:inout", 12345);
 		NSQL nsql=new NSQL();
-		nsql=NSQL.parseSql(sql, mp, true,nsql);
+		nsql=NSQL.parseSql(sql, mp, nsql);
 		
 		log.info("nsql="+ ObjectUtils.toString(nsql));
 	}
@@ -34,7 +34,7 @@ public class NSQLTest {
 		mp.put("sysRightName", "777");
 		mp.put("aaa", 12345);
 		NSQL nsql=new NSQL();
-		nsql=NSQL.parseSql(sql, mp, false,nsql);
+		nsql=NSQL.parseSql(sql, mp, nsql);
 		
 		log.info("nsql="+ObjectUtils.toString(nsql));
 		
