@@ -2,7 +2,6 @@ package com.github.ulwx.aka.dbutils.database;
 
 import com.github.ulwx.aka.dbutils.database.DataBase.MainSlaveModeConnectMode;
 import com.github.ulwx.aka.dbutils.database.spring.DBTransInfo;
-import com.github.ulwx.aka.dbutils.tool.support.Assert;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -105,15 +104,36 @@ public class DbContext implements Serializable {
 			return null;
 		}
 	}
-	public static int getTransactionLevel(Map<String, DataBaseDecorator> context){
-		int level=0;
+	public static TransactionDataBaseTrace getTransactionStart(Map<String, DataBaseDecorator> context){
 		if(context.get(MDbTransactionManager._transaction_start)!=null) {
-			level=((TransactionDataBaseTrace)context.get(MDbTransactionManager._transaction_start)).getLevel();
+			return ((TransactionDataBaseTrace)context.get(MDbTransactionManager._transaction_start));
 		}else {//说明是顶级
-			level=0;
+
 		}
-		return level;
+		return null;
 	}
+	public static Integer getTransactionLevel(Map<String, DataBaseDecorator> context){
+		TransactionDataBaseTrace transactionDataBaseTrace = getTransactionStart(context);
+		if(transactionDataBaseTrace!=null){
+			return transactionDataBaseTrace.getInfo().getLevel();
+		}
+		return null;
+	}
+	public static TransactionDataBaseTrace findNestStartInTransactionContextStack() {
+		Stack<Map<String, DataBaseDecorator>> stack = DbContext.getTransactionContextStack();
+
+		for (int i = stack.size() - 1; i >= 0; i--) {
+			Map<String, DataBaseDecorator> tempContext = stack.get(i);
+			TransactionDataBaseTrace transactionStart=(TransactionDataBaseTrace)tempContext.get(MDbTransactionManager._transaction_start);
+			if(transactionStart.getInfo().getNestedLevel()==0){//
+				return transactionStart;
+			}
+
+		}
+		return null;
+
+	}
+
 	public static DataBaseDecorator findDataBaseInTransactionContextStack(String dbPoolName) {
 		Stack<Map<String, DataBaseDecorator>> stack = DbContext.getTransactionContextStack();
 
@@ -121,22 +141,17 @@ public class DbContext implements Serializable {
 			Map<String, DataBaseDecorator> tempContext = stack.get(i);
 			DataBaseDecorator db = tempContext.get(dbPoolName);
 			TransactionDataBaseTrace transactionStart=(TransactionDataBaseTrace)tempContext.get(MDbTransactionManager._transaction_start);
-			if (transactionStart != null) {
-				if(transactionStart.getLevel()>0){//
-					if (db != null) {
-						return db;
-					} else {
-						//继续向上查找
-					}
-				}else{  //截止查找
-					if(db!=null){
-						return db;
-					}
-					break;
+			if(transactionStart.getInfo().getLevel()>0){//
+				if (db != null) {
+					return db;
+				} else {
+					//继续向上查找
 				}
-
-			} else {// 截止点
-				Assert.notNull(transactionStart);
+			}else{  //截止查找
+				if(db!=null){ //到达顶级事务上下文
+					return db;
+				}
+				break;
 			}
 			
 		}

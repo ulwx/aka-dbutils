@@ -1,6 +1,10 @@
 package com.github.ulwx.aka.dbutils.tool;
 
-import com.github.ulwx.aka.dbutils.database.*;
+import com.github.ulwx.aka.dbutils.database.DataBaseSet;
+import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.RowMapper;
 
 import java.io.Reader;
 import java.util.ArrayList;
@@ -52,9 +56,11 @@ public class DbUtils extends BaseDao {
         }, dbpoolName);
     }
 
-    public static <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList) throws DbException {
+    public static <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
+                                               String sqlQuery, Map<Integer, Object> vParameters,
+                                               One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
         return execute(db -> {
-            return db.queryListOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList);
+            return db.queryListOne2One(clazz,  sqlQuery, vParameters, one2OneMapNestOptions);
         }, dbpoolName);
     }
 
@@ -64,15 +70,20 @@ public class DbUtils extends BaseDao {
         }, dbpoolName);
     }
 
-    public static <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageUtils, String countSql) throws DbException {
+    public static <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
+                                               String sqlQuery, Map<Integer, Object> vParameters,
+                                               One2OneMapNestOptions one2OneMapNestOptions,
+                                               int page, int perPage, PageBean pageUtils, String countSql) throws DbException {
         return execute(db -> {
-            return db.queryListOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage, pageUtils, countSql);
+            return db.queryListOne2One(clazz,  sqlQuery, vParameters, one2OneMapNestOptions, page, perPage, pageUtils, countSql);
         }, dbpoolName);
     }
 
-    public static <T> List<T> queryListOne2Many(String dbpoolName, Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery, Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
+    public static <T> List<T> queryListOne2Many(String dbpoolName, Class<T> clazz,
+                                                String sqlQuery, Map<Integer, Object> vParameters,
+                                                One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
         return execute(db -> {
-            return db.queryListOne2Many(clazz, sqlPrefix, parentBeanKeys, sqlQuery, vParameters, queryMapNestList);
+            return db.queryListOne2Many(clazz,   sqlQuery, vParameters, one2ManyMapNestOptions);
         }, dbpoolName);
     }
 

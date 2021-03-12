@@ -1,14 +1,14 @@
 package com.github.ulwx.aka.dbutils.tool;
 
-import com.github.ulwx.aka.dbutils.database.MapperMethodParm.MapNestOptions;
-import com.github.ulwx.aka.dbutils.database.MapperMethodParm.One2ManyMapNestOptions;
-import com.github.ulwx.aka.dbutils.database.MapperMethodParm.One2OneMapNestOptions;
-import com.github.ulwx.aka.dbutils.database.MapperMethodParm.PageOptions;
-import com.github.ulwx.aka.dbutils.database.MapperMethodParm.PageOptions.InsertOptions;
-import com.github.ulwx.aka.dbutils.database.MapperMethodParm.PageOptions.InsertOptions.ReturnFlag;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions.InsertOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions.InsertOptions.ReturnFlag;
 import com.github.ulwx.aka.dbutils.database.QueryMapNestOne2Many;
 import com.github.ulwx.aka.dbutils.database.QueryMapNestOne2One;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
+import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.CGetFun;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.GetFun;
 
@@ -23,13 +23,21 @@ public class MD {
         return prefix + ".md:" + mdMethodName;
     }
     public static String  md() {
-        return md(2);
+        return md(2,null);
     }
-    private static String  md(int level) {
+    public static String md(String mdMethodName){
+        return md(2,mdMethodName);
+    }
+    private static String  md(int level,String mdMehtodName) {
         StackTraceElement[] stack = (new Throwable()).getStackTrace();
         StackTraceElement ste = stack[level];
         String className=ste.getClassName();
-        String methodName=ste.getMethodName();
+        String methodName="";
+        if(StringUtils.hasText(mdMehtodName)){
+            methodName=mdMehtodName;
+        }else {
+            methodName=ste.getMethodName();
+        }
         return className+".md:"+methodName;
     }
     public static Object[] objs(Object... args){
@@ -79,14 +87,15 @@ public class MD {
        return ObjectUtils.fromJavaBeanToMap(javaBean);
     }
 
-    public static MapNestOptions ofOne2One(String sqlPrefix, QueryMapNestOne2One[] queryMapNests) {
+    public static One2OneMapNestOptions ofOne2One(String sqlPrefix,
+                                                  QueryMapNestOne2One... queryMapNests) {
         One2OneMapNestOptions o2os = new One2OneMapNestOptions();
         o2os.setSqlPrefix(sqlPrefix);
         o2os.setQueryMapNestOne2Ones(queryMapNests);
         return o2os;
     }
-    public static MapNestOptions ofOne2Many(String sqlPrefix, String[] parentBeanKeys,
-                                            QueryMapNestOne2Many[] QueryMapNestOne2Manys) {
+    public static One2ManyMapNestOptions ofOne2Many(String sqlPrefix, String[] parentBeanKeys,
+                                            QueryMapNestOne2Many... QueryMapNestOne2Manys) {
         One2ManyMapNestOptions o2ms = new One2ManyMapNestOptions();
         o2ms.setSqlPrefix(sqlPrefix);
         o2ms.setParentBeanKeys(parentBeanKeys);
@@ -141,7 +150,7 @@ public class MD {
      * @param needReturnKey true：返回主键id，false：返回插入的条数
      * @return
      */
-    public static InsertOptions ofReturnKey(boolean needReturnKey){
+    public static InsertOptions ofInsert(boolean needReturnKey){
         InsertOptions insertOptions=new InsertOptions();
         if(needReturnKey) {
             insertOptions.setReturnFlag(ReturnFlag.AutoKey);

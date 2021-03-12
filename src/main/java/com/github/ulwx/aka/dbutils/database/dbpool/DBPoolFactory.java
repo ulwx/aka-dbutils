@@ -1,8 +1,9 @@
 package com.github.ulwx.aka.dbutils.database.dbpool;
 
-import com.github.ulwx.aka.dbutils.database.DataBaseImpl;
 import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
+import com.github.ulwx.aka.dbutils.database.dialect.DialectClient;
 import com.github.ulwx.aka.dbutils.tool.support.EncryptUtil;
 import com.github.ulwx.aka.dbutils.tool.support.RandomUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
@@ -13,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -316,17 +319,23 @@ public class DBPoolFactory {
 	public  volatile  Map<DataSource,DataSourceStat> errorDataSourceStat=new ConcurrentHashMap<>();
 
 	public boolean checkIsNormalDataSource(DataSource dss){
-		DataBaseImpl dataBase = new DataBaseImpl();
+		Connection connection=null;
 		try {
-			Connection connection = dss.getConnection();
+			connection = dss.getConnection();
 			DbContext.permitDebugLog(false);
-			dataBase.connectDb(connection, false);
-			dataBase.queryForResultSet(dataBase.getDataBaseType().getCheckSql(),null);
+			DBMS dbms=DialectClient.decideDialect(connection);
+			PreparedStatement preparedStatement = connection.prepareStatement(dbms.getCheckSql());
+			preparedStatement.execute();
 		}catch(Exception e) {
 			log.error(""+e,e);
 			return false;
 		}finally{
-			dataBase.close();
+			if(connection!=null){
+				try {
+					connection.close();
+				} catch (SQLException exception) {
+				}
+			}
 		}
 		return true;
 	}

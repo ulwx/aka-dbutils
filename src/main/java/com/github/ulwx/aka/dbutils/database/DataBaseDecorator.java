@@ -1,11 +1,14 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
 import javax.sql.DataSource;
 import java.io.Reader;
 import java.sql.Connection;
+import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -74,10 +77,13 @@ public abstract  class DataBaseDecorator implements DBObjectOperation, AutoClose
 		return db.isColsed();
 	}
 
-
 	@Override
-	public Connection getConnection() {
-		return db.getConnection();
+	public Map<String, Savepoint>  getSavepoint(){
+		return db.getSavepoint();
+	}
+	@Override
+	public Connection getConnection(boolean force) {
+		return db.getConnection(force);
 	}
 
 	@Override
@@ -108,9 +114,10 @@ public abstract  class DataBaseDecorator implements DBObjectOperation, AutoClose
 		return db.queryOne(clazz, sqlQuery, vParameters);
 	}
 	@Override
-	public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
-			QueryMapNestOne2One[] queryMapNestList) throws DbException {
-		return db.queryListOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList);
+	public <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery,
+										Map<Integer, Object> vParameters,
+										One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
+		return db.queryListOne2One(clazz,  sqlQuery, vParameters, one2OneMapNestOptions);
 	}
 	@Override
 	public <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
@@ -118,16 +125,17 @@ public abstract  class DataBaseDecorator implements DBObjectOperation, AutoClose
 		return db.queryList(clazz, sqlQuery, vParameters, page, perPage, pageUtils, countSql);
 	}
 	@Override
-	public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
-			QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageUtils, String countSql)
+	public <T> List<T> queryListOne2One(Class<T> clazz,  String sqlQuery, Map<Integer, Object> vParameters,
+			One2OneMapNestOptions one2OneMapNestOptions, int page, int perPage, PageBean pageUtils, String countSql)
 			throws DbException {
-		return db.queryListOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage, pageUtils, countSql);
+		return db.queryListOne2One(clazz, sqlQuery, vParameters, one2OneMapNestOptions, page, perPage, pageUtils, countSql);
 	}
 
 	@Override
-	public <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery,
-			Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
-		return db.queryListOne2Many(clazz, sqlPrefix, parentBeanKeys, sqlQuery, vParameters, queryMapNestList);
+	public <T> List<T> queryListOne2Many(Class<T> clazz,  String sqlQuery,
+										 Map<Integer, Object> vParameters,
+										 One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
+		return db.queryListOne2Many(clazz,  sqlQuery, vParameters, one2ManyMapNestOptions);
 	}
 	@Override
 	public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException {
@@ -327,5 +335,6 @@ public abstract  class DataBaseDecorator implements DBObjectOperation, AutoClose
 	public String exeScript(Reader reader, boolean throwWarning,Map<String,Object> args) {
 		return db.exeScript(reader, throwWarning,args);
 	}
+
 
 }

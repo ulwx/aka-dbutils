@@ -1,11 +1,14 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
 import javax.sql.DataSource;
 import java.io.Reader;
 import java.sql.Connection;
+import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -78,18 +81,19 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     <T> T queryOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException;
 
-    <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
-                          QueryMapNestOne2One[] queryMapNestList) throws DbException;
+    <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
+                                 One2OneMapNestOptions one2OneMapNestOptions) throws DbException;
 
     <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
                           PageBean pageBean, String countSql) throws DbException;
 
-    <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
-                          QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageBean, String countSql)
+    <T> List<T> queryListOne2One(Class<T> clazz,  String sqlQuery, Map<Integer, Object> vParameters,
+                                 One2OneMapNestOptions one2OneMapNestOptions,
+                                 int page, int perPage, PageBean pageBean, String countSql)
             throws DbException;
 
-    <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery,
-                          Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException;
+    <T> List<T> queryListOne2Many(Class<T> clazz,String sqlQuery,
+                                  Map<Integer, Object> vParameters,One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException;
 
     <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException;
 
@@ -151,12 +155,35 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     boolean getAutoCommit() throws DbException;
 
     /**
-     * 用于事务性操作的回滚，如果事务为分布式事务，则为空操作。
+     * 用于事务性操作的回滚。
      *
      * @throws DbException
      */
     void rollback() throws DbException;
 
+    /**
+     * 得到保存点信息；
+     * @return
+     */
+    Map<String, Savepoint> getSavepoint();
+    /**
+     * 设置保存点
+     * @param savepointName 保存点名称
+     * @throws DbException
+     */
+    void setSavepoint(String savepointName) throws DbException;
+
+    /**
+     * 释放并删除指定名称的savepoint
+     * @param savepointName
+     * @throws DbException
+     */
+    void releaseSavepoint(String savepointName) throws DbException;
+    /**
+     * 用于事务回滚到保存点。
+     * @throws DbException
+     */
+    void rollbackToSavepoint(String savepointName) throws DbException;
 
     /**
      * 判断资源和底层数据库连接是否关闭
@@ -179,5 +206,11 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      */
     void close();
 
-    Connection getConnection();
+    /**
+     * 返回当前连接，如果force=true，若当前没有连接，则新生成一个连接；force=false，若连接
+     * 不存在或已经关闭则会返回null。
+     * @param force
+     * @return
+     */
+    Connection getConnection(boolean force);
 }

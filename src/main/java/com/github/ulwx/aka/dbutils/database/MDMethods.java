@@ -2,7 +2,7 @@ package com.github.ulwx.aka.dbutils.database;
 
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
-public class MapperMethodParm {
+public class MDMethods {
 
     public static abstract class MapNestOptions {
         public abstract boolean isOne2One();
@@ -16,6 +16,10 @@ public class MapperMethodParm {
             return sqlPrefix;
         }
 
+        /**
+         * 指定一个前缀，用于限定sql语句里的哪些列映射主类的属性
+         * @param sqlPrefix
+         */
         public void setSqlPrefix(String sqlPrefix) {
             this.sqlPrefix = sqlPrefix;
         }
@@ -24,6 +28,10 @@ public class MapperMethodParm {
             return parentBeanKeys;
         }
 
+        /**
+         * 指定主类里的哪些属性共同对应到表里一个唯一键，可能是主键
+         * @param parentBeanKeys
+         */
         public void setParentBeanKeys(String[] parentBeanKeys) {
             this.parentBeanKeys = parentBeanKeys;
         }
@@ -32,10 +40,18 @@ public class MapperMethodParm {
             return QueryMapNestOne2Manys;
         }
 
+        /**
+         * 可以设置多个关联属性，每个QueryMapNestOne2Many对象代表一个一对多关联属性配置
+         * @param queryMapNestOne2Manys
+         */
         public void setQueryMapNestOne2Manys(QueryMapNestOne2Many[] queryMapNestOne2Manys) {
             QueryMapNestOne2Manys = queryMapNestOne2Manys;
         }
 
+        /**
+         * 是否是一对一关联，否则是一对多关联
+         * @return
+         */
         @Override
         public boolean isOne2One() {
             return false;
@@ -50,14 +66,26 @@ public class MapperMethodParm {
             return sqlPrefix;
         }
 
+        /**
+         * 指定一个前缀，用于限定sql语句里的哪些列映射主类的属性
+         * @param sqlPrefix
+         */
         public void setSqlPrefix(String sqlPrefix) {
             this.sqlPrefix = sqlPrefix;
         }
 
+        /**
+         *
+         * @return
+         */
         public QueryMapNestOne2One[] getQueryMapNestOne2Ones() {
             return queryMapNestOne2Ones;
         }
 
+        /**
+         * 可以设置多个关联属性配置，每个QueryMapNestOne2Many对象代表一个一对一关联属性配置
+         * @param queryMapNestOne2Ones
+         */
         public void setQueryMapNestOne2Ones(QueryMapNestOne2One[] queryMapNestOne2Ones) {
             this.queryMapNestOne2Ones = queryMapNestOne2Ones;
         }

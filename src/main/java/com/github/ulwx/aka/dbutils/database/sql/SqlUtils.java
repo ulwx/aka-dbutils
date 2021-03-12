@@ -406,7 +406,7 @@ public class SqlUtils {
 		try {
 			db = DataBaseFactory.getDataBase(pool);
 			db.setAutoCommit(false);
-			Connection conn = db.getConnection();
+			Connection conn = db.getConnection(true);
 			DatabaseMetaData dd = conn.getMetaData();
 			if(StringUtils.isEmpty(schema)){
 				schema=conn.getCatalog();
@@ -536,12 +536,18 @@ public class SqlUtils {
 					name = mapName;
 				}
 			}
-			String labelName = prefix + getColumName(dbpoolName,name);
-			if(!isExistColumn(rs,labelName)){
-				if(!isExistColumn(rs,name)) {
+			String columName=getColumName(dbpoolName,name);
+			String labelName = prefix+columName;
+			String prefixName= prefix+name;
+			if(!isExistColumn(rs,labelName)){ //优先使用labelName
+				if(labelName.equals(prefixName)){
 					return null;
 				}else {
-					labelName=name;
+					if (!isExistColumn(rs, prefixName)) {
+						return null;
+					} else {
+						labelName = prefixName;
+					}
 				}
 			}
 			

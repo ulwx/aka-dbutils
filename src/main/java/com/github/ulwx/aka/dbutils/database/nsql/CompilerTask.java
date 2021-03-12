@@ -115,7 +115,7 @@ public class CompilerTask {
         ClassLoader parentClassLoader = Thread.currentThread().getContextClassLoader();;
         if (parentClassLoader instanceof URLClassLoader) {
             URLClassLoader urlLoader = (URLClassLoader) parentClassLoader;
-            log.debug("parentClassLoader" + parentClassLoader);
+            //log.debug("parentClassLoader" + parentClassLoader);
             StringBuilder sb = new StringBuilder();
             for (URL url : urlLoader.getURLs()) {
                 String p = url.getFile().substring(1);

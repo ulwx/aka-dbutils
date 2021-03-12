@@ -17,32 +17,33 @@ public class TransactionDataBase extends DataBaseDecorator {
 		super(db);
 	}
 
-
 	@Override
 	public void connectDb(String dbPoolName) throws DbException {
 
 		Stack<Map<String, DataBaseDecorator>> stack = DbContext.getTransactionContextStack();
 		if (stack != null) {
 			Map<String, DataBaseDecorator> context = DbContext.getTransactionContextStackTopContext(stack);
-			if (context != null) {// 如果在事务上下文中,则新建的数据库实例放入当前上下文中
+			if (context != null) {// 如果存在在事务上下文,则新建的数据库实例放入当前上下文中
 				DataBaseDecorator contextDb =
 						DbContext.findDataBaseInTransactionContextStack(dbPoolName);
 				if (contextDb != null) {
-					this.db=contextDb.db;
-					log.debug("["+dbPoolName+"]db from context stack!");
-					context.put(dbPoolName, this);
-					int level=DbContext.getTransactionLevel(context);
-					log.debug("context："
-							+ ObjectUtils.toJsonString(context.keySet())+":level="+level);
-					return;
+					this.db=contextDb.db;//使用老连接
+					log.debug("fetch a ["+dbPoolName+"]db from context stack!");
 				} else {
-					this.db.connectDb(dbPoolName);
+					this.db.connectDb(dbPoolName);//获取新连接，会延迟获取
 					this.db.setAutoCommit(false);
-					log.debug(dbPoolName+": a new db is created and put into context stack!");
+					log.debug("create a ["+dbPoolName+"]db and put it into context stack!");
+				}
+				TransactionDataBaseTrace start=DbContext.getTransactionStart(context);
+				if(start.getInfo().getNestedLevel()>=0){//说明有嵌套事务
+					//查找nestStart
+					TransactionDataBaseTrace nestStart =
+							DbContext.findNestStartInTransactionContextStack();
+					this.db.setSavepoint(nestStart.getInfo().getNestedStartSavepointName());
 				}
 				context.put(dbPoolName, this);
 				int level=DbContext.getTransactionLevel(context);
-				log.debug("context："
+				log.debug("current context："
 						+ ObjectUtils.toJsonString(context.keySet())+":level="+level);
 				return;
 			}
@@ -63,9 +64,35 @@ public class TransactionDataBase extends DataBaseDecorator {
 		if (findDb != null) {// 拦截
 			return;
 		}
+
 		db.rollback();
 	}
 
+	@Override
+	public void rollbackToSavepoint(String savepointName) throws DbException {
+		DataBase findDb = findInCurTransactionContext(this.getDbPoolName());
+		if (findDb != null) {// 拦截
+			return;
+		}
+		db.rollbackToSavepoint(savepointName);
+	}
+	@Override
+	public void setSavepoint(String savepointName) throws DbException{
+		DataBase findDb = findInCurTransactionContext(this.getDbPoolName());
+		if (findDb != null) {// 拦截
+			return;
+		}
+		db.setSavepoint(savepointName);
+	}
+
+	@Override
+	public void releaseSavepoint(String savepointName) throws DbException{
+		DataBase findDb = findInCurTransactionContext(this.getDbPoolName());
+		if (findDb != null) {// 拦截
+			return;
+		}
+		db.releaseSavepoint(savepointName);
+	}
 	@Override
 	public void commit() throws DbException {
 		DataBase findDb = findInCurTransactionContext(this.getDbPoolName());

@@ -1,6 +1,8 @@
 package com.github.ulwx.aka.dbutils.tool;
 
 import com.github.ulwx.aka.dbutils.database.*;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -264,9 +266,10 @@ public class MDbUtils extends BaseDao {
 
 
     /**
-     * 一对一关联查询。是针对一个对象"一对一关联"另一对象（通过在对象类型里包含另一个对象类型的属性来实现一对一关联）。
-     * 两个对象的类型都对应数据库表，例如student表，其每个学生只学习一门课程（course表）， 那么student表一行学生信息记录就一对一
-     * 关联course表的一门课程记录。数据库表可以设计成如下：<blockquote><pre>
+     * 一对一关联分页查询。是针对一个对象"一对一关联"另一对象，通过在对象的类里定义一个关联属性，包含关联属性的类为主类，
+     * 关联属性的类型为子关联类。主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
+     * 那么student表一行学生信息记录就一对一关联course表的一门课程记录，从类的角度来说就是主类Student和子关联类Course具有一对一关联，
+     * 并且在Student类里定义了一个名为"course"（名称随意）的关联属性，其类型为Course，它是子关联类型。数据库表可以设计成如下：<blockquote><pre>
      * student表：
      * id,student_name
      *
@@ -314,53 +317,56 @@ public class MDbUtils extends BaseDao {
      *         Map<String,Object> args = new HashMap<>();
      *         args.put("name","student");
      *         QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
-     *         queryMapNestOne2One.set(null,
-     *                              "course",  ①
-     *                                "c.");   ②
-     *         List<One2OneStudent> list=MDbUtils.queryList(DbPoolName, One2OneStudent.class,
-     *                 "stu.",   ③
-     *                 MD.md(),
-     *                 args,new QueryMapNestOne2One[]{queryMapNestOne2One});
+     *         queryMapNestOne2One.set(null,  //子关联类哪些属性被映射，null表明全部映射
+     *                              "course",  ①  //指定主类里的关联属性
+     *                                "c.");   ② //限定哪些列映射到子关联类里
+
+     *         One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
+     *                 "stu."  ③
+     *                 ,queryMapNestOne2One
+     *         );
+     *         List<One2OneStudent> list=MDbUtils.queryListOne2One(DbPoolName, One2OneStudent.class,
+     *                  MD.md(), args, one2OneMapNestOptions);
      *         System.out.println("list="+ ObjectUtils.toPrettyJsonString(list));
      *
      *     }
+     *
      *    public static void main(String[] args) throws Exception{
      *         CourseDao dao=new CourseDao();
      *         dao.testQueryListOne2One();
      *     }
      * }
      * </pre></blockquote>
-     * MDbUtils#queryList()第三个参数传入了"stu."（③），这限定了SQL语句里字段（③-1处）映射到主对象（包含关联对象属性）的属性。
-     * queryMapNestOne2One对象设置了"course"（①处），指定了One2OneStudent类型里的关联对象的属性名course（①-1处），
-     * 在②处设置了"c."，这限定了SQL语句里哪些字段（②-1处）映射到关联子对象里的属性（①-1处course对象里的属性）。
+     * ③处的"stu."指定了一个前缀，它限定了SQL语句里哪些列字段（③-1处）要映射到主类（包含关联属性的类）里对应的属性。
+     * queryMapNestOne2One对象被设置了"course"（①处），它指定了主类One2OneStudent类里的关联属性（即对应于①-1处的course属性），
+     *在②处设置了"c."，这限定了SQL语句里哪些列字段（②-1处）要映射到子关联子里的对应的属性（即Course类里的属性）。
      * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param clazz 映射到的对象所属类型
-     * @param sqlPrefix  限定SQL语句里的字段映射到主对象的属性
      * @param mdFullMethodName  md方法地址
      * @param args  md方法里用到的参数
-     * @param queryMapNestList  指定关联子对象的映射信息，为数组类型，表明可以指定多个不同类型关联子对象映射信息。
+     * @param one2OneMapNestOptions  关联子对象的映射配置对象。
      * @param <T>
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz, String sqlPrefix,
+    public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
                                          String mdFullMethodName, Map<String, Object> args,
-                                         QueryMapNestOne2One[] queryMapNestList) throws DbException {
+                                                One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListOne2One(clazz, sqlPrefix, mdFullMethodName, args, queryMapNestList);
+            return mdb.queryListOne2One(clazz,  mdFullMethodName, args, one2OneMapNestOptions);
         }, dbpoolName);
     }
 
     /**
-     * 一对一关联分页查询。是针对一个对象"一对一关联"另一对象（通过在对象类型里包含另一个对象类型的属性来实现一对一关联）。
-     * 两个对象的类型都对应数据库表，例如student表，其每个学生只学习一门课程（course表一条记录）， 那么student表一行学生信息记录就一对一
-     * 关联course表的一门课程记录。
+     * 一对一关联分页查询。是针对一个对象"一对一关联"另一对象，通过在对象的类里定义一个关联属性，包含关联属性的类为主类，
+     * 关联属性的类型为子关联类。主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
+     * 那么student表一行学生信息记录就一对一关联course表的一门课程记录，从类的角度来说就是主类Student和子关联类Course具有一对一关联，
+     * 并且在Student类里定义了一个名为"course"的关联属性，其类型为Course，它是子关联类型。
      * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param clazz  映射到的对象所属类型
-     * @param sqlPrefix  限定SQL语句里的字段映射到主对象的属性
      * @param mdFullMethodName  md方法地址
      * @param args   md方法里用到的参数
-     * @param queryMapNestList  指定关联子对象的映射信息，为数组类型，表明可以指定多个不同类型关联子对象映射信息。
+     * @param one2OneMapNestOptions  关联子对象的映射配置对象。
      * @param page  当前请求页码
      * @param perPage  每页多少行
      * @param pageBean  存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
@@ -373,16 +379,23 @@ public class MDbUtils extends BaseDao {
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args, QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
+    public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
+                                                String mdFullMethodName,
+                                                Map<String, Object> args,
+                                                One2OneMapNestOptions one2OneMapNestOptions,
+                                                int page, int perPage, PageBean pageBean,
+                                                String countSqlMdFullMethodName) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListOne2One(clazz, sqlPrefix, mdFullMethodName, args, queryMapNestList, page, perPage, pageBean, countSqlMdFullMethodName);
+            return mdb.queryListOne2One(clazz,  mdFullMethodName, args, one2OneMapNestOptions, page, perPage, pageBean, countSqlMdFullMethodName);
         }, dbpoolName);
     }
 
     /**
-     * 一对多关联查询,针对一个对象"一对多关联"多个同类型对象（在对象类型里包含一个List属性，List里元素对象类型为关联对象的类型）。
-     * 两个对象的类型都对应数据库表，例如student表，其每个学生只学习多门课程（course表的多条记录），那么student表一行学生信息记录
-     * 就一对多关联course表的多条课程记录。数据库表可以设计成如下：<blockquote><pre>
+     * 一对多关联查询。是针对一个对象"一对多关联"另一对象，通过在对象的类（主类）里定义一个关联属性，关联属性的类型为子关联类。
+     * 主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习多门课程（对应course表里多条记录），
+     * 那么student表一行学生信息记录就一对多关联course表的多门课程记录，从类的角度来说就是主类Student和子关联类Course具有一对多关联，
+     * 并且在Student类里定义了一个名为"courseList"的关联属性，其类型为List<Course>，Course为子关联类型。
+     * 数据库表可以设计成如下：<blockquote><pre>
      * student表：
      * id,student_name
      *
@@ -432,17 +445,19 @@ public class MDbUtils extends BaseDao {
      *         Map<String,Object> args = new HashMap<>();
      *         args.put("name",new String[]{"student1","student2","student3"});
      *         QueryMapNestOne2Many queryMapNestOne2Many = new QueryMapNestOne2Many();
-     *         queryMapNestOne2Many.set(Course.class,
-     *                 "courseList",  ①
-     *                 new String[]{"id"}, ②
-     *                 "c.",    ③
-     *                 null);
-     *         List<One2ManyStudent> list=MDbUtils.queryListByOne2Many(DbPoolName,One2ManyStudent.class,
-     *                 "stu.",  ④
-     *                 new String[]{"id"}, ⑤
+     *         queryMapNestOne2Many.set(Course.class, //子关联类
+     *                 "courseList",  ①    //对应主类里的关联属性名称
+     *                 new String[]{"id"}, ②  //指定子关联类的唯一键属性（可能是多个属性共同组成唯一键），对应子关联类Course里id属性
+     *                 "c.",    ③   //限定sql里哪些列映射到子关联类
+     *                 null);   //指定子关联类里哪些属性被映射，如果为null表明所有属性被映射
+     *         One2ManyMapNestOptions one2ManyMapNestOptions=MD.ofOne2Many(
+     *                  "stu."   ④     //限定sql里哪些列被映射到主类里
+     *                 , new String[]{"id"},  ⑤  //指定主类的主键属性，对应主类Student里的id属性
+     *                 queryMapNestOne2Many);
+     *         List<One2ManyStudent> list=MDbUtils.queryListOne2Many(DbPoolName,One2ManyStudent.class,
      *                 MD.md(),
      *                 args,
-     *                 new QueryMapNestOne2Many[]{queryMapNestOne2Many});
+     *                 one2ManyMapNestOptions);
      *         System.out.println("list="+ ObjectUtils.toPrettyJsonString(list));
      *
      *     }
@@ -453,26 +468,25 @@ public class MDbUtils extends BaseDao {
      * }
      *
      * </pre></blockquote>
-     * MDbUtils#queryListByOne2Many()第三个参数传入了"stu."（④），这限定了SQL语句里哪些字段（③-1处）映射到主对象（包含关联对象属性）的属性。
-     * queryMapNestOne2Many对象设置了"courseList"（①处），指定了One2ManyStudent类型里的关联对象的属性名courseList（①-1处），
-     * 在③处设置了"c."，这限定了SQL语句里哪些字段（③-1处）映射到关联子对象里的属性（①-1处courseList里元素对象里的属性）。
-     * MDbUtils#queryListByOne2Many()第四个参数（⑤）处指定了主对象（父对象）里哪些属性共同唯一的确定一个对象（即这些属性对应的表字段
-     * 唯一确定一行记录），aka-dbutils利用这些属性对查询的记录进行分组，分组内的记录再通过②处指定的子关联类里的属性确定唯一的关联子对象，从而去
-     * 重复的关联对象，最后构成关联子对象列表。
+     * ④处通过指定"stu."限定SQL语句里哪些列字段（③-1处）映射到主类里对应的属性。
+     * queryMapNestOne2Many对象设置了关联属性"courseList"（①处），对应到主类One2ManyStudent里的关联属性名courseList（①-1处），
+     * 在③处设置了"c."，这限定了SQL语句里哪些字段（③-1处）映射到子关联类（Course）里的属性。⑤处指定了主类里哪些属性组成唯一键来确定一个对象
+     * （即这些属性对应的表字段合起来是是唯一键），aka-dbutils利用这些属性对查询的记录进行分组，分组内的记录再通过子关联类主键属性（②处）去
+     * 掉重复生成的关联子对象，从而构成最终的关联子对象列表。
      * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param clazz 映射到的对象所属类型
-     * @param sqlPrefix 限定SQL语句里的字段映射到主对象的属性
-     * @param parentBeanKeys 指定主类里哪些属性可以唯一确定一个主对象，用于对查询记录的分组
      * @param mdFullMethodName  md方法地址
      * @param args  md方法里用到的参数
-     * @param queryMapNestList   指定一对多关联子对象的映射信息，为数组类型，表明可以指定多个不同类型关联子对象映射信息。
+     * @param one2ManyMapNestOptions   指定一对多关联子对象的映射信息，为数组类型，可以指定多个一对多关联映射
      * @param <T>
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListOne2Many(String dbpoolName, Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName, Map<String, Object> args, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
+    public static  <T> List<T> queryListOne2Many(String dbpoolName, Class<T> clazz,
+                                                 String mdFullMethodName, Map<String, Object> args,
+                                                 One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListOne2Many(clazz, sqlPrefix, parentBeanKeys, mdFullMethodName, args, queryMapNestList);
+            return mdb.queryListOne2Many(clazz,  mdFullMethodName, args, one2ManyMapNestOptions);
         }, dbpoolName);
     }
 

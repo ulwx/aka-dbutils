@@ -1,9 +1,12 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
 import java.sql.Connection;
+import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,18 +32,20 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable{
 
     <T> T queryOne(Class<T> clazz, String mdFullMethodName, Map<String, Object> args) throws DbException;
 
-    <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args,
-                          QueryMapNestOne2One[] queryMapNestList) throws DbException;
+    <T> List<T> queryListOne2One(Class<T> clazz, String mdFullMethodName, Map<String, Object> args,
+                                        One2OneMapNestOptions one2OneMapNestOptions) throws DbException;
 
     <T> List<T> queryList(Class<T> clazz, String mdFullMethodName, Map<String, Object> args, int page,
                           int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException;
 
-    <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName,
-                          Map<String, Object> args, QueryMapNestOne2One[] queryMapNestList, int page, int perPage,
-                          PageBean pageBean, String countSqlMdFullMethodName) throws DbException;
+    <T> List<T> queryListOne2One(Class<T> clazz, String mdFullMethodName,
+                                        Map<String, Object> args, One2OneMapNestOptions one2OneMapNestOptions,
+                                        int page, int perPage, PageBean pageBean,
+                                        String countSqlMdFullMethodName) throws DbException;
 
-    <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName,
-                          Map<String, Object> args, QueryMapNestOne2Many[] queryMapNestList) throws DbException;
+     <T> List<T> queryListOne2Many(Class<T> clazz, String mdFullMethodName,
+                                         Map<String, Object> args,
+                                         One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException ;
 
     <T> List<T> queryList(String mdFullMethodName, Map<String, Object> args, RowMapper<T> rowMapper) throws DbException;
 
@@ -70,13 +75,37 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable{
      */
     <T> T getMapper(Class<T> interfaceType) throws DbException;
 
-    Connection getConnection();
+    Connection getConnection(boolean force);
 
     void setAutoCommit(boolean b) throws DbException;
 
     boolean getAutoCommit() throws DbException;
 
     void rollback() throws DbException;
+    /**
+     * 得到保存点信息；
+     * @return
+     */
+    Map<String, Savepoint> getSavepoint();
+    /**
+     * 设置保存点
+     * @param savepointName 保存点名称
+     * @throws DbException
+     */
+    void setSavepoint(String savepointName) throws DbException;
+
+    /**
+     * 释放并删除指定名称的savepoint
+     * @param savepointName
+     * @throws DbException
+     */
+    void releaseSavepoint(String savepointName) throws DbException;
+    /**
+     * 用于事务回滚到保存点。
+     * @throws DbException
+     */
+    void rollbackToSavepoint(String savepointName) throws DbException;
+
 
     boolean isColsed() throws DbException;
 

@@ -1,5 +1,7 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.CachedRowSetImpl;
 import com.github.ulwx.aka.dbutils.database.dbpool.DBPoolFactory;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
@@ -39,7 +41,6 @@ public class DataBaseImpl implements DataBase {
     private Connection conn = null;
     private PreparedStatement ps = null;
     private ResultSet rs = null;
-   // private CallableStatement cs = null;
     private boolean mainSlaveMode = false;
     private DataSource dataSource;
     private boolean isAutoCommit = true;
@@ -51,6 +52,7 @@ public class DataBaseImpl implements DataBase {
     private String dbPoolName = "";
     private boolean externalControlConClose = false;
     private ConnectType connectType = null;
+    private Map<String, Savepoint> savePointMap = new LinkedHashMap<>();
 
     public DataBaseImpl() {
     }
@@ -110,27 +112,27 @@ public class DataBaseImpl implements DataBase {
 
     public static String getCallerInf() {
         // 3, 10, DbConst.filter, 1
-        int fromLevel = 3,  upLevelNum = 0;
+        int fromLevel = 3, upLevelNum = 0;
 
         StackTraceElement stack[] = (new Throwable()).getStackTrace();// ;
         // 获取线程运行栈信息
-        String str="";
+        String str = "";
         if (stack.length > fromLevel) {
             //com.github.ulwx.aka.dbutils.tool.MDbUtils.queryList(MDbUtils.java:107)
-            for (int i = fromLevel;  i < stack.length; i++) {
+            for (int i = fromLevel; i < stack.length; i++) {
                 if (stack[i].getClassName().startsWith(DataBase.class.getPackage().getName())
-                      || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
+                        || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
 
                     continue;
                 }
-                String tempInfo=getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(:"
+                String tempInfo = getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(:"
                         + stack[i].getLineNumber() + ")";
-                if(upLevelNum==0) {
-                    str= tempInfo;
-                }else {
+                if (upLevelNum == 0) {
+                    str = tempInfo;
+                } else {
                     if (upLevelNum < 3) {
                         str = tempInfo + "=>" + str;
-                    } else{
+                    } else {
                         break;
                     }
                 }
@@ -288,78 +290,83 @@ public class DataBaseImpl implements DataBase {
         long start0 = System.currentTimeMillis();
         String msg = "";
         try {
-            if (!this.isColsed()) {
-                return;
-            } else {
+            if (this.isColsed()) {
                 conn = null;
-            }
-            if (this.connectType == ConnectType.POOL) {
-                if (this.mainSlaveMode) {
-                    if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是主从模式，并将是连接从库
-                        if (!this.getAutoCommit()) {//事务性操作
-                            throw new DbException("当前操作为事务性，不能在从库上执行!!");
-                        }
-                        if (this.sqlType != SQLType.SELECT) {
-                            throw new DbException("从库只能执行select语句执行！");
-                        }
-                        msg = "获得从库链接";
-                        TResult<Connection> tResult = new TResult<>();
-                        DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
-                        this.conn = tResult.getValue();
-                        ;
-                        this.dataSource = ds;
-
-                    } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
-                        msg = "获得主库链接";
-                        DataSource datasource = this.getDataSourceFromPool(dbPoolName);
-                        this.dataSource = datasource;
-                    } else { //Connect_Auto
-                        if (this.sqlType == SQLType.SELECT) {
+                if (this.connectType == ConnectType.POOL) {
+                    if (this.mainSlaveMode) {
+                        if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是主从模式，并将是连接从库
                             if (!this.getAutoCommit()) {//事务性操作
+                                throw new DbException("当前操作为事务性，不能在从库上执行!!");
+                            }
+                            if (this.sqlType != SQLType.SELECT) {
+                                throw new DbException("从库只能执行select语句执行！");
+                            }
+                            msg = "获得从库链接";
+                            TResult<Connection> tResult = new TResult<>();
+                            DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
+                            this.conn = tResult.getValue();
+                            this.dataSource = ds;
+
+                        } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
+                            msg = "获得主库链接";
+                            DataSource datasource = this.getDataSourceFromPool(dbPoolName);
+                            this.dataSource = datasource;
+                        } else { //Connect_Auto
+                            if (this.sqlType == SQLType.SELECT) {
+                                if (!this.getAutoCommit()) {//事务性操作
+                                    msg = "获得主库链接";
+                                    DataSource ds = this.getDataSourceFromPool(dbPoolName);
+                                    this.dataSource = ds;
+                                } else {
+                                    msg = "获得从库链接";
+                                    TResult<Connection> tResult = new TResult<>();
+                                    DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
+                                    this.conn = tResult.getValue();
+                                    this.dataSource = ds;
+                                    ///
+                                }
+                            } else { //update、delete、存储过程,脚本在主库上执行
                                 msg = "获得主库链接";
                                 DataSource ds = this.getDataSourceFromPool(dbPoolName);
                                 this.dataSource = ds;
-                            } else {
-                                msg = "获得从库链接";
-                                TResult<Connection> tResult = new TResult<>();
-                                DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
-                                this.conn = tResult.getValue();
-                                this.dataSource = ds;
-                                ///
                             }
-                        } else { //update、delete、存储过程,脚本在主库上执行
-                            msg = "获得主库链接";
-                            DataSource ds = this.getDataSourceFromPool(dbPoolName);
-                            this.dataSource = ds;
+
                         }
-
+                    } else { //非主从库方式
+                        msg = "获得主库链接";
+                        DataSource datasource = this.getDataSourceFromPool(dbPoolName);
+                        this.dataSource = datasource;
                     }
-                } else { //非主从库方式
-                    msg = "获得主库链接";
-                    DataSource datasource = this.getDataSourceFromPool(dbPoolName);
-                    this.dataSource = datasource;
+                    if (this.isColsed()) {
+                        conn = this.dataSource.getConnection();
+                    }
+
+                } else if (this.connectType == ConnectType.CONNECTION) {
+                    if (this.isColsed()) {
+                        msg = "数据库连接为空或已经关闭！";
+                    } else {
+                        msg = "获得数据库库链接";
+                    }
+                } else if (this.connectType == ConnectType.DATASOURCE) {
+                    msg = "获得数据库库链接";
+                    conn = dataSource.getConnection();
+                } else {
+                    throw new DbException("不支持的连接方式！" + this.connectType);
                 }
-                if (this.isColsed()) {
-                    conn = this.dataSource.getConnection();
+                this.setInternalConnectionAutoCommit(this.getAutoCommit());
+                this.setDataBaseType(conn);
+                if (DbContext.permitDebugLog()) {
+                    log.debug("fetch a new connection from [" + this.getConnectInfo()
+                            + "]" + msg + ",connect time:"
+                            + (System.currentTimeMillis() - start0) + " 毫秒");
                 }
 
-            } else if (this.connectType == ConnectType.CONNECTION) {
-                if (this.conn == null || this.conn.isClosed()) {
-                    msg = "数据库连接为空或已经关闭！" ;
-                }else{
-                    msg = "获得数据库库链接";
-                }
-            } else if (this.connectType == ConnectType.DATASOURCE) {
-                msg = "获得数据库库链接";
-                conn = dataSource.getConnection();
-            } else {
-                throw new DbException("不支持的连接方式！" + this.connectType);
             }
-            this.setInternalConnectionAutoCommit(this.getAutoCommit());
-            this.setDataBaseType(conn);
-            if (DbContext.permitDebugLog()) {
-                log.debug("fetch a connection from [" + this.getConnectionType() + "]" + msg + ",connect time:"
-                        + (System.currentTimeMillis() - start0) + " 毫秒");
+
+            for (String key : this.savePointMap.keySet()) {
+                if (this.savePointMap.get(key) == null) {
+                    this.setRealSavepoint(key);
+                }
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -606,7 +613,7 @@ public class DataBaseImpl implements DataBase {
 
     private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters)
             throws DbException {
-        return this.doQueryClassOne2One(clazz, null, sqlQuery, vParameters, (QueryMapNestOne2One[]) null);
+        return this.doQueryClassOne2One(clazz, sqlQuery, vParameters, (One2OneMapNestOptions) null);
 
     }
 
@@ -684,30 +691,41 @@ public class DataBaseImpl implements DataBase {
     /**
      * 一到一关联映射查询，调用此方法会默认自动关闭底层数据库连接
      * <blockquote><pre>
-     * String sql = "select n.*,p.*,a.* from news n left outer join photos p on  n.id=p.newsid  left outer join archives a  on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc";
+     * String sql = "select n.*,p.*,a.* from news n left outer join photos p on
+     * n.id=p.newsid  left outer join archives a  on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc";
      * </pre></blockquote>
      * 如果sqlPrefix指定"n."，clazz指定New.class，则对n.*所属的字段会映射到New类对象
      *
-     * @param clazz            指定映射父对象所属的类
-     * @param sqlPrefix        sql前缀所属的字段都会映射到属于clazz类的对象
-     * @param sqlQuery         sql语句
-     * @param vParameters      参数
-     * @param queryMapNestList 一到一映射关系，可以有多个映射关系，一个映射关系对应一个QueryMapNestOne2One对象
+     * @param clazz                 指定映射父对象所属的类
+     * @param sqlQuery              sql语句
+     * @param vParameters           参数
+     * @param one2OneMapNestOptions 一到一映射关系配置对象，可以有多个映射关系，一个映射关系对应一个QueryMapNestOne2One对象
      * @param <T>
      * @return 返回查询到的列表
      * @throws DbException
      */
-    private <T> List<T> doQueryClassOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery,
-                                            Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList) throws DbException {
-        return this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, null,
-                false, 0, 0);
+    private <T> List<T> doQueryClassOne2One(Class<T> clazz, String sqlQuery,
+                                            Map<Integer, Object> vParameters,
+                                            One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
+
+        if (one2OneMapNestOptions != null) {
+            Assert.hasText(one2OneMapNestOptions.getSqlPrefix());
+            Assert.notEmpty(one2OneMapNestOptions.getQueryMapNestOne2Ones());
+            QueryMapNestOne2One[] queryMapNestList = one2OneMapNestOptions.getQueryMapNestOne2Ones();
+            String sqlPrefix = one2OneMapNestOptions.getSqlPrefix();
+            return this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, null,
+                    false, 0, 0);
+        } else {
+            return this.doQueryClass(clazz, sqlQuery, vParameters, null, null, null,
+                    false, 0, 0);
+        }
 
     }
 
     @Override
-    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
-                                          QueryMapNestOne2One[] queryMapNestList) throws DbException {
-        return this.doQueryClassOne2One(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList);
+    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
+                                        One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
+        return this.doQueryClassOne2One(clazz, sqlQuery, vParameters, one2OneMapNestOptions);
 
     }
 
@@ -771,10 +789,16 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters,
-                                          QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageBean, String countSql)
+    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
+                                        One2OneMapNestOptions one2OneMapNestOptions,
+                                        int page, int perPage, PageBean pageBean, String countSql)
             throws DbException {
-        return this.doPageQueryClass(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage,
+        Assert.notNull(one2OneMapNestOptions);
+        Assert.hasText(one2OneMapNestOptions.getSqlPrefix());
+        Assert.notEmpty(one2OneMapNestOptions.getQueryMapNestOne2Ones());
+
+        return this.doPageQueryClass(clazz, one2OneMapNestOptions.getSqlPrefix(),
+                sqlQuery, vParameters, one2OneMapNestOptions.getQueryMapNestOne2Ones(), page, perPage,
                 pageBean, countSql);
     }
 
@@ -848,9 +872,15 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery,
-                                           Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
-        return this.doQueryClassOne2Many(clazz, sqlPrefix, parentBeanKeys, sqlQuery, vParameters, queryMapNestList);
+    public <T> List<T> queryListOne2Many(Class<T> clazz, String sqlQuery,
+                                         Map<Integer, Object> vParameters,
+                                         One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
+        Assert.notNull(one2ManyMapNestOptions);
+        Assert.hasText(one2ManyMapNestOptions.getSqlPrefix());
+        Assert.notEmpty(one2ManyMapNestOptions.getQueryMapNestOne2Manys());
+        Assert.notEmpty(one2ManyMapNestOptions.getParentBeanKeys());
+        return this.doQueryClassOne2Many(clazz, one2ManyMapNestOptions.getSqlPrefix(),
+                one2ManyMapNestOptions.getParentBeanKeys(), sqlQuery, vParameters, one2ManyMapNestOptions.getQueryMapNestOne2Manys());
     }
 
     private <T> List<T> doQueryObject(String sqlQuery, Collection<Object> vParameters, RowMapper<T> rowMapper,
@@ -950,20 +980,23 @@ public class DataBaseImpl implements DataBase {
         return this.doQueryMap(sqlQuery, args);
     }
 
-    private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
-                                     QueryMapNestOne2One[] queryMapNestList, String sqlPrefix, String[] parentBeanKeys,
-                                     boolean isPageQuery, int rsStart, int rsEnd) throws DbException {
+    private <T> List<T> doQueryClass(Class<T> clazz,
+                                     String sqlQuery,
+                                     Map<Integer, Object> vParameters,
+                                     QueryMapNestOne2One[] queryMapNestList,
+                                     String sqlPrefix,
+                                     String[] parentBeanKeys,
+                                     boolean isPageQuery,
+                                     int rsStart,
+                                     int rsEnd) throws DbException {
 
         ArrayList<T> list = new ArrayList<>();
         Map<String, T> keyMapList = new LinkedHashMap<>();
         if (sqlPrefix == null)
             sqlPrefix = "";
         try {
-
             DataBaseSet rs = this.doQuery(sqlQuery, vParameters);
-
             this.rs = rs.getResultSet();
-
             if (isPageQuery) {
                 if (rsStart <= 0) {
                     rs.beforeFirst();
@@ -1279,8 +1312,9 @@ public class DataBaseImpl implements DataBase {
                 maxSql = "select count(1) from (" + sb.toString() + ") t";
             }
 
+        } else if (this.dataBaseType.isMySqlFamily()) {
+            maxSql = "select count(1) from (" + sb.toString() + ") t";
         } else {
-
             maxSql = "select count(1) from (" + sb.toString() + ") t";
         }
 
@@ -1365,7 +1399,7 @@ public class DataBaseImpl implements DataBase {
         if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
             String line = System.getProperty("line.separator");
 
-            log.debug("call info[" + getConnectInfo()+ "][" + getCallerInf() + "]");
+            log.debug("call info[" + getConnectInfo() + "][" + getCallerInf() + "]");
             log.debug("debugSql[" + SqlUtils.generateDebugSql(sqlQuery, vParameters) + "]");
 
         }
@@ -1378,17 +1412,18 @@ public class DataBaseImpl implements DataBase {
         return new DataBaseSet(this.rs);
     }
 
-    private String getConnectInfo(){
-        String connectInfo="";
-        if(this.connectType==ConnectType.CONNECTION){
-            connectInfo=ConnectType.CONNECTION+":";
-        }else if(this.connectType==ConnectType.DATASOURCE){
-            connectInfo=ConnectType.DATASOURCE+":"+this.dataSource+"";
-        }else if((this.connectType==ConnectType.POOL)){
-            connectInfo=ConnectType.POOL+":"+this.dbPoolName;
+    private String getConnectInfo() {
+        String connectInfo = "";
+        if (this.connectType == ConnectType.CONNECTION) {
+            connectInfo = ConnectType.CONNECTION + ":";
+        } else if (this.connectType == ConnectType.DATASOURCE) {
+            connectInfo = ConnectType.DATASOURCE + ":" + this.dataSource + "";
+        } else if ((this.connectType == ConnectType.POOL)) {
+            connectInfo = ConnectType.POOL + ":" + this.dbPoolName;
         }
         return connectInfo;
     }
+
     /**
      * 不关闭底层数据库连接
      *
@@ -1534,7 +1569,7 @@ public class DataBaseImpl implements DataBase {
                 }
             }
 
-            CallableStatement cs = (CallableStatement)this.getPreparedStatement(sqltext);
+            CallableStatement cs = (CallableStatement) this.getPreparedStatement(sqltext);
             // 设置输入参数
             String inParamStr = SqlUtils.setToPreStatment(inParms, cs);
 
@@ -1546,7 +1581,7 @@ public class DataBaseImpl implements DataBase {
                         "sql [" + sqltext + "]" + " in param[ " + inParamStr + " ]" + "out param[" + outParamStr + "]");
                 if (outParamStr.equals("")) {
                     Collection<Object> args = CollectionUtils.getSortedValues(inParms);
-                    log.debug("[" + getConnectInfo()+ "][" + getCallerInf() + "]");
+                    log.debug("[" + getConnectInfo() + "][" + getCallerInf() + "]");
                     log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, args) + "]");
                 }
 
@@ -2486,15 +2521,92 @@ public class DataBaseImpl implements DataBase {
     @Override
     public void rollback() throws DbException {
         try {
-
             if (conn != null) {
                 conn.rollback();
+                clearSavePoint();
                 if (DbContext.permitDebugLog())
-                    log.debug( this.dbPoolName + ":rollback..");
+                    log.debug(this.getConnectInfo() + ":rollback..");
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
+        }
+    }
+
+    @Override
+    public Map<String, Savepoint> getSavepoint() {
+        return this.savePointMap;
+    }
+
+    /**
+     * 设置保存点
+     *
+     * @param savepointName 保存点的名称
+     * @throws DbException
+     */
+    @Override
+    public void setSavepoint(String savepointName) throws DbException {
+        Assert.hasText(savepointName);
+        if (this.savePointMap.containsKey(savepointName)) {
+            return;
+        } else {
+            this.savePointMap.put(savepointName, null);
+            if(!this.isColsed()){
+                this.setRealSavepoint(savepointName);
+            }
+        }
+    }
+
+    @Override
+    public void releaseSavepoint(String savepointName) throws DbException {
+        if (!this.isColsed()) {
+            Savepoint savepoint = this.savePointMap.get(savepointName);
+            try {
+                if (savepoint != null) {
+                    this.conn.releaseSavepoint(savepoint);
+                }
+            } catch (SQLException exception) {
+                throw new DbException(exception);
+            }
+
+        }
+    }
+
+    private void setRealSavepoint(String savepointName) throws DbException {
+        try {
+            if (savepointName != null && !savepointName.isEmpty() && !this.isColsed()) {
+                if (savePointMap.containsKey(savepointName) && savePointMap.get(savepointName) == null) {
+                    Savepoint savepoint = conn.setSavepoint(savepointName);
+                    if (DbContext.permitDebugLog()) {
+                        log.debug(this.getConnectInfo() + ":set Savepoint:" + savepointName + " ok!");
+                    }
+                    this.savePointMap.put(savepointName, savepoint);
+                }
+            }
+
+        } catch (Exception e) {
+            if (e instanceof DbException) throw (DbException) e;
+            throw new DbException(e);
+        }
+    }
+
+    @Override
+    public void rollbackToSavepoint(String savepointName) throws DbException {
+        if (!savePointMap.containsKey(savepointName)
+                || savePointMap.get(savepointName) == null) {
+            return;
+        } else {
+            try {
+                if (!this.isColsed()) {
+                    conn.rollback(savePointMap.get(savepointName));
+                    savePointMap.remove(savepointName);
+                    if (DbContext.permitDebugLog())
+                        log.debug("["+this.getConnectInfo() + "]:rollback..to savepoint:" + savepointName);
+                }
+            } catch (Exception e) {
+                if (e instanceof DbException) throw (DbException) e;
+                throw new DbException(e);
+            }
         }
     }
 
@@ -2518,6 +2630,10 @@ public class DataBaseImpl implements DataBase {
         return result;
     }
 
+    private void clearSavePoint() {
+        this.savePointMap.clear();
+    }
+
     /**
      * 事务性操作的事务的提交，当 {@link #setAutoCommit(boolean)}设为false， 会用到此方法，一般对于事务性操作会用到，如果
      * 事务为分布式事务，则为空操作。
@@ -2529,8 +2645,9 @@ public class DataBaseImpl implements DataBase {
         try {
             if (conn != null) {
                 conn.commit();
+                clearSavePoint();
                 if (DbContext.permitDebugLog())
-                    log.debug( "["+this.dbPoolName + "]commit...");
+                    log.debug("[" + this.getConnectInfo() + "]commit...");
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -2563,7 +2680,7 @@ public class DataBaseImpl implements DataBase {
 
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
 
-                    log.debug("[" + this.dbPoolName + "][" + callInfo + "]");
+                    log.debug("[" + this.getConnectInfo() + "][" + callInfo + "]");
                     log.debug("" + m + ".debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters) + "]");
                 }
 
@@ -2773,37 +2890,28 @@ public class DataBaseImpl implements DataBase {
 
     private PreparedStatement getPreparedStatement(String sqltxt) throws DbException {
         try {
-            this.sqlType=SqlUtils.decideSqlType(sqltxt);
-            if (this.sqlType==SQLType.SELECT) {
-                try {
-                    this.fetchConnection();
-                    ps = conn.prepareStatement(sqltxt, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
-                } catch (Exception e) {
-                    throw e;
-                }
-            } else if (this.sqlType== SQLType.INSERT) {
-                try {
-                    this.fetchConnection();
-                    ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
-                } catch (Exception e) {
-                    log.warn("您的数据库驱动程序不支持带Statement.RETURN_GENERATED_KEYS参数"
-                            + "的PreparedStatement构造函数，可能由于您的数据库版本较低，建议升级您的驱动程序！");
-                    throw e;
-                }
-            } else if (this.sqlType== SQLType.UPDATE) {
+            this.sqlType = SqlUtils.decideSqlType(sqltxt);
+
+            if (this.sqlType == SQLType.SELECT) {
+                this.fetchConnection();
+                ps = conn.prepareStatement(sqltxt, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            } else if (this.sqlType == SQLType.INSERT) {
+                this.fetchConnection();
+                ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
+            } else if (this.sqlType == SQLType.UPDATE) {
                 this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt);
-            } else if (this.sqlType== SQLType.DELETE) {
+            } else if (this.sqlType == SQLType.DELETE) {
                 this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt);
-            }else if (this.sqlType== SQLType.STORE_DPROCEDURE) {
+            } else if (this.sqlType == SQLType.STORE_DPROCEDURE) {
                 this.fetchConnection();
-                ps= this.conn.prepareCall(sqltxt);
-            } else if (this.sqlType== SQLType.OTHER){
+                ps = this.conn.prepareCall(sqltxt);
+            } else if (this.sqlType == SQLType.OTHER) { //create,drop等
                 this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt);
 
-            }else{
+            } else {
                 throw new DbException("不能决定sql语句的类型！");
             }
 
@@ -2825,10 +2933,6 @@ public class DataBaseImpl implements DataBase {
                 rs = null;
             }
 
-            // if (cs != null) {
-            //     cs.close();
-            //     cs = null;
-            // }
             if (ps != null) {
                 ps.close();
                 ps = null;
@@ -2863,10 +2967,6 @@ public class DataBaseImpl implements DataBase {
                 rs = null;
             }
 
-            // if (cs != null) {
-            //     cs.close();
-            //     cs = null;
-            // }
             if (ps != null) {
                 ps.close();
                 ps = null;
@@ -2878,11 +2978,12 @@ public class DataBaseImpl implements DataBase {
                             this.setInternalConnectionAutoCommit(true);
                             conn.close();
                             conn = null;
+                            clearSavePoint();
                             if (DbContext.permitDebugLog())
-                                log.debug("[" + this.dbPoolName + "]:closed!");
+                                log.debug("[" + this.getConnectInfo() + "]:closed!");
                         }
                     } catch (Exception ex) {
-                        log.error(this.dbPoolName + ":close fail!", ex);
+                        log.error(this.getConnectInfo() + ":close fail!", ex);
                     }
 
 
@@ -2896,8 +2997,8 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public Connection getConnection() {
-        if (this.isColsed()) {
+    public Connection getConnection(boolean force) {
+        if (this.isColsed() && force) {
             this.fetchConnection();
         }
         return this.conn;
@@ -2905,9 +3006,7 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int insertBy(T insertObject) throws DbException {
-
         return this.excuteInsertClass(insertObject);
-
     }
 
     @Override
@@ -3148,10 +3247,7 @@ public class DataBaseImpl implements DataBase {
             try {
                 this.sqlType = SQLType.SCRIPT;
                 this.fetchConnection();
-                if(this.isColsed()){
-                    throw new DbException("数据库连接已经关闭!");
-                }
-                ScriptRunner scriptRunner = new ScriptRunner(this.getConnection());
+                ScriptRunner scriptRunner = new ScriptRunner(this.getConnection(false));
                 scriptRunner.setThrowWarning(throwWarning);
                 scriptRunner.setRemoveCRs(true);
                 scriptRunner.setArgs(args);
@@ -3174,7 +3270,7 @@ public class DataBaseImpl implements DataBase {
 
     private <R> R exeBatchSQLTemplate(Supplier<R> function) {
         Boolean backAutoCommit = null;
-        boolean error = false;
+        boolean error = true;
         R ret = null;
         try {
             backAutoCommit = this.getAutoCommit();
@@ -3182,7 +3278,7 @@ public class DataBaseImpl implements DataBase {
                 this.setAutoCommit(false);//暂时设置为false，使之成为事务性操作
             }
             ret = function.get();
-            if (ret != null) error = false;
+            error = false;
             if (backAutoCommit) {
                 if (error) {
                     this.rollback();

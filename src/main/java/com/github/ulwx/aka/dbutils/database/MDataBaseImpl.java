@@ -1,5 +1,7 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
+import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.database.nsql.MDTemplate;
 import com.github.ulwx.aka.dbutils.database.nsql.NSQL;
@@ -12,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.sql.Connection;
+import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -163,13 +166,6 @@ public class MDataBaseImpl implements MDataBase {
     }
 
 
-    @Override
-    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName, Map<String, Object> args,
-                                        QueryMapNestOne2One[] queryMapNestList) throws DbException {
-        NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
-        return this.dataBase.queryListOne2One(clazz, sqlPrefix, nsql.getExeSql(), nsql.getArgs(), queryMapNestList);
-    }
-
 
     @Override
     public <T> List<T> queryList(Class<T> clazz, String mdFullMethodName, Map<String, Object> args, int page,
@@ -179,23 +175,33 @@ public class MDataBaseImpl implements MDataBase {
         return this.dataBase.queryList(clazz, nsql.getExeSql(), nsql.getArgs(), page, perPage, pageBean, countSql);
     }
 
+    @Override
+    public <T> List<T> queryListOne2One(Class<T> clazz, String mdFullMethodName, Map<String, Object> args,
+                                        One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
+        NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
+        return this.dataBase.queryListOne2One(clazz,  nsql.getExeSql(), nsql.getArgs(), one2OneMapNestOptions);
+    }
 
     @Override
-    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlPrefix, String mdFullMethodName,
-                                        Map<String, Object> args, QueryMapNestOne2One[] queryMapNestList, int page, int perPage,
-                                        PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
+    public <T> List<T> queryListOne2One(Class<T> clazz, String mdFullMethodName,
+                                        Map<String, Object> args, One2OneMapNestOptions one2OneMapNestOptions,
+                                        int page, int perPage, PageBean pageBean,
+                                        String countSqlMdFullMethodName) throws DbException {
 
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
         String countSql = getCountSql(countSqlMdFullMethodName, args);
-        return this.dataBase.queryListOne2One(clazz, sqlPrefix, nsql.getExeSql(), nsql.getArgs(), queryMapNestList, page, perPage, pageBean, countSql);
+        return this.dataBase.queryListOne2One(clazz,  nsql.getExeSql(),
+                nsql.getArgs(), one2OneMapNestOptions, page, perPage, pageBean, countSql);
     }
 
 
     @Override
-    public <T> List<T> queryListOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String mdFullMethodName,
-                                         Map<String, Object> args, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
+    public <T> List<T> queryListOne2Many(Class<T> clazz,
+                                         String mdFullMethodName,
+                                         Map<String, Object> args,
+                                         One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
-        return this.dataBase.queryListOne2Many(clazz, sqlPrefix, parentBeanKeys, nsql.getExeSql(), nsql.getArgs(), queryMapNestList);
+        return this.dataBase.queryListOne2Many(clazz,nsql.getExeSql(), nsql.getArgs(), one2ManyMapNestOptions);
     }
 
 
@@ -391,10 +397,15 @@ public class MDataBaseImpl implements MDataBase {
     }
 
 
-
+    /**
+     * 返回当前连接，如果force=true，若当前没有连接，则新生成一个连接；force=false，若连接
+     * 不存在或已经关闭则会返回null。
+     * @param force
+     * @return
+     */
     @Override
-    public Connection getConnection() {
-        return this.dataBase.getConnection();
+    public Connection getConnection(boolean force) {
+        return this.dataBase.getConnection(force);
     }
 
     @Override
@@ -470,6 +481,36 @@ public class MDataBaseImpl implements MDataBase {
     @Override
     public void rollback() throws DbException {
         this.dataBase.rollback();
+    }
+
+    @Override
+    public Map<String, Savepoint> getSavepoint() {
+        return this.dataBase.getSavepoint();
+    }
+
+    /**
+     * 设置事务保存点，rollbackToSavepoint()方法会回滚到某个保存点，用于事务的局部回滚
+     * @param savepointName 保存点
+     * @throws DbException
+     */
+    @Override
+    public void setSavepoint(String savepointName) throws DbException {
+        this.dataBase.setSavepoint(savepointName);
+    }
+
+    @Override
+    public void releaseSavepoint(String savepointName) throws DbException {
+         this.dataBase.releaseSavepoint(savepointName);
+    }
+
+    /**
+     *
+     * @param savepointName
+     * @throws DbException
+     */
+    @Override
+    public void rollbackToSavepoint(String savepointName) throws DbException {
+        this.dataBase.rollbackToSavepoint(savepointName);
     }
 
 

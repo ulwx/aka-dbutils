@@ -66,25 +66,25 @@ public  class NumberUtils {
 			if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
 				raiseOverflowException(number, targetClass);
 			}
-			return new Byte(number.byteValue());
+			return Byte.valueOf(number.byteValue());
 		} else if (targetClass.equals(Short.class) ||targetClass.equals(short.class)) {
 			long value = number.longValue();
 			if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
 				raiseOverflowException(number, targetClass);
 			}
-			return new Short(number.shortValue());
+			return Short.valueOf(number.shortValue());
 		} else if (targetClass.equals(Integer.class) ||targetClass.equals(int.class)) {
 			long value = number.longValue();
 			if (value < Integer.MIN_VALUE || value > Integer.MAX_VALUE) {
 				raiseOverflowException(number, targetClass);
 			}
-			return new Integer(number.intValue());
+			return Integer.valueOf(number.intValue());
 		} else if (targetClass.equals(Long.class) ||targetClass.equals(long.class)) {
-			return new Long(number.longValue());
+			return  Long.valueOf(number.longValue());
 		} else if (targetClass.equals(Float.class) ||targetClass.equals(float.class)) {
-			return new Float(number.floatValue());
+			return Float.valueOf(number.floatValue());
 		} else if (targetClass.equals(Double.class) ||targetClass.equals(double.class)) {
-			return new Double(number.doubleValue());
+			return Double.valueOf(number.doubleValue());
 		} else if (targetClass.equals(BigInteger.class) ) {
 			return BigInteger.valueOf(number.longValue());
 		} else if (targetClass.equals(BigDecimal.class)) {

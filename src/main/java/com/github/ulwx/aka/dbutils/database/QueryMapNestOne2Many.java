@@ -14,7 +14,7 @@ public class QueryMapNestOne2Many extends MapNest {
 	// 子关联类主键属性
 	private String[] nestedBeanPropertyKeys = new String[0];
 
-	// 存放父对象的主键(复合主键,以英文逗号分隔)与子对象信息，子对象信息存入LinkedHashMap，存放主键值与子对象的映射
+	// 存放主类的唯一键(复合键,以英文逗号分隔)与子关联对象，子关联对象存入LinkedHashMap，里面存放子关联对象唯一键值与子关联对象的映射
 	private Map<String, LinkedHashMap<String, Object>> result = new HashMap<>();
 
 	public QueryMapNestOne2Many() {

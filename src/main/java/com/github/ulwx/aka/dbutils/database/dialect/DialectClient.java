@@ -7,6 +7,8 @@ package com.github.ulwx.aka.dbutils.database.dialect;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 
 /**
  * <p>
@@ -20,7 +22,15 @@ import java.io.Serializable;
 public class DialectClient implements Serializable {
     private static final long serialVersionUID = 8107330250767760951L;
 
+    public static DBMS decideDialect(Connection conn)throws Exception{
+        DatabaseMetaData meta = conn.getMetaData();
+        String driverName = meta.getDriverName();
+        String databaseName = meta.getDatabaseProductName();
+        int majorVersion = meta.getDatabaseMajorVersion();
+        int minorVersion = meta.getDatabaseMinorVersion();
+        return decideDialect(driverName,databaseName,majorVersion,minorVersion);
 
+    }
     public static DBMS decideDialect(String driverName, String databaseName,
                                      Integer majorVersion,int minorVersion) {
         if ("CUBRID".equalsIgnoreCase(databaseName))
