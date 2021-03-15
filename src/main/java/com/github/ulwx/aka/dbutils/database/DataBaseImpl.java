@@ -125,7 +125,9 @@ public class DataBaseImpl implements DataBase {
 
                     continue;
                 }
-                String tempInfo = getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(:"
+                String tempInfo = "at "+getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" +
+                        stack[i].getFileName()+
+                        ":"
                         + stack[i].getLineNumber() + ")";
                 if (upLevelNum == 0) {
                     str = tempInfo;
@@ -160,6 +162,7 @@ public class DataBaseImpl implements DataBase {
         }
         className = className.substring(lastIndex);
         return className;
+       // return srcClassName;
     }
 
     @Override
@@ -463,13 +466,11 @@ public class DataBaseImpl implements DataBase {
 
         Collection<Object> vParameters = CollectionUtils.getSortedValues(args);
 
-        TInteger rsStart = new TInteger();
-        TInteger rsEnd = new TInteger();
-        String pageSql = this.getPagedSql(sqlQuery, vParameters, page, perPage, pageBean, countSql, rsStart, rsEnd);
+        String pageSql = this.getPagedSql(sqlQuery, vParameters, page, perPage, pageBean, countSql);
         if (StringUtils.isEmpty(pageSql)) {
             return new ArrayList<T>();
         }
-        return this.doQueryObject(pageSql, vParameters, rowMapper, true, rsStart.getValue(), rsEnd.getValue());
+        return this.doQueryObject(pageSql, vParameters, rowMapper);
 
     }
 
@@ -505,17 +506,15 @@ public class DataBaseImpl implements DataBase {
 
         CachedRowSet crs = null;
         try {
-            TInteger rsStart = new TInteger();
-            TInteger rsEnd = new TInteger();
-            String pageSql = this.getPagedSql(sqlQuery, vParameters, page, perPage, pageBean, countSql, rsStart,
-                    rsEnd);
+            String pageSql = this.getPagedSql(sqlQuery, vParameters, page, perPage,
+                    pageBean, countSql);
             if (StringUtils.isEmpty(pageSql)) {
                 return new CachedRowSetImpl();
             }
             ResultSet rs = (this.doQuery(pageSql, vParameters)).getResultSet();
             this.rs = rs;
 
-            crs = this.getCachedRowSet(rs, true, rsStart.getValue(), rsEnd.getValue());
+            crs = this.getCachedRowSet(rs);
 
         } catch (Exception e) {
             // log.error("", e);
@@ -713,11 +712,10 @@ public class DataBaseImpl implements DataBase {
             Assert.notEmpty(one2OneMapNestOptions.getQueryMapNestOne2Ones());
             QueryMapNestOne2One[] queryMapNestList = one2OneMapNestOptions.getQueryMapNestOne2Ones();
             String sqlPrefix = one2OneMapNestOptions.getSqlPrefix();
-            return this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, null,
-                    false, 0, 0);
+            return this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, null);
         } else {
-            return this.doQueryClass(clazz, sqlQuery, vParameters, null, null, null,
-                    false, 0, 0);
+            return this.doQueryClass(clazz, sqlQuery, vParameters,(QueryMapNestOne2One[])null,
+                    null, null);
         }
 
     }
@@ -777,14 +775,11 @@ public class DataBaseImpl implements DataBase {
                                          PageBean pageBean, String countSql) throws DbException {
         Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
 
-        TInteger rsStart = new TInteger();
-        TInteger rsEnd = new TInteger();
-        String pageSql = this.getPagedSql(sqlQuery, args, page, perPage, pageBean, countSql, rsStart, rsEnd);
+        String pageSql = this.getPagedSql(sqlQuery, args, page, perPage, pageBean, countSql);
         if (StringUtils.isEmpty(pageSql)) {
             return new ArrayList<T>();
         }
-        return this.doQueryClass(clazz, pageSql, vParameters, queryMapNestList, sqlPrefix, null,
-                true, rsStart.getValue(), rsEnd.getValue());
+        return this.doQueryClass(clazz, pageSql, vParameters, queryMapNestList, sqlPrefix, null);
 
     }
 
@@ -883,8 +878,8 @@ public class DataBaseImpl implements DataBase {
                 one2ManyMapNestOptions.getParentBeanKeys(), sqlQuery, vParameters, one2ManyMapNestOptions.getQueryMapNestOne2Manys());
     }
 
-    private <T> List<T> doQueryObject(String sqlQuery, Collection<Object> vParameters, RowMapper<T> rowMapper,
-                                      boolean isPageQuery, int rsStart, int rsEnd) throws DbException {
+    private <T> List<T> doQueryObject(String sqlQuery, Collection<Object> vParameters,
+                                      RowMapper<T> rowMapper) throws DbException {
 
         boolean close = this.getAutoCommit();
 
@@ -893,26 +888,10 @@ public class DataBaseImpl implements DataBase {
 
             DataBaseSet dbset = this.getResultSet(sqlQuery, vParameters);
             this.rs = dbset.getResultSet();
-
-            if (isPageQuery) {
-                if (rsStart <= 0)
-                    rs.beforeFirst();
-                else
-                    rs.absolute(rsStart);
-            } else {
-                rs.beforeFirst(); // 如果还要用结果集，就把指针再移到初始化的位置
-            }
             int index = 0;
-            int count = rsEnd - rsStart;
             T obj = null;
 
             while (dbset.next()) {
-                if (isPageQuery) {
-                    if (index++ >= count) {
-                        break;
-                    }
-
-                }
                 obj = rowMapper.mapRow(dbset);
                 results.add(obj);
             }
@@ -950,7 +929,7 @@ public class DataBaseImpl implements DataBase {
 
         Collection<Object> vParameters = CollectionUtils.getSortedValues(args);
 
-        return this.doQueryObject(sqlQuery, vParameters, rowMapper, false, 0, 0);
+        return this.doQueryObject(sqlQuery, vParameters, rowMapper);
 
     }
 
@@ -979,16 +958,18 @@ public class DataBaseImpl implements DataBase {
     public List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args) throws DbException {
         return this.doQueryMap(sqlQuery, args);
     }
+    private void resultSetPosition(boolean isPageQuery,ResultSet rs,int rsStart){
+        if(rsStart>0){
+            throw new DbException("不支持结果集里定位操作！");
+        }
+    }
 
     private <T> List<T> doQueryClass(Class<T> clazz,
                                      String sqlQuery,
                                      Map<Integer, Object> vParameters,
                                      QueryMapNestOne2One[] queryMapNestList,
                                      String sqlPrefix,
-                                     String[] parentBeanKeys,
-                                     boolean isPageQuery,
-                                     int rsStart,
-                                     int rsEnd) throws DbException {
+                                     String[] parentBeanKeys) throws DbException {
 
         ArrayList<T> list = new ArrayList<>();
         Map<String, T> keyMapList = new LinkedHashMap<>();
@@ -997,26 +978,9 @@ public class DataBaseImpl implements DataBase {
         try {
             DataBaseSet rs = this.doQuery(sqlQuery, vParameters);
             this.rs = rs.getResultSet();
-            if (isPageQuery) {
-                if (rsStart <= 0) {
-                    rs.beforeFirst();
-                } else {
-                    rs.absolute(rsStart);
-                }
-            } else {
-                rs.beforeFirst(); // 如果还要用结果集，就把指针再移到初始化的位置
-            }
             int index = 0;
-            int count = rsEnd - rsStart;
             while (rs.next()) {
                 try {
-                    if (isPageQuery) {
-
-                        if (index++ >= count) {
-                            break;
-                        }
-                    }
-
                     T bean = clazz.newInstance();
                     Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
                     Set<?> set = map.keySet();
@@ -1125,11 +1089,7 @@ public class DataBaseImpl implements DataBase {
         try {
 
             DataBaseSet rs = this.doQuery(sqlQuery, vParameters);
-
             this.rs = rs.getResultSet();
-
-            rs.beforeFirst(); // 如果还要用结果集，就把指针再移到初始化的位置
-
             while (rs.next()) {
                 try {
 
@@ -1323,7 +1283,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     private String getPagedSql(String sqlQuery, Collection<Object> vParameters, int page, int perPage,
-                               PageBean pageBean, String countSql, TInteger rsStart, TInteger rsEnd) throws DbException {
+                               PageBean pageBean, String countSql) throws DbException {
 
         if (sqlQuery == null)
             return null;
@@ -1365,7 +1325,7 @@ public class DataBaseImpl implements DataBase {
                 return "";
             }
             sql = SqlUtils.getPageSql(sqlQuery, pageBean.getPage(), pageBean.getPerPage(),
-                    this.dataBaseType, rsStart, rsEnd);
+                    this.dataBaseType);
 
             return sql;
 
@@ -1376,19 +1336,10 @@ public class DataBaseImpl implements DataBase {
     }
 
 
-    private CachedRowSet getCachedRowSet(ResultSet rs, boolean isPageQuery, int rsStart, int rsEnd) throws Exception {
+    private CachedRowSet getCachedRowSet(ResultSet rs) throws Exception {
 
         CachedRowSet crs = new CachedRowSetImpl();
-
-        if (isPageQuery) {
-            int begin = rsStart, end = rsEnd;
-            crs.setMaxRows(end - begin);
-            crs.populate(rs, begin + 1);
-        } else {
-            rs.beforeFirst();
-            crs.populate(rs);
-        }
-
+        crs.populate(rs);
         return crs;
     }
 
@@ -1400,7 +1351,7 @@ public class DataBaseImpl implements DataBase {
             String line = System.getProperty("line.separator");
 
             log.debug("call info[" + getConnectInfo() + "][" + getCallerInf() + "]");
-            log.debug("debugSql[" + SqlUtils.generateDebugSql(sqlQuery, vParameters) + "]");
+            log.debug("debugSql[" + SqlUtils.generateDebugSql(sqlQuery, vParameters,this.getDataBaseType()) + "]");
 
         }
         long start = System.currentTimeMillis();
@@ -1579,11 +1530,13 @@ public class DataBaseImpl implements DataBase {
                 String line = System.getProperty("line.separator");
                 log.debug(
                         "sql [" + sqltext + "]" + " in param[ " + inParamStr + " ]" + "out param[" + outParamStr + "]");
-                if (outParamStr.equals("")) {
-                    Collection<Object> args = CollectionUtils.getSortedValues(inParms);
-                    log.debug("[" + getConnectInfo() + "][" + getCallerInf() + "]");
-                    log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, args) + "]");
-                }
+                Map<Integer, Object> inOutParms = new HashMap<Integer, Object>();
+                inOutParms.putAll(inParms);
+                inOutParms.putAll(outParms);
+                Collection<Object> args = CollectionUtils.getSortedValues(inOutParms);
+                log.debug("[" + getConnectInfo() + "][" + getCallerInf() + "]");
+                log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, args,this.getDataBaseType()) + "]");
+                // }
 
             }
             boolean flag = cs.execute();
@@ -1603,7 +1556,6 @@ public class DataBaseImpl implements DataBase {
                         // 处理rs
                         CachedRowSet crs = new CachedRowSetImpl();
                         try {
-                            rs.beforeFirst();
                             crs.populate(rs);
                         } finally {
                             rs.close();
@@ -1700,13 +1652,13 @@ public class DataBaseImpl implements DataBase {
             if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                 String line = System.getProperty("line.separator");
                 log.debug("[" + getConnectInfo() + "][" + getCallerInf() + "]");
-                log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters) + "]");
+                log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters,this.getDataBaseType()) + "]");
 
             }
             long start = System.currentTimeMillis();
             count = preStmt.executeUpdate();
             if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                log.debug("sql执行:" + (System.currentTimeMillis() - start));
+                log.debug("sql执行时间:" + (System.currentTimeMillis() - start)+"，更新条数:"+count);
             }
             twoInt[0] = count;
             try {
@@ -2551,7 +2503,7 @@ public class DataBaseImpl implements DataBase {
             return;
         } else {
             this.savePointMap.put(savepointName, null);
-            if(!this.isColsed()){
+            if (!this.isColsed()) {
                 this.setRealSavepoint(savepointName);
             }
         }
@@ -2601,7 +2553,7 @@ public class DataBaseImpl implements DataBase {
                     conn.rollback(savePointMap.get(savepointName));
                     savePointMap.remove(savepointName);
                     if (DbContext.permitDebugLog())
-                        log.debug("["+this.getConnectInfo() + "]:rollback..to savepoint:" + savepointName);
+                        log.debug("[" + this.getConnectInfo() + "]:rollback..to savepoint:" + savepointName);
                 }
             } catch (Exception e) {
                 if (e instanceof DbException) throw (DbException) e;
@@ -2681,7 +2633,7 @@ public class DataBaseImpl implements DataBase {
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
 
                     log.debug("[" + this.getConnectInfo() + "][" + callInfo + "]");
-                    log.debug("" + m + ".debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters) + "]");
+                    log.debug("" + m + ".debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters,this.getDataBaseType()) + "]");
                 }
 
                 String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
@@ -2894,7 +2846,7 @@ public class DataBaseImpl implements DataBase {
 
             if (this.sqlType == SQLType.SELECT) {
                 this.fetchConnection();
-                ps = conn.prepareStatement(sqltxt, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                ps = conn.prepareStatement(sqltxt,ResultSet.CONCUR_READ_ONLY);
             } else if (this.sqlType == SQLType.INSERT) {
                 this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
@@ -3465,16 +3417,18 @@ public class DataBaseImpl implements DataBase {
                     if (handArgs) {
                         Collection<Object> vParameters = CollectionUtils.getSortedValues(nsql.getArgs());
                         log.debug("transactionId:" + transactionId + ":debugSql["
-                                + SqlUtils.generateDebugSql(preparedSql, vParameters) + "]");
+                                + SqlUtils.generateDebugSql(preparedSql, vParameters,DataBaseImpl.this.getDataBaseType()) + "]");
                     } else {
-                        log.debug(transactionId + ":debugSql[" + preparedSql + "]");
+                        log.debug("transactionId:" +transactionId + ":debugSql[" + preparedSql + "]");
                     }
                 }
                 long start = System.currentTimeMillis();
 
                 boolean hasResults = statement.execute();
+
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                    log.debug("sql执行:" + (System.currentTimeMillis() - start));
+
+                    log.debug("sql执行:" + (System.currentTimeMillis() - start)+(!hasResults?",更新条数:"+statement.getUpdateCount():""));
                 }
                 while (!(!hasResults && statement.getUpdateCount() == -1)) {
                     checkWarnings(statement);

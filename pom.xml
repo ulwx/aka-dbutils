@@ -43,7 +43,7 @@
 		</dependency>
 		<dependency>
 			<groupId>cglib</groupId>
-			<artifactId>cglib</artifactId>
+			<artifactId>cglib-nodep</artifactId>
 			<version>3.3.0</version>
 		</dependency>
 <!--		<dependency>-->

@@ -128,7 +128,7 @@ public class NFunction {
                             item = SqlUtils.encodeSQLStr(item.toString());
                             item = "'" + item + "'";
                         }
-                        retValue = retValue + item;
+                        retValue = retValue + item.toString();
 
 
                     }
@@ -152,7 +152,7 @@ public class NFunction {
                             item = SqlUtils.encodeSQLStr(item.toString());
                             item = "'" + item + "'";
                         }
-                        retValue = retValue + item;
+                        retValue = retValue + item.toString();
 
                     }
                 }

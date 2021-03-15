@@ -1,10 +1,18 @@
 package com.github.ulwx.aka.dbutils.database.dialect;
 
 import com.github.ulwx.aka.dbutils.database.DbException;
-import com.github.ulwx.aka.dbutils.database.dialect.codes.*;
 import com.github.ulwx.aka.dbutils.database.dialect.page.DialectPageSqlTemplate;
+import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
 import com.github.ulwx.aka.dbutils.tool.support.Assert;
+import com.github.ulwx.aka.dbutils.tool.support.CTime;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
+
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Date;
 
 public enum DBMS {
 
@@ -100,9 +108,9 @@ public enum DBMS {
     private static final String DISTINCT_TAG = "($DISTINCT)";
     private String sqlTemplate = null;
     private String topLimitTemplate = null;
-    private DBType dbType=null;
-    private Codec codec=new CommonDBCodec();
-    private String checkSql="select 1";
+    private DBType dbType = null;
+    private String checkSql = "select 1";
+
     static {
         for (DBMS d : DBMS.values()) {
             d.sqlTemplate = DialectPageSqlTemplate.initializePaginSQLTemplate(d);
@@ -114,52 +122,195 @@ public enum DBMS {
     public DBType getDbType() {
         return dbType;
     }
-    public String getCheckSql(){
+
+    public String getCheckSql() {
         return this.checkSql;
     }
-    private void decideDBType(){
-        if(isMySqlFamily()){
-            dbType=DBType.MYSQL;
-            codec=new MySQLCodec(MySQLCodec.Mode.STANDARD);
-        }else if(isInfomixFamily()){
-            dbType=DBType.INFOMIX;
-        }else if(isOracleFamily()){
-            dbType=DBType.ORACLE;
-            codec=new OracleCodec();
-            this.checkSql="select 1 from dual";
-        }else if(isSQLServerFamily()){
-            dbType=DBType.MS_SQL_SERVER;
-        }else if(isH2Family()){
-            dbType=DBType.H2;
-        }else if(isPostgresFamily()){
-            dbType=DBType.POSTGRE;
-            codec=new OracleCodec();
-        }else if(isSybaseFamily()){
-            dbType=DBType.SYBASE;
-        }else if(isDB2Family()){
-            dbType=DBType.DB2;
-            codec=new DB2Codec();
-            this.checkSql="select 1 from sysibm.sysdummy1";
-        }else if(isDerbyFamily()){
-            dbType=DBType.DERBY;
-            this.checkSql="select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
-        }else if (isSQLiteFamily()){
-            dbType=DBType.SQLITE;
-        }else if(isHSQLFamily()) {
-            dbType=DBType.HSQL;
-            this.checkSql="select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
-        }else{
-            dbType=DBType.OTHER;
+
+    private void decideDBType() {
+        if (isMySqlFamily()) {
+            dbType = DBType.MYSQL;
+        } else if (isInfomixFamily()) {
+            dbType = DBType.INFOMIX;
+        } else if (isOracleFamily()) {
+            dbType = DBType.ORACLE;
+            this.checkSql = "select 1 from dual";
+        } else if (isSQLServerFamily()) {
+            dbType = DBType.MS_SQL_SERVER;
+        } else if (isH2Family()) {
+            dbType = DBType.H2;
+        } else if (isPostgresFamily()) {
+            dbType = DBType.POSTGRE;
+        } else if (isSybaseFamily()) {
+            dbType = DBType.SYBASE;
+        } else if (isDB2Family()) {
+            dbType = DBType.DB2;
+            this.checkSql = "select 1 from sysibm.sysdummy1";
+        } else if (isDerbyFamily()) {
+            dbType = DBType.DERBY;
+            this.checkSql = "select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
+        } else if (isSQLiteFamily()) {
+            dbType = DBType.SQLITE;
+        } else if (isHSQLFamily()) {
+            dbType = DBType.HSQL;
+            this.checkSql = "select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
+        } else {
+            dbType = DBType.OTHER;
         }
     }
 
-    public String encodeForSQL(String str){
-        if(codec!=null){
-            char[] IMMUNE_SQL = { ' ' };
-           return  codec.encode(IMMUNE_SQL, str);
-        }
-        return str;
+    public String encodeForSQL(String str) {
+        // if (codec != null) {
+        //     char[] IMMUNE_SQL = {' '};
+        //     return codec.encode(IMMUNE_SQL, str);
+        // }
+        return SqlUtils.encodeSQLStr(str);
     }
+
+    public String javaObjToSqlValue(Object obj) {
+        String ret = null;
+        if (obj == null) {
+            return "" + obj + "";
+        } else if (obj instanceof Boolean) {
+            return "'" + obj.toString() + "'";
+        } else if (obj instanceof Character) {
+            return "'" + obj.toString() + "'";
+        } else if (obj instanceof String) {
+            return "'" + encodeForSQL(obj.toString()) + "'";
+        } else if (obj instanceof Integer) {
+            return obj.toString();
+        } else if (obj instanceof Long) {
+            return obj.toString();
+        } else if (obj instanceof java.math.BigDecimal) {
+            return obj.toString();
+        } else if (obj instanceof java.math.BigInteger) {
+            return obj.toString();
+        } else if (obj instanceof Float) {
+            return obj.toString();
+        } else if (obj instanceof Double) {
+            return obj.toString();
+        } else if (obj instanceof java.sql.Date) {
+            return javaDateToSqlValue(new Date(
+                    ((java.sql.Date) obj).getTime()));
+        } else if (obj instanceof Timestamp) {
+            LocalDateTime localDateTime = ((Timestamp) obj).toLocalDateTime();
+            return javaDateToSqlValue(localDateTime);
+        } else if (obj instanceof Time) {
+            LocalTime localTime = ((Time) obj).toLocalTime();
+            return javaDateToSqlValue(localTime);
+        } else if (obj instanceof Date) {
+            return javaDateToSqlValue(obj);
+        } else if (obj instanceof LocalDate) {
+            return javaDateToSqlValue(obj);
+        } else if (obj instanceof LocalDateTime) {
+            return javaDateToSqlValue(obj);
+        } else if (obj instanceof LocalTime) {
+            return javaDateToSqlValue(obj);
+        } else if (obj instanceof Class) {
+            return ((Class) obj).getName();
+        } else {
+            //防止注入式攻击
+            return "'" + encodeForSQL(obj.toString()) + "'";
+        }
+    }
+
+
+    private String javaDateToSqlValue(Object dateObj) {
+        switch (this.dbType) {
+            case MS_SQL_SERVER:
+                if (dateObj instanceof Date) {
+                    String str= "'"+CTime.formatWholeDate((Date)dateObj)+"'";
+                    return "CONVERT(datetime,"+str+",20)";
+                } else if (dateObj instanceof LocalDate) {
+                    String str= "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
+                    return "CONVERT(date,"+str+",23)";
+                } else if (dateObj instanceof LocalDateTime) {
+                    String str=  "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
+                    return "CONVERT(datetime,"+str+",20)";
+                } else if (dateObj instanceof LocalTime) {
+                    String str=  "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
+                    return "CONVERT(time,"+str+",24)";
+                } else{
+                }
+                break;
+            case ORACLE:
+            case HSQL:
+            case INFOMIX:
+            case POSTGRE:
+                if (dateObj instanceof Date) {
+                    String str= "'"+CTime.formatWholeDate((Date)dateObj)+"'";
+                    return  "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+                } else if (dateObj instanceof LocalDate) {
+                    String str= "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
+                    return  "to_date(" + str + ",'yyyy-mm-dd')";
+                } else if (dateObj instanceof LocalDateTime) {
+                    String str=  "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
+                    return  "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+                } else if (dateObj instanceof LocalTime) {
+                    String str=  "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
+                    return  "to_date(" + str + ",'hh24:mi:ss')";
+                } else{
+                }
+                break;
+            case H2:
+                if (dateObj instanceof Date) {
+                    String str= "'"+CTime.formatWholeDate((Date)dateObj)+"'";
+                    return  "parsedatetime(" + str + ",'dd-MM-yyyy hh:mm:ss')";
+                } else if (dateObj instanceof LocalDate) {
+                    String str= "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
+                    return  "parsedatetime(" + str + ",'dd-MM-yyyy')";
+                } else if (dateObj instanceof LocalDateTime) {
+                    String str=  "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
+                    return  "parsedatetime(" + str + ",'dd-MM-yyyy hh:mm:ss')";
+                } else if (dateObj instanceof LocalTime) {
+                    String str=  "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
+                    return  "parsedatetime(" + str + ",'hh:mm:ss')";
+                } else{
+                }
+                break;
+            case SQLITE:
+            case DERBY:
+                if (dateObj instanceof Date) {
+                    String str= "'"+CTime.formatWholeDate((Date)dateObj)+"'";
+                    return  "datetime(" + str + ")";
+                } else if (dateObj instanceof LocalDate) {
+                    String str= "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
+                    return  "date(" + str + ")";
+                } else if (dateObj instanceof LocalDateTime) {
+                    String str=  "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
+                    if(this.dbType==DBType.DERBY){
+                        return "timestamp(" + str + ")";
+                    }else {
+                        return "datetime(" + str + ")";
+                    }
+                } else if (dateObj instanceof LocalTime) {
+                    String str=  "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
+                    return  "time(" + str + ")";
+                } else{
+                }
+                break;
+            case SYBASE:
+            case MYSQL :
+            case DB2:
+            case OTHER:
+            default:
+                if (dateObj instanceof Date) {
+                    return "'"+CTime.formatWholeDate((Date)dateObj)+"'";
+                } else if (dateObj instanceof LocalDate) {
+                    return "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
+                } else if (dateObj instanceof LocalDateTime) {
+                    return "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
+                } else if (dateObj instanceof LocalTime) {
+                    return "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
+                } else{
+
+                }
+                break;
+        }
+        throw new DbException(dateObj+"[" +dateObj.getClass().getName()+
+                "]不为日期类型！");
+    }
+
     /**
      * @return true if is MySql family
      */
@@ -184,7 +335,7 @@ public enum DBMS {
     /**
      * @return true if is SQL Server family
      */
-    public boolean isSQLServerFamily(){
+    public boolean isSQLServerFamily() {
         return this.toString().startsWith("SQLServer");
     }
 
@@ -222,20 +373,23 @@ public enum DBMS {
     public boolean isDerbyFamily() {
         return this.toString().startsWith("Derby");
     }
+
     public boolean isSQLiteFamily() {
         return this.toString().startsWith("SQLite");
     }
+
     public boolean isHSQLFamily() {
         return this.toString().startsWith("HSQL");
     }
-    public String pageSQL(String sql,int pageNumber, int pageSize) {// NOSONAR
+
+    public String pageSQL(String sql, int pageNumber, int pageSize) {// NOSONAR
         String result = null;
         Assert.hasText(sql, "sql string can not be empty");
         String trimedSql = sql.trim();
         Assert.hasText(trimedSql, "sql string can not be empty");
 
         if (!StringUtils.startsWithIgnoreCase(trimedSql, "select "))
-            throw new DbException(trimedSql+",SQL should start with \"select \".");
+            throw new DbException(trimedSql + ",SQL should start with \"select \".");
         String body = trimedSql.substring(7).trim();
         Assert.hasText(body, "SQL body can not be empty");
 
@@ -253,7 +407,7 @@ public enum DBMS {
         }
 
         if (StringUtils.isEmpty(useTemplate)) {
-           return null;//表示不支持分页
+            return null;//表示不支持分页
         }
 
         if (useTemplate.contains(DISTINCT_TAG)) {
@@ -268,7 +422,7 @@ public enum DBMS {
         }
 
         // if have $XXX tag, replaced by real values
-       // StringUtils.rep
+        // StringUtils.rep
         result = StringUtils.replaceIgnoreCase(useTemplate, SKIP_ROWS, String.valueOf(skipRows));
         result = StringUtils.replaceIgnoreCase(result, PAGESIZE, String.valueOf(pageSize));
         result = StringUtils.replaceIgnoreCase(result, TOTAL_ROWS, String.valueOf(totalRows));
