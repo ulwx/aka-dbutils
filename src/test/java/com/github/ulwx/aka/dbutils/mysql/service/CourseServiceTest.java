@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * 测试aka-dbutils通过MDataBase实例实现数据库事务及通过MDbTransactionManager实现事务
  */
-public class CourseService {
+public class CourseServiceTest {
     private CourseDao courseDao=new CourseDao();
     private TeacherDao teacherDao=new TeacherDao();
     public static String DbPoolName_Student = "db_student";
