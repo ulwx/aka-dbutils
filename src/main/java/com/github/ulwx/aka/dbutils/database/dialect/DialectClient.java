@@ -22,17 +22,18 @@ import java.sql.DatabaseMetaData;
 public class DialectClient implements Serializable {
     private static final long serialVersionUID = 8107330250767760951L;
 
-    public static DBMS decideDialect(Connection conn)throws Exception{
+    public static DBMS decideDialect(Connection conn) throws Exception {
         DatabaseMetaData meta = conn.getMetaData();
         String driverName = meta.getDriverName();
         String databaseName = meta.getDatabaseProductName();
         int majorVersion = meta.getDatabaseMajorVersion();
         int minorVersion = meta.getDatabaseMinorVersion();
-        return decideDialect(driverName,databaseName,majorVersion,minorVersion);
+        return decideDialect(driverName, databaseName, majorVersion, minorVersion);
 
     }
+
     public static DBMS decideDialect(String driverName, String databaseName,
-                                     Integer majorVersion,int minorVersion) {
+                                     Integer majorVersion, int minorVersion) {
         if ("CUBRID".equalsIgnoreCase(databaseName))
             return DBMS.CUBRIDDialect;
         if ("HSQL Database Engine".equals(databaseName))
@@ -157,7 +158,6 @@ public class DialectClient implements Serializable {
             return DBMS.SQLiteDialect;
         return null;
     }
-
 
 
 }

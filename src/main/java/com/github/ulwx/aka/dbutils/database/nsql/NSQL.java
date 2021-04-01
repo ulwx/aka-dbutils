@@ -97,7 +97,7 @@ public final class NSQL {
         try {
             return NSQL.getNSQL(strs[0], strs[1], args);
         } catch (Exception e) {
-            if(e instanceof DbException) throw (DbException)e;
+            if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e.getMessage(), e);
         }
     }
@@ -105,9 +105,9 @@ public final class NSQL {
     /**
      * 根据md文件里的方法名和参数，获取NSQL对象
      *
-     * @param mdPath       ：md文件的包路径全名称，例如，格式为： com.github.ulwx.database.test.SysRightDao.md
-     * @param methodName   ：md里对应的方法名，例如 getDataCount
-     * @param args         ：存放参数的map或JavaBean
+     * @param mdPath     ：md文件的包路径全名称，例如，格式为： com.github.ulwx.database.test.SysRightDao.md
+     * @param methodName ：md里对应的方法名，例如 getDataCount
+     * @param args       ：存放参数的map或JavaBean
      * @return
      * @throws Exception
      */
@@ -128,10 +128,10 @@ public final class NSQL {
 
         NSQL nsql = new NSQL();
         nsql.setMethodFullName(methodFullName);
-        nsql = parseSql(sql, args,  nsql);
+        nsql = parseSql(sql, args, nsql);
 
-        if (log.isDebugEnabled() &&  DbContext.permitDebugLog()) {
-            log.debug("nsql:"+ObjectUtils.toString(nsql));
+        if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
+            log.debug("nsql:" + ObjectUtils.toString(nsql));
         }
 
         return nsql;
@@ -156,21 +156,21 @@ public final class NSQL {
      *
      *  }</blockquote></pre>
      *
-     * @param sqltxt          sql语句
-     * @param args         参数
+     * @param sqltxt sql语句
+     * @param args   参数
      * @return
      */
     public static NSQL parseSql(String sqltxt, final Map<String, Object> args, NSQL nsql) {
 
-        sqltxt=StringUtils.trim(sqltxt);
+        sqltxt = StringUtils.trim(sqltxt);
         if (sqltxt.isEmpty()) {
             throw new NullPointerException("SQL String is empty or null");
         }
-        String sql=sqltxt;
+        String sql = sqltxt;
         //判断sql的类型
-       SQLType sqlType=SqlUtils.decideSqlType(sql);
+        SQLType sqlType = SqlUtils.decideSqlType(sql);
         //if(sql)
-        if (sqlType== SQLType.STORE_DPROCEDURE) {
+        if (sqlType == SQLType.STORE_DPROCEDURE) {
             final Map<String, TResult2<String, Object>> newArgs = new HashMap<String, TResult2<String, Object>>();
             for (String key : args.keySet()) {
                 String[] strs = key.split(":");
@@ -236,7 +236,7 @@ public final class NSQL {
                                         + "，参数[" + key + "]在md文件里没有定义");
                             }
                             val = args.get(key);
-                            if (val != null ) {
+                            if (val != null) {
                                 if (val.getClass().isArray()) {
                                     isArray = true;
                                 } else if (val instanceof List) {// list类型
@@ -248,9 +248,9 @@ public final class NSQL {
                         }
 
                         if (isArray || isList) {// 数组或list
-                            if( prePercentSigns || lastPercentSigns){
-                                throw new DbException("解析sql失败![" + sql+ "][" + nsql.getMethodFullName()+ "]"
-                                        + "，参数[" + key + "]为数组或集合类型，不支持在#{" +groupStr+"}含有%");
+                            if (prePercentSigns || lastPercentSigns) {
+                                throw new DbException("解析sql失败![" + sql + "][" + nsql.getMethodFullName() + "]"
+                                        + "，参数[" + key + "]为数组或集合类型，不支持在#{" + groupStr + "}含有%");
                             }
                             if (val == null) {
                                 indexToValue.put(i.getValue(), val);
@@ -301,9 +301,9 @@ public final class NSQL {
 
                             }
                         } else {
-                            if(val==null){
+                            if (val == null) {
                                 ///
-                            }else {
+                            } else {
                                 if (val instanceof String) {
                                     if (prePercentSigns) {
                                         val = "%" + val;
@@ -331,7 +331,7 @@ public final class NSQL {
         NSQL dbsql = nsql;
         dbsql.sql_naming = sql;
         dbsql.sql_execute = exeSql;
-        dbsql.sqlType=sqlType;
+        dbsql.sqlType = sqlType;
         dbsql.args = indexToValue;
         dbsql.argsToKey = IndexToKey;
 

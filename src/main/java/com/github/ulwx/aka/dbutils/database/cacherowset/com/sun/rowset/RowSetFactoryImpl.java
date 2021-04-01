@@ -34,11 +34,9 @@ import java.sql.SQLException;
  * default implementation for the Java SE platform.
  *
  * @author Lance Andersen
- *
- *
  * @version 1.7
  */
-public  final class RowSetFactoryImpl implements RowSetFactory {
+public final class RowSetFactoryImpl implements RowSetFactory {
 
     public CachedRowSet createCachedRowSet() throws SQLException {
         return new CachedRowSetImpl();

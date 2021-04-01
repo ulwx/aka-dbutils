@@ -48,12 +48,12 @@ import java.sql.*;
  * must have implemented the <code>RowSetInternal</code> interface
  * and have the standard <code>CachedRowSetReader</code> object set as its
  * reader.
- * <P>
+ * <p>
  * This implementation always reads all rows of the data source,
  * and it assumes that the <code>command</code> property for the caller
  * is set with a query that is appropriate for execution by a
  * <code>PreparedStatement</code> object.
- * <P>
+ * <p>
  * Typically the <code>SyncFactory</code> manages the <code>RowSetReader</code> and
  * the <code>RowSetWriter</code> implementations using <code>SyncProvider</code> objects.
  * Standard JDBC RowSet implementations provide an object instance of this
@@ -70,7 +70,7 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
      * The field that keeps track of whether the writer associated with
      * this <code>CachedRowSetReader</code> object's rowset has been called since
      * the rowset was populated.
-     * <P>
+     * <p>
      * When this <code>CachedRowSetReader</code> object reads data into
      * its rowset, it sets the field <code>writerCalls</code> to 0.
      * When the writer associated with the rowset is called to write
@@ -93,8 +93,8 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
 
     public CachedRowSetReader() {
         try {
-                resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
     }
@@ -106,7 +106,7 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
      * This method is called by the rowset internally when
      * the application invokes the method <code>execute</code>
      * to read a new set of rows.
-     * <P>
+     * <p>
      * After clearing the rowset of its contents, if any, and setting
      * the number of writer calls to <code>0</code>, this reader calls
      * its <code>connect</code> method to make
@@ -115,14 +115,14 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
      * method will use a <code>DataSource</code> object or the
      * <code>DriverManager</code> facility to make a connection to the
      * data source.
-     * <P>
+     * <p>
      * Once the connection to the data source is made, this reader
      * executes the query in the calling <code>CachedRowSet</code> object's
      * <code>command</code> property. Then it calls the rowset's
      * <code>populate</code> method, which reads data from the
      * <code>ResultSet</code> object produced by executing the rowset's
      * command. The rowset is then populated with this data.
-     * <P>
+     * <p>
      * This method's final act is to close the connection it made, thus
      * leaving the rowset disconnected from its data source.
      *
@@ -131,14 +131,13 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
      *               this <code>CachedRowSetReader</code> object set as
      *               its reader
      * @throws SQLException if there is a database access error, there is a
-     *         problem making the connection, or the command property has not
-     *         been set
+     *                      problem making the connection, or the command property has not
+     *                      been set
      */
-    public void readData(RowSetInternal caller) throws SQLException
-    {
+    public void readData(RowSetInternal caller) throws SQLException {
         Connection con = null;
         try {
-            CachedRowSet crs = (CachedRowSet)caller;
+            CachedRowSet crs = (CachedRowSet) caller;
 
             // Get rid of the current contents of the rowset.
 
@@ -148,10 +147,10 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
              * to be maintained.
              */
 
-            if(crs.getPageSize() == 0 && crs.size() >0 ) {
-               // When page size is not set,
-               // crs.size() will show the total no of rows.
-               crs.close();
+            if (crs.getPageSize() == 0 && crs.size() > 0) {
+                // When page size is not set,
+                // crs.size() will show the total no of rows.
+                crs.close();
             }
 
             writerCalls = 0;
@@ -190,7 +189,7 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
                 throw new SQLException(ex.getMessage());
             }
 
-            if(crs.getCommand().toLowerCase().indexOf("select") != -1) {
+            if (crs.getCommand().toLowerCase().indexOf("select") != -1) {
                 // can be (crs.getCommand()).indexOf("select")) == 0
                 // because we will be getting resultset when
                 // it may be the case that some false select query with
@@ -200,34 +199,33 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
                 // implies a Prepared Statement like query exists.
 
                 ResultSet rs = pstmt.executeQuery();
-               if(crs.getPageSize() == 0){
-                      crs.populate(rs);
-               }
-               else {
-                       /**
-                        * If page size has been set then create a ResultSet object that is scrollable using a
-                        * PreparedStatement handle.Also call the populate(ResultSet,int) function to populate
-                        * a page of data as specified by the page size.
-                        */
-                       pstmt = con.prepareStatement(crs.getCommand(),ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
-                       decodeParams(caller.getParams(), pstmt);
-                       try {
-                               pstmt.setMaxRows(crs.getMaxRows());
-                               pstmt.setMaxFieldSize(crs.getMaxFieldSize());
-                               pstmt.setEscapeProcessing(crs.getEscapeProcessing());
-                               pstmt.setQueryTimeout(crs.getQueryTimeout());
-                           } catch (Exception ex) {
-                          /*
-                           * drivers may not support the above - esp. older
-                           * drivers being used by the bridge..
-                           */
-                            throw new SQLException(ex.getMessage());
-                          }
-                       rs = pstmt.executeQuery();
-                       crs.populate(rs,startPosition);
-               }
+                if (crs.getPageSize() == 0) {
+                    crs.populate(rs);
+                } else {
+                    /**
+                     * If page size has been set then create a ResultSet object that is scrollable using a
+                     * PreparedStatement handle.Also call the populate(ResultSet,int) function to populate
+                     * a page of data as specified by the page size.
+                     */
+                    pstmt = con.prepareStatement(crs.getCommand(), ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                    decodeParams(caller.getParams(), pstmt);
+                    try {
+                        pstmt.setMaxRows(crs.getMaxRows());
+                        pstmt.setMaxFieldSize(crs.getMaxFieldSize());
+                        pstmt.setEscapeProcessing(crs.getEscapeProcessing());
+                        pstmt.setQueryTimeout(crs.getQueryTimeout());
+                    } catch (Exception ex) {
+                        /*
+                         * drivers may not support the above - esp. older
+                         * drivers being used by the bridge..
+                         */
+                        throw new SQLException(ex.getMessage());
+                    }
+                    rs = pstmt.executeQuery();
+                    crs.populate(rs, startPosition);
+                }
                 rs.close();
-            } else  {
+            } else {
                 pstmt.executeUpdate();
             }
 
@@ -241,8 +239,7 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
             // only close connections we created...
             if (getCloseConnection() == true)
                 con.close();
-        }
-        catch (SQLException ex) {
+        } catch (SQLException ex) {
             // Throw an exception if reading fails for any reason.
             throw ex;
         } finally {
@@ -279,7 +276,7 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
      * this reader when components were being wired together.
      *
      * @return <code>true</code> if writer associated with this reader needs
-     *         to reset the values of its fields; <code>false</code> otherwise
+     * to reset the values of its fields; <code>false</code> otherwise
      * @throws SQLException if an access error occurs
      */
     public boolean reset() throws SQLException {
@@ -295,7 +292,7 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
      * If the url, username, and password properties have been set, this
      * method uses the <code>DriverManager.getConnection</code> method to
      * make the connection.
-     * <P>
+     * <p>
      * This method is used internally by the reader and writer associated with
      * the calling <code>RowSet</code> object; an application never calls it
      * directly.
@@ -305,7 +302,7 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
      *               this <code>CachedRowSetReader</code> object set as
      *               its reader
      * @return a <code>Connection</code> object that represents a connection
-     *         to the caller's data source
+     * to the caller's data source
      * @throws SQLException if an access error occurs
      */
     public Connection connect(RowSetInternal caller) throws SQLException {
@@ -317,38 +314,35 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
             // won't close it.
             userCon = true;
             return caller.getConnection();
-        }
-        else if (((RowSet)caller).getDataSourceName() != null) {
+        } else if (((RowSet) caller).getDataSourceName() != null) {
             // Connect using JNDI.
             try {
                 Context ctx = new InitialContext();
-                DataSource ds = (DataSource)ctx.lookup
-                    (((RowSet)caller).getDataSourceName());
+                DataSource ds = (DataSource) ctx.lookup
+                        (((RowSet) caller).getDataSourceName());
 
                 // Check for username, password,
                 // if it exists try getting a Connection handle through them
                 // else try without these
                 // else throw SQLException
 
-                if(((RowSet)caller).getUsername() != null) {
-                     return ds.getConnection(((RowSet)caller).getUsername(),
-                                            ((RowSet)caller).getPassword());
+                if (((RowSet) caller).getUsername() != null) {
+                    return ds.getConnection(((RowSet) caller).getUsername(),
+                            ((RowSet) caller).getPassword());
                 } else {
-                     return ds.getConnection();
+                    return ds.getConnection();
                 }
-            }
-            catch (NamingException ex) {
+            } catch (NamingException ex) {
                 SQLException sqlEx = new SQLException(resBundle.handleGetObject("crsreader.connect").toString());
                 sqlEx.initCause(ex);
                 throw sqlEx;
             }
-        } else if (((RowSet)caller).getUrl() != null) {
+        } else if (((RowSet) caller).getUrl() != null) {
             // Connect using the driver manager.
-            return DriverManager.getConnection(((RowSet)caller).getUrl(),
-                                               ((RowSet)caller).getUsername(),
-                                               ((RowSet)caller).getPassword());
-        }
-        else {
+            return DriverManager.getConnection(((RowSet) caller).getUrl(),
+                    ((RowSet) caller).getUsername(),
+                    ((RowSet) caller).getPassword());
+        } else {
             return null;
         }
     }
@@ -373,44 +367,43 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
     @SuppressWarnings("deprecation")
     private void decodeParams(Object[] params,
                               PreparedStatement pstmt) throws SQLException {
-    // There is a corresponding decodeParams in JdbcRowSetImpl
-    // which does the same as this method. This is a design flaw.
-    // Update the JdbcRowSetImpl.decodeParams when you update
-    // this method.
+        // There is a corresponding decodeParams in JdbcRowSetImpl
+        // which does the same as this method. This is a design flaw.
+        // Update the JdbcRowSetImpl.decodeParams when you update
+        // this method.
 
-    // Adding the same comments to JdbcRowSetImpl.decodeParams.
+        // Adding the same comments to JdbcRowSetImpl.decodeParams.
 
         int arraySize;
         Object[] param = null;
 
-        for (int i=0; i < params.length; i++) {
+        for (int i = 0; i < params.length; i++) {
             if (params[i] instanceof Object[]) {
-                param = (Object[])params[i];
+                param = (Object[]) params[i];
 
                 if (param.length == 2) {
                     if (param[0] == null) {
-                        pstmt.setNull(i + 1, ((Integer)param[1]).intValue());
+                        pstmt.setNull(i + 1, ((Integer) param[1]).intValue());
                         continue;
                     }
 
                     if (param[0] instanceof Date ||
-                        param[0] instanceof Time ||
-                        param[0] instanceof Timestamp) {
+                            param[0] instanceof Time ||
+                            param[0] instanceof Timestamp) {
                         System.err.println(resBundle.handleGetObject("crsreader.datedetected").toString());
                         if (param[1] instanceof java.util.Calendar) {
                             System.err.println(resBundle.handleGetObject("crsreader.caldetected").toString());
-                            pstmt.setDate(i + 1, (Date)param[0],
-                                       (java.util.Calendar)param[1]);
+                            pstmt.setDate(i + 1, (Date) param[0],
+                                    (java.util.Calendar) param[1]);
                             continue;
-                        }
-                        else {
+                        } else {
                             throw new SQLException(resBundle.handleGetObject("crsreader.paramtype").toString());
                         }
                     }
 
                     if (param[0] instanceof Reader) {
-                        pstmt.setCharacterStream(i + 1, (Reader)param[0],
-                                              ((Integer)param[1]).intValue());
+                        pstmt.setCharacterStream(i + 1, (Reader) param[0],
+                                ((Integer) param[1]).intValue());
                         continue;
                     }
 
@@ -418,37 +411,37 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
                      * What's left should be setObject(int, Object, scale)
                      */
                     if (param[1] instanceof Integer) {
-                        pstmt.setObject(i + 1, param[0], ((Integer)param[1]).intValue());
+                        pstmt.setObject(i + 1, param[0], ((Integer) param[1]).intValue());
                         continue;
                     }
 
                 } else if (param.length == 3) {
 
                     if (param[0] == null) {
-                        pstmt.setNull(i + 1, ((Integer)param[1]).intValue(),
-                                   (String)param[2]);
+                        pstmt.setNull(i + 1, ((Integer) param[1]).intValue(),
+                                (String) param[2]);
                         continue;
                     }
 
                     if (param[0] instanceof InputStream) {
-                        switch (((Integer)param[2]).intValue()) {
-                        case CachedRowSetImpl.UNICODE_STREAM_PARAM:
-                            pstmt.setUnicodeStream(i + 1,
-                                                (InputStream)param[0],
-                                                ((Integer)param[1]).intValue());
-                            break;
-                        case CachedRowSetImpl.BINARY_STREAM_PARAM:
-                            pstmt.setBinaryStream(i + 1,
-                                               (InputStream)param[0],
-                                               ((Integer)param[1]).intValue());
-                            break;
-                        case CachedRowSetImpl.ASCII_STREAM_PARAM:
-                            pstmt.setAsciiStream(i + 1,
-                                              (InputStream)param[0],
-                                              ((Integer)param[1]).intValue());
-                            break;
-                        default:
-                            throw new SQLException(resBundle.handleGetObject("crsreader.paramtype").toString());
+                        switch (((Integer) param[2]).intValue()) {
+                            case CachedRowSetImpl.UNICODE_STREAM_PARAM:
+                                pstmt.setUnicodeStream(i + 1,
+                                        (InputStream) param[0],
+                                        ((Integer) param[1]).intValue());
+                                break;
+                            case CachedRowSetImpl.BINARY_STREAM_PARAM:
+                                pstmt.setBinaryStream(i + 1,
+                                        (InputStream) param[0],
+                                        ((Integer) param[1]).intValue());
+                                break;
+                            case CachedRowSetImpl.ASCII_STREAM_PARAM:
+                                pstmt.setAsciiStream(i + 1,
+                                        (InputStream) param[0],
+                                        ((Integer) param[1]).intValue());
+                                break;
+                            default:
+                                throw new SQLException(resBundle.handleGetObject("crsreader.paramtype").toString());
                         }
                     }
 
@@ -457,8 +450,8 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
                      * what's left must be the setObject() cases.
                      */
                     if (param[1] instanceof Integer && param[2] instanceof Integer) {
-                        pstmt.setObject(i + 1, param[0], ((Integer)param[1]).intValue(),
-                                     ((Integer)param[2]).intValue());
+                        pstmt.setObject(i + 1, param[0], ((Integer) param[1]).intValue(),
+                                ((Integer) param[2]).intValue());
                         continue;
                     }
 
@@ -469,9 +462,9 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
                     pstmt.setObject(i + 1, params[i]);
                     continue;
                 }
-            }  else {
-               // Try to get all the params to be set here
-               pstmt.setObject(i + 1, params[i]);
+            } else {
+                // Try to get all the params to be set here
+                pstmt.setObject(i + 1, params[i]);
 
             }
         }
@@ -491,13 +484,14 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
     }
 
     /**
-     *  This sets the start position in the ResultSet from where to begin. This is
+     * This sets the start position in the ResultSet from where to begin. This is
      * called by the Reader in the CachedRowSetImpl to set the position on the page
      * to begin populating from.
+     *
      * @param pos integer indicating the position in the <code>ResultSet</code> to begin
-     *        populating from.
+     *            populating from.
      */
-    public void setStartPosition(int pos){
+    public void setStartPosition(int pos) {
         startPosition = pos;
     }
 
@@ -506,12 +500,12 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
         ois.defaultReadObject();
         // Initialization of  Res Bundle happens here .
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 
     }
 
-    static final long serialVersionUID =5049738185801363801L;
+    static final long serialVersionUID = 5049738185801363801L;
 }

@@ -160,10 +160,6 @@ public enum DBMS {
     }
 
     public String encodeForSQL(String str) {
-        // if (codec != null) {
-        //     char[] IMMUNE_SQL = {' '};
-        //     return codec.encode(IMMUNE_SQL, str);
-        // }
         return SqlUtils.encodeSQLStr(str);
     }
 
@@ -207,7 +203,7 @@ public enum DBMS {
         } else if (obj instanceof LocalTime) {
             return javaDateToSqlValue(obj);
         } else if (obj instanceof Class) {
-            return ((Class) obj).getName();
+            return "?:" + ((Class) obj).getName();
         } else {
             //防止注入式攻击
             return "'" + encodeForSQL(obj.toString()) + "'";
@@ -219,18 +215,18 @@ public enum DBMS {
         switch (this.dbType) {
             case MS_SQL_SERVER:
                 if (dateObj instanceof Date) {
-                    String str= "'"+CTime.formatWholeDate((Date)dateObj)+"'";
-                    return "CONVERT(datetime,"+str+",20)";
+                    String str = "'" + CTime.formatWholeDate((Date) dateObj) + "'";
+                    return "CONVERT(datetime," + str + ",20)";
                 } else if (dateObj instanceof LocalDate) {
-                    String str= "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
-                    return "CONVERT(date,"+str+",23)";
+                    String str = "'" + CTime.formatLocalDate((LocalDate) dateObj) + "'";
+                    return "CONVERT(date," + str + ",23)";
                 } else if (dateObj instanceof LocalDateTime) {
-                    String str=  "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
-                    return "CONVERT(datetime,"+str+",20)";
+                    String str = "'" + ((LocalDateTime) dateObj).format(CTime.DTF_YMD_HH_MM_SS) + "'";
+                    return "CONVERT(datetime," + str + ",20)";
                 } else if (dateObj instanceof LocalTime) {
-                    String str=  "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
-                    return "CONVERT(time,"+str+",24)";
-                } else{
+                    String str = "'" + ((LocalTime) dateObj).format(CTime.DTF_HH_MM_SS) + "'";
+                    return "CONVERT(time," + str + ",24)";
+                } else {
                 }
                 break;
             case ORACLE:
@@ -238,76 +234,76 @@ public enum DBMS {
             case INFOMIX:
             case POSTGRE:
                 if (dateObj instanceof Date) {
-                    String str= "'"+CTime.formatWholeDate((Date)dateObj)+"'";
-                    return  "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+                    String str = "'" + CTime.formatWholeDate((Date) dateObj) + "'";
+                    return "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
                 } else if (dateObj instanceof LocalDate) {
-                    String str= "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
-                    return  "to_date(" + str + ",'yyyy-mm-dd')";
+                    String str = "'" + CTime.formatLocalDate((LocalDate) dateObj) + "'";
+                    return "to_date(" + str + ",'yyyy-mm-dd')";
                 } else if (dateObj instanceof LocalDateTime) {
-                    String str=  "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
-                    return  "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+                    String str = "'" + ((LocalDateTime) dateObj).format(CTime.DTF_YMD_HH_MM_SS) + "'";
+                    return "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
                 } else if (dateObj instanceof LocalTime) {
-                    String str=  "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
-                    return  "to_date(" + str + ",'hh24:mi:ss')";
-                } else{
+                    String str = "'" + ((LocalTime) dateObj).format(CTime.DTF_HH_MM_SS) + "'";
+                    return "to_date(" + str + ",'hh24:mi:ss')";
+                } else {
                 }
                 break;
             case H2:
                 if (dateObj instanceof Date) {
-                    String str= "'"+CTime.formatWholeDate((Date)dateObj)+"'";
-                    return  "parsedatetime(" + str + ",'dd-MM-yyyy hh:mm:ss')";
+                    String str = "'" + CTime.formatWholeDate((Date) dateObj) + "'";
+                    return "parsedatetime(" + str + ",'dd-MM-yyyy hh:mm:ss')";
                 } else if (dateObj instanceof LocalDate) {
-                    String str= "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
-                    return  "parsedatetime(" + str + ",'dd-MM-yyyy')";
+                    String str = "'" + CTime.formatLocalDate((LocalDate) dateObj) + "'";
+                    return "parsedatetime(" + str + ",'dd-MM-yyyy')";
                 } else if (dateObj instanceof LocalDateTime) {
-                    String str=  "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
-                    return  "parsedatetime(" + str + ",'dd-MM-yyyy hh:mm:ss')";
+                    String str = "'" + ((LocalDateTime) dateObj).format(CTime.DTF_YMD_HH_MM_SS) + "'";
+                    return "parsedatetime(" + str + ",'dd-MM-yyyy hh:mm:ss')";
                 } else if (dateObj instanceof LocalTime) {
-                    String str=  "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
-                    return  "parsedatetime(" + str + ",'hh:mm:ss')";
-                } else{
+                    String str = "'" + ((LocalTime) dateObj).format(CTime.DTF_HH_MM_SS) + "'";
+                    return "parsedatetime(" + str + ",'hh:mm:ss')";
+                } else {
                 }
                 break;
             case SQLITE:
             case DERBY:
                 if (dateObj instanceof Date) {
-                    String str= "'"+CTime.formatWholeDate((Date)dateObj)+"'";
-                    return  "datetime(" + str + ")";
+                    String str = "'" + CTime.formatWholeDate((Date) dateObj) + "'";
+                    return "datetime(" + str + ")";
                 } else if (dateObj instanceof LocalDate) {
-                    String str= "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
-                    return  "date(" + str + ")";
+                    String str = "'" + CTime.formatLocalDate((LocalDate) dateObj) + "'";
+                    return "date(" + str + ")";
                 } else if (dateObj instanceof LocalDateTime) {
-                    String str=  "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
-                    if(this.dbType==DBType.DERBY){
+                    String str = "'" + ((LocalDateTime) dateObj).format(CTime.DTF_YMD_HH_MM_SS) + "'";
+                    if (this.dbType == DBType.DERBY) {
                         return "timestamp(" + str + ")";
-                    }else {
+                    } else {
                         return "datetime(" + str + ")";
                     }
                 } else if (dateObj instanceof LocalTime) {
-                    String str=  "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
-                    return  "time(" + str + ")";
-                } else{
+                    String str = "'" + ((LocalTime) dateObj).format(CTime.DTF_HH_MM_SS) + "'";
+                    return "time(" + str + ")";
+                } else {
                 }
                 break;
             case SYBASE:
-            case MYSQL :
+            case MYSQL:
             case DB2:
             case OTHER:
             default:
                 if (dateObj instanceof Date) {
-                    return "'"+CTime.formatWholeDate((Date)dateObj)+"'";
+                    return "'" + CTime.formatWholeDate((Date) dateObj) + "'";
                 } else if (dateObj instanceof LocalDate) {
-                    return "'"+CTime.formatLocalDate((LocalDate)dateObj)+"'";
+                    return "'" + CTime.formatLocalDate((LocalDate) dateObj) + "'";
                 } else if (dateObj instanceof LocalDateTime) {
-                    return "'"+((LocalDateTime)dateObj).format(CTime.DTF_YMD_HH_MM_SS)+"'";
+                    return "'" + ((LocalDateTime) dateObj).format(CTime.DTF_YMD_HH_MM_SS) + "'";
                 } else if (dateObj instanceof LocalTime) {
-                    return "'"+((LocalTime)dateObj).format(CTime.DTF_HH_MM_SS)+"'";
-                } else{
+                    return "'" + ((LocalTime) dateObj).format(CTime.DTF_HH_MM_SS) + "'";
+                } else {
 
                 }
                 break;
         }
-        throw new DbException(dateObj+"[" +dateObj.getClass().getName()+
+        throw new DbException(dateObj + "[" + dateObj.getClass().getName() +
                 "]不为日期类型！");
     }
 

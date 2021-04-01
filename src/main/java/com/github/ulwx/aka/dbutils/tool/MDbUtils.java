@@ -28,15 +28,16 @@ public class MDbUtils extends BaseDao {
      * 执行sql脚本，packageFullName指定SQL脚本所在的包（全路径），sqlFileName为脚本文件的名称，脚本文件里存放的是SQL脚本，
      * 整个脚本的执行在一个事务里，如果执行过程中出错则抛出异常并回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
      * 脚本是按每个语句依次执行，脚本里每个语句的分界是根据英文分号和回车换行共同判定，即 ";\r\n"
-     * @param dbpoolName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     *
+     * @param dbpoolName      连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param packageFullName 指定SQL脚本所在的包（全路径）
-     * @param sqlFileName 为脚本文件的名称，脚本文件里存放的是SQL脚本
-     * @param throwWarning 脚本执行时如果出现warning时是否抛出异常并回滚
-     * @return  返回执行脚本的结果
+     * @param sqlFileName     为脚本文件的名称，脚本文件里存放的是SQL脚本
+     * @param throwWarning    脚本执行时如果出现warning时是否抛出异常并回滚
+     * @return 返回执行脚本的结果
      * @throws DbException
      */
-    public static  String exeScript(String dbpoolName, String packageFullName, String sqlFileName,
-                                    Boolean throwWarning) throws DbException {
+    public static String exeScript(String dbpoolName, String packageFullName, String sqlFileName,
+                                   Boolean throwWarning) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.exeScript(packageFullName, sqlFileName, throwWarning);
         }, dbpoolName);
@@ -44,34 +45,36 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 执行md方法地址指定的脚本，并且可以传入参数,脚本里执行时按每个SQL语句执行，执行的时候利用的是jdbc的PrepareStatement，能有效防止注入式攻击
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param mdFullMethodName md方法地址
-     * @param args  传入md方法的参数
-     * @param delimiters 指定每个SQL语句的分界，例如";"
-     * @return  返回脚本执行的结果
+     * @param args             传入md方法的参数
+     * @param delimiters       指定每个SQL语句的分界，例如";"
+     * @return 返回脚本执行的结果
      * @throws DbException
      */
-    public static  String exeScript(String dbpoolName, String mdFullMethodName,String delimiters, Map<String, Object> args) throws DbException {
+    public static String exeScript(String dbpoolName, String mdFullMethodName, String delimiters, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.exeScript(mdFullMethodName,delimiters, args);
+            return mdb.exeScript(mdFullMethodName, delimiters, args);
         }, dbpoolName);
     }
 
     /**
-     *根据mdFullMethodName指定的md方法地址所在的SQL从数据库查询记录，aka-dbutils会在内部封装SQL从而形成分页查询的SQL，
+     * 根据mdFullMethodName指定的md方法地址所在的SQL从数据库查询记录，aka-dbutils会在内部封装SQL从而形成分页查询的SQL，
      * 最终返回当前页的结果集。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodName  md方法地址，如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile
-     * @param args md方法里用到的参数
-     * @param page 当前页码（从1开始）
-     * @param perPage  每页多少行
-     * @param pageBean  存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
-     * @param countSqlMdFullMethodName  可以指定四种类型的参数，<br/>
-     *                                  null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
-     *                                  数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
-     *                                  md方法地址：表示计算总数的SQL的md方法地址<br/>
-     *                                  -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
-     * @return  返回结果集
+     *
+     * @param dbpoolName               连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName         md方法地址，如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile
+     * @param args                     md方法里用到的参数
+     * @param page                     当前页码（从1开始）
+     * @param perPage                  每页多少行
+     * @param pageBean                 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
+     * @param countSqlMdFullMethodName 可以指定四种类型的参数，<br/>
+     *                                 null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
+     *                                 数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
+     *                                 md方法地址：表示计算总数的SQL的md方法地址<br/>
+     *                                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
+     * @return 返回结果集
      * @throws DbException
      */
     public static DataBaseSet queryForResultSet(String dbpoolName, String mdFullMethodName, Map<String, Object> args, int page, int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
@@ -79,15 +82,17 @@ public class MDbUtils extends BaseDao {
             return mdb.queryForResultSet(mdFullMethodName, args, page, perPage, pageBean, countSqlMdFullMethodName);
         }, dbpoolName);
     }
+
     /**
-     *根据mdFullMethodName指定的md方法地址所在的SQL从数据库查询记录，返回结果集
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodName  md方法地址，如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile
-     * @param args md方法里用到的参数
-     * @return  返回结果集
+     * 根据mdFullMethodName指定的md方法地址所在的SQL从数据库查询记录，返回结果集
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName md方法地址，如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile
+     * @param args             md方法里用到的参数
+     * @return 返回结果集
      * @throws DbException
      */
-    public static  DataBaseSet queryForResultSet(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
+    public static DataBaseSet queryForResultSet(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.queryForResultSet(mdFullMethodName, args);
         }, dbpoolName);
@@ -95,16 +100,17 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 根据md方法指定的SQL语句查询记录，每行记录映射到指定类型的对象。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param clazz   记录映射到对象的类型
-     * @param mdFullMethodName  md方法地址
-     * @param args  md方法用到的参数
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param clazz            记录映射到对象的类型
+     * @param mdFullMethodName md方法地址
+     * @param args             md方法用到的参数
      * @param <T>
-     * @return  返回一个List对象，包含行记录映射的对象。
+     * @return 返回一个List对象，包含行记录映射的对象。
      * @throws DbException
      */
-    public static  <T> List<T> queryList(String dbpoolName, Class<T> clazz,
-                                         String mdFullMethodName, Map<String, Object> args) throws DbException {
+    public static <T> List<T> queryList(String dbpoolName, Class<T> clazz,
+                                        String mdFullMethodName, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.queryList(clazz, mdFullMethodName, args);
         }, dbpoolName);
@@ -120,47 +126,51 @@ public class MDbUtils extends BaseDao {
      *     select * from course  where name='course_page' limit 20,10
      *     (由于 mysql的limit后面的索引是从0开始，所以这里的20表示从第21条开始往后的10条记录，即第二页数据)
      * </pre></blockquote>
-     *  如果countSqlMdFullMethodName=null，那么aka-dbutils在生成上面的分页select语句之前，会首先自动生成查询总数的select语句，
-     *  如果当前数据库类型为mysql，生成的语句如下：
-     *  <blockquote><pre>
+     * 如果countSqlMdFullMethodName=null，那么aka-dbutils在生成上面的分页select语句之前，会首先自动生成查询总数的select语句，
+     * 如果当前数据库类型为mysql，生成的语句如下：
+     * <blockquote><pre>
      *      select count(1) from (select * from course  where name='course_page') t
      *  </pre></blockquote>
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param clazz 记录映射到对象的类型
-     * @param mdFullMethodName md方法地址
-     * @param args   md方法用到的参数
-     * @param page  当前请求页码
-     * @param perPage  每页多少行
-     * @param pageBean  存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
-     * @param countSqlMdFullMethodName  可以指定四种类型的参数，<br/>
-     *                                  null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
-     *                                  数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
-     *                                  md方法地址：表示计算总数的SQL的md方法地址<br/>
-     *                                  -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
+     *
+     * @param dbpoolName               连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param clazz                    记录映射到对象的类型
+     * @param mdFullMethodName         md方法地址
+     * @param args                     md方法用到的参数
+     * @param page                     当前请求页码
+     * @param perPage                  每页多少行
+     * @param pageBean                 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
+     * @param countSqlMdFullMethodName 可以指定四种类型的参数，<br/>
+     *                                 null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
+     *                                 数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
+     *                                 md方法地址：表示计算总数的SQL的md方法地址<br/>
+     *                                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
      * @param <T>
-     * @return  返回一个List对象，包含行记录映射的对象。
+     * @return 返回一个List对象，包含行记录映射的对象。
      * @throws DbException
      */
-    public static  <T> List<T> queryList(String dbpoolName, Class<T> clazz, String mdFullMethodName, Map<String, Object> args, int page, int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
+    public static <T> List<T> queryList(String dbpoolName, Class<T> clazz, String mdFullMethodName, Map<String, Object> args, int page, int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.queryList(clazz, mdFullMethodName, args, page, perPage, pageBean, countSqlMdFullMethodName);
         }, dbpoolName);
     }
+
     /**
      * 根据md方法指定的SQL语句来查询记录，并通过rowMapper映射到指定类型的对象。
-     * @param dbpoolName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodName  md方法地址
-     * @param args md方法所用到的参数
-     * @param rowMapper 自定义映射接口，可通过此接口，开发者可以自定义结果集到对象的映射
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName md方法地址
+     * @param args             md方法所用到的参数
+     * @param rowMapper        自定义映射接口，可通过此接口，开发者可以自定义结果集到对象的映射
      * @param <T>
      * @return 返回一个List对象，包含通过rowMapper映射的对象。
      * @throws DbException
      */
-    public static  <T> List<T> queryList(String dbpoolName, String mdFullMethodName, Map<String, Object> args, RowMapper<T> rowMapper) throws DbException {
+    public static <T> List<T> queryList(String dbpoolName, String mdFullMethodName, Map<String, Object> args, RowMapper<T> rowMapper) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.queryList(mdFullMethodName, args, rowMapper);
         }, dbpoolName);
     }
+
     /**
      * 根据md方法指定的SQL语句来查询记录，并通过rowMapper映射到指定类型的对象，本方法为分页查询，参数page为页码（从1开始），
      * 参数perPage为每页多少行记录，aka-dbutils会根据这些信息生成分页的select语句，例如，如果当前数据库类型为mysql，请求第2页（page=2），
@@ -171,28 +181,29 @@ public class MDbUtils extends BaseDao {
      *     select * from course  where name='course_page' limit 20,10
      *     (由于 mysql的limit后面的索引是从0开始，所以这里的20表示从第21条开始往后的10条记录，即第二页数据)
      * </pre></blockquote>
-     *  如果countSqlMdFullMethodName=null，那么aka-dbutils在生成上面的分页select语句之前，会首先自动生成查询总数的select语句，
-     *  如果当前数据库类型为mysql，生成的语句如下：
-     *  <blockquote><pre>
+     * 如果countSqlMdFullMethodName=null，那么aka-dbutils在生成上面的分页select语句之前，会首先自动生成查询总数的select语句，
+     * 如果当前数据库类型为mysql，生成的语句如下：
+     * <blockquote><pre>
      *      select count(1) from (select * from course  where name='course_page') t
      *  </pre></blockquote>
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodName  md方法地址
-     * @param args  md方法所用到的参数
-     * @param page  当前请求页码
-     * @param perPage  每页多少行
-     * @param pageBean  存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
-     * @param rowMapper  自定义映射接口，可通过此接口，开发者可以自定义结果集到对象的映射
-     * @param countSqlMdFullMethodName  可以指定四种类型的参数，<br/>
-     *                                  null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
-     *                                  数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
-     *                                  md方法地址：表示计算总数的SQL的md方法地址<br/>
-     *                                  -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
+     *
+     * @param dbpoolName               连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName         md方法地址
+     * @param args                     md方法所用到的参数
+     * @param page                     当前请求页码
+     * @param perPage                  每页多少行
+     * @param pageBean                 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
+     * @param rowMapper                自定义映射接口，可通过此接口，开发者可以自定义结果集到对象的映射
+     * @param countSqlMdFullMethodName 可以指定四种类型的参数，<br/>
+     *                                 null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
+     *                                 数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
+     *                                 md方法地址：表示计算总数的SQL的md方法地址<br/>
+     *                                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
      * @param <T>
-     * @return  返回一个List对象，包含通过rowMapper映射的对象。
+     * @return 返回一个List对象，包含通过rowMapper映射的对象。
      * @throws DbException
      */
-    public static  <T> List<T> queryList(String dbpoolName, String mdFullMethodName, Map<String, Object> args, int page, int perPage, PageBean pageBean, RowMapper<T> rowMapper, String countSqlMdFullMethodName) throws DbException {
+    public static <T> List<T> queryList(String dbpoolName, String mdFullMethodName, Map<String, Object> args, int page, int perPage, PageBean pageBean, RowMapper<T> rowMapper, String countSqlMdFullMethodName) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.queryList(mdFullMethodName, args, page, perPage, pageBean, rowMapper, countSqlMdFullMethodName);
         }, dbpoolName);
@@ -200,19 +211,21 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 根据md方法指定的SQL查询记录，每行记录映射到一个Map对象，并返回包含Map对象的List。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param mdFullMethodName md方法地址
-     * @param args md方法所用到的参数
+     * @param args             md方法所用到的参数
      * @return 返回一个含有map的List，每个map对应一行记录，key为表字段名称，value为字段的值
      * @throws DbException
      */
-    public static  List<Map<String, Object>> queryMap(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
+    public static List<Map<String, Object>> queryMap(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.queryMap(mdFullMethodName, args);
         }, dbpoolName);
     }
+
     /**
-     *根据md方法指定的SQL查询记录，每行记录映射到一个Map对象，并返回包含Map对象的List。本方法为分页查询，参数page为页码（从1开始），
+     * 根据md方法指定的SQL查询记录，每行记录映射到一个Map对象，并返回包含Map对象的List。本方法为分页查询，参数page为页码（从1开始），
      * 参数perPage为每页多少行记录，aka-dbutils会根据这些信息生成分页的select语句，例如，如果当前数据库类型为mysql，请求第2页（page=2），
      * 每页10条（perPage=10），如果mdFullMethodName地址指定的SQL为
      * <blockquote><pre>
@@ -222,25 +235,26 @@ public class MDbUtils extends BaseDao {
      *     select * from course  where name='course_page' limit 20,10
      *     (由于 mysql的limit后面的索引是从0开始，所以这里的20表示从第21条开始往后的10条记录，即第二页数据)
      * </pre></blockquote>
-     *  如果countSqlMdFullMethodName=null，那么aka-dbutils在生成上面的分页select语句之前，会首先自动生成查询总数的select语句，
-     *  如果当前数据库类型为mysql，生成的语句如下：
-     *  <blockquote><pre>
+     * 如果countSqlMdFullMethodName=null，那么aka-dbutils在生成上面的分页select语句之前，会首先自动生成查询总数的select语句，
+     * 如果当前数据库类型为mysql，生成的语句如下：
+     * <blockquote><pre>
      *      select count(1) from (select * from course  where name='course_page') t</pre></blockquote>
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodName   md方法地址
-     * @param args  md方法所用到的参数
-     * @param page  当前请求页码
-     * @param perPage  每页多少行
-     * @param pageBean  存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
-     * @param countSqlMdFullMethodName  可以指定四种类型的参数，<br/>
-     *                                  null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
-     *                                  数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
-     *                                  md方法地址：表示计算总数的SQL的md方法地址<br/>
-     *                                  -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
-     * @return  返回一个含有map的List，每个map对应一行记录，key为表字段名称，value为字段的值
+     *
+     * @param dbpoolName               连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName         md方法地址
+     * @param args                     md方法所用到的参数
+     * @param page                     当前请求页码
+     * @param perPage                  每页多少行
+     * @param pageBean                 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
+     * @param countSqlMdFullMethodName 可以指定四种类型的参数，<br/>
+     *                                 null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
+     *                                 数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
+     *                                 md方法地址：表示计算总数的SQL的md方法地址<br/>
+     *                                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
+     * @return 返回一个含有map的List，每个map对应一行记录，key为表字段名称，value为字段的值
      * @throws DbException
      */
-    public static  List<Map<String, Object>> queryMap(String dbpoolName, String mdFullMethodName, Map<String, Object> args, int page, int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
+    public static List<Map<String, Object>> queryMap(String dbpoolName, String mdFullMethodName, Map<String, Object> args, int page, int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.queryMap(mdFullMethodName, args, page, perPage, pageBean, countSqlMdFullMethodName);
         }, dbpoolName);
@@ -249,16 +263,17 @@ public class MDbUtils extends BaseDao {
     /**
      * 根据mdFullMethodName指定的SQL查询记录，每条记录映射到一个对象，并返回一个对象。注意，如果指定的SQL语句查询多条记录，aka-dbutils会
      * 内部依然会映射到一个列表，并从列表里取出第一个对象，所以，如果调用此方法，建议指定的SQL里要含有限制取第一个对象，如对mysql，SQL后面加limit 1。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param clazz  映射的对象的类型
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param clazz            映射的对象的类型
      * @param mdFullMethodName md方法地址
-     * @param args  md方法所用到的参数
+     * @param args             md方法所用到的参数
      * @param <T>
-     * @return  返回一个对象
+     * @return 返回一个对象
      * @throws DbException
      */
-    public static  <T> T queryOne(String dbpoolName, Class<T> clazz, String mdFullMethodName,
-                                  Map<String, Object> args) throws DbException {
+    public static <T> T queryOne(String dbpoolName, Class<T> clazz, String mdFullMethodName,
+                                 Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.queryOne(clazz, mdFullMethodName, args);
         }, dbpoolName);
@@ -287,14 +302,14 @@ public class MDbUtils extends BaseDao {
      *     ......
      * }
      *
-     *public class StudentCourse{
+     * public class StudentCourse{
      *     private Integer id,
      *     private Integer studentId;
      *     private Integer courseId;
      *     ......
      * }
      *
-     *public class Course{
+     * public class Course{
      *     private Integer id,
      *     private String courseName;
      *     ......
@@ -320,7 +335,7 @@ public class MDbUtils extends BaseDao {
      *         queryMapNestOne2One.set(null,  //子关联类哪些属性被映射，null表明全部映射
      *                              "course",  ①  //指定主类里的关联属性
      *                                "c.");   ② //限定哪些列映射到子关联类里
-
+     *
      *         One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
      *                 "stu."  ③
      *                 ,queryMapNestOne2One
@@ -339,21 +354,22 @@ public class MDbUtils extends BaseDao {
      * </pre></blockquote>
      * ③处的"stu."指定了一个前缀，它限定了SQL语句里哪些列字段（③-1处）要映射到主类（包含关联属性的类）里对应的属性。
      * queryMapNestOne2One对象被设置了"course"（①处），它指定了主类One2OneStudent类里的关联属性（即对应于①-1处的course属性），
-     *在②处设置了"c."，这限定了SQL语句里哪些列字段（②-1处）要映射到子关联子里的对应的属性（即Course类里的属性）。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param clazz 映射到的对象所属类型
-     * @param mdFullMethodName  md方法地址
-     * @param args  md方法里用到的参数
-     * @param one2OneMapNestOptions  关联子对象的映射配置对象。
+     * 在②处设置了"c."，这限定了SQL语句里哪些列字段（②-1处）要映射到子关联子里的对应的属性（即Course类里的属性）。
+     *
+     * @param dbpoolName            连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param clazz                 映射到的对象所属类型
+     * @param mdFullMethodName      md方法地址
+     * @param args                  md方法里用到的参数
+     * @param one2OneMapNestOptions 关联子对象的映射配置对象。
      * @param <T>
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
-                                         String mdFullMethodName, Map<String, Object> args,
-                                                One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
+    public static <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
+                                               String mdFullMethodName, Map<String, Object> args,
+                                               One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListOne2One(clazz,  mdFullMethodName, args, one2OneMapNestOptions);
+            return mdb.queryListOne2One(clazz, mdFullMethodName, args, one2OneMapNestOptions);
         }, dbpoolName);
     }
 
@@ -362,31 +378,32 @@ public class MDbUtils extends BaseDao {
      * 关联属性的类型为子关联类。主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
      * 那么student表一行学生信息记录就一对一关联course表的一门课程记录，从类的角度来说就是主类Student和子关联类Course具有一对一关联，
      * 并且在Student类里定义了一个名为"course"的关联属性，其类型为Course，它是子关联类型。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param clazz  映射到的对象所属类型
-     * @param mdFullMethodName  md方法地址
-     * @param args   md方法里用到的参数
-     * @param one2OneMapNestOptions  关联子对象的映射配置对象。
-     * @param page  当前请求页码
-     * @param perPage  每页多少行
-     * @param pageBean  存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
-     * @param countSqlMdFullMethodName  可以指定四种类型的参数，<br/>
-     *                                  null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
-     *                                  数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
-     *                                  md方法地址：表示计算总数的SQL的md方法地址<br/>
-     *                                  -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
+     *
+     * @param dbpoolName               连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param clazz                    映射到的对象所属类型
+     * @param mdFullMethodName         md方法地址
+     * @param args                     md方法里用到的参数
+     * @param one2OneMapNestOptions    关联子对象的映射配置对象。
+     * @param page                     当前请求页码
+     * @param perPage                  每页多少行
+     * @param pageBean                 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
+     * @param countSqlMdFullMethodName 可以指定四种类型的参数，<br/>
+     *                                 null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
+     *                                 数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
+     *                                 md方法地址：表示计算总数的SQL的md方法地址<br/>
+     *                                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
      * @param <T>
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
-                                                String mdFullMethodName,
-                                                Map<String, Object> args,
-                                                One2OneMapNestOptions one2OneMapNestOptions,
-                                                int page, int perPage, PageBean pageBean,
-                                                String countSqlMdFullMethodName) throws DbException {
+    public static <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
+                                               String mdFullMethodName,
+                                               Map<String, Object> args,
+                                               One2OneMapNestOptions one2OneMapNestOptions,
+                                               int page, int perPage, PageBean pageBean,
+                                               String countSqlMdFullMethodName) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListOne2One(clazz,  mdFullMethodName, args, one2OneMapNestOptions, page, perPage, pageBean, countSqlMdFullMethodName);
+            return mdb.queryListOne2One(clazz, mdFullMethodName, args, one2OneMapNestOptions, page, perPage, pageBean, countSqlMdFullMethodName);
         }, dbpoolName);
     }
 
@@ -413,14 +430,14 @@ public class MDbUtils extends BaseDao {
      *     ......
      * }
      *
-     *public class StudentCourse{
+     * public class StudentCourse{
      *     private Integer id,
      *     private Integer studentId;
      *     private Integer courseId;
      *     ......
      * }
      *
-     *public class Course{
+     * public class Course{
      *     private Integer id,
      *     private String courseName;
      *     ......
@@ -473,32 +490,35 @@ public class MDbUtils extends BaseDao {
      * 在③处设置了"c."，这限定了SQL语句里哪些字段（③-1处）映射到子关联类（Course）里的属性。⑤处指定了主类里哪些属性组成唯一键来确定一个对象
      * （即这些属性对应的表字段合起来是是唯一键），aka-dbutils利用这些属性对查询的记录进行分组，分组内的记录再通过子关联类主键属性（②处）去
      * 掉重复生成的关联子对象，从而构成最终的关联子对象列表。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param clazz 映射到的对象所属类型
-     * @param mdFullMethodName  md方法地址
-     * @param args  md方法里用到的参数
-     * @param one2ManyMapNestOptions   指定一对多关联子对象的映射信息，为数组类型，可以指定多个一对多关联映射
+     *
+     * @param dbpoolName             连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param clazz                  映射到的对象所属类型
+     * @param mdFullMethodName       md方法地址
+     * @param args                   md方法里用到的参数
+     * @param one2ManyMapNestOptions 指定一对多关联子对象的映射信息，为数组类型，可以指定多个一对多关联映射
      * @param <T>
      * @return
      * @throws DbException
      */
-    public static  <T> List<T> queryListOne2Many(String dbpoolName, Class<T> clazz,
-                                                 String mdFullMethodName, Map<String, Object> args,
-                                                 One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
+    public static <T> List<T> queryListOne2Many(String dbpoolName, Class<T> clazz,
+                                                String mdFullMethodName, Map<String, Object> args,
+                                                One2ManyMapNestOptions one2ManyMapNestOptions)
+            throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.queryListOne2Many(clazz,  mdFullMethodName, args, one2ManyMapNestOptions);
+            return mdb.queryListOne2Many(clazz, mdFullMethodName, args, one2ManyMapNestOptions);
         }, dbpoolName);
     }
 
     /**
      * 执行mdFullMethodName指定的SQL执行删除操作
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param mdFullMethodName md方法地址
-     * @param args  md方法里用到的参数
+     * @param args             md方法里用到的参数
      * @return 返回删除操作删除的条数
      * @throws DbException
      */
-    public static  int del(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
+    public static int del(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.del(mdFullMethodName, args);
         }, dbpoolName);
@@ -528,43 +548,48 @@ public class MDbUtils extends BaseDao {
      *   oData:"2015-09-23 12:34:56"
      *   ioQuantity:34456
      * }</blockquote></pre>
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodName md方法地址
-     * @param parms  传入的参数
-     * @param outPramsValues   输出参数
-     * @param returnDataBaseSets  返回的结果集
+     *
+     * @param dbpoolName         连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName   md方法地址
+     * @param parms              传入的参数
+     * @param outPramsValues     输出参数
+     * @param returnDataBaseSets 返回的结果集
      * @return
      * @throws DbException
      */
-    public static  void callStoredPro(String dbpoolName, String mdFullMethodName, Map<String, Object> parms,
+    public static void callStoredPro(String dbpoolName, String mdFullMethodName, Map<String, Object> parms,
                                      Map<String, Object> outPramsValues, List<DataBaseSet> returnDataBaseSets) throws DbException {
-         mdbExecute(mdb -> {
-             mdb.callStoredPro(mdFullMethodName, parms, outPramsValues, returnDataBaseSets);
-             return 1;
+        mdbExecute(mdb -> {
+            mdb.callStoredPro(mdFullMethodName, parms, outPramsValues, returnDataBaseSets);
+            return 1;
         }, dbpoolName);
     }
+
     /**
      * 执行插入操作，一个md方法地址对应多个参数，同一个md方法会根据不同的参数多次执行，每次执行返回插入的记录数
-     * @param dbpoolName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param mdFullMethodName md方法地址
-     * @param args  参数数组，会根据数组里的每个参数执行一次md方法，从而生成不同的insert语句
+     * @param args             参数数组，会根据数组里的每个参数执行一次md方法，从而生成不同的insert语句
      * @return 每此执行插入操作返回的记录条数存放于int数组相应位置
      * @throws DbException
      */
-    public static  int[] insert(String dbpoolName, String mdFullMethodName, List<Map<String, Object>> args) throws DbException {
+    public static int[] insert(String dbpoolName, String mdFullMethodName, List<Map<String, Object>> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.insert(mdFullMethodName, args);
         }, dbpoolName);
     }
+
     /**
      * 根据mdFullMethodName指定的SQL执行插入操作，args为动态生成SQL语句的参数
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodName  md方法地址
-     * @param args  为动态生成SQL语句的参数
-     * @return  返回执行插入操作后插入记录的条数
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName md方法地址
+     * @param args             为动态生成SQL语句的参数
+     * @return 返回执行插入操作后插入记录的条数
      * @throws DbException
      */
-    public static  int insert(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
+    public static int insert(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.insert(mdFullMethodName, args);
         }, dbpoolName);
@@ -572,13 +597,14 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 根据mdFullMethodName指定的SQL执行插入操作，args为动态生成SQL语句的参数，返回插入单条记录的自增主键id
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param mdFullMethodName md方法地址
-     * @param args 为动态生成SQL语句的参数
+     * @param args             为动态生成SQL语句的参数
      * @return 返回插入单条记录的自增主键id
      * @throws DbException
      */
-    public static  long insertReturnKey(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
+    public static long insertReturnKey(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.insertReturnKey(mdFullMethodName, args);
         }, dbpoolName);
@@ -586,12 +612,13 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 根据多个md方法地址指定的SQL执行插入数据库操作，返回每个md方法执行后插入的记录条数
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     *
+     * @param dbpoolName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param mdFullMethodNames md方法地址数组，每个元素存放一个md方法地址。mdFullMethodNames可以存放不同的md方法地址。
      * @return 每个md方法地址指定的SQL执行插入操作返回的记录条数存放于int数组相应位置
      * @throws DbException
      */
-    public static  int[] insert(String dbpoolName, ArrayList<String> mdFullMethodNames) throws DbException {
+    public static int[] insert(String dbpoolName, ArrayList<String> mdFullMethodNames) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.insert(mdFullMethodNames);
         }, dbpoolName);
@@ -599,13 +626,14 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 根据多个md方法地址指定的SQL执行插入数据库操作，返回每个md方法执行后插入的记录条数，每个md方法对应一个Map<String, Object>对象，用于传递参数。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodNames  md方法地址数组，每个元素存放一个md方法地址。mdFullMethodNames可以存放不同的md方法地址。
-     * @param args  mdFullMethodNames数组里每个md方法地址所定义的SQL，可以被提供一个Map<String, Object>对象，用于传递参数。
-     * @return  每个md方法地址指定的SQL执行插入操作返回的记录条数存放于int数组相应位置
+     *
+     * @param dbpoolName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodNames md方法地址数组，每个元素存放一个md方法地址。mdFullMethodNames可以存放不同的md方法地址。
+     * @param args              mdFullMethodNames数组里每个md方法地址所定义的SQL，可以被提供一个Map<String, Object>对象，用于传递参数。
+     * @return 每个md方法地址指定的SQL执行插入操作返回的记录条数存放于int数组相应位置
      * @throws DbException
      */
-    public static  int[] insert(String dbpoolName, String[] mdFullMethodNames, Map<String, Object>[] args) throws DbException {
+    public static int[] insert(String dbpoolName, String[] mdFullMethodNames, Map<String, Object>[] args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.insert(mdFullMethodNames, args);
         }, dbpoolName);
@@ -614,13 +642,14 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 更新操作，一个md方法地址对应多个Map<String, Object>参数对象，从而同一个md方法可以执行多次，每次对应不同的Map<String, Object>对象（用于传达SQL使用的参数）。
-     * @param dbpoolName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodName  md方法地址
-     * @param args  多个Map<String, Object>对象，对应于每次执行的md方法
-     * @return  返回每次执行md方法的SQL语句返回的条数
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodName md方法地址
+     * @param args             多个Map<String, Object>对象，对应于每次执行的md方法
+     * @return 返回每次执行md方法的SQL语句返回的条数
      * @throws DbException
      */
-    public static  int[] update(String dbpoolName, String mdFullMethodName, List<Map<String, Object>> args) throws DbException {
+    public static int[] update(String dbpoolName, String mdFullMethodName, List<Map<String, Object>> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.update(mdFullMethodName, args);
         }, dbpoolName);
@@ -628,13 +657,14 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 更新操作，根据提供的多个md方法地址指定的SQL执行批量更新操作,每个md方法的SQL可以使用一个Map<String, Object>对象来传递参数
-     * @param dbpoolName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodNames  多个md方法地址
-     * @param args 每个md方法的SQL可以使用一个Map<String, Object>对象来传递参数
-     * @return  返回每次执行md方法的SQL语句返回的条数
+     *
+     * @param dbpoolName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodNames 多个md方法地址
+     * @param args              每个md方法的SQL可以使用一个Map<String, Object>对象来传递参数
+     * @return 返回每次执行md方法的SQL语句返回的条数
      * @throws DbException
      */
-    public static  int[] update(String dbpoolName, String[] mdFullMethodNames, Map<String, Object>[] args) throws DbException {
+    public static int[] update(String dbpoolName, String[] mdFullMethodNames, Map<String, Object>[] args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.update(mdFullMethodNames, args);
         }, dbpoolName);
@@ -643,12 +673,13 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 更新操作，根据提供的多个md方法地址指定的SQL执行批量更新操作
-     * @param dbpoolName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param mdFullMethodNames  多个md方法地址
-     * @return  返回每个md方法地址指定的SQL所更新的记录条数
+     *
+     * @param dbpoolName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param mdFullMethodNames 多个md方法地址
+     * @return 返回每个md方法地址指定的SQL所更新的记录条数
      * @throws DbException
      */
-    public static  int[] update(String dbpoolName, ArrayList<String> mdFullMethodNames) throws DbException {
+    public static int[] update(String dbpoolName, ArrayList<String> mdFullMethodNames) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.update(mdFullMethodNames);
         }, dbpoolName);
@@ -656,13 +687,14 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 更新操作，根据md方法地址定义的SQL执行更新，可提供参数给SQL使用
-     * @param dbpoolName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     *
+     * @param dbpoolName       连接池的名字，对应dbpool.xml里<dbpool>的name属性
      * @param mdFullMethodName md方法地址
-     * @param args md方法用到的参数
-     * @return  md方法地址指定的SQL执行返回的条数
+     * @param args             md方法用到的参数
+     * @return md方法地址指定的SQL执行返回的条数
      * @throws DbException
      */
-    public static  int update(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
+    public static int update(String dbpoolName, String mdFullMethodName, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
             return mdb.update(mdFullMethodName, args);
         }, dbpoolName);
@@ -671,15 +703,16 @@ public class MDbUtils extends BaseDao {
     /**
      * 根据接口映射到md文件，接口里定义的方法对应md方法，接口和md文件要放到同一目录，
      * 并且接口名称和md文件的名称相同（不含.md后缀）。
-     * @param dbpoolName  连接池的名字，对应dbpool.xml里<dbpool>的name属性
-     * @param interfaceType  接口名称
+     *
+     * @param dbpoolName    连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param interfaceType 接口名称
      * @param <T>
-     * @return  返回根据接口生成的动态代理
+     * @return 返回根据接口生成的动态代理
      * @throws DbException
      */
-    public static <T> T getMapper(String dbpoolName,Class<T> interfaceType) throws DbException {
+    public static <T> T getMapper(String dbpoolName, Class<T> interfaceType) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.getMapper( interfaceType);
+            return mdb.getMapper(interfaceType);
         }, dbpoolName);
     }
 

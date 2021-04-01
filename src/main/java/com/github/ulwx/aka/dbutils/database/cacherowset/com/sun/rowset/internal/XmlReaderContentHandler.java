@@ -54,12 +54,12 @@ import java.util.Vector;
  * it invokes. The final goal of the SAX parser working with an
  * <code>XmlReaderContentHandler</code> object is to read an XML document that represents
  * a <code>RowSet</code> object.
- * <P>
+ * <p>
  * A rowset consists of its properties, metadata, and data values. An XML document
  * representating a rowset includes the values in these three categories along with
  * appropriate XML tags to identify them.  It also includes a top-level XML tag for
  * the rowset and three section tags identifying the three categories of values.
- * <P>
+ * <p>
  * The tags in an XML document are hierarchical.
  * This means that the top-level tag, <code>RowSet</code>, is
  * followed by the three sections with appropriate tags, which are in turn each
@@ -69,21 +69,20 @@ import java.util.Vector;
  * field.  The content of the other two fields, <code>colDef</code>, which lists
  * the rowset's metadata elements, and <code>data</code>, which lists the rowset's data
  * elements, are handled similarly .
- * <P>
+ * <p>
  * This implementation of <code>XmlReaderContentHandler</code> provides the means for the
  * parser to determine which elements need to have a value set and then to set
  * those values. The methods in this class are all called by the parser; an
  * application programmer never calls them directly.
- *
  */
 
 public class XmlReaderContentHandler extends DefaultHandler {
 
-    private HashMap <String, Integer> propMap;
-    private HashMap <String, Integer> colDefMap;
-    private HashMap <String, Integer> dataMap;
+    private HashMap<String, Integer> propMap;
+    private HashMap<String, Integer> colDefMap;
+    private HashMap<String, Integer> dataMap;
 
-    private HashMap<String,Class<?>> typeMap;
+    private HashMap<String, Class<?>> typeMap;
 
     private Vector<Object[]> updates;
     private Vector<String> keyCols;
@@ -106,7 +105,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
     private String tempStr;
     private String tempUpdate;
     private String tempCommand;
-    private Object [] upd;
+    private Object[] upd;
 
     /**
      * A list of the properties for a rowset. There is a constant defined to
@@ -114,15 +113,15 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * object can be created to map the properties, which are strings, to
      * the constants, which are integers.
      */
-    private String [] properties = {"command", "concurrency", "datasource",
-                            "escape-processing", "fetch-direction", "fetch-size",
-                            "isolation-level", "key-columns", "map",
-                            "max-field-size", "max-rows", "query-timeout",
-                            "read-only", "rowset-type", "show-deleted",
-                            "table-name", "url", "null", "column", "type",
-                            "class", "sync-provider", "sync-provider-name",
-                             "sync-provider-vendor", "sync-provider-version",
-                             "sync-provider-grade","data-source-lock"};
+    private String[] properties = {"command", "concurrency", "datasource",
+            "escape-processing", "fetch-direction", "fetch-size",
+            "isolation-level", "key-columns", "map",
+            "max-field-size", "max-rows", "query-timeout",
+            "read-only", "rowset-type", "show-deleted",
+            "table-name", "url", "null", "column", "type",
+            "class", "sync-provider", "sync-provider-name",
+            "sync-provider-vendor", "sync-provider-version",
+            "sync-provider-grade", "data-source-lock"};
 
     /**
      * A constant representing the tag for the command property.
@@ -269,13 +268,13 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * A listing of the kinds of metadata information available about
      * the columns in a <code>WebRowSet</code> object.
      */
-    private String [] colDef = {"column-count", "column-definition", "column-index",
-                        "auto-increment", "case-sensitive", "currency",
-                        "nullable", "signed", "searchable",
-                        "column-display-size", "column-label", "column-name",
-                        "schema-name", "column-precision", "column-scale",
-                        "table-name", "catalog-name", "column-type",
-                        "column-type-name", "null"};
+    private String[] colDef = {"column-count", "column-definition", "column-index",
+            "auto-increment", "case-sensitive", "currency",
+            "nullable", "signed", "searchable",
+            "column-display-size", "column-label", "column-name",
+            "schema-name", "column-precision", "column-scale",
+            "table-name", "catalog-name", "column-type",
+            "column-type-name", "null"};
 
 
     /**
@@ -378,7 +377,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
      */
     private final static int MetaNullTag = 19;
 
-    private String [] data = {"currentRow", "columnValue", "insertRow", "deleteRow", "insdel", "updateRow", "null" , "emptyString"};
+    private String[] data = {"currentRow", "columnValue", "insertRow", "deleteRow", "insdel", "updateRow", "null", "emptyString"};
 
     private final static int RowTag = 0;
     private final static int ColTag = 1;
@@ -393,7 +392,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * A constant indicating the state of this <code>XmlReaderContentHandler</code>
      * object in which it has not yet been called by the SAX parser and therefore
      * has no indication of what type of input to expect from the parser next.
-     * <P>
+     * <p>
      * The state is set to <code>INITIAL</code> at the end of each
      * section, which allows the sections to appear in any order and
      * still be parsed correctly (except that metadata must be
@@ -440,7 +439,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
      */
     public XmlReaderContentHandler(RowSet r) {
         // keep the rowset we've been given
-        rs = (WebRowSetImpl)r;
+        rs = (WebRowSetImpl) r;
 
         // set-up the token maps
         initMaps();
@@ -460,8 +459,8 @@ public class XmlReaderContentHandler extends DefaultHandler {
         tempCommand = "";
 
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
     }
@@ -476,7 +475,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * constant defined. It is to these constants that the strings are mapped.
      * In the <code>HashMap</code> objects, the string is the key, and the
      * integer is the value.
-     * <P>
+     * <p>
      * The purpose of the mapping is to make comparisons faster.  Because comparing
      * numbers is more efficient than comparing strings, the strings returned
      * by the parser are mapped to integers, which can then be used in a
@@ -488,21 +487,21 @@ public class XmlReaderContentHandler extends DefaultHandler {
         propMap = new HashMap<>();
         items = properties.length;
 
-        for (i=0;i<items;i++) {
+        for (i = 0; i < items; i++) {
             propMap.put(properties[i], Integer.valueOf(i));
         }
 
         colDefMap = new HashMap<>();
         items = colDef.length;
 
-        for (i=0;i<items;i++) {
+        for (i = 0; i < items; i++) {
             colDefMap.put(colDef[i], Integer.valueOf(i));
         }
 
         dataMap = new HashMap<>();
         items = data.length;
 
-        for (i=0;i<items;i++) {
+        for (i = 0; i < items; i++) {
             dataMap.put(data[i], Integer.valueOf(i));
         }
 
@@ -527,7 +526,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * <code>METADATA</code>, or <code>DATA</code>.  In either case, this
      * method puts this document handler in the proper state for calling
      * the method <code>endElement</code>.
-     * <P>
+     * <p>
      * If the state is <code>DATA</code> and the tag is <code>RowTag</code>,
      * <code>DelTag</code>, or <code>InsTag</code>, this method moves the
      * rowset's cursor to the insert row and sets this
@@ -535,17 +534,17 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * field to <code>0</code> so that it will be in the proper
      * state when the parser calls the method <code>endElement</code>.
      *
-     * @param lName the name of the element; either (1) one of the array
-     *        elements in the fields <code>properties</code>,
-     *        <code>colDef</code>, or <code>data</code> or
-     *        (2) one of the <code>RowSet</code> elements
-     *        <code>"properties"</code>, <code>"metadata"</code>, or
-     *        <code>"data"</code>
+     * @param lName      the name of the element; either (1) one of the array
+     *                   elements in the fields <code>properties</code>,
+     *                   <code>colDef</code>, or <code>data</code> or
+     *                   (2) one of the <code>RowSet</code> elements
+     *                   <code>"properties"</code>, <code>"metadata"</code>, or
+     *                   <code>"data"</code>
      * @param attributes <code>org.xml.sax.AttributeList</code> objects that are
-     *             attributes of the named section element; may be <code>null</code>
-     *             if there are no attributes, which is the case for
-     *             <code>WebRowSet</code> objects
-     * @exception SAXException if a general SAX error occurs
+     *                   attributes of the named section element; may be <code>null</code>
+     *                   if there are no attributes, which is the case for
+     *                   <code>WebRowSet</code> objects
+     * @throws SAXException if a general SAX error occurs
      */
     public void startElement(String uri, String lName, String qName, Attributes attributes) throws SAXException {
         int tag;
@@ -554,59 +553,59 @@ public class XmlReaderContentHandler extends DefaultHandler {
         name = lName;
 
         switch (getState()) {
-        case PROPERTIES:
+            case PROPERTIES:
 
-            tempCommand = "";
-            tag = propMap.get(name);
-            if (tag == PropNullTag)
-               setNullValue(true);
-            else
-                setTag(tag);
-            break;
-        case METADATA:
-            tag = colDefMap.get(name);
+                tempCommand = "";
+                tag = propMap.get(name);
+                if (tag == PropNullTag)
+                    setNullValue(true);
+                else
+                    setTag(tag);
+                break;
+            case METADATA:
+                tag = colDefMap.get(name);
 
-            if (tag == MetaNullTag)
-                setNullValue(true);
-            else
-                setTag(tag);
-            break;
-        case DATA:
+                if (tag == MetaNullTag)
+                    setNullValue(true);
+                else
+                    setTag(tag);
+                break;
+            case DATA:
 
-            /**
-              * This has been added to clear out the values of the previous read
-              * so that we should not add up values of data between different tags
-              */
-            tempStr = "";
-            tempUpdate = "";
-            if(dataMap.get(name) == null) {
-                tag = NullTag;
-            } else if(dataMap.get(name) == EmptyStringTag) {
-                tag = EmptyStringTag;
-            } else {
-                 tag = dataMap.get(name);
-            }
+                /**
+                 * This has been added to clear out the values of the previous read
+                 * so that we should not add up values of data between different tags
+                 */
+                tempStr = "";
+                tempUpdate = "";
+                if (dataMap.get(name) == null) {
+                    tag = NullTag;
+                } else if (dataMap.get(name) == EmptyStringTag) {
+                    tag = EmptyStringTag;
+                } else {
+                    tag = dataMap.get(name);
+                }
 
-            if (tag == NullTag) {
-                setNullValue(true);
-            } else if(tag == EmptyStringTag) {
-                setEmptyStringValue(true);
-            } else {
-                setTag(tag);
+                if (tag == NullTag) {
+                    setNullValue(true);
+                } else if (tag == EmptyStringTag) {
+                    setEmptyStringValue(true);
+                } else {
+                    setTag(tag);
 
-                if (tag == RowTag || tag == DelTag || tag == InsTag) {
-                    idx = 0;
-                    try {
-                        rs.moveToInsertRow();
-                    } catch (SQLException ex) {
-                        ;
+                    if (tag == RowTag || tag == DelTag || tag == InsTag) {
+                        idx = 0;
+                        try {
+                            rs.moveToInsertRow();
+                        } catch (SQLException ex) {
+                            ;
+                        }
                     }
                 }
-            }
 
-            break;
-        default:
-            setState(name);
+                break;
+            default:
+                setState(name);
         }
 
     }
@@ -618,7 +617,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * <code>XmlReaderContentHandler</code> object's state is not
      * <code>INITIAL</code>. If the state is <code>INITIAL</code>,
      * this method does nothing.
-     * <P>
+     * <p>
      * If the state is <code>METADATA</code> and
      * the argument supplied is <code>"metadata"</code>, the rowset's
      * metadata is set. If the state is <code>PROPERTIES</code>, the
@@ -630,13 +629,12 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * this method makes the appropriate changes to the rowset's data.
      *
      * @param lName the name of the element; either (1) one of the array
-     *        elements in the fields <code>properties</code>,
-     *        <code>colDef</code>, or <code>data</code> or
-     *        (2) one of the <code>RowSet</code> elements
-     *        <code>"properties"</code>, <code>"metadata"</code>, or
-     *        <code>"data"</code>
-     *
-     * @exception SAXException if a general SAX error occurs
+     *              elements in the fields <code>properties</code>,
+     *              <code>colDef</code>, or <code>data</code> or
+     *              (2) one of the <code>RowSet</code> elements
+     *              <code>"properties"</code>, <code>"metadata"</code>, or
+     *              <code>"data"</code>
+     * @throws SAXException if a general SAX error occurs
      */
     @SuppressWarnings("fallthrough")
     public void endElement(String uri, String lName, String qName) throws SAXException {
@@ -646,182 +644,181 @@ public class XmlReaderContentHandler extends DefaultHandler {
         name = lName;
 
         switch (getState()) {
-        case PROPERTIES:
-            if (name.equals("properties")) {
-                state = INITIAL;
-                break;
-            }
-
-            try {
-                tag = propMap.get(name);
-                switch (tag) {
-                case KeycolsTag:
-                    if (keyCols != null) {
-                        int i[] = new int[keyCols.size()];
-                        for (int j = 0; j < i.length; j++)
-                            i[j] = Integer.parseInt(keyCols.elementAt(j));
-                        rs.setKeyColumns(i);
-                    }
-                    break;
-
-                 case PropClassTag:
-                     //Added the handling for Class tags to take care of maps
-                     //Makes an entry into the map upon end of class tag
-                     try{
-                          typeMap.put(Key_map, ReflectUtil.forName(Value_map));
-
-                        }catch(ClassNotFoundException ex) {
-                          throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errmap").toString(), ex.getMessage()));
-                        }
-                      break;
-
-                 case MapTag:
-                      //Added the handling for Map to take set the typeMap
-                      rs.setTypeMap(typeMap);
-                      break;
-
-                default:
-                    break;
-                }
-
-                if (getNullValue()) {
-                    setPropertyValue(null);
-                    setNullValue(false);
-                } else {
-                    setPropertyValue(propertyValue);
-                }
-            } catch (SQLException ex) {
-                throw new SAXException(ex.getMessage());
-            }
-
-            // propertyValue need to be reset to an empty string
-            propertyValue = "";
-            setTag(-1);
-            break;
-        case METADATA:
-            if (name.equals("metadata")) {
-                try {
-                    rs.setMetaData(md);
+            case PROPERTIES:
+                if (name.equals("properties")) {
                     state = INITIAL;
-                } catch (SQLException ex) {
-                    throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errmetadata").toString(), ex.getMessage()));
+                    break;
                 }
-            } else {
+
                 try {
+                    tag = propMap.get(name);
+                    switch (tag) {
+                        case KeycolsTag:
+                            if (keyCols != null) {
+                                int i[] = new int[keyCols.size()];
+                                for (int j = 0; j < i.length; j++)
+                                    i[j] = Integer.parseInt(keyCols.elementAt(j));
+                                rs.setKeyColumns(i);
+                            }
+                            break;
+
+                        case PropClassTag:
+                            //Added the handling for Class tags to take care of maps
+                            //Makes an entry into the map upon end of class tag
+                            try {
+                                typeMap.put(Key_map, ReflectUtil.forName(Value_map));
+
+                            } catch (ClassNotFoundException ex) {
+                                throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errmap").toString(), ex.getMessage()));
+                            }
+                            break;
+
+                        case MapTag:
+                            //Added the handling for Map to take set the typeMap
+                            rs.setTypeMap(typeMap);
+                            break;
+
+                        default:
+                            break;
+                    }
+
                     if (getNullValue()) {
-                        setMetaDataValue(null);
+                        setPropertyValue(null);
                         setNullValue(false);
                     } else {
-                        setMetaDataValue(metaDataValue);
+                        setPropertyValue(propertyValue);
                     }
                 } catch (SQLException ex) {
-                    throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errmetadata").toString(), ex.getMessage()));
-
+                    throw new SAXException(ex.getMessage());
                 }
-                // metaDataValue needs to be reset to an empty string
-                metaDataValue = "";
-            }
-            setTag(-1);
-            break;
-        case DATA:
-            if (name.equals("data")) {
-                state = INITIAL;
-                return;
-            }
 
-            if(dataMap.get(name) == null) {
-                tag = NullTag;
-            } else {
-                 tag = dataMap.get(name);
-            }
-            switch (tag) {
-            case ColTag:
-                try {
-                    idx++;
-                    if (getNullValue()) {
-                        insertValue(null);
-                        setNullValue(false);
-                    } else {
-                        insertValue(tempStr);
+                // propertyValue need to be reset to an empty string
+                propertyValue = "";
+                setTag(-1);
+                break;
+            case METADATA:
+                if (name.equals("metadata")) {
+                    try {
+                        rs.setMetaData(md);
+                        state = INITIAL;
+                    } catch (SQLException ex) {
+                        throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errmetadata").toString(), ex.getMessage()));
                     }
-                    // columnValue now need to be reset to the empty string
-                    columnValue = "";
-                } catch (SQLException ex) {
-                    throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errinsertval").toString(), ex.getMessage()));
-                }
-                break;
-            case RowTag:
-                try {
-                    rs.insertRow();
-                    rs.moveToCurrentRow();
-                    rs.next();
+                } else {
+                    try {
+                        if (getNullValue()) {
+                            setMetaDataValue(null);
+                            setNullValue(false);
+                        } else {
+                            setMetaDataValue(metaDataValue);
+                        }
+                    } catch (SQLException ex) {
+                        throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errmetadata").toString(), ex.getMessage()));
 
-                    // Making this as the original to turn off the
-                    // rowInserted flagging
-                    rs.setOriginalRow();
-
-                    applyUpdates();
-                } catch (SQLException ex) {
-                    throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errconstr").toString(), ex.getMessage()));
+                    }
+                    // metaDataValue needs to be reset to an empty string
+                    metaDataValue = "";
                 }
+                setTag(-1);
                 break;
-            case DelTag:
-                try {
-                    rs.insertRow();
-                    rs.moveToCurrentRow();
-                    rs.next();
-                    rs.setOriginalRow();
-                    applyUpdates();
-                    rs.deleteRow();
-                } catch (SQLException ex) {
-                    throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errdel").toString() , ex.getMessage()));
+            case DATA:
+                if (name.equals("data")) {
+                    state = INITIAL;
+                    return;
                 }
-                break;
-            case InsTag:
-                try {
-                    rs.insertRow();
-                    rs.moveToCurrentRow();
-                    rs.next();
-                    applyUpdates();
-                } catch (SQLException ex) {
-                    throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errinsert").toString() , ex.getMessage()));
+
+                if (dataMap.get(name) == null) {
+                    tag = NullTag;
+                } else {
+                    tag = dataMap.get(name);
                 }
-                break;
+                switch (tag) {
+                    case ColTag:
+                        try {
+                            idx++;
+                            if (getNullValue()) {
+                                insertValue(null);
+                                setNullValue(false);
+                            } else {
+                                insertValue(tempStr);
+                            }
+                            // columnValue now need to be reset to the empty string
+                            columnValue = "";
+                        } catch (SQLException ex) {
+                            throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errinsertval").toString(), ex.getMessage()));
+                        }
+                        break;
+                    case RowTag:
+                        try {
+                            rs.insertRow();
+                            rs.moveToCurrentRow();
+                            rs.next();
 
-            case InsDelTag:
-                try {
-                    rs.insertRow();
-                    rs.moveToCurrentRow();
-                    rs.next();
-                    rs.setOriginalRow();
-                    applyUpdates();
-                } catch (SQLException ex) {
-                    throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errinsdel").toString() , ex.getMessage()));
+                            // Making this as the original to turn off the
+                            // rowInserted flagging
+                            rs.setOriginalRow();
+
+                            applyUpdates();
+                        } catch (SQLException ex) {
+                            throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errconstr").toString(), ex.getMessage()));
+                        }
+                        break;
+                    case DelTag:
+                        try {
+                            rs.insertRow();
+                            rs.moveToCurrentRow();
+                            rs.next();
+                            rs.setOriginalRow();
+                            applyUpdates();
+                            rs.deleteRow();
+                        } catch (SQLException ex) {
+                            throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errdel").toString(), ex.getMessage()));
+                        }
+                        break;
+                    case InsTag:
+                        try {
+                            rs.insertRow();
+                            rs.moveToCurrentRow();
+                            rs.next();
+                            applyUpdates();
+                        } catch (SQLException ex) {
+                            throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errinsert").toString(), ex.getMessage()));
+                        }
+                        break;
+
+                    case InsDelTag:
+                        try {
+                            rs.insertRow();
+                            rs.moveToCurrentRow();
+                            rs.next();
+                            rs.setOriginalRow();
+                            applyUpdates();
+                        } catch (SQLException ex) {
+                            throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errinsdel").toString(), ex.getMessage()));
+                        }
+                        break;
+
+                    case UpdTag:
+                        try {
+                            if (getNullValue()) {
+                                insertValue(null);
+                                setNullValue(false);
+                            } else if (getEmptyStringValue()) {
+                                insertValue("");
+                                setEmptyStringValue(false);
+                            } else {
+                                updates.add(upd);
+                            }
+                        } catch (SQLException ex) {
+                            throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errupdate").toString(), ex.getMessage()));
+                        }
+                        break;
+
+                    default:
+                        break;
                 }
-                break;
-
-             case UpdTag:
-                 try {
-                        if(getNullValue())
-                         {
-                          insertValue(null);
-                          setNullValue(false);
-                         } else if(getEmptyStringValue()) {
-                               insertValue("");
-                               setEmptyStringValue(false);
-                         } else {
-                            updates.add(upd);
-                         }
-                 }  catch(SQLException ex) {
-                        throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errupdate").toString() , ex.getMessage()));
-                 }
-                break;
-
             default:
                 break;
-            }
-        default:
-            break;
         }
     }
 
@@ -832,18 +829,18 @@ public class XmlReaderContentHandler extends DefaultHandler {
                 Object upd[];
                 Iterator<?> i = updates.iterator();
                 while (i.hasNext()) {
-                    upd = (Object [])i.next();
-                    idx = ((Integer)upd[0]).intValue();
+                    upd = (Object[]) i.next();
+                    idx = ((Integer) upd[0]).intValue();
 
-                   if(!(lastval.equals(upd[1]))){
-                       insertValue((String)(upd[1]));
+                    if (!(lastval.equals(upd[1]))) {
+                        insertValue((String) (upd[1]));
                     }
                 }
 
                 rs.updateRow();
-                } catch (SQLException ex) {
-                    throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errupdrow").toString() , ex.getMessage()));
-                }
+            } catch (SQLException ex) {
+                throw new SAXException(MessageFormat.format(resBundle.handleGetObject("xmlrch.errupdrow").toString(), ex.getMessage()));
+            }
             updates.removeAllElements();
         }
 
@@ -855,65 +852,62 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * the given array of characters, starting with the array element
      * indicated by <code>start</code> and continuing for <code>length</code>
      * number of characters.
-     * <P>
+     * <p>
      * The SAX parser invokes this method and supplies
      * the character array, start position, and length parameter values it
      * got from parsing the XML document.  An application programmer never
      * invokes this method directly.
      *
-     * @param ch an array of characters supplied by the SAX parser, all or part of
-     *         which will be used to set a value
-     * @param start the position in the given array at which to start
+     * @param ch     an array of characters supplied by the SAX parser, all or part of
+     *               which will be used to set a value
+     * @param start  the position in the given array at which to start
      * @param length the number of consecutive characters to use
      */
     public void characters(char[] ch, int start, int length) throws SAXException {
         try {
             switch (getState()) {
-            case PROPERTIES:
-                propertyValue = new String(ch, start, length);
+                case PROPERTIES:
+                    propertyValue = new String(ch, start, length);
 
-                /**
-                  * This has been added for handling of special characters. When special
-                  * characters are encountered the characters function gets called for
-                  * each of the characters so we need to append the value got in the
-                  * previous call as it is the same data present between the start and
-                  * the end tag.
-                  **/
-                tempCommand = tempCommand.concat(propertyValue);
-                propertyValue = tempCommand;
+                    /**
+                     * This has been added for handling of special characters. When special
+                     * characters are encountered the characters function gets called for
+                     * each of the characters so we need to append the value got in the
+                     * previous call as it is the same data present between the start and
+                     * the end tag.
+                     **/
+                    tempCommand = tempCommand.concat(propertyValue);
+                    propertyValue = tempCommand;
 
-                // Added the following check for handling of type tags in maps
-                if(tag == PropTypeTag)
-                {
+                    // Added the following check for handling of type tags in maps
+                    if (tag == PropTypeTag) {
                         Key_map = propertyValue;
-                }
+                    }
 
-                // Added the following check for handling of class tags in maps
-                else if(tag == PropClassTag)
-                {
+                    // Added the following check for handling of class tags in maps
+                    else if (tag == PropClassTag) {
                         Value_map = propertyValue;
-                }
-                break;
+                    }
+                    break;
 
-            case METADATA:
+                case METADATA:
 
-                // The parser will come here after the endElement as there is
-                // "\n" in the after endTag is printed. This will cause a problem
-                // when the data between the tags is an empty string so adding
-                // below condition to take care of that situation.
+                    // The parser will come here after the endElement as there is
+                    // "\n" in the after endTag is printed. This will cause a problem
+                    // when the data between the tags is an empty string so adding
+                    // below condition to take care of that situation.
 
-                if (tag == -1)
-                {
+                    if (tag == -1) {
                         break;
-                }
+                    }
 
-                metaDataValue = new String(ch, start, length);
-                break;
-            case DATA:
-                setDataValue(ch, start, length);
-                break;
-            default:
-                ;
+                    metaDataValue = new String(ch, start, length);
+                    break;
+                case DATA:
+                    setDataValue(ch, start, length);
+                    break;
+                default:
+                    ;
             }
         } catch (SQLException ex) {
             throw new SAXException(resBundle.handleGetObject("xmlrch.chars").toString() + ex.getMessage());
@@ -948,10 +942,10 @@ public class XmlReaderContentHandler extends DefaultHandler {
      * <code>state</code> field.
      *
      * @return one of the following constants:
-     *         <code>XmlReaderContentHandler.PROPERTIES</code>
-     *         <code>XmlReaderContentHandler.METADATA</code>
-     *         <code>XmlReaderContentHandler.DATA</code>
-     *         <code>XmlReaderContentHandler.INITIAL</code>
+     * <code>XmlReaderContentHandler.PROPERTIES</code>
+     * <code>XmlReaderContentHandler.METADATA</code>
+     * <code>XmlReaderContentHandler.DATA</code>
+     * <code>XmlReaderContentHandler.INITIAL</code>
      */
     private int getState() {
         return state;
@@ -982,7 +976,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
     }
 
     private String getStringValue(String s) {
-         return s;
+        return s;
     }
 
     private int getIntegerValue(String s) {
@@ -1038,141 +1032,141 @@ public class XmlReaderContentHandler extends DefaultHandler {
         // find out if we are going to be dealing with a null
         boolean nullValue = getNullValue();
 
-        switch(getTag()) {
-        case CommandTag:
-            if (nullValue)
-               ; //rs.setCommand(null);
-            else
-                rs.setCommand(s);
-            break;
-        case ConcurrencyTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setConcurrency(getIntegerValue(s));
-            break;
-        case DatasourceTag:
-            if (nullValue)
-                rs.setDataSourceName(null);
-            else
-                rs.setDataSourceName(s);
-            break;
-        case EscapeProcessingTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setEscapeProcessing(getBooleanValue(s));
-            break;
-        case FetchDirectionTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setFetchDirection(getIntegerValue(s));
-            break;
-        case FetchSizeTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setFetchSize(getIntegerValue(s));
-            break;
-        case IsolationLevelTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setTransactionIsolation(getIntegerValue(s));
-            break;
-        case KeycolsTag:
-            break;
-        case PropColumnTag:
-            if (keyCols == null)
-                keyCols = new Vector<>();
-            keyCols.add(s);
-            break;
-        case MapTag:
-            break;
-        case MaxFieldSizeTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setMaxFieldSize(getIntegerValue(s));
-            break;
-        case MaxRowsTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setMaxRows(getIntegerValue(s));
-            break;
-        case QueryTimeoutTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setQueryTimeout(getIntegerValue(s));
-            break;
-        case ReadOnlyTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setReadOnly(getBooleanValue(s));
-            break;
-        case RowsetTypeTag:
-            if (nullValue) {
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            } else {
-                //rs.setType(getIntegerValue(s));
-                String strType = getStringValue(s);
-                int iType = 0;
+        switch (getTag()) {
+            case CommandTag:
+                if (nullValue)
+                    ; //rs.setCommand(null);
+                else
+                    rs.setCommand(s);
+                break;
+            case ConcurrencyTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setConcurrency(getIntegerValue(s));
+                break;
+            case DatasourceTag:
+                if (nullValue)
+                    rs.setDataSourceName(null);
+                else
+                    rs.setDataSourceName(s);
+                break;
+            case EscapeProcessingTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setEscapeProcessing(getBooleanValue(s));
+                break;
+            case FetchDirectionTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setFetchDirection(getIntegerValue(s));
+                break;
+            case FetchSizeTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setFetchSize(getIntegerValue(s));
+                break;
+            case IsolationLevelTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setTransactionIsolation(getIntegerValue(s));
+                break;
+            case KeycolsTag:
+                break;
+            case PropColumnTag:
+                if (keyCols == null)
+                    keyCols = new Vector<>();
+                keyCols.add(s);
+                break;
+            case MapTag:
+                break;
+            case MaxFieldSizeTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setMaxFieldSize(getIntegerValue(s));
+                break;
+            case MaxRowsTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setMaxRows(getIntegerValue(s));
+                break;
+            case QueryTimeoutTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setQueryTimeout(getIntegerValue(s));
+                break;
+            case ReadOnlyTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setReadOnly(getBooleanValue(s));
+                break;
+            case RowsetTypeTag:
+                if (nullValue) {
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                } else {
+                    //rs.setType(getIntegerValue(s));
+                    String strType = getStringValue(s);
+                    int iType = 0;
 
-                if(strType.trim().equals("ResultSet.TYPE_SCROLL_INSENSITIVE")) {
-                   iType = 1004;
-                } else if(strType.trim().equals("ResultSet.TYPE_SCROLL_SENSITIVE"))   {
-                   iType = 1005;
-                } else if(strType.trim().equals("ResultSet.TYPE_FORWARD_ONLY")) {
-                   iType = 1003;
+                    if (strType.trim().equals("ResultSet.TYPE_SCROLL_INSENSITIVE")) {
+                        iType = 1004;
+                    } else if (strType.trim().equals("ResultSet.TYPE_SCROLL_SENSITIVE")) {
+                        iType = 1005;
+                    } else if (strType.trim().equals("ResultSet.TYPE_FORWARD_ONLY")) {
+                        iType = 1003;
+                    }
+                    rs.setType(iType);
                 }
-                rs.setType(iType);
-            }
-            break;
-        case ShowDeletedTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
-            else
-                rs.setShowDeleted(getBooleanValue(s));
-            break;
-        case TableNameTag:
-            if (nullValue)
-                //rs.setTableName(null);
-                ;
-            else
-                rs.setTableName(s);
-            break;
-        case UrlTag:
-            if (nullValue)
-                rs.setUrl(null);
-            else
-                rs.setUrl(s);
-            break;
-        case SyncProviderNameTag:
-            if (nullValue) {
-                rs.setSyncProvider(null);
-            } else {
-                String str = s.substring(0,s.indexOf("@")+1);
-                rs.setSyncProvider(str);
-            }
-            break;
-        case SyncProviderVendorTag:
-            // to be implemented
-            break;
-        case SyncProviderVersionTag:
-            // to be implemented
-            break;
-        case SyncProviderGradeTag:
-            // to be implemented
-            break;
-        case DataSourceLock:
-            // to be implemented
-            break;
-        default:
-            break;
+                break;
+            case ShowDeletedTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue").toString());
+                else
+                    rs.setShowDeleted(getBooleanValue(s));
+                break;
+            case TableNameTag:
+                if (nullValue)
+                    //rs.setTableName(null);
+                    ;
+                else
+                    rs.setTableName(s);
+                break;
+            case UrlTag:
+                if (nullValue)
+                    rs.setUrl(null);
+                else
+                    rs.setUrl(s);
+                break;
+            case SyncProviderNameTag:
+                if (nullValue) {
+                    rs.setSyncProvider(null);
+                } else {
+                    String str = s.substring(0, s.indexOf("@") + 1);
+                    rs.setSyncProvider(str);
+                }
+                break;
+            case SyncProviderVendorTag:
+                // to be implemented
+                break;
+            case SyncProviderVersionTag:
+                // to be implemented
+                break;
+            case SyncProviderGradeTag:
+                // to be implemented
+                break;
+            case DataSourceLock:
+                // to be implemented
+                break;
+            default:
+                break;
         }
 
     }
@@ -1182,158 +1176,158 @@ public class XmlReaderContentHandler extends DefaultHandler {
         boolean nullValue = getNullValue();
 
         switch (getTag()) {
-        case ColumnCountTag:
-            md = new RowSetMetaDataImpl();
-            idx = 0;
+            case ColumnCountTag:
+                md = new RowSetMetaDataImpl();
+                idx = 0;
 
-            if (nullValue) {
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            } else {
-                md.setColumnCount(getIntegerValue(s));
-            }
-            break;
-        case ColumnDefinitionTag:
-            break;
-        case ColumnIndexTag:
-            idx++;
-            break;
-        case AutoIncrementTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setAutoIncrement(idx, getBooleanValue(s));
-            break;
-        case CaseSensitiveTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setCaseSensitive(idx, getBooleanValue(s));
-            break;
-        case CurrencyTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setCurrency(idx, getBooleanValue(s));
-            break;
-        case NullableTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setNullable(idx, getIntegerValue(s));
-            break;
-        case SignedTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setSigned(idx, getBooleanValue(s));
-            break;
-        case SearchableTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setSearchable(idx, getBooleanValue(s));
-            break;
-        case ColumnDisplaySizeTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setColumnDisplaySize(idx, getIntegerValue(s));
-            break;
-        case ColumnLabelTag:
-            if (nullValue)
-                md.setColumnLabel(idx, null);
-            else
-                md.setColumnLabel(idx, s);
-            break;
-        case ColumnNameTag:
-            if (nullValue)
-                md.setColumnName(idx, null);
-            else
-                md.setColumnName(idx, s);
+                if (nullValue) {
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                } else {
+                    md.setColumnCount(getIntegerValue(s));
+                }
+                break;
+            case ColumnDefinitionTag:
+                break;
+            case ColumnIndexTag:
+                idx++;
+                break;
+            case AutoIncrementTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setAutoIncrement(idx, getBooleanValue(s));
+                break;
+            case CaseSensitiveTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setCaseSensitive(idx, getBooleanValue(s));
+                break;
+            case CurrencyTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setCurrency(idx, getBooleanValue(s));
+                break;
+            case NullableTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setNullable(idx, getIntegerValue(s));
+                break;
+            case SignedTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setSigned(idx, getBooleanValue(s));
+                break;
+            case SearchableTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setSearchable(idx, getBooleanValue(s));
+                break;
+            case ColumnDisplaySizeTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setColumnDisplaySize(idx, getIntegerValue(s));
+                break;
+            case ColumnLabelTag:
+                if (nullValue)
+                    md.setColumnLabel(idx, null);
+                else
+                    md.setColumnLabel(idx, s);
+                break;
+            case ColumnNameTag:
+                if (nullValue)
+                    md.setColumnName(idx, null);
+                else
+                    md.setColumnName(idx, s);
 
-            break;
-        case SchemaNameTag:
-            if (nullValue) {
-                md.setSchemaName(idx, null); }
-            else
-                md.setSchemaName(idx, s);
-            break;
-        case ColumnPrecisionTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setPrecision(idx, getIntegerValue(s));
-            break;
-        case ColumnScaleTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setScale(idx, getIntegerValue(s));
-            break;
-        case MetaTableNameTag:
-            if (nullValue)
-                md.setTableName(idx, null);
-            else
-                md.setTableName(idx, s);
-            break;
-        case CatalogNameTag:
-            if (nullValue)
-                md.setCatalogName(idx, null);
-            else
-                md.setCatalogName(idx, s);
-            break;
-        case ColumnTypeTag:
-            if (nullValue)
-                throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
-            else
-                md.setColumnType(idx, getIntegerValue(s));
-            break;
-        case ColumnTypeNameTag:
-            if (nullValue)
-                md.setColumnTypeName(idx, null);
-            else
-                md.setColumnTypeName(idx, s);
-            break;
-        default:
-            //System.out.println("MetaData: Unknown Tag: (" + getTag() + ")");
-            break;
+                break;
+            case SchemaNameTag:
+                if (nullValue) {
+                    md.setSchemaName(idx, null);
+                } else
+                    md.setSchemaName(idx, s);
+                break;
+            case ColumnPrecisionTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setPrecision(idx, getIntegerValue(s));
+                break;
+            case ColumnScaleTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setScale(idx, getIntegerValue(s));
+                break;
+            case MetaTableNameTag:
+                if (nullValue)
+                    md.setTableName(idx, null);
+                else
+                    md.setTableName(idx, s);
+                break;
+            case CatalogNameTag:
+                if (nullValue)
+                    md.setCatalogName(idx, null);
+                else
+                    md.setCatalogName(idx, s);
+                break;
+            case ColumnTypeTag:
+                if (nullValue)
+                    throw new SQLException(resBundle.handleGetObject("xmlrch.badvalue1").toString());
+                else
+                    md.setColumnType(idx, getIntegerValue(s));
+                break;
+            case ColumnTypeNameTag:
+                if (nullValue)
+                    md.setColumnTypeName(idx, null);
+                else
+                    md.setColumnTypeName(idx, s);
+                break;
+            default:
+                //System.out.println("MetaData: Unknown Tag: (" + getTag() + ")");
+                break;
 
         }
     }
 
     private void setDataValue(char[] ch, int start, int len) throws SQLException {
         switch (getTag()) {
-        case ColTag:
-            columnValue = new String(ch, start, len);
-            /**
-              * This has been added for handling of special characters. When special
-              * characters are encountered the characters function gets called for
-              * each of the characters so we need to append the value got in the
-              * previous call as it is the same data present between the start and
-              * the end tag.
-              **/
-            tempStr = tempStr.concat(columnValue);
-            break;
-        case UpdTag:
-            upd = new Object[2];
+            case ColTag:
+                columnValue = new String(ch, start, len);
+                /**
+                 * This has been added for handling of special characters. When special
+                 * characters are encountered the characters function gets called for
+                 * each of the characters so we need to append the value got in the
+                 * previous call as it is the same data present between the start and
+                 * the end tag.
+                 **/
+                tempStr = tempStr.concat(columnValue);
+                break;
+            case UpdTag:
+                upd = new Object[2];
 
-            /**
-              * This has been added for handling of special characters. When special
-              * characters are encountered the characters function gets called for
-              * each of the characters so we need to append the value got in the
-              * previous call as it is the same data present between the start and
-              * the end tag.
-              **/
+                /**
+                 * This has been added for handling of special characters. When special
+                 * characters are encountered the characters function gets called for
+                 * each of the characters so we need to append the value got in the
+                 * previous call as it is the same data present between the start and
+                 * the end tag.
+                 **/
 
-            tempUpdate = tempUpdate.concat(new String(ch,start,len));
-            upd[0] = Integer.valueOf(idx);
-            upd[1] = tempUpdate;
-            //updates.add(upd);
+                tempUpdate = tempUpdate.concat(new String(ch, start, len));
+                upd[0] = Integer.valueOf(idx);
+                upd[1] = tempUpdate;
+                //updates.add(upd);
 
-            lastval = (String)upd[1];
-            //insertValue(ch, start, len);
-            break;
-        case InsTag:
+                lastval = (String) upd[1];
+                //insertValue(ch, start, len);
+                break;
+            case InsTag:
 
         }
     }
@@ -1348,53 +1342,53 @@ public class XmlReaderContentHandler extends DefaultHandler {
         // no longer have to deal with those pesky nulls.
         int type = rs.getMetaData().getColumnType(idx);
         switch (type) {
-        case Types.BIT:
-            rs.updateBoolean(idx, getBooleanValue(s));
-            break;
-        case Types.BOOLEAN:
-            rs.updateBoolean(idx, getBooleanValue(s));
-            break;
-        case Types.SMALLINT:
-        case Types.TINYINT:
-            rs.updateShort(idx, getShortValue(s));
-            break;
-        case Types.INTEGER:
-            rs.updateInt(idx, getIntegerValue(s));
-            break;
-        case Types.BIGINT:
-            rs.updateLong(idx, getLongValue(s));
-            break;
-        case Types.REAL:
-        case Types.FLOAT:
-            rs.updateFloat(idx, getFloatValue(s));
-            break;
-        case Types.DOUBLE:
-            rs.updateDouble(idx, getDoubleValue(s));
-            break;
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            rs.updateObject(idx, getBigDecimalValue(s));
-            break;
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-            rs.updateBytes(idx, getBinaryValue(s));
-            break;
-        case Types.DATE:
-            rs.updateDate(idx,  getDateValue(s));
-            break;
-        case Types.TIME:
-            rs.updateTime(idx, getTimeValue(s));
-            break;
-        case Types.TIMESTAMP:
-            rs.updateTimestamp(idx, getTimestampValue(s));
-            break;
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.LONGVARCHAR:
-            rs.updateString(idx, getStringValue(s));
-            break;
-        default:
+            case Types.BIT:
+                rs.updateBoolean(idx, getBooleanValue(s));
+                break;
+            case Types.BOOLEAN:
+                rs.updateBoolean(idx, getBooleanValue(s));
+                break;
+            case Types.SMALLINT:
+            case Types.TINYINT:
+                rs.updateShort(idx, getShortValue(s));
+                break;
+            case Types.INTEGER:
+                rs.updateInt(idx, getIntegerValue(s));
+                break;
+            case Types.BIGINT:
+                rs.updateLong(idx, getLongValue(s));
+                break;
+            case Types.REAL:
+            case Types.FLOAT:
+                rs.updateFloat(idx, getFloatValue(s));
+                break;
+            case Types.DOUBLE:
+                rs.updateDouble(idx, getDoubleValue(s));
+                break;
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+                rs.updateObject(idx, getBigDecimalValue(s));
+                break;
+            case Types.BINARY:
+            case Types.VARBINARY:
+            case Types.LONGVARBINARY:
+                rs.updateBytes(idx, getBinaryValue(s));
+                break;
+            case Types.DATE:
+                rs.updateDate(idx, getDateValue(s));
+                break;
+            case Types.TIME:
+                rs.updateTime(idx, getTimeValue(s));
+                break;
+            case Types.TIMESTAMP:
+                rs.updateTimestamp(idx, getTimestampValue(s));
+                break;
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.LONGVARCHAR:
+                rs.updateString(idx, getStringValue(s));
+                break;
+            default:
 
         }
 
@@ -1407,11 +1401,12 @@ public class XmlReaderContentHandler extends DefaultHandler {
      *
      * @param e the <code>SAXParseException</code> object to throw
      */
-    public void error (SAXParseException e) throws SAXParseException {
-            throw e;
+    public void error(SAXParseException e) throws SAXParseException {
+        throw e;
     }
 
     // dump warnings too
+
     /**
      * Prints a warning message to <code>System.out</code> giving the line
      * number and uri for what caused the warning plus a message explaining
@@ -1419,8 +1414,8 @@ public class XmlReaderContentHandler extends DefaultHandler {
      *
      * @param err a warning generated by the SAX parser
      */
-    public void warning (SAXParseException err) throws SAXParseException {
-        System.out.println (MessageFormat.format(resBundle.handleGetObject("xmlrch.warning").toString(), new Object[] { err.getMessage(), err.getLineNumber(), err.getSystemId() }));
+    public void warning(SAXParseException err) throws SAXParseException {
+        System.out.println(MessageFormat.format(resBundle.handleGetObject("xmlrch.warning").toString(), new Object[]{err.getMessage(), err.getLineNumber(), err.getSystemId()}));
     }
 
     /**
@@ -1437,26 +1432,24 @@ public class XmlReaderContentHandler extends DefaultHandler {
 
     }
 
-   /**
-    * Returns the current row of this <code>Rowset</code>object.
-    * The ResultSet's cursor is positioned at the Row which is needed
-    *
-    * @return the <code>Row</code> object on which the <code>RowSet</code>
-    *           implementation objects's cursor is positioned
-    */
+    /**
+     * Returns the current row of this <code>Rowset</code>object.
+     * The ResultSet's cursor is positioned at the Row which is needed
+     *
+     * @return the <code>Row</code> object on which the <code>RowSet</code>
+     * implementation objects's cursor is positioned
+     */
     private Row getPresentRow(WebRowSetImpl rs) throws SQLException {
-         //rs.setOriginalRow();
-         // ResultSetMetaData rsmd = rs.getMetaData();
-         // int numCols = rsmd.getColumnCount();
-         // Object vals[] = new Object[numCols];
-         // for(int j = 1; j<= numCols ; j++){
-         //     vals[j-1] = rs.getObject(j);
-         // }
-         // return(new Row(numCols, vals));
-         return null;
-   }
-
-
+        //rs.setOriginalRow();
+        // ResultSetMetaData rsmd = rs.getMetaData();
+        // int numCols = rsmd.getColumnCount();
+        // Object vals[] = new Object[numCols];
+        // for(int j = 1; j<= numCols ; j++){
+        //     vals[j-1] = rs.getObject(j);
+        // }
+        // return(new Row(numCols, vals));
+        return null;
+    }
 
 
 }

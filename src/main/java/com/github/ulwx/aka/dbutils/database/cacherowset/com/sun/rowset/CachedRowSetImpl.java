@@ -44,11 +44,14 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 /**
  * The standard implementation of the <code>CachedRowSet</code> interface.
- *
+ * <p>
  * See interface definition for full behavior and implementation requirements.
  * This reference implementation has made provision for a one-to-one write back
  * facility and it is curremtly be possible to change the peristence provider
@@ -68,6 +71,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * The <code>RowSetReaderImpl</code> object that is the reader
      * for this rowset.  The method <code>execute</code> uses this
      * reader as part of its implementation.
+     *
      * @serial
      */
     private RowSetReader rowSetReader;
@@ -76,6 +80,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * The <code>RowSetWriterImpl</code> object that is the writer
      * for this rowset.  The method <code>acceptChanges</code> uses
      * this writer as part of its implementation.
+     *
      * @serial
      */
     private RowSetWriter rowSetWriter;
@@ -96,6 +101,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * The <code>RowSetMetaData</code> object that contains information about
      * the columns in this <code>CachedRowSetImpl</code> object.
+     *
      * @serial
      */
     private RowSetMetaDataImpl RowSetMD;
@@ -106,6 +112,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * An array containing the columns in this <code>CachedRowSetImpl</code>
      * object that form a unique identifier for a row. This array
      * is used by the writer.
+     *
      * @serial
      */
     private int keyCols[];
@@ -115,6 +122,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * should be written.  This name is needed because most drivers
      * do not return this information in a <code>ResultSetMetaData</code>
      * object.
+     *
      * @serial
      */
     private String tableName;
@@ -122,6 +130,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * A <code>Vector</code> object containing the <code>Row</code>
      * objects that comprise  this <code>CachedRowSetImpl</code> object.
+     *
      * @serial
      */
     private Vector<Object> rvh;
@@ -129,6 +138,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * The current position of the cursor in this <code>CachedRowSetImpl</code>
      * object.
+     *
      * @serial
      */
     private int cursorPos;
@@ -136,11 +146,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * The current position of the cursor in this <code>CachedRowSetImpl</code>
      * object not counting rows that have been deleted, if any.
-     * <P>
+     * <p>
      * For example, suppose that the cursor is on the last row of a rowset
      * that started with five rows and subsequently had the second and third
      * rows deleted. The <code>absolutePos</code> would be <code>3</code>,
      * whereas the <code>cursorPos</code> would be <code>5</code>.
+     *
      * @serial
      */
     private int absolutePos;
@@ -148,6 +159,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * The number of deleted rows currently in this <code>CachedRowSetImpl</code>
      * object.
+     *
      * @serial
      */
     private int numDeleted;
@@ -155,6 +167,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * The total number of rows currently in this <code>CachedRowSetImpl</code>
      * object.
+     *
      * @serial
      */
     private int numRows;
@@ -163,6 +176,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * A special row used for constructing a new row. A new
      * row is constructed by using <code>ResultSet.updateXXX</code>
      * methods to insert column values into the insert row.
+     *
      * @serial
      */
     private InsertRow insertRow;
@@ -170,6 +184,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * A <code>boolean</code> indicating whether the cursor is
      * currently on the insert row.
+     *
      * @serial
      */
     private boolean onInsertRow;
@@ -178,6 +193,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * The field that temporarily holds the last position of the
      * cursor before it moved to the insert row, thus preserving
      * the number of the current row to which the cursor may return.
+     *
      * @serial
      */
     private int currentRow;
@@ -185,6 +201,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * A <code>boolean</code> indicating whether the last value
      * returned was an SQL <code>NULL</code>.
+     *
      * @serial
      */
     private boolean lastValueNull;
@@ -197,7 +214,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * Used to track match column for JoinRowSet consumption
      */
-    private String strMatchColumn ="";
+    private String strMatchColumn = "";
 
     /**
      * Used to track match column for JoinRowSet consumption
@@ -324,7 +341,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     private boolean updateOnInsert;
 
 
-
     /**
      * Constructs a new default <code>CachedRowSetImpl</code> object with
      * the capacity to hold 100 rows. This new object has no metadata
@@ -352,27 +368,28 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * A <code>CachedRowSetImpl</code> object is configured to use the default
      * <code>RIOptimisticProvider</code> implementation to provide connectivity
      * and synchronization capabilities to the set data source.
-     * <P>
+     * <p>
+     *
      * @throws SQLException if an error occurs
      */
     public CachedRowSetImpl() throws SQLException {
 
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 
         // set the Reader, this maybe overridden latter
-        provider =   provider =  new RIOptimisticProvider();
+        provider = provider = new RIOptimisticProvider();
         //SyncFactory.getInstance(DEFAULT_SYNC_PROVIDER);
 
         if (!(provider instanceof RIOptimisticProvider)) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidp").toString());
         }
 
-        rowSetReader = (CachedRowSetReader)provider.getRowSetReader();
-        rowSetWriter = (CachedRowSetWriter)provider.getRowSetWriter();
+        rowSetReader = (CachedRowSetReader) provider.getRowSetReader();
+        rowSetWriter = (CachedRowSetWriter) provider.getRowSetWriter();
 
         // allocate the parameters collection
         initParams();
@@ -415,7 +432,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *     absolutePos = 0
      *     numRows = 0
      * </pre>
-     *
+     * <p>
      * However, applications will have the means to specify at runtime the
      * desired <code>SyncProvider</code> object.
      * <p>
@@ -450,18 +467,19 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * More specific detailes are available in the <code>SyncFactory</code>
      * and <code>SyncProvider</code> specificiations later in this document.
      * <p>
+     *
      * @param env a <code>Hashtable</code> object with a list of desired
-     *        synchronization providers
+     *            synchronization providers
      * @throws SQLException if the requested provider cannot be found by the
-     * synchronization factory
+     *                      synchronization factory
      * @see SyncProvider
      */
     public CachedRowSetImpl(@SuppressWarnings("rawtypes") Hashtable env) throws SQLException {
 
 
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 
@@ -469,12 +487,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.nullhash").toString());
         }
 
-        String providerName = (String)env.get(
-        SyncFactory.ROWSET_SYNC_PROVIDER);
+        String providerName = (String) env.get(
+                SyncFactory.ROWSET_SYNC_PROVIDER);
 
         // set the Reader, this maybe overridden latter
         provider =
-        SyncFactory.getInstance(providerName);
+                SyncFactory.getInstance(providerName);
 
         rowSetReader = provider.getRowSetReader();
         rowSetWriter = provider.getRowSetWriter();
@@ -506,10 +524,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
     private void initProperties() throws SQLException {
 
-        if(resBundle == null) {
+        if (resBundle == null) {
             try {
-               resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-            } catch(IOException ioe) {
+                resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+            } catch (IOException ioe) {
                 throw new RuntimeException(ioe);
             }
         }
@@ -519,7 +537,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         setMaxFieldSize(0);
         setType(ResultSet.TYPE_SCROLL_INSENSITIVE);
         setConcurrency(ResultSet.CONCUR_UPDATABLE);
-        if((rvh.size() > 0) && (isReadOnly() == false))
+        if ((rvh.size() > 0) && (isReadOnly() == false))
             setReadOnly(false);
         else
             setReadOnly(true);
@@ -531,13 +549,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         //Instantiating the vector for MatchColumns
 
         iMatchColumns = new Vector<Integer>(10);
-        for(int i = 0; i < 10 ; i++) {
-           iMatchColumns.add(i, -1);
+        for (int i = 0; i < 10; i++) {
+            iMatchColumns.add(i, -1);
         }
 
         strMatchColumns = new Vector<String>(10);
-        for(int j = 0; j < 10; j++) {
-           strMatchColumns.add(j,null);
+        for (int j = 0; j < 10; j++) {
+            strMatchColumns.add(j, null);
         }
     }
 
@@ -564,7 +582,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets an private field to all transaction bounddaries to be set
      */
     private void establishTransactionalWriter() {
-        tWriter = (TransactionalWriter)provider.getRowSetWriter();
+        tWriter = (TransactionalWriter) provider.getRowSetWriter();
     }
 
     //-----------------------------------------------------------------------
@@ -575,7 +593,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets this <code>CachedRowSetImpl</code> object's command property
      * to the given <code>String</code> object and clears the parameters,
      * if any, that were set for the previous command.
-     * <P>
+     * <p>
      * The command property may not be needed
      * if the rowset is produced by a data source, such as a spreadsheet,
      * that does not support commands. Thus, this property is optional
@@ -589,7 +607,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
         super.setCommand(cmd);
 
-        if(!buildTableName(cmd).equals("")) {
+        if (!buildTableName(cmd).equals("")) {
             this.setTableName(buildTableName(cmd));
         }
     }
@@ -611,7 +629,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * which to get data and thus does not need to use the properties
      * required for setting up a connection and executing this
      * <code>CachedRowSetImpl</code> object's command.
-     * <P>
+     * <p>
      * After populating this rowset with data, the method
      * <code>populate</code> sets the rowset's metadata and
      * then sends a <code>RowSetChangedEvent</code> object
@@ -620,11 +638,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @param data the <code>ResultSet</code> object containing the data
      *             to be read into this <code>CachedRowSetImpl</code> object
      * @throws SQLException if an error occurs; or the max row setting is
-     *          violated while populating the RowSet
+     *                      violated while populating the RowSet
      * @see #execute
      */
 
-     public void populate(ResultSet data) throws SQLException {
+    public void populate(ResultSet data) throws SQLException {
         int rowsFetched;
         Row currentRow;
         int numCols;
@@ -652,15 +670,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         rowsFetched = 0;
         currentRow = null;
 
-        while ( data.next()) {
+        while (data.next()) {
 
             currentRow = new Row(numCols);
 
-            if ( rowsFetched > mRows && mRows > 0) {
+            if (rowsFetched > mRows && mRows > 0) {
                 rowsetWarning.setNextWarning(new RowSetWarning("Populating rows "
-                + "setting has exceeded max row setting"));
+                        + "setting has exceeded max row setting"));
             }
-            for ( i = 1; i <= numCols; i++) {
+            for (i = 1; i <= numCols; i++) {
                 /*
                  * check if the user has set a map. If no map
                  * is set then use plain getObject. This lets
@@ -678,18 +696,27 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                  * store - right now only structs have been tested
                  */
                 if (obj instanceof Struct) {
-                    obj = new SerialStruct((Struct)obj, map);
+                    obj = new SerialStruct((Struct) obj, map);
                 } else if (obj instanceof SQLData) {
-                    obj = new SerialStruct((SQLData)obj, map);
+                    obj = new SerialStruct((SQLData) obj, map);
                 } else if (obj instanceof Blob) {
-                    obj = new SerialBlob((Blob)obj);
+                    obj = new SerialBlob((Blob) obj);
                 } else if (obj instanceof Clob) {
-                    obj = new SerialClob((Clob)obj);
+                    obj = new SerialClob((Clob) obj);
                 } else if (obj instanceof Array) {
-                    if(map != null)
-                        obj = new SerialArray((Array)obj, map);
+                    if (map != null)
+                        obj = new SerialArray((Array) obj, map);
                     else
-                        obj = new SerialArray((Array)obj);
+                        obj = new SerialArray((Array) obj);
+                } else if (obj instanceof LocalDateTime) {
+                    Timestamp tmsp = Timestamp.valueOf((LocalDateTime) obj);
+                    obj = tmsp;
+                } else if (obj instanceof LocalDate) {
+                    java.sql.Date tmsp = java.sql.Date.valueOf((LocalDate) obj);
+                    obj = tmsp;
+                } else if (obj instanceof LocalTime) {
+                    Time tmsp = Time.valueOf((LocalTime) obj);
+                    obj = tmsp;
                 }
 
                 currentRow.initColumnObject(i, obj);
@@ -698,7 +725,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             rvh.add(currentRow);
         }
 
-        numRows = rowsFetched ;
+        numRows = rowsFetched;
         // Also rowsFetched should be equal to rvh.size()
 
         // notify any listeners that the rowset has changed
@@ -711,9 +738,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Initializes the given <code>RowSetMetaData</code> object with the values
      * in the given <code>ResultSetMetaData</code> object.
      *
-     * @param md the <code>RowSetMetaData</code> object for this
-     *           <code>CachedRowSetImpl</code> object, which will be set with
-     *           values from rsmd
+     * @param md   the <code>RowSetMetaData</code> object for this
+     *             <code>CachedRowSetImpl</code> object, which will be set with
+     *             values from rsmd
      * @param rsmd the <code>ResultSetMetaData</code> object from which new
      *             values for md will be read
      * @throws SQLException if an error occurs
@@ -722,16 +749,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         int numCols = rsmd.getColumnCount();
 
         md.setColumnCount(numCols);
-        for (int col=1; col <= numCols; col++) {
+        for (int col = 1; col <= numCols; col++) {
             md.setAutoIncrement(col, rsmd.isAutoIncrement(col));
-            if(rsmd.isAutoIncrement(col))
+            if (rsmd.isAutoIncrement(col))
                 updateOnInsert = true;
             md.setCaseSensitive(col, rsmd.isCaseSensitive(col));
             md.setCurrency(col, rsmd.isCurrency(col));
             md.setNullable(col, rsmd.isNullable(col));
             md.setSigned(col, rsmd.isSigned(col));
             md.setSearchable(col, rsmd.isSearchable(col));
-             /*
+            /*
              * The PostgreSQL drivers sometimes return negative columnDisplaySize,
              * which causes an exception to be thrown.  Check for it.
              */
@@ -769,9 +796,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             md.setColumnTypeName(col, rsmd.getColumnTypeName(col));
         }
 
-        if( conn != null){
-           // JDBC 4.0 mandates as does the Java EE spec that all DataBaseMetaData methods
-           // must be implemented, therefore, the previous fix for 5055528 is being backed out
+        if (conn != null) {
+            // JDBC 4.0 mandates as does the Java EE spec that all DataBaseMetaData methods
+            // must be implemented, therefore, the previous fix for 5055528 is being backed out
             dbmslocatorsUpdateCopy = conn.getMetaData().locatorsUpdateCopy();
         }
     }
@@ -786,11 +813,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * that is given a connection ignores these properties.
      *
      * @param conn A standard JDBC <code>Connection</code> object that this
-     * <code>CachedRowSet</code> object can pass to a synchronization provider
-     * to establish a connection to the data source
+     *             <code>CachedRowSet</code> object can pass to a synchronization provider
+     *             to establish a connection to the data source
      * @throws SQLException if an invalid <code>Connection</code> is supplied
-     *           or an error occurs in establishing the connection to the
-     *           data source
+     *                      or an error occurs in establishing the connection to the
+     *                      data source
      * @see #populate
      * @see Connection
      */
@@ -798,20 +825,20 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // store the connection so the reader can find it.
         setConnection(conn);
 
-        if(getPageSize() != 0){
-            crsReader = (CachedRowSetReader)provider.getRowSetReader();
+        if (getPageSize() != 0) {
+            crsReader = (CachedRowSetReader) provider.getRowSetReader();
             crsReader.setStartPosition(1);
             callWithCon = true;
-            crsReader.readData((RowSetInternal)this);
+            crsReader.readData((RowSetInternal) this);
         }
 
         // Now call the current reader's readData method
         else {
-           rowSetReader.readData((RowSetInternal)this);
+            rowSetReader.readData((RowSetInternal) this);
         }
-        RowSetMD = (RowSetMetaDataImpl)this.getMetaData();
+        RowSetMD = (RowSetMetaDataImpl) this.getMetaData();
 
-        if(conn != null){
+        if (conn != null) {
             // JDBC 4.0 mandates as does the Java EE spec that all DataBaseMetaData methods
             // must be implemented, therefore, the previous fix for 5055528 is being backed out
             dbmslocatorsUpdateCopy = conn.getMetaData().locatorsUpdateCopy();
@@ -833,7 +860,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *                   in this <code>CachedRowSetImpl</code> object's connection
      *                   property
      */
-    private void setConnection (Connection connection) {
+    private void setConnection(Connection connection) {
         conn = connection;
     }
 
@@ -842,11 +869,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Propagates all row update, insert, and delete changes to the
      * underlying data source backing this <code>CachedRowSetImpl</code>
      * object.
-     * <P>
+     * <p>
      * <b>Note</b>In the reference implementation an optimistic concurrency implementation
      * is provided as a sample implementation of a the <code>SyncProvider</code>
      * abstract class.
-     * <P>
+     * <p>
      * This method fails if any of the updates cannot be propagated back
      * to the data source.  When it fails, the caller can assume that
      * none of the updates are reflected in the data source.
@@ -855,19 +882,19 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * unless the row that caused the exception is a "deleted" row.
      * In that case, when deleted rows are not shown, which is usually true,
      * the current row is not affected.
-     * <P>
+     * <p>
      * If no <code>SyncProvider</code> is configured, the reference implementation
      * leverages the <code>RIOptimisticProvider</code> available which provides the
      * default and reference synchronization capabilities for disconnected
      * <code>RowSets</code>.
      *
-     * @throws SQLException if the cursor is on the insert row or the underlying
-     *          reference synchronization provider fails to commit the updates
-     *          to the datasource
+     * @throws SQLException          if the cursor is on the insert row or the underlying
+     *                               reference synchronization provider fails to commit the updates
+     *                               to the datasource
      * @throws SyncProviderException if an internal error occurs within the
-     *          <code>SyncProvider</code> instance during either during the
-     *          process or at any time when the <code>SyncProvider</code>
-     *          instance touches the data source.
+     *                               <code>SyncProvider</code> instance during either during the
+     *                               process or at any time when the <code>SyncProvider</code>
+     *                               instance touches the data source.
      * @see #acceptChanges(Connection)
      * @see RowSetWriter
      * @see SyncProvider
@@ -884,20 +911,20 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         try {
             if (rowSetWriter != null) {
                 saveCursorPos = cursorPos;
-                conflict = rowSetWriter.writeData((RowSetInternal)this);
+                conflict = rowSetWriter.writeData((RowSetInternal) this);
                 cursorPos = saveCursorPos;
             }
 
             if (tXWriter) {
                 // do commit/rollback's here
                 if (!conflict) {
-                    tWriter = (TransactionalWriter)rowSetWriter;
+                    tWriter = (TransactionalWriter) rowSetWriter;
                     tWriter.rollback();
                     success = false;
                 } else {
-                    tWriter = (TransactionalWriter)rowSetWriter;
+                    tWriter = (TransactionalWriter) rowSetWriter;
                     if (tWriter instanceof CachedRowSetWriter) {
-                        ((CachedRowSetWriter)tWriter).commit(this, updateOnInsert);
+                        ((CachedRowSetWriter) tWriter).commit(this, updateOnInsert);
                     } else {
                         tWriter.commit();
                     }
@@ -908,12 +935,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
             if (success == true) {
                 setOriginal();
-            } else if (!(success) ) {
+            } else if (!(success)) {
                 throw new SyncProviderException(resBundle.handleGetObject("cachedrowsetimpl.accfailed").toString());
             }
 
         } catch (SyncProviderException spe) {
-               throw spe;
+            throw spe;
         } catch (SQLException e) {
             e.printStackTrace();
             throw new SyncProviderException(e.getMessage());
@@ -926,7 +953,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Propagates all row update, insert, and delete changes to the
      * data source backing this <code>CachedRowSetImpl</code> object
      * using the given <code>Connection</code> object.
-     * <P>
+     * <p>
      * The reference implementation <code>RIOptimisticProvider</code>
      * modifies its synchronization to a write back function given
      * the updated connection
@@ -937,33 +964,34 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param con a standard JDBC <code>Connection</code> object
      * @throws SQLException if the cursor is on the insert row or the underlying
-     *                   synchronization provider fails to commit the updates
-     *                   back to the data source
+     *                      synchronization provider fails to commit the updates
+     *                      back to the data source
      * @see #acceptChanges
      * @see RowSetWriter
      * @see SyncFactory
      * @see SyncProvider
      */
-    public void acceptChanges(Connection con) throws SyncProviderException{
-      setConnection(con);
-      acceptChanges();
+    public void acceptChanges(Connection con) throws SyncProviderException {
+        setConnection(con);
+        acceptChanges();
     }
 
     /**
      * Restores this <code>CachedRowSetImpl</code> object to its original state,
      * that is, its state before the last set of changes.
-     * <P>
+     * <p>
      * Before returning, this method moves the cursor before the first row
      * and sends a <code>rowSetChanged</code> event to all registered
      * listeners.
+     *
      * @throws SQLException if an error is occurs rolling back the RowSet
-     *           state to the definied original value.
+     *                      state to the definied original value.
      * @see RowSetListener#rowSetChanged
      */
     public void restoreOriginal() throws SQLException {
         Row currentRow;
-        for (Iterator<?> i = rvh.iterator(); i.hasNext();) {
-            currentRow = (Row)i.next();
+        for (Iterator<?> i = rvh.iterator(); i.hasNext(); ) {
+            currentRow = (Row) i.next();
             if (currentRow.getInserted() == true) {
                 i.remove();
                 --numRows;
@@ -989,7 +1017,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * registered listeners.
      *
      * @throws SQLException if an error occurs flushing the contents of
-     *           RowSet.
+     *                      RowSet.
      * @see RowSetListener#rowSetChanged
      */
     public void release() throws SQLException {
@@ -1000,7 +1028,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * Cancels deletion of the current row and notifies listeners that
      * a row has changed.
-     * <P>
+     * <p>
      * Note:  This method can be ignored if deleted rows are not being shown,
      * which is the normal case.
      *
@@ -1018,7 +1046,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
         }
 
-        Row currentRow = (Row)getCurrentRow();
+        Row currentRow = (Row) getCurrentRow();
         if (currentRow.getDeleted() == true) {
             currentRow.clearDeleted();
             --numDeleted;
@@ -1032,12 +1060,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * also notifies listeners the a row has changed.  An exception is thrown
      * if the row is not a row that has been inserted or the cursor is before
      * the first row, after the last row, or on the insert row.
-     * <P>
+     * <p>
      * This operation cannot be undone.
      *
      * @throws SQLException if an error occurs,
-     *                         the cursor is not on a valid row,
-     *                         or the row has not been inserted
+     *                      the cursor is not on a valid row,
+     *                      or the row has not been inserted
      */
     public void undoInsert() throws SQLException {
         // make sure we are on a row
@@ -1048,9 +1076,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
         }
 
-        Row currentRow = (Row)getCurrentRow();
+        Row currentRow = (Row) getCurrentRow();
         if (currentRow.getInserted() == true) {
-            rvh.remove(cursorPos-1);
+            rvh.remove(cursorPos - 1);
             --numRows;
             notifyRowChanged();
         } else {
@@ -1065,13 +1093,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * been rolled back to their originating state since the last synchronization
      * (<code>acceptChanges</code>) or population. This method may also be called
      * while performing updates to the insert row.
-     * <P>
+     * <p>
      * <code>undoUpdate</code may be called at any time during the life-time of a
      * rowset, however after a synchronization has occurs this method has no
      * affect until further modification to the RowSet data occurs.
      *
      * @throws SQLException if cursor is before the first row, after the last
-     *     row in rowset.
+     *                      row in rowset.
      * @see #undoDelete
      * @see #undoInsert
      * @see ResultSet#cancelRowUpdates
@@ -1103,14 +1131,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @return a <code>RowSet</code> object that is a copy of this <code>CachedRowSetImpl</code>
      * object and shares a set of cursors with it
      * @throws SQLException if an error occurs or cloning is
-     *                         not supported
+     *                      not supported
      * @see RowSetEvent
      * @see RowSetListener
      */
     public RowSet createShared() throws SQLException {
         RowSet clone;
         try {
-            clone = (RowSet)clone();
+            clone = (RowSet) clone();
         } catch (CloneNotSupportedException ex) {
             throw new SQLException(ex.getMessage());
         }
@@ -1130,10 +1158,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @return a copy of this <code>CachedRowSetImpl</code> object
      * @throws CloneNotSupportedException if an error occurs when
-     * attempting to clone this <code>CachedRowSetImpl</code> object
+     *                                    attempting to clone this <code>CachedRowSetImpl</code> object
      * @see #createShared
      */
-    protected Object clone() throws CloneNotSupportedException  {
+    protected Object clone() throws CloneNotSupportedException {
         return (super.clone());
     }
 
@@ -1143,17 +1171,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * constraints.  Updates made
      * on a copy are not visible to the original rowset;
      * a copy of a rowset is completely independent from the original.
-     * <P>
+     * <p>
      * Making a copy saves the cost of creating an identical rowset
      * from first principles, which can be quite expensive.
      * For example, it can eliminate the need to query a
      * remote database server.
+     *
      * @return a new <code>CachedRowSet</code> object that is a deep copy
-     *           of this <code>CachedRowSet</code> object and is
-     *           completely independent from this <code>CachedRowSetImpl</code>
-     *           object.
+     * of this <code>CachedRowSet</code> object and is
+     * completely independent from this <code>CachedRowSetImpl</code>
+     * object.
      * @throws SQLException if an error occurs in generating the copy of this
-     *           of the <code>CachedRowSetImpl</code>
+     *                      of the <code>CachedRowSetImpl</code>
      * @see #createShared
      * @see RowSetEvent
      * @see RowSetListener
@@ -1165,7 +1194,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             out = new ObjectOutputStream(bOut);
             out.writeObject(this);
         } catch (IOException ex) {
-            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString() , ex.getMessage()));
+            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString(), ex.getMessage()));
         }
 
         ObjectInputStream in;
@@ -1174,23 +1203,23 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
             in = new ObjectInputStream(bIn);
         } catch (StreamCorruptedException ex) {
-            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString() , ex.getMessage()));
+            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString(), ex.getMessage()));
         } catch (IOException ex) {
-            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString() , ex.getMessage()));
+            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString(), ex.getMessage()));
         }
 
         try {
             //return ((CachedRowSet)(in.readObject()));
-            CachedRowSetImpl crsTemp = (CachedRowSetImpl)in.readObject();
+            CachedRowSetImpl crsTemp = (CachedRowSetImpl) in.readObject();
             crsTemp.resBundle = this.resBundle;
-            return ((CachedRowSet)crsTemp);
+            return ((CachedRowSet) crsTemp);
 
         } catch (ClassNotFoundException ex) {
-            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString() , ex.getMessage()));
+            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString(), ex.getMessage()));
         } catch (OptionalDataException ex) {
-            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString() , ex.getMessage()));
+            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString(), ex.getMessage()));
         } catch (IOException ex) {
-            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString() , ex.getMessage()));
+            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.clonefail").toString(), ex.getMessage()));
         }
     }
 
@@ -1200,7 +1229,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * and the constraints only.
      * There will be no data in the object being returned.
      * Updates made on a copy are not visible to the original rowset.
-     * <P>
+     * <p>
      * This helps in getting the underlying XML schema which can
      * be used as the basis for populating a <code>WebRowSet</code>.
      *
@@ -1209,7 +1238,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * retains all the constraints on the original rowset but contains
      * no data
      * @throws SQLException if an error occurs in generating the copy
-     * of the <code>CachedRowSet</code> object
+     *                      of the <code>CachedRowSet</code> object
      * @see #createShared
      * @see #createCopy
      * @see #createCopyNoConstraints
@@ -1244,7 +1273,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of this <code>CachedRowSetImpl</code> object and is
      * completely independent from this <code>CachedRowSetImpl</code> object
      * @throws SQLException if an error occurs in generating the copy of the
-     * of the <code>CachedRowSet</code>
+     *                      of the <code>CachedRowSet</code>
      * @see #createShared
      * @see #createCopy
      * @see #createCopySchema
@@ -1254,18 +1283,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     public CachedRowSet createCopyNoConstraints() throws SQLException {
         // Copy the whole data ONLY without any constraints.
         CachedRowSetImpl crs;
-        crs = (CachedRowSetImpl)this.createCopy();
+        crs = (CachedRowSetImpl) this.createCopy();
 
         crs.initProperties();
         try {
             crs.unsetMatchColumn(crs.getMatchColumnIndexes());
-        } catch(SQLException sqle) {
+        } catch (SQLException sqle) {
             //do nothing, if the setMatchColumn is not set.
         }
 
         try {
             crs.unsetMatchColumn(crs.getMatchColumnNames());
-        } catch(SQLException sqle) {
+        } catch (SQLException sqle) {
             //do nothing, if the setMatchColumn is not set.
         }
 
@@ -1280,8 +1309,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * sorted according to the natural order for the key's class.
      *
      * @return a <code>Collection</code> object consisting of tables,
-     *         each of which is a copy of a row in this
-     *         <code>CachedRowSetImpl</code> object
+     * each of which is a copy of a row in this
+     * <code>CachedRowSetImpl</code> object
      * @throws SQLException if an error occurs in generating the collection
      * @see #toCollection(int)
      * @see #toCollection(String)
@@ -1291,7 +1320,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
         TreeMap<Integer, Object> tMap = new TreeMap<>();
 
-        for (int i = 0; i<numRows; i++) {
+        for (int i = 0; i < numRows; i++) {
             tMap.put(i, rvh.get(i));
         }
 
@@ -1307,11 +1336,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * an integer index similar to that of an array.
      *
      * @return a <code>Collection</code> object that contains the value(s)
-     *         stored in the specified column of this
-     *         <code>CachedRowSetImpl</code>
-     *         object
+     * stored in the specified column of this
+     * <code>CachedRowSetImpl</code>
+     * object
      * @throws SQLException if an error occurs generated the collection; or
-     *          an invalid column is provided.
+     *                      an invalid column is provided.
      * @see #toCollection()
      * @see #toCollection(String)
      * @see Vector
@@ -1325,13 +1354,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         CachedRowSetImpl crsTemp;
         crsTemp = (CachedRowSetImpl) this.createCopy();
 
-        while(nRows!=0) {
+        while (nRows != 0) {
             crsTemp.next();
             vec.add(crsTemp.getObject(column));
             nRows--;
         }
 
-        return (Collection)vec;
+        return (Collection) vec;
     }
 
     /**
@@ -1343,11 +1372,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * an integer index similar to that of an array.
      *
      * @return a <code>Collection</code> object that contains the value(s)
-     *         stored in the specified column of this
-     *         <code>CachedRowSetImpl</code>
-     *         object
+     * stored in the specified column of this
+     * <code>CachedRowSetImpl</code>
+     * object
      * @throws SQLException if an error occurs generated the collection; or
-     *          an invalid column is provided.
+     *                      an invalid column is provided.
      * @see #toCollection()
      * @see #toCollection(int)
      * @see Vector
@@ -1366,10 +1395,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * with this <code>CachedRowSetImpl</code> implementation rowset.
      *
      * @return the SyncProvider used by the rowset. If not provider was
-     *          set when the rowset was instantiated, the reference
-     *          implementation (default) provider is returned.
+     * set when the rowset was instantiated, the reference
+     * implementation (default) provider is returned.
      * @throws SQLException if error occurs while return the
-     *          <code>SyncProvider</code> instance.
+     *                      <code>SyncProvider</code> instance.
      */
     public SyncProvider getSyncProvider() throws SQLException {
         return provider;
@@ -1380,11 +1409,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * load the new provider using the <code>SyncFactory</code> SPI.
      *
      * @throws SQLException if an error occurs while resetting the
-     *          <code>SyncProvider</code>.
+     *                      <code>SyncProvider</code>.
      */
     public void setSyncProvider(String providerStr) throws SQLException {
         provider =
-        SyncFactory.getInstance(providerStr);
+                SyncFactory.getInstance(providerStr);
 
         rowSetReader = provider.getRowSetReader();
         rowSetWriter = provider.getRowSetWriter();
@@ -1394,10 +1423,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     //-----------------
     // methods inherited from RowSet
     //-----------------
-
-
-
-
 
 
     //---------------------------------------------------------------------
@@ -1410,27 +1435,26 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * data source name properties to create a database
      * connection.  If properties that are needed
      * have not been set, this method will throw an exception.
-     * <P>
+     * <p>
      * Another form of this method uses an existing JDBC <code>Connection</code>
      * object instead of creating a new one; therefore, it ignores the
      * properties used for establishing a new connection.
-     * <P>
+     * <p>
      * The query specified by the command property is executed to create a
      * <code>ResultSet</code> object from which to retrieve data.
      * The current contents of the rowset are discarded, and the
      * rowset's metadata is also (re)set.  If there are outstanding updates,
      * they are also ignored.
-     * <P>
+     * <p>
      * The method <code>execute</code> closes any database connections that it
      * creates.
      *
      * @throws SQLException if an error occurs or the
-     *                         necessary properties have not been set
+     *                      necessary properties have not been set
      */
     public void execute() throws SQLException {
         execute(null);
     }
-
 
 
     //-----------------------------------
@@ -1452,10 +1476,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * chain is cleared when a new row is read.
      *
      * @return <code>true</code> if the new current row is valid;
-     *         <code>false</code> if there are no more rows
+     * <code>false</code> if there are no more rows
      * @throws SQLException if an error occurs or
-     *            the cursor is not positioned in the rowset, before
-     *            the first row, or after the last row
+     *                      the cursor is not positioned in the rowset, before
+     *                      the first row, or after the last row
      */
     public boolean next() throws SQLException {
         /*
@@ -1478,13 +1502,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * row and returns <code>true</code> if the cursor is still in the rowset;
      * returns <code>false</code> if the cursor has moved to the position after
      * the last row.
-     * <P>
+     * <p>
      * This method handles the cases where the cursor moves to a row that
      * has been deleted.
      * If this rowset shows deleted rows and the cursor moves to a row
      * that has been deleted, this method moves the cursor to the next
      * row until the cursor is on a row that has not been deleted.
-     * <P>
+     * <p>
      * The method <code>internalNext</code> is called by methods such as
      * <code>next</code>, <code>absolute</code>, and <code>relative</code>,
      * and, as its name implies, is only called internally.
@@ -1493,7 +1517,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * implementation of the <code>CachedRowSet</code> interface.
      *
      * @return <code>true</code> if the cursor is on a valid row in this
-     *         rowset; <code>false</code> if it is after the last row
+     * rowset; <code>false</code> if it is after the last row
      * @throws SQLException if an error occurs
      */
     protected boolean internalNext() throws SQLException {
@@ -1527,7 +1551,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * it was using.
      *
      * @throws SQLException if an error occurs when releasing any resources in use
-     * by this <code>CachedRowSetImpl</code> object
+     *                      by this <code>CachedRowSetImpl</code> object
      */
     public void close() throws SQLException {
 
@@ -1558,7 +1582,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * SQL <code>NULL</code>.
      *
      * @return <code>true</code> if the value in the last column read
-     *         was SQL <code>NULL</code>; <code>false</code> otherwise
+     * was SQL <code>NULL</code>; <code>false</code> otherwise
      * @throws SQLException if an error occurs
      */
     public boolean wasNull() throws SQLException {
@@ -1570,8 +1594,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>boolean</code> value.
      *
      * @param value <code>true</code> to indicate that the value of
-     *        the last column read was SQL <code>NULL</code>;
-     *        <code>false</code> to indicate that it was not
+     *              the last column read was SQL <code>NULL</code>;
+     *              <code>false</code> to indicate that it was not
      */
     private void setLastValueNull(boolean value) {
         lastValueNull = value;
@@ -1585,7 +1609,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * an <code>SQLException</code> if it is not. The index is out of bounds
      * if it is less than <code>1</code> or greater than the number of
      * columns in this rowset.
-     * <P>
+     * <p>
      * This method is called internally by the <code>getXXX</code> and
      * <code>updateXXX</code> methods.
      *
@@ -1604,13 +1628,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Checks to see whether the cursor for this <code>CachedRowSetImpl</code>
      * object is on a row in the rowset and throws an
      * <code>SQLException</code> if it is not.
-     * <P>
+     * <p>
      * This method is called internally by <code>getXXX</code> methods, by
      * <code>updateXXX</code> methods, and by methods that update, insert,
      * or delete a row or that cancel a row update, insert, or delete.
      *
      * @throws SQLException if the cursor for this <code>CachedRowSetImpl</code>
-     *         object is not on a valid row
+     *                      object is not on a valid row
      */
     private void checkCursor() throws SQLException {
         if (isAfterLast() == true || isBeforeFirst() == true) {
@@ -1625,15 +1649,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * one of the columns in this rowset.
      *
      * @param name a <code>String</code> object that is the name of a column in
-     *              this <code>CachedRowSetImpl</code> object
+     *             this <code>CachedRowSetImpl</code> object
      * @throws SQLException if the given name does not match the name of one of
-     *         the columns in this rowset
+     *                      the columns in this rowset
      */
     private int getColIdxByName(String name) throws SQLException {
-        RowSetMD = (RowSetMetaDataImpl)this.getMetaData();
+        RowSetMD = (RowSetMetaDataImpl) this.getMetaData();
         int cols = RowSetMD.getColumnCount();
 
-        for (int i=1; i <= cols; ++i) {
+        for (int i = 1; i <= cols; ++i) {
             // String colName = RowSetMD.getColumnName(i);替换成下面一行
             String colName = RowSetMD.getColumnLabel(i);
             if (colName != null)
@@ -1655,9 +1679,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      */
     protected BaseRow getCurrentRow() {
         if (onInsertRow == true) {
-            return (BaseRow)insertRow;
+            return (BaseRow) insertRow;
         } else {
-            return (BaseRow)(rvh.get(cursorPos - 1));
+            return (BaseRow) (rvh.get(cursorPos - 1));
         }
     }
 
@@ -1668,10 +1692,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * implementation of the <code>CachedRowSet</code> interface.
      *
      * @throws SQLException if the cursor is positioned on the insert
-     *            row
+     *                      row
      */
     protected void removeCurrentRow() {
-        ((Row)getCurrentRow()).setDeleted();
+        ((Row) getCurrentRow()).setDeleted();
         rvh.remove(cursorPos - 1);
         --numRows;
     }
@@ -1683,17 +1707,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>String</code> object.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value; if the value is SQL <code>NULL</code>, the
-     *         result is <code>null</code>
+     * result is <code>null</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>TINYINT, SMALLINT, INTEGER, BIGINT, REAL,
-     * FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, <b>CHAR</b>, <b>VARCHAR</b></code>
-     * or <code>LONGVARCHAR</code> value. The bold SQL type designates the
-     * recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>TINYINT, SMALLINT, INTEGER, BIGINT, REAL,
+     *                      FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, <b>CHAR</b>, <b>VARCHAR</b></code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type designates the
+     *                      recommended return type.
      */
     public String getString(int columnIndex) throws SQLException {
         Object value;
@@ -1721,14 +1745,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>boolean</code> value.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value as a <code>boolean</code> in the Java progamming language;
-     *        if the value is SQL <code>NULL</code>, the result is <code>false</code>
+     * if the value is SQL <code>NULL</code>, the result is <code>false</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) the designated column does not store an
-     *            SQL <code>BOOLEAN</code> value
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>BOOLEAN</code> value
      * @see #getBoolean(String)
      */
     public boolean getBoolean(int columnIndex) throws SQLException {
@@ -1750,7 +1774,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
         // check for Boolean...
         if (value instanceof Boolean) {
-            return ((Boolean)value).booleanValue();
+            return ((Boolean) value).booleanValue();
         }
 
         // convert to a Double and compare to zero
@@ -1758,7 +1782,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             return Double.compare(Double.parseDouble(value.toString()), 0) != 0;
         } catch (NumberFormatException ex) {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.boolfail").toString(),
-                  new Object[] {value.toString().trim(), columnIndex}));
+                    new Object[]{value.toString().trim(), columnIndex}));
         }
     }
 
@@ -1768,17 +1792,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>byte</code> value.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value as a <code>byte</code> in the Java programming
      * language; if the value is SQL <code>NULL</code>, the result is <code>0</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) the designated column does not store an
-     *            SQL <code><b>TINYINT</b>, SMALLINT, INTEGER, BIGINT, REAL,
-     *            FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
-     *            or <code>LONGVARCHAR</code> value. The bold SQL type
-     *            designates the recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code><b>TINYINT</b>, SMALLINT, INTEGER, BIGINT, REAL,
+     *                      FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type
+     *                      designates the recommended return type.
      * @see #getByte(String)
      */
     public byte getByte(int columnIndex) throws SQLException {
@@ -1795,13 +1819,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // check for SQL NULL
         if (value == null) {
             setLastValueNull(true);
-            return (byte)0;
+            return (byte) 0;
         }
         try {
             return ((Byte.valueOf(value.toString())).byteValue());
         } catch (NumberFormatException ex) {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.bytefail").toString(),
-                  new Object[] {value.toString().trim(), columnIndex}));
+                    new Object[]{value.toString().trim(), columnIndex}));
         }
     }
 
@@ -1811,17 +1835,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>short</code> value.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value; if the value is SQL <code>NULL</code>, the
-     *         result is <code>0</code>
+     * result is <code>0</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>TINYINT, <b>SMALLINT</b>, INTEGER, BIGINT, REAL
-     * FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
-     * or <code>LONGVARCHAR</code> value. The bold SQL type designates the
-     * recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>TINYINT, <b>SMALLINT</b>, INTEGER, BIGINT, REAL
+     *                      FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type designates the
+     *                      recommended return type.
      * @see #getShort(String)
      */
     public short getShort(int columnIndex) throws SQLException {
@@ -1838,14 +1862,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // check for SQL NULL
         if (value == null) {
             setLastValueNull(true);
-            return (short)0;
+            return (short) 0;
         }
 
         try {
             return ((Short.valueOf(value.toString().trim())).shortValue());
         } catch (NumberFormatException ex) {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.shortfail").toString(),
-                  new Object[] {value.toString().trim(), columnIndex}));
+                    new Object[]{value.toString().trim(), columnIndex}));
         }
     }
 
@@ -1855,17 +1879,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>int</code> value.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value; if the value is SQL <code>NULL</code>, the
-     *         result is <code>0</code>
+     * result is <code>0</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>TINYINT, SMALLINT, <b>INTEGER</b>, BIGINT, REAL
-     * FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
-     * or <code>LONGVARCHAR</code> value. The bold SQL type designates the
-     * recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>TINYINT, SMALLINT, <b>INTEGER</b>, BIGINT, REAL
+     *                      FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type designates the
+     *                      recommended return type.
      */
     public int getInt(int columnIndex) throws SQLException {
         Object value;
@@ -1888,7 +1912,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             return ((Integer.valueOf(value.toString().trim())).intValue());
         } catch (NumberFormatException ex) {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.intfail").toString(),
-                  new Object[] {value.toString().trim(), columnIndex}));
+                    new Object[]{value.toString().trim(), columnIndex}));
         }
     }
 
@@ -1898,17 +1922,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>long</code> value.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value; if the value is SQL <code>NULL</code>, the
-     *         result is <code>0</code>
+     * result is <code>0</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>TINYINT, SMALLINT, INTEGER, <b>BIGINT</b>, REAL
-     * FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
-     * or <code>LONGVARCHAR</code> value. The bold SQL type designates the
-     * recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>TINYINT, SMALLINT, INTEGER, <b>BIGINT</b>, REAL
+     *                      FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type designates the
+     *                      recommended return type.
      * @see #getLong(String)
      */
     public long getLong(int columnIndex) throws SQLException {
@@ -1925,13 +1949,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // check for SQL NULL
         if (value == null) {
             setLastValueNull(true);
-            return (long)0;
+            return (long) 0;
         }
         try {
             return ((Long.valueOf(value.toString().trim())).longValue());
         } catch (NumberFormatException ex) {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.longfail").toString(),
-                  new Object[] {value.toString().trim(), columnIndex}));
+                    new Object[]{value.toString().trim(), columnIndex}));
         }
     }
 
@@ -1941,17 +1965,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>float</code> value.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value; if the value is SQL <code>NULL</code>, the
-     *         result is <code>0</code>
+     * result is <code>0</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>TINYINT, SMALLINT, INTEGER, BIGINT, <b>REAL</b>,
-     * FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
-     * or <code>LONGVARCHAR</code> value. The bold SQL type designates the
-     * recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>TINYINT, SMALLINT, INTEGER, BIGINT, <b>REAL</b>,
+     *                      FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type designates the
+     *                      recommended return type.
      * @see #getFloat(String)
      */
     public float getFloat(int columnIndex) throws SQLException {
@@ -1968,13 +1992,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // check for SQL NULL
         if (value == null) {
             setLastValueNull(true);
-            return (float)0;
+            return (float) 0;
         }
         try {
             return ((new Float(value.toString())).floatValue());
         } catch (NumberFormatException ex) {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.floatfail").toString(),
-                  new Object[] {value.toString().trim(), columnIndex}));
+                    new Object[]{value.toString().trim(), columnIndex}));
         }
     }
 
@@ -1984,19 +2008,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>double</code> value.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value; if the value is SQL <code>NULL</code>, the
-     *         result is <code>0</code>
+     * result is <code>0</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>TINYINT, SMALLINT, INTEGER, BIGINT, REAL,
-     * <b>FLOAT</b>, <b>DOUBLE</b>, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
-     * or <code>LONGVARCHAR</code> value. The bold SQL type designates the
-     * recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>TINYINT, SMALLINT, INTEGER, BIGINT, REAL,
+     *                      <b>FLOAT</b>, <b>DOUBLE</b>, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type designates the
+     *                      recommended return type.
      * @see #getDouble(String)
-     *
      */
     public double getDouble(int columnIndex) throws SQLException {
         Object value;
@@ -2012,13 +2035,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // check for SQL NULL
         if (value == null) {
             setLastValueNull(true);
-            return (double)0;
+            return (double) 0;
         }
         try {
             return ((new Double(value.toString().trim())).doubleValue());
         } catch (NumberFormatException ex) {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.doublefail").toString(),
-                  new Object[] {value.toString().trim(), columnIndex}));
+                    new Object[]{value.toString().trim(), columnIndex}));
         }
     }
 
@@ -2026,21 +2049,21 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Retrieves the value of the designated column in the current row
      * of this <code>CachedRowSetImpl</code> object as a
      * <code>java.math.BigDecimal</code> object.
-     * <P>
+     * <p>
      * This method is deprecated; use the version of <code>getBigDecimal</code>
      * that does not take a scale parameter and returns a value with full
      * precision.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
-     * @param scale the number of digits to the right of the decimal point in the
-     *        value returned
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
+     * @param scale       the number of digits to the right of the decimal point in the
+     *                    value returned
      * @return the column value with the specified number of digits to the right
-     *         of the decimal point; if the value is SQL <code>NULL</code>, the
-     *         result is <code>null</code>
+     * of the decimal point; if the value is SQL <code>NULL</code>, the
+     * result is <code>null</code>
      * @throws SQLException if the given column index is out of bounds,
-     *            the cursor is not on a valid row, or this method fails
+     *                      the cursor is not on a valid row, or this method fails
      * @deprecated
      */
     @Deprecated
@@ -2075,18 +2098,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>byte</code> array value.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value as a <code>byte</code> array in the Java programming
      * language; if the value is SQL <code>NULL</code>, the
      * result is <code>null</code>
-     *
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code><b>BINARY</b>, <b>VARBINARY</b> or
-     * LONGVARBINARY</code> value.
-     * The bold SQL type designates the recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code><b>BINARY</b>, <b>VARBINARY</b> or
+     *                      LONGVARBINARY</code> value.
+     *                      The bold SQL type designates the recommended return type.
      * @see #getBytes(String)
      */
     public byte[] getBytes(int columnIndex) throws SQLException {
@@ -2099,7 +2121,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
         }
 
-        return (byte[])(getCurrentRow().getColumnObject(columnIndex));
+        return (byte[]) (getCurrentRow().getColumnObject(columnIndex));
     }
 
     /**
@@ -2108,13 +2130,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>java.sql.Date</code> object.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value as a <code>java.sql.Data</code> object; if
-     *        the value is SQL <code>NULL</code>, the
-     *        result is <code>null</code>
+     * the value is SQL <code>NULL</code>, the
+     * result is <code>null</code>
      * @throws SQLException if the given column index is out of bounds,
-     *            the cursor is not on a valid row, or this method fails
+     *                      the cursor is not on a valid row, or this method fails
      */
     public java.sql.Date getDate(int columnIndex) throws SQLException {
         Object value;
@@ -2142,11 +2164,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
          */
         switch (RowSetMD.getColumnType(columnIndex)) {
             case Types.DATE: {
-                long sec = ((java.sql.Date)value).getTime();
+                long sec = ((java.sql.Date) value).getTime();
                 return new java.sql.Date(sec);
             }
             case Types.TIMESTAMP: {
-                long sec = ((Timestamp)value).getTime();
+                long sec = ((Timestamp) value).getTime();
                 return new java.sql.Date(sec);
             }
             case Types.CHAR:
@@ -2154,15 +2176,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             case Types.LONGVARCHAR: {
                 try {
                     DateFormat df = DateFormat.getDateInstance();
-                    return ((java.sql.Date)(df.parse(value.toString())));
+                    return ((java.sql.Date) (df.parse(value.toString())));
                 } catch (ParseException ex) {
                     throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.datefail").toString(),
-                        new Object[] {value.toString().trim(), columnIndex}));
+                            new Object[]{value.toString().trim(), columnIndex}));
                 }
             }
             default: {
                 throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.datefail").toString(),
-                        new Object[] {value.toString().trim(), columnIndex}));
+                        new Object[]{value.toString().trim(), columnIndex}));
             }
         }
     }
@@ -2173,12 +2195,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>java.sql.Time</code> object.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value; if the value is SQL <code>NULL</code>, the
-     *         result is <code>null</code>
+     * result is <code>null</code>
      * @throws SQLException if the given column index is out of bounds,
-     *         the cursor is not on a valid row, or this method fails
+     *                      the cursor is not on a valid row, or this method fails
      */
     public Time getTime(int columnIndex) throws SQLException {
         Object value;
@@ -2206,10 +2228,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
          */
         switch (RowSetMD.getColumnType(columnIndex)) {
             case Types.TIME: {
-                return (Time)value;
+                return (Time) value;
             }
             case Types.TIMESTAMP: {
-                long sec = ((Timestamp)value).getTime();
+                long sec = ((Timestamp) value).getTime();
                 return new Time(sec);
             }
             case Types.CHAR:
@@ -2217,15 +2239,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             case Types.LONGVARCHAR: {
                 try {
                     DateFormat tf = DateFormat.getTimeInstance();
-                    return ((Time)(tf.parse(value.toString())));
+                    return ((Time) (tf.parse(value.toString())));
                 } catch (ParseException ex) {
                     throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.timefail").toString(),
-                        new Object[] {value.toString().trim(), columnIndex}));
+                            new Object[]{value.toString().trim(), columnIndex}));
                 }
             }
             default: {
                 throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.timefail").toString(),
-                        new Object[] {value.toString().trim(), columnIndex}));
+                        new Object[]{value.toString().trim(), columnIndex}));
             }
         }
     }
@@ -2236,12 +2258,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>java.sql.Timestamp</code> object.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return the column value; if the value is SQL <code>NULL</code>, the
-     *         result is <code>null</code>
+     * result is <code>null</code>
      * @throws SQLException if the given column index is out of bounds,
-     *            the cursor is not on a valid row, or this method fails
+     *                      the cursor is not on a valid row, or this method fails
      */
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
         Object value;
@@ -2269,14 +2291,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
          */
         switch (RowSetMD.getColumnType(columnIndex)) {
             case Types.TIMESTAMP: {
-                return (Timestamp)value;
+                return (Timestamp) value;
             }
             case Types.TIME: {
-                long sec = ((Time)value).getTime();
+                long sec = ((Time) value).getTime();
                 return new Timestamp(sec);
             }
             case Types.DATE: {
-                long sec = ((java.sql.Date)value).getTime();
+                long sec = ((java.sql.Date) value).getTime();
                 return new Timestamp(sec);
             }
             case Types.CHAR:
@@ -2284,15 +2306,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             case Types.LONGVARCHAR: {
                 try {
                     DateFormat tf = DateFormat.getTimeInstance();
-                    return ((Timestamp)(tf.parse(value.toString())));
+                    return ((Timestamp) (tf.parse(value.toString())));
                 } catch (ParseException ex) {
                     throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.timefail").toString(),
-                        new Object[] {value.toString().trim(), columnIndex}));
+                            new Object[]{value.toString().trim(), columnIndex}));
                 }
             }
             default: {
                 throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.timefail").toString(),
-                        new Object[] {value.toString().trim(), columnIndex}));
+                        new Object[]{value.toString().trim(), columnIndex}));
             }
         }
     }
@@ -2301,7 +2323,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Retrieves the value of the designated column in the current row of this
      * <code>CachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
      * object.
-     *
+     * <p>
      * A column value can be retrieved as a stream of ASCII characters
      * and then read in chunks from the stream.  This method is particularly
      * suitable for retrieving large <code>LONGVARCHAR</code> values.  The JDBC
@@ -2314,18 +2336,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * whether there is data available or not.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
      * @return a Java input stream that delivers the database column value
-     *         as a stream of one-byte ASCII characters.  If the value is SQL
-     *         <code>NULL</code>, the result is <code>null</code>.
+     * as a stream of one-byte ASCII characters.  If the value is SQL
+     * <code>NULL</code>, the result is <code>null</code>.
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>CHAR, VARCHAR</code>, <code><b>LONGVARCHAR</b></code>
-     * <code>BINARY, VARBINARY</code> or <code>LONGVARBINARY</code> value. The
-     * bold SQL type designates the recommended return types that this method is
-     * used to retrieve.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>CHAR, VARCHAR</code>, <code><b>LONGVARCHAR</b></code>
+     *                      <code>BINARY, VARBINARY</code> or <code>LONGVARBINARY</code> value. The
+     *                      bold SQL type designates the recommended return types that this method is
+     *                      used to retrieve.
      * @see #getAsciiStream(String)
      */
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
@@ -2339,7 +2361,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         //make sure the cursor is on a vlid row
         checkCursor();
 
-        value =  getCurrentRow().getColumnObject(columnIndex);
+        value = getCurrentRow().getColumnObject(columnIndex);
         if (value == null) {
             lastValueNull = true;
             return null;
@@ -2347,7 +2369,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
         try {
             if (isString(RowSetMD.getColumnType(columnIndex))) {
-                asciiStream = new ByteArrayInputStream(((String)value).getBytes("ASCII"));
+                asciiStream = new ByteArrayInputStream(((String) value).getBytes("ASCII"));
             } else {
                 throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
             }
@@ -2371,8 +2393,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * available or not.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
      * @return a Java input stream that delivers the database column value
      * as a stream of two byte Unicode characters.  If the value is SQL NULL
      * then the result is null.
@@ -2390,7 +2412,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         if (isBinary(RowSetMD.getColumnType(columnIndex)) == false &&
-        isString(RowSetMD.getColumnType(columnIndex)) == false) {
+                isString(RowSetMD.getColumnType(columnIndex)) == false) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
         }
 
@@ -2409,7 +2431,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Retrieves the value of the designated column in the current row of this
      * <code>CachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
      * object.
-     * <P>
+     * <p>
      * A column value can be retrieved as a stream of uninterpreted bytes
      * and then read in chunks from the stream.  This method is particularly
      * suitable for retrieving large <code>LONGVARBINARY</code> values.
@@ -2422,17 +2444,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * available or not.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     * is <code>2</code>, and so on; must be <code>1</code> or larger
-     * and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return a Java input stream that delivers the database column value
      * as a stream of uninterpreted bytes.  If the value is SQL <code>NULL</code>
      * then the result is <code>null</code>.
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>BINARY, VARBINARY</code> or <code><b>LONGVARBINARY</b></code>
-     * The bold type indicates the SQL type that this method is recommened
-     * to retrieve.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>BINARY, VARBINARY</code> or <code><b>LONGVARBINARY</b></code>
+     *                      The bold type indicates the SQL type that this method is recommened
+     *                      to retrieve.
      * @see #getBinaryStream(String)
      */
     public InputStream getBinaryStream(int columnIndex) throws SQLException {
@@ -2455,7 +2477,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             return null;
         }
 
-        binaryStream = new ByteArrayInputStream((byte[])value);
+        binaryStream = new ByteArrayInputStream((byte[]) value);
 
         return binaryStream;
 
@@ -2469,16 +2491,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>String</code> object.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
-     * BIGINT, REAL, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, <b>CHAR</b>,
-     * <b>VARCHAR</b></code> or <code>LONGVARCHAR<</code> value. The bold SQL type
-     * designates the recommended return type.
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
+     *                      BIGINT, REAL, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, <b>CHAR</b>,
+     *                      <b>VARCHAR</b></code> or <code>LONGVARCHAR<</code> value. The bold SQL type
+     *                      designates the recommended return type.
      */
     public String getString(String columnName) throws SQLException {
         return getString(getColIdxByName(columnName));
@@ -2489,14 +2511,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>boolean</code> value.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value as a <code>boolean</code> in the Java programming
-     *        language; if the value is SQL <code>NULL</code>,
-     *        the result is <code>false</code>
+     * language; if the value is SQL <code>NULL</code>,
+     * the result is <code>false</code>
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>BOOLEAN</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>BOOLEAN</code> value
      * @see #getBoolean(int)
      */
     public boolean getBoolean(String columnName) throws SQLException {
@@ -2508,16 +2530,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>byte</code> value.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value as a <code>byte</code> in the Java programming
      * language; if the value is SQL <code>NULL</code>, the result is <code>0</code>
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code><B>TINYINT</B>, SMALLINT, INTEGER,
-     * BIGINT, REAL, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR,
-     * VARCHAR</code> or <code>LONGVARCHAR</code> value. The
-     * bold type designates the recommended return type
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code><B>TINYINT</B>, SMALLINT, INTEGER,
+     *                      BIGINT, REAL, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR,
+     *                      VARCHAR</code> or <code>LONGVARCHAR</code> value. The
+     *                      bold type designates the recommended return type
      */
     public byte getByte(String columnName) throws SQLException {
         return getByte(getColIdxByName(columnName));
@@ -2528,16 +2550,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>short</code> value.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>0</code>
+     * the result is <code>0</code>
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code>TINYINT, <b>SMALLINT</b>, INTEGER
-     * BIGINT, REAL, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR,
-     * VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
-     * designates the recommended return type.
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TINYINT, <b>SMALLINT</b>, INTEGER
+     *                      BIGINT, REAL, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR,
+     *                      VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
+     *                      designates the recommended return type.
      * @see #getShort(int)
      */
     public short getShort(String columnName) throws SQLException {
@@ -2549,17 +2571,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as an <code>int</code> value.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>0</code>
+     * the result is <code>0</code>
      * @throws SQLException if (1) the given column name is not the name
-     * of a column in this rowset,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>TINYINT, SMALLINT, <b>INTEGER</b>, BIGINT, REAL
-     * FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
-     * or <code>LONGVARCHAR</code> value. The bold SQL type designates the
-     * recommended return type.
+     *                      of a column in this rowset,
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>TINYINT, SMALLINT, <b>INTEGER</b>, BIGINT, REAL
+     *                      FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR, VARCHAR</code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type designates the
+     *                      recommended return type.
      */
     public int getInt(String columnName) throws SQLException {
         return getInt(getColIdxByName(columnName));
@@ -2570,16 +2592,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>long</code> value.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>0</code>
+     * the result is <code>0</code>
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
-     * <b>BIGINT</b>, REAL, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR,
-     * VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
-     * designates the recommended return type.
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
+     *                      <b>BIGINT</b>, REAL, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR,
+     *                      VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
+     *                      designates the recommended return type.
      * @see #getLong(int)
      */
     public long getLong(String columnName) throws SQLException {
@@ -2591,16 +2613,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>float</code> value.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>0</code>
+     * the result is <code>0</code>
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
-     * BIGINT, <b>REAL</b>, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR,
-     * VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
-     * designates the recommended return type.
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
+     *                      BIGINT, <b>REAL</b>, FLOAT, DOUBLE, DECIMAL, NUMERIC, BIT, CHAR,
+     *                      VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
+     *                      designates the recommended return type.
      * @see #getFloat(String)
      */
     public float getFloat(String columnName) throws SQLException {
@@ -2613,16 +2635,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * as a <code>double</code> value.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>0</code>
+     * the result is <code>0</code>
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
-     * BIGINT, REAL, <b>FLOAT</b>, <b>DOUBLE</b>, DECIMAL, NUMERIC, BIT, CHAR,
-     * VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
-     * designates the recommended return types.
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
+     *                      BIGINT, REAL, <b>FLOAT</b>, <b>DOUBLE</b>, DECIMAL, NUMERIC, BIT, CHAR,
+     *                      VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
+     *                      designates the recommended return types.
      * @see #getDouble(int)
      */
     public double getDouble(String columnName) throws SQLException {
@@ -2634,20 +2656,20 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>java.math.BigDecimal</code> object.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
-     * @param scale the number of digits to the right of the decimal point
+     *                   a column in this <code>CachedRowSetImpl</code> object
+     * @param scale      the number of digits to the right of the decimal point
      * @return a java.math.BugDecimal object with <code><i>scale</i></code>
      * number of digits to the right of the decimal point.
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
-     * BIGINT, REAL, FLOAT, DOUBLE, <b>DECIMAL</b>, <b>NUMERIC</b>, BIT CHAR,
-     * VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
-     * designates the recommended return type that this method is used to
-     * retrieve.
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
+     *                      BIGINT, REAL, FLOAT, DOUBLE, <b>DECIMAL</b>, <b>NUMERIC</b>, BIT CHAR,
+     *                      VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
+     *                      designates the recommended return type that this method is used to
+     *                      retrieve.
      * @deprecated Use the <code>getBigDecimal(String columnName)</code>
-     *             method instead
+     * method instead
      */
     @Deprecated
     public BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
@@ -2660,15 +2682,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * The bytes represent the raw values returned by the driver.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value as a <code>byte</code> array in the Java programming
      * language; if the value is SQL <code>NULL</code>, the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code><b>BINARY</b>, <b>VARBINARY</b>
-     * </code> or <code>LONGVARBINARY</code> values
-     * The bold SQL type designates the recommended return type.
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code><b>BINARY</b>, <b>VARBINARY</b>
+     *                      </code> or <code>LONGVARBINARY</code> values
+     *                      The bold SQL type designates the recommended return type.
      * @see #getBytes(int)
      */
     public byte[] getBytes(String columnName) throws SQLException {
@@ -2680,14 +2702,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>java.sql.Date</code> object.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>DATE</code> or
-     *            <code>TIMESTAMP</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>DATE</code> or
+     *                      <code>TIMESTAMP</code> value
      */
     public java.sql.Date getDate(String columnName) throws SQLException {
         return getDate(getColIdxByName(columnName));
@@ -2698,12 +2720,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>java.sql.Time</code> object.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if the given column name does not match one of
-     *            this rowset's column names or the cursor is not on one of
-     *            this rowset's rows or its insert row
+     *                      this rowset's column names or the cursor is not on one of
+     *                      this rowset's rows or its insert row
      */
     public Time getTime(String columnName) throws SQLException {
         return getTime(getColIdxByName(columnName));
@@ -2714,12 +2736,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * of the current row as a <code>java.sql.Timestamp</code> object.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if the given column name does not match one of
-     *            this rowset's column names or the cursor is not on one of
-     *            this rowset's rows or its insert row
+     *                      this rowset's column names or the cursor is not on one of
+     *                      this rowset's rows or its insert row
      */
     public Timestamp getTimestamp(String columnName) throws SQLException {
         return getTimestamp(getColIdxByName(columnName));
@@ -2729,7 +2751,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Retrieves the value of the designated column in the current row of this
      * <code>CachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
      * object.
-     *
+     * <p>
      * A column value can be retrieved as a stream of ASCII characters
      * and then read in chunks from the stream. This method is particularly
      * suitable for retrieving large <code>LONGVARCHAR</code> values. The
@@ -2741,18 +2763,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * next call to a <code>getXXX</code> method implicitly closes the stream.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return a Java input stream that delivers the database column value
-     *         as a stream of one-byte ASCII characters.  If the value is SQL
-     *         <code>NULL</code>, the result is <code>null</code>.
+     * as a stream of one-byte ASCII characters.  If the value is SQL
+     * <code>NULL</code>, the result is <code>null</code>.
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>CHAR, VARCHAR</code>, <code><b>LONGVARCHAR</b></code>
-     * <code>BINARY, VARBINARY</code> or <code>LONGVARBINARY</code> value. The
-     * bold SQL type designates the recommended return types that this method is
-     * used to retrieve.
+     *                      a column in this rowset
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>CHAR, VARCHAR</code>, <code><b>LONGVARCHAR</b></code>
+     *                      <code>BINARY, VARBINARY</code> or <code>LONGVARBINARY</code> value. The
+     *                      bold SQL type designates the recommended return types that this method is
+     *                      used to retrieve.
      * @see #getAsciiStream(int)
      */
     public InputStream getAsciiStream(String columnName) throws SQLException {
@@ -2772,13 +2794,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * next call to a <code>getXXX</code> method implicitly closes the stream.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return a Java input stream that delivers the database column value
-     *         as a stream of two-byte Unicode characters.  If the value is
-     *         SQL <code>NULL</code>, the result is <code>null</code>.
+     * as a stream of two-byte Unicode characters.  If the value is
+     * SQL <code>NULL</code>, the result is <code>null</code>.
      * @throws SQLException if the given column name does not match one of
-     *            this rowset's column names or the cursor is not on one of
-     *            this rowset's rows or its insert row
+     *                      this rowset's column names or the cursor is not on one of
+     *                      this rowset's rows or its insert row
      * @deprecated use the method <code>getCharacterStream</code> instead
      */
     @Deprecated
@@ -2790,7 +2812,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Retrieves the value of the designated column in the current row of this
      * <code>CachedRowSetImpl</code> object as a <code>java.io.InputStream</code>
      * object.
-     * <P>
+     * <p>
      * A column value can be retrieved as a stream of uninterpreted bytes
      * and then read in chunks from the stream.  This method is particularly
      * suitable for retrieving large <code>LONGVARBINARY</code> values.
@@ -2802,18 +2824,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * whether there is data available or not.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return a Java input stream that delivers the database column value
-     *         as a stream of uninterpreted bytes.  If the value is SQL
-     *         <code>NULL</code>, the result is <code>null</code>.
+     * as a stream of uninterpreted bytes.  If the value is SQL
+     * <code>NULL</code>, the result is <code>null</code>.
      * @throws SQLException if (1) the given column name is unknown,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>BINARY, VARBINARY</code> or <code><b>LONGVARBINARY</b></code>
-     * The bold type indicates the SQL type that this method is recommened
-     * to retrieve.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>BINARY, VARBINARY</code> or <code><b>LONGVARBINARY</b></code>
+     *                      The bold type indicates the SQL type that this method is recommened
+     *                      to retrieve.
      * @see #getBinaryStream(int)
-     *
      */
     public InputStream getBinaryStream(String columnName) throws SQLException {
         return getBinaryStream(getColIdxByName(columnName));
@@ -2872,7 +2893,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>SQLException</code> is thrown.
      *
      * @return the SQL cursor name for this <code>CachedRowSetImpl</code> object's
-     *         cursor
+     * cursor
      * @throws SQLException if an error occurs
      */
     public String getCursorName() throws SQLException {
@@ -2886,7 +2907,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>RowSetMetaData</code> interface implementation. In the
      * reference implementation, this cast can be done on the
      * <code>RowSetMetaDataImpl</code> class.
-     * <P>
+     * <p>
      * For example:
      * <pre>
      * CachedRowSet crs = new CachedRowSetImpl();
@@ -2900,13 +2921,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * </pre>
      *
      * @return the <code>ResultSetMetaData</code> object that describes this
-     *         <code>CachedRowSetImpl</code> object's columns
+     * <code>CachedRowSetImpl</code> object's columns
      * @throws SQLException if an error occurs in generating the RowSet
-     * meta data; or if the <code>CachedRowSetImpl</code> is empty.
+     *                      meta data; or if the <code>CachedRowSetImpl</code> is empty.
      * @see RowSetMetaData
      */
     public ResultSetMetaData getMetaData() throws SQLException {
-        return (ResultSetMetaData)RowSetMD;
+        return (ResultSetMetaData) RowSetMD;
     }
 
 
@@ -2914,15 +2935,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Retrieves the value of the designated column in the current row
      * of this <code>CachedRowSetImpl</code> object as an
      * <code>Object</code> value.
-     * <P>
+     * <p>
      * The type of the <code>Object</code> will be the default
      * Java object type corresponding to the column's SQL type,
      * following the mapping for built-in types specified in the JDBC 3.0
      * specification.
-     * <P>
+     * <p>
      * This method may also be used to read datatabase-specific
      * abstract data types.
-     * <P>
+     * <p>
      * This implementation of the method <code>getObject</code> extends its
      * behavior so that it gets the attributes of an SQL structured type
      * as an array of <code>Object</code> values.  This method also custom
@@ -2933,13 +2954,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * this.getStatement().getConnection().getTypeMap())</code>.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return a <code>java.lang.Object</code> holding the column value;
-     *         if the value is SQL <code>NULL</code>, the result is <code>null</code>
+     * if the value is SQL <code>NULL</code>, the result is <code>null</code>
      * @throws SQLException if the given column index is out of bounds,
-     *            the cursor is not on a valid row, or there is a problem getting
-     *            the <code>Class</code> object for a custom mapping
+     *                      the cursor is not on a valid row, or there is a problem getting
+     *                      the <code>Class</code> object for a custom mapping
      * @see #getObject(String)
      */
     public Object getObject(int columnIndex) throws SQLException {
@@ -2960,7 +2981,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             return null;
         }
         if (value instanceof Struct) {
-            Struct s = (Struct)value;
+            Struct s = (Struct) value;
             map = getTypeMap();
             // look up the class in the map
             Class<?> c = map.get(s.getSQLTypeName());
@@ -2969,7 +2990,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 SQLData obj = null;
                 try {
                     obj = (SQLData) ReflectUtil.newInstance(c);
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     throw new SQLException("Unable to Instantiate: ", ex);
                 }
                 // get the attributes from the struct
@@ -2978,7 +2999,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 SQLInputImpl sqlInput = new SQLInputImpl(attribs, map);
                 // read the values...
                 obj.readSQL(sqlInput, s.getSQLTypeName());
-                return (Object)obj;
+                return (Object) obj;
             }
         }
         return value;
@@ -2988,15 +3009,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Retrieves the value of the designated column in the current row
      * of this <code>CachedRowSetImpl</code> object as an
      * <code>Object</code> value.
-     * <P>
+     * <p>
      * The type of the <code>Object</code> will be the default
      * Java object type corresponding to the column's SQL type,
      * following the mapping for built-in types specified in the JDBC 3.0
      * specification.
-     * <P>
+     * <p>
      * This method may also be used to read datatabase-specific
      * abstract data types.
-     * <P>
+     * <p>
      * This implementation of the method <code>getObject</code> extends its
      * behavior so that it gets the attributes of an SQL structured type
      * as an array of <code>Object</code> values.  This method also custom
@@ -3007,13 +3028,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * this.getStatement().getConnection().getTypeMap())</code>.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
+     *                   SQL name of a column in this rowset, ignoring case
      * @return a <code>java.lang.Object</code> holding the column value;
-     *         if the value is SQL <code>NULL</code>, the result is <code>null</code>
+     * if the value is SQL <code>NULL</code>, the result is <code>null</code>
      * @throws SQLException if (1) the given column name does not match one of
-     *            this rowset's column names, (2) the cursor is not
-     *            on a valid row, or (3) there is a problem getting
-     *            the <code>Class</code> object for a custom mapping
+     *                      this rowset's column names, (2) the cursor is not
+     *                      on a valid row, or (3) there is a problem getting
+     *                      the <code>Class</code> object for a custom mapping
      * @see #getObject(int)
      */
     public Object getObject(String columnName) throws SQLException {
@@ -3027,10 +3048,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * object's columns to its column number.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
+     *                   SQL name of a column in this rowset, ignoring case
      * @return the column index of the given column name
      * @throws SQLException if the given column name does not match one
-     *            of this rowset's column names
+     *                      of this rowset's column names
      */
     public int findColumn(String columnName) throws SQLException {
         return getColIdxByName(columnName);
@@ -3052,21 +3073,21 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * next call to a <code>getXXX</code> method implicitly closes the stream.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return a Java character stream that delivers the database column value
      * as a stream of two-byte unicode characters in a
      * <code>java.io.Reader</code> object.  If the value is
      * SQL <code>NULL</code>, the result is <code>null</code>.
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>CHAR, VARCHAR, <b>LONGVARCHAR</b>, BINARY, VARBINARY</code> or
-     * <code>LONGVARBINARY</code> value.
-     * The bold SQL type designates the recommended return type.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>CHAR, VARCHAR, <b>LONGVARCHAR</b>, BINARY, VARBINARY</code> or
+     *                      <code>LONGVARBINARY</code> value.
+     *                      The bold SQL type designates the recommended return type.
      * @see #getCharacterStream(String)
      */
-    public Reader getCharacterStream(int columnIndex) throws SQLException{
+    public Reader getCharacterStream(int columnIndex) throws SQLException {
 
         // sanity check.
         checkIndex(columnIndex);
@@ -3080,7 +3101,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 return null;
             }
             charStream = new InputStreamReader
-            (new ByteArrayInputStream((byte[])value));
+                    (new ByteArrayInputStream((byte[]) value));
         } else if (isString(RowSetMD.getColumnType(columnIndex))) {
             Object value = getCurrentRow().getColumnObject(columnIndex);
             if (value == null) {
@@ -3104,16 +3125,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * next call to a <code>getXXX</code> method implicitly closes the stream.
      *
      * @param columnName a <code>String</code> object giving the SQL name of
-     *        a column in this <code>CachedRowSetImpl</code> object
+     *                   a column in this <code>CachedRowSetImpl</code> object
      * @return a Java input stream that delivers the database column value
-     *         as a stream of two-byte Unicode characters.  If the value is
-     *         SQL <code>NULL</code>, the result is <code>null</code>.
+     * as a stream of two-byte Unicode characters.  If the value is
+     * SQL <code>NULL</code>, the result is <code>null</code>.
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code>CHAR, VARCHAR, <b>LONGVARCHAR</b>,
-     * BINARY, VARYBINARY</code> or <code>LONGVARBINARY</code> value.
-     * The bold SQL type designates the recommended return type.
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>CHAR, VARCHAR, <b>LONGVARCHAR</b>,
+     *                      BINARY, VARYBINARY</code> or <code>LONGVARBINARY</code> value.
+     *                      The bold SQL type designates the recommended return type.
      */
     public Reader getCharacterStream(String columnName) throws SQLException {
         return getCharacterStream(getColIdxByName(columnName));
@@ -3125,17 +3146,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>java.math.BigDecimal</code> object.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
      * @return a <code>java.math.BigDecimal</code> value with full precision;
-     *         if the value is SQL <code>NULL</code>, the result is <code>null</code>
+     * if the value is SQL <code>NULL</code>, the result is <code>null</code>
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>TINYINT, SMALLINT, INTEGER, BIGINT, REAL,
-     * FLOAT, DOUBLE, <b>DECIMAL</b>, <b>NUMERIC</b>, BIT, CHAR, VARCHAR</code>
-     * or <code>LONGVARCHAR</code> value. The bold SQL type designates the
-     * recommended return types that this method is used to retrieve.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>TINYINT, SMALLINT, INTEGER, BIGINT, REAL,
+     *                      FLOAT, DOUBLE, <b>DECIMAL</b>, <b>NUMERIC</b>, BIT, CHAR, VARCHAR</code>
+     *                      or <code>LONGVARCHAR</code> value. The bold SQL type designates the
+     *                      recommended return types that this method is used to retrieve.
      * @see #getBigDecimal(String)
      */
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
@@ -3158,7 +3179,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             return (new BigDecimal(value.toString().trim()));
         } catch (NumberFormatException ex) {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("cachedrowsetimpl.doublefail").toString(),
-                new Object[] {value.toString().trim(), columnIndex}));
+                    new Object[]{value.toString().trim(), columnIndex}));
         }
     }
 
@@ -3168,17 +3189,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>java.math.BigDecimal</code> object.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
+     *                   SQL name of a column in this rowset, ignoring case
      * @return a <code>java.math.BigDecimal</code> value with full precision;
-     *         if the value is SQL <code>NULL</code>, the result is <code>null</code>
+     * if the value is SQL <code>NULL</code>, the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     * a column in this rowset, (2) the cursor is not on one of
-     * this rowset's rows or its insert row, or (3) the designated
-     * column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
-     * BIGINT, REAL, FLOAT, DOUBLE, <b>DECIMAL</b>, <b>NUMERIC</b>, BIT CHAR,
-     * VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
-     * designates the recommended return type that this method is used to
-     * retrieve
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TINYINT, SMALLINT, INTEGER
+     *                      BIGINT, REAL, FLOAT, DOUBLE, <b>DECIMAL</b>, <b>NUMERIC</b>, BIT CHAR,
+     *                      VARCHAR</code> or <code>LONGVARCHAR</code> value. The bold SQL type
+     *                      designates the recommended return type that this method is used to
+     *                      retrieve
      * @see #getBigDecimal(int)
      */
     public BigDecimal getBigDecimal(String columnName) throws SQLException {
@@ -3203,7 +3224,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>CachedRowSetImpl</code> object.
      *
      * @return <code>true</code> if the cursor is before the first row;
-     *         <code>false</code> otherwise or if the rowset contains no rows
+     * <code>false</code> otherwise or if the rowset contains no rows
      * @throws SQLException if an error occurs
      */
     public boolean isBeforeFirst() throws SQLException {
@@ -3219,11 +3240,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>CachedRowSetImpl</code> object.
      *
      * @return <code>true</code> if the cursor is after the last row;
-     *         <code>false</code> otherwise or if the rowset contains no rows
+     * <code>false</code> otherwise or if the rowset contains no rows
      * @throws SQLException if an error occurs
      */
     public boolean isAfterLast() throws SQLException {
-        if (cursorPos == numRows+1 && numRows > 0) {
+        if (cursorPos == numRows + 1 && numRows > 0) {
             return true;
         } else {
             return false;
@@ -3235,7 +3256,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>CachedRowSetImpl</code> object.
      *
      * @return <code>true</code> if the cursor is on the first row;
-     *         <code>false</code> otherwise or if the rowset contains no rows
+     * <code>false</code> otherwise or if the rowset contains no rows
      * @throws SQLException if an error occurs
      */
     public boolean isFirst() throws SQLException {
@@ -3255,13 +3276,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * Indicates whether the cursor is on the last row in this
      * <code>CachedRowSetImpl</code> object.
-     * <P>
+     * <p>
      * Note: Calling the method <code>isLast</code> may be expensive
      * because the JDBC driver might need to fetch ahead one row in order
      * to determine whether the current row is the last row in this rowset.
      *
      * @return <code>true</code> if the cursor is on the last row;
-     *         <code>false</code> otherwise or if this rowset contains no rows
+     * <code>false</code> otherwise or if this rowset contains no rows
      * @throws SQLException if an error occurs
      */
     public boolean isLast() throws SQLException {
@@ -3287,10 +3308,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * this rowset contains no rows.
      *
      * @throws SQLException if an error occurs or the type of this rowset
-     *            is <code>ResultSet.TYPE_FORWARD_ONLY</code>
+     *                      is <code>ResultSet.TYPE_FORWARD_ONLY</code>
      */
     public void beforeFirst() throws SQLException {
-       if (getType() == ResultSet.TYPE_FORWARD_ONLY) {
+        if (getType() == ResultSet.TYPE_FORWARD_ONLY) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.beforefirst").toString());
         }
         cursorPos = 0;
@@ -3319,13 +3340,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * method also notifies registered listeners that the cursor has moved.
      *
      * @return <code>true</code> if the cursor is on a valid row;
-     *         <code>false</code> otherwise or if there are no rows in this
-     *         <code>CachedRowSetImpl</code> object
+     * <code>false</code> otherwise or if there are no rows in this
+     * <code>CachedRowSetImpl</code> object
      * @throws SQLException if the type of this rowset
-     *            is <code>ResultSet.TYPE_FORWARD_ONLY</code>
+     *                      is <code>ResultSet.TYPE_FORWARD_ONLY</code>
      */
     public boolean first() throws SQLException {
-        if(getType() == ResultSet.TYPE_FORWARD_ONLY) {
+        if (getType() == ResultSet.TYPE_FORWARD_ONLY) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.first").toString());
         }
 
@@ -3339,7 +3360,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * Moves this <code>CachedRowSetImpl</code> object's cursor to the first
      * row and returns <code>true</code> if the operation is successful.
-     * <P>
+     * <p>
      * This method is called internally by the methods <code>first</code>,
      * <code>isFirst</code>, and <code>absolute</code>.
      * It in turn calls the method <code>internalNext</code> in order to
@@ -3349,7 +3370,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * implementation of the <code>CachedRowSet</code> interface.
      *
      * @return <code>true</code> if the cursor moved to the first row;
-     *         <code>false</code> otherwise
+     * <code>false</code> otherwise
      * @throws SQLException if an error occurs
      */
     protected boolean internalFirst() throws SQLException {
@@ -3378,10 +3399,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * method also notifies registered listeners that the cursor has moved.
      *
      * @return <code>true</code> if the cursor is on a valid row;
-     *         <code>false</code> otherwise or if there are no rows in this
-     *         <code>CachedRowSetImpl</code> object
+     * <code>false</code> otherwise or if there are no rows in this
+     * <code>CachedRowSetImpl</code> object
      * @throws SQLException if the type of this rowset
-     *            is <code>ResultSet.TYPE_FORWARD_ONLY</code>
+     *                      is <code>ResultSet.TYPE_FORWARD_ONLY</code>
      */
     public boolean last() throws SQLException {
         if (getType() == ResultSet.TYPE_FORWARD_ONLY) {
@@ -3398,7 +3419,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * Moves this <code>CachedRowSetImpl</code> object's cursor to the last
      * row and returns <code>true</code> if the operation is successful.
-     * <P>
+     * <p>
      * This method is called internally by the method <code>last</code>
      * when rows have been deleted and the deletions are not visible.
      * The method <code>internalLast</code> handles the case where the
@@ -3409,7 +3430,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * implementation of the <code>CachedRowSet</code> interface.
      *
      * @return <code>true</code> if the cursor moved to the last row;
-     *         <code>false</code> otherwise
+     * <code>false</code> otherwise
      * @throws SQLException if an error occurs
      */
     protected boolean internalLast() throws SQLException {
@@ -3435,16 +3456,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * object. The first row is number 1, the second number 2, and so on.
      *
      * @return the number of the current row;  <code>0</code> if there is no
-     *         current row
+     * current row
      * @throws SQLException if an error occurs; or if the <code>CacheRowSetImpl</code>
-     *         is empty
+     *                      is empty
      */
     public int getRow() throws SQLException {
         // are we on a valid row? Valid rows are between first and last
         if (numRows > 0 &&
-        cursorPos > 0 &&
-        cursorPos < (numRows + 1) &&
-        (getShowDeleted() == false && rowDeleted() == false)) {
+                cursorPos > 0 &&
+                cursorPos < (numRows + 1) &&
+                (getShowDeleted() == false && rowDeleted() == false)) {
             return absolutePos;
         } else if (getShowDeleted() == true) {
             return cursorPos;
@@ -3463,11 +3484,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>crs</code> is a <code>CachedRowSetImpl</code> object, moves the cursor
      * to the fourth row, starting from the beginning of the rowset.
      * <PRE><code>
-     *
-     *    crs.absolute(4);
+     * <p>
+     * crs.absolute(4);
      *
      * </code> </PRE>
-     * <P>
+     * <p>
      * If the number is negative, the cursor moves to an absolute row position
      * with respect to the end of the rowset.  For example, calling
      * <code>absolute(-1)</code> positions the cursor on the last row,
@@ -3477,30 +3498,30 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the case of a  rowset with five rows, is also the second row, counting
      * from the beginning.
      * <PRE><code>
-     *
-     *    crs.absolute(-4);
+     * <p>
+     * crs.absolute(-4);
      *
      * </code> </PRE>
-     *
+     * <p>
      * If the number specified is larger than the number of rows, the cursor
      * will move to the position after the last row. If the number specified
      * would move the cursor one or more rows before the first row, the cursor
      * moves to the position before the first row.
-     * <P>
+     * <p>
      * Note: Calling <code>absolute(1)</code> is the same as calling the
      * method <code>first()</code>.  Calling <code>absolute(-1)</code> is the
      * same as calling <code>last()</code>.
      *
      * @param row a positive number to indicate the row, starting row numbering from
-     *        the first row, which is <code>1</code>; a negative number to indicate
-     *        the row, starting row numbering from the last row, which is
-     *        <code>-1</code>; it must not be <code>0</code>
+     *            the first row, which is <code>1</code>; a negative number to indicate
+     *            the row, starting row numbering from the last row, which is
+     *            <code>-1</code>; it must not be <code>0</code>
      * @return <code>true</code> if the cursor is on the rowset; <code>false</code>
-     *         otherwise
+     * otherwise
      * @throws SQLException if the given cursor position is <code>0</code> or the
-     *            type of this rowset is <code>ResultSet.TYPE_FORWARD_ONLY</code>
+     *                      type of this rowset is <code>ResultSet.TYPE_FORWARD_ONLY</code>
      */
-    public boolean absolute( int row ) throws SQLException {
+    public boolean absolute(int row) throws SQLException {
         if (row == 0 || getType() == ResultSet.TYPE_FORWARD_ONLY) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.absolute").toString());
         }
@@ -3530,8 +3551,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             if (absolutePos < row) {
                 if (!internalNext())
                     break;
-            }
-            else {
+            } else {
                 if (!internalPrevious())
                     break;
             }
@@ -3550,7 +3570,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Moves the cursor the specified number of rows from the current
      * position, with a positive number moving it forward and a
      * negative number moving it backward.
-     * <P>
+     * <p>
      * If the number is positive, the cursor moves the specified number of
      * rows toward the end of the rowset, starting at the current row.
      * For example, the following command, in which
@@ -3558,11 +3578,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * moves the cursor forward four rows from the current row.  If the
      * current row is 50, the cursor would move to row 54.
      * <PRE><code>
-     *
-     *    crs.relative(4);
+     * <p>
+     * crs.relative(4);
      *
      * </code> </PRE>
-     * <P>
+     * <p>
      * If the number is negative, the cursor moves back toward the beginning
      * the specified number of rows, starting at the current row.
      * For example, calling the method
@@ -3573,17 +3593,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the case of a  rowset with five rows, is also the second row
      * from the beginning.
      * <PRE><code>
-     *
-     *    crs.absolute(-4);
+     * <p>
+     * crs.absolute(-4);
      *
      * </code> </PRE>
-     *
+     * <p>
      * If the number specified is larger than the number of rows, the cursor
      * will move to the position after the last row. If the number specified
      * would move the cursor one or more rows before the first row, the cursor
      * moves to the position before the first row. In both cases, this method
      * throws an <code>SQLException</code>.
-     * <P>
+     * <p>
      * Note: Calling <code>absolute(1)</code> is the same as calling the
      * method <code>first()</code>.  Calling <code>absolute(-1)</code> is the
      * same as calling <code>last()</code>.  Calling <code>relative(0)</code>
@@ -3595,15 +3615,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *             backward; must not move the cursor past the valid
      *             rows
      * @return <code>true</code> if the cursor is on a row in this
-     *         <code>CachedRowSetImpl</code> object; <code>false</code>
-     *         otherwise
+     * <code>CachedRowSetImpl</code> object; <code>false</code>
+     * otherwise
      * @throws SQLException if there are no rows in this rowset, the cursor is
-     *         positioned either before the first row or after the last row, or
-     *         the rowset is type <code>ResultSet.TYPE_FORWARD_ONLY</code>
+     *                      positioned either before the first row or after the last row, or
+     *                      the rowset is type <code>ResultSet.TYPE_FORWARD_ONLY</code>
      */
     public boolean relative(int rows) throws SQLException {
         if (numRows == 0 || isBeforeFirst() ||
-        isAfterLast() || getType() == ResultSet.TYPE_FORWARD_ONLY) {
+                isAfterLast() || getType() == ResultSet.TYPE_FORWARD_ONLY) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.relative").toString());
         }
 
@@ -3616,7 +3636,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 // fell off the end
                 afterLast();
             } else {
-                for (int i=0; i < rows; i++) {
+                for (int i = 0; i < rows; i++) {
                     if (!internalNext())
                         break;
                 }
@@ -3626,7 +3646,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 // fell off the front
                 beforeFirst();
             } else {
-                for (int i=rows; i < 0; i++) {
+                for (int i = rows; i < 0; i++) {
                     if (!internalPrevious())
                         break;
                 }
@@ -3647,13 +3667,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * a valid row or <code>false</code> if it is not.
      * This method also notifies all listeners registered with this
      * <code>CachedRowSetImpl</code> object that its cursor has moved.
-     * <P>
+     * <p>
      * Note: calling the method <code>previous()</code> is not the same
      * as calling the method <code>relative(-1)</code>.  This is true
      * because it is possible to call <code>previous()</code> from the insert
      * row, from after the last row, or from the current row, whereas
      * <code>relative</code> may only be called from the current row.
-     * <P>
+     * <p>
      * The method <code>previous</code> may used in a <code>while</code>
      * loop to iterate through a rowset starting after the last row
      * and moving toward the beginning. The loop ends when <code>previous</code>
@@ -3664,24 +3684,24 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * after the last row so that the first call to the method
      * <code>previous</code> places the cursor on the last line.
      * <PRE> <code>
-     *
-     *     crs.afterLast();
-     *     while (previous()) {
-     *         String name = crs.getString(1);
-     *         int age = crs.getInt(2);
-     *         short ssn = crs.getShort(3);
-     *         System.out.println(name + "   " + age + "   " + ssn);
-     *     }
+     * <p>
+     * crs.afterLast();
+     * while (previous()) {
+     * String name = crs.getString(1);
+     * int age = crs.getInt(2);
+     * short ssn = crs.getShort(3);
+     * System.out.println(name + "   " + age + "   " + ssn);
+     * }
      *
      * </code> </PRE>
      * This method throws an <code>SQLException</code> if the cursor is not
      * on a row in the rowset, before the first row, or after the last row.
      *
      * @return <code>true</code> if the cursor is on a valid row;
-     *         <code>false</code> if it is before the first row or after the
-     *         last row
+     * <code>false</code> if it is before the first row or after the
+     * last row
      * @throws SQLException if the cursor is not on a valid position or the
-     *           type of this rowset is <code>ResultSet.TYPE_FORWARD_ONLY</code>
+     *                      type of this rowset is <code>ResultSet.TYPE_FORWARD_ONLY</code>
      */
     public boolean previous() throws SQLException {
         if (getType() == ResultSet.TYPE_FORWARD_ONLY) {
@@ -3707,15 +3727,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * object, skipping past deleted rows that are not visible; returns
      * <code>true</code> if the cursor is on a row in this rowset and
      * <code>false</code> when the cursor goes before the first row.
-     * <P>
+     * <p>
      * This method is called internally by the method <code>previous</code>.
-     * <P>
+     * <p>
      * This is a implementation only method and is not required as a standard
      * implementation of the <code>CachedRowSet</code> interface.
      *
      * @return <code>true</code> if the cursor is on a row in this rowset;
-     *         <code>false</code> when the cursor reaches the position before
-     *         the first row
+     * <code>false</code> when the cursor reaches the position before
+     * the first row
      * @throws SQLException if an error occurs
      */
     protected boolean internalPrevious() throws SQLException {
@@ -3757,11 +3777,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * will always be returned if it does not detect updates.
      *
      * @return <code>true</code> if the row has been visibly updated
-     *         by the owner or another and updates are detected;
-     *         <code>false</code> otherwise
+     * by the owner or another and updates are detected;
+     * <code>false</code> otherwise
      * @throws SQLException if the cursor is on the insert row or not
-     *            not on a valid row
-     *
+     *                      not on a valid row
      * @see DatabaseMetaData#updatesAreDetected
      */
     public boolean rowUpdated() throws SQLException {
@@ -3770,7 +3789,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         if (onInsertRow == true) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
         }
-        return(((Row)getCurrentRow()).getUpdated());
+        return (((Row) getCurrentRow()).getUpdated());
     }
 
     /**
@@ -3784,7 +3803,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * and the rowset detects updates; <code>false</code> if the rowset has not
      * been updated or the rowset does not detect updates
      * @throws SQLException if the cursor is on the insert row or not
-     *          on a valid row
+     *                      on a valid row
      * @see DatabaseMetaData#updatesAreDetected
      */
     public boolean columnUpdated(int idx) throws SQLException {
@@ -3793,7 +3812,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         if (onInsertRow == true) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
         }
-        return (((Row)getCurrentRow()).getColUpdated(idx - 1));
+        return (((Row) getCurrentRow()).getColUpdated(idx - 1));
     }
 
     /**
@@ -3803,12 +3822,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>false</code> will always be returned if it does not detect updates.
      *
      * @param columnName the <code>String</code> column name column that may be have
-     * been updated.
+     *                   been updated.
      * @return <code>true</code> is the designated column has been updated
      * and the rowset detects updates; <code>false</code> if the rowset has not
      * been updated or the rowset does not detect updates
      * @throws SQLException if the cursor is on the insert row or not
-     *          on a valid row
+     *                      on a valid row
      * @see DatabaseMetaData#updatesAreDetected
      */
     public boolean columnUpdated(String columnName) throws SQLException {
@@ -3820,10 +3839,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * depends on whether or not the rowset can detect visible inserts.
      *
      * @return <code>true</code> if a row has been inserted and inserts are detected;
-     *         <code>false</code> otherwise
+     * <code>false</code> otherwise
      * @throws SQLException if the cursor is on the insert row or not
-     *            not on a valid row
-     *
+     *                      not on a valid row
      * @see DatabaseMetaData#insertsAreDetected
      */
     public boolean rowInserted() throws SQLException {
@@ -3832,7 +3850,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         if (onInsertRow == true) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
         }
-        return(((Row)getCurrentRow()).getInserted());
+        return (((Row) getCurrentRow()).getInserted());
     }
 
     /**
@@ -3843,8 +3861,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * deletions.
      *
      * @return <code>true</code> if (1)the current row is blank, indicating that
-     *         the row has been deleted, and (2)deletions are detected;
-     *         <code>false</code> otherwise
+     * the row has been deleted, and (2)deletions are detected;
+     * <code>false</code> otherwise
      * @throws SQLException if the cursor is on a valid row in this rowset
      * @see DatabaseMetaData#deletesAreDetected
      */
@@ -3852,12 +3870,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // make sure the cursor is on a valid row
 
         if (isAfterLast() == true ||
-        isBeforeFirst() == true ||
-        onInsertRow == true) {
+                isBeforeFirst() == true ||
+                onInsertRow == true) {
 
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
         }
-        return(((Row)getCurrentRow()).getDeleted());
+        return (((Row) getCurrentRow()).getDeleted());
     }
 
     /**
@@ -3865,10 +3883,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param type one of the constants from <code>java.sql.Types</code>
      * @return <code>true</code> if the given type is <code>NUMERIC</code>,'
-     *         <code>DECIMAL</code>, <code>BIT</code>, <code>TINYINT</code>,
-     *         <code>SMALLINT</code>, <code>INTEGER</code>, <code>BIGINT</code>,
-     *         <code>REAL</code>, <code>DOUBLE</code>, or <code>FLOAT</code>;
-     *         <code>false</code> otherwise
+     * <code>DECIMAL</code>, <code>BIT</code>, <code>TINYINT</code>,
+     * <code>SMALLINT</code>, <code>INTEGER</code>, <code>BIGINT</code>,
+     * <code>REAL</code>, <code>DOUBLE</code>, or <code>FLOAT</code>;
+     * <code>false</code> otherwise
      */
     private boolean isNumeric(int type) {
         switch (type) {
@@ -3893,8 +3911,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param type one of the constants from <code>java.sql.Types</code>
      * @return <code>true</code> if the given type is <code>CHAR</code>,'
-     *         <code>VARCHAR</code>, or <code>LONGVARCHAR</code>;
-     *         <code>false</code> otherwise
+     * <code>VARCHAR</code>, or <code>LONGVARCHAR</code>;
+     * <code>false</code> otherwise
      */
     private boolean isString(int type) {
         switch (type) {
@@ -3912,8 +3930,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param type one of the constants from <code>java.sql.Types</code>
      * @return <code>true</code> if the given type is <code>BINARY</code>,'
-     *         <code>VARBINARY</code>, or <code>LONGVARBINARY</code>;
-     *         <code>false</code> otherwise
+     * <code>VARBINARY</code>, or <code>LONGVARBINARY</code>;
+     * <code>false</code> otherwise
      */
     private boolean isBinary(int type) {
         switch (type) {
@@ -3933,8 +3951,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param type one of the constants from <code>java.sql.Types</code>
      * @return <code>true</code> if the given type is <code>DATE</code>,
-     *         <code>TIME</code>, or <code>TIMESTAMP</code>;
-     *         <code>false</code> otherwise
+     * <code>TIME</code>, or <code>TIMESTAMP</code>;
+     * <code>false</code> otherwise
      */
     private boolean isTemporal(int type) {
         switch (type) {
@@ -3954,8 +3972,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param type one of the constants from <code>java.sql.Types</code>
      * @return <code>true</code> if the given type is <code>BIT</code>,
-     *         , or <code>BOOLEAN</code>;
-     *         <code>false</code> otherwise
+     * , or <code>BOOLEAN</code>;
+     * <code>false</code> otherwise
      */
     private boolean isBoolean(int type) {
         switch (type) {
@@ -3975,25 +3993,25 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * restrictions on the type to be converted.  If the source type and target
      * type are the same, the given object is simply returned.
      *
-     * @param srcObj the <code>Object</code> in the Java programming language
-     *               that is to be converted to the target type
+     * @param srcObj  the <code>Object</code> in the Java programming language
+     *                that is to be converted to the target type
      * @param srcType the data type that is the standard mapping in SQL of the
      *                object to be converted; must be one of the constants in
      *                <code>java.sql.Types</code>
      * @param trgType the SQL data type to which to convert the given object;
      *                must be one of the following constants in
      *                <code>java.sql.Types</code>: <code>NUMERIC</code>,
-     *         <code>DECIMAL</code>, <code>BIT</code>, <code>TINYINT</code>,
-     *         <code>SMALLINT</code>, <code>INTEGER</code>, <code>BIGINT</code>,
-     *         <code>REAL</code>, <code>DOUBLE</code>, <code>FLOAT</code>,
-     *         <code>VARCHAR</code>, <code>LONGVARCHAR</code>, or <code>CHAR</code>
+     *                <code>DECIMAL</code>, <code>BIT</code>, <code>TINYINT</code>,
+     *                <code>SMALLINT</code>, <code>INTEGER</code>, <code>BIGINT</code>,
+     *                <code>REAL</code>, <code>DOUBLE</code>, <code>FLOAT</code>,
+     *                <code>VARCHAR</code>, <code>LONGVARCHAR</code>, or <code>CHAR</code>
      * @return an <code>Object</code> value.that is
-     *         the standard object mapping for the target SQL type
+     * the standard object mapping for the target SQL type
      * @throws SQLException if the given target type is not one of the string or
-     *         numeric types in <code>java.sql.Types</code>
+     *                      numeric types in <code>java.sql.Types</code>
      */
     private Object convertNumeric(Object srcObj, int srcType,
-    int trgType) throws SQLException {
+                                  int trgType) throws SQLException {
 
         if (srcType == trgType) {
             return srcObj;
@@ -4008,8 +4026,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 case Types.BIT:
                     Integer i = Integer.valueOf(srcObj.toString().trim());
                     return i.equals(0) ?
-                    Boolean.valueOf(false) :
-                        Boolean.valueOf(true);
+                            Boolean.valueOf(false) :
+                            Boolean.valueOf(true);
                 case Types.TINYINT:
                     return Byte.valueOf(srcObj.toString().trim());
                 case Types.SMALLINT:
@@ -4031,7 +4049,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 case Types.LONGVARCHAR:
                     return srcObj.toString();
                 default:
-                    throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString()+ trgType);
+                    throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString() + trgType);
             }
         } catch (NumberFormatException ex) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString() + trgType);
@@ -4043,63 +4061,63 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * to the standard object mapping for the specified SQL target data type.
      * The conversion must be to a string or temporal type, and there are also
      * restrictions on the type to be converted.
-     * <P>
+     * <p>
      * <TABLE ALIGN="CENTER" BORDER CELLPADDING=10 BORDERCOLOR="#0000FF"
      * <CAPTION ALIGN="CENTER"><B>Parameters and Return Values</B></CAPTION>
      * <TR>
-     *   <TD><B>Source SQL Type</B>
-     *   <TD><B>Target SQL Type</B>
-     *   <TD><B>Object Returned</B>
+     * <TD><B>Source SQL Type</B>
+     * <TD><B>Target SQL Type</B>
+     * <TD><B>Object Returned</B>
      * </TR>
      * <TR>
-     *   <TD><code>TIMESTAMP</code>
-     *   <TD><code>DATE</code>
-     *   <TD><code>java.sql.Date</code>
+     * <TD><code>TIMESTAMP</code>
+     * <TD><code>DATE</code>
+     * <TD><code>java.sql.Date</code>
      * </TR>
      * <TR>
-     *   <TD><code>TIMESTAMP</code>
-     *   <TD><code>TIME</code>
-     *   <TD><code>java.sql.Time</code>
+     * <TD><code>TIMESTAMP</code>
+     * <TD><code>TIME</code>
+     * <TD><code>java.sql.Time</code>
      * </TR>
      * <TR>
-     *   <TD><code>TIME</code>
-     *   <TD><code>TIMESTAMP</code>
-     *   <TD><code>java.sql.Timestamp</code>
+     * <TD><code>TIME</code>
+     * <TD><code>TIMESTAMP</code>
+     * <TD><code>java.sql.Timestamp</code>
      * </TR>
      * <TR>
-     *   <TD><code>DATE</code>, <code>TIME</code>, or <code>TIMESTAMP</code>
-     *   <TD><code>CHAR</code>, <code>VARCHAR</code>, or <code>LONGVARCHAR</code>
-     *   <TD><code>java.lang.String</code>
+     * <TD><code>DATE</code>, <code>TIME</code>, or <code>TIMESTAMP</code>
+     * <TD><code>CHAR</code>, <code>VARCHAR</code>, or <code>LONGVARCHAR</code>
+     * <TD><code>java.lang.String</code>
      * </TR>
      * </TABLE>
-     * <P>
+     * <p>
      * If the source type and target type are the same,
      * the given object is simply returned.
      *
-     * @param srcObj the <code>Object</code> in the Java programming language
-     *               that is to be converted to the target type
+     * @param srcObj  the <code>Object</code> in the Java programming language
+     *                that is to be converted to the target type
      * @param srcType the data type that is the standard mapping in SQL of the
      *                object to be converted; must be one of the constants in
      *                <code>java.sql.Types</code>
      * @param trgType the SQL data type to which to convert the given object;
      *                must be one of the following constants in
      *                <code>java.sql.Types</code>: <code>DATE</code>,
-     *         <code>TIME</code>, <code>TIMESTAMP</code>, <code>CHAR</code>,
-     *         <code>VARCHAR</code>, or <code>LONGVARCHAR</code>
+     *                <code>TIME</code>, <code>TIMESTAMP</code>, <code>CHAR</code>,
+     *                <code>VARCHAR</code>, or <code>LONGVARCHAR</code>
      * @return an <code>Object</code> value.that is
-     *         the standard object mapping for the target SQL type
+     * the standard object mapping for the target SQL type
      * @throws SQLException if the given target type is not one of the string or
-     *         temporal types in <code>java.sql.Types</code>
+     *                      temporal types in <code>java.sql.Types</code>
      */
     private Object convertTemporal(Object srcObj,
-    int srcType, int trgType) throws SQLException {
+                                   int srcType, int trgType) throws SQLException {
 
         if (srcType == trgType) {
             return srcObj;
         }
 
         if (isNumeric(trgType) == true ||
-        (isString(trgType) == false && isTemporal(trgType) == false)) {
+                (isString(trgType) == false && isTemporal(trgType) == false)) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
         }
 
@@ -4107,19 +4125,19 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             switch (trgType) {
                 case Types.DATE:
                     if (srcType == Types.TIMESTAMP) {
-                        return new java.sql.Date(((Timestamp)srcObj).getTime());
+                        return new java.sql.Date(((Timestamp) srcObj).getTime());
                     } else {
                         throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
                     }
                 case Types.TIMESTAMP:
                     if (srcType == Types.TIME) {
-                        return new Timestamp(((Time)srcObj).getTime());
+                        return new Timestamp(((Time) srcObj).getTime());
                     } else {
-                        return new Timestamp(((java.sql.Date)srcObj).getTime());
+                        return new Timestamp(((java.sql.Date) srcObj).getTime());
                     }
                 case Types.TIME:
                     if (srcType == Types.TIMESTAMP) {
-                        return new Time(((Timestamp)srcObj).getTime());
+                        return new Time(((Timestamp) srcObj).getTime());
                     } else {
                         throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
                     }
@@ -4143,29 +4161,29 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * restrictions on the type to be converted.  If the source type and target
      * type are the same, the given object is simply returned.
      *
-     * @param srcObj the <code>Object</code> in the Java programming language
-     *               that is to be converted to the target type
+     * @param srcObj  the <code>Object</code> in the Java programming language
+     *                that is to be converted to the target type
      * @param srcType the data type that is the standard mapping in SQL of the
      *                object to be converted; must be one of the constants in
      *                <code>java.sql.Types</code>
      * @param trgType the SQL data type to which to convert the given object;
      *                must be one of the following constants in
      *                <code>java.sql.Types</code>: <code>BIT</code>,
-     *         or <code>BOOLEAN</code>
+     *                or <code>BOOLEAN</code>
      * @return an <code>Object</code> value.that is
-     *         the standard object mapping for the target SQL type
+     * the standard object mapping for the target SQL type
      * @throws SQLException if the given target type is not one of the Boolean
-     *         types in <code>java.sql.Types</code>
+     *                      types in <code>java.sql.Types</code>
      */
     private Object convertBoolean(Object srcObj, int srcType,
-    int trgType) throws SQLException {
+                                  int trgType) throws SQLException {
 
         if (srcType == trgType) {
             return srcObj;
         }
 
         if (isNumeric(trgType) == true ||
-        (isString(trgType) == false && isBoolean(trgType) == false)) {
+                (isString(trgType) == false && isBoolean(trgType) == false)) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
         }
 
@@ -4175,12 +4193,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 case Types.BIT:
                     Integer i = Integer.valueOf(srcObj.toString().trim());
                     return i.equals(0) ?
-                    Boolean.valueOf(false) :
-                        Boolean.valueOf(true);
+                            Boolean.valueOf(false) :
+                            Boolean.valueOf(true);
                 case Types.BOOLEAN:
                     return Boolean.valueOf(srcObj.toString().trim());
                 default:
-                    throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString()+ trgType);
+                    throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString() + trgType);
             }
         } catch (NumberFormatException ex) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString() + trgType);
@@ -4191,7 +4209,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated nullable column in the current row or the
      * insert row of this <code>CachedRowSetImpl</code> object with
      * <code>null</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset; however, another method must be called to complete
      * the update process. If the cursor is on a row in the rowset, the
@@ -4200,18 +4218,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * If the cursor is on the insert row, the method {@link #insertRow}
      * must be called to insert the new row into this rowset and to notify
      * listeners that a row has changed.
-     * <P>
+     * <p>
      * In order to propagate updates in this rowset to the underlying
      * data source, an application must call the method {@link #acceptChanges}
      * after it calls either <code>updateRow</code> or <code>insertRow</code>.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateNull(int columnIndex) throws SQLException {
         // sanity check.
@@ -4228,7 +4246,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>boolean</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4239,13 +4257,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBoolean(int columnIndex, boolean x) throws SQLException {
         // sanity check.
@@ -4253,8 +4271,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // make sure the cursor is on a valid row
         checkCursor();
         Object obj = convertBoolean(Boolean.valueOf(x),
-        Types.BIT,
-        RowSetMD.getColumnType(columnIndex));
+                Types.BIT,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4263,7 +4281,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>byte</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4274,13 +4292,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateByte(int columnIndex, byte x) throws SQLException {
         // sanity check.
@@ -4289,8 +4307,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         Object obj = convertNumeric(Byte.valueOf(x),
-        Types.TINYINT,
-        RowSetMD.getColumnType(columnIndex));
+                Types.TINYINT,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4299,7 +4317,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>short</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4310,13 +4328,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateShort(int columnIndex, short x) throws SQLException {
         // sanity check.
@@ -4325,8 +4343,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         Object obj = convertNumeric(Short.valueOf(x),
-        Types.SMALLINT,
-        RowSetMD.getColumnType(columnIndex));
+                Types.SMALLINT,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4335,7 +4353,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>int</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4346,13 +4364,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateInt(int columnIndex, int x) throws SQLException {
         // sanity check.
@@ -4360,8 +4378,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // make sure the cursor is on a valid row
         checkCursor();
         Object obj = convertNumeric(x,
-        Types.INTEGER,
-        RowSetMD.getColumnType(columnIndex));
+                Types.INTEGER,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4370,7 +4388,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>long</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4381,13 +4399,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateLong(int columnIndex, long x) throws SQLException {
         // sanity check.
@@ -4396,8 +4414,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         Object obj = convertNumeric(Long.valueOf(x),
-        Types.BIGINT,
-        RowSetMD.getColumnType(columnIndex));
+                Types.BIGINT,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
 
@@ -4407,7 +4425,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>float</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4418,13 +4436,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateFloat(int columnIndex, float x) throws SQLException {
         // sanity check.
@@ -4433,8 +4451,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         Object obj = convertNumeric(Float.valueOf(x),
-        Types.REAL,
-        RowSetMD.getColumnType(columnIndex));
+                Types.REAL,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4443,7 +4461,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>double</code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4454,13 +4472,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateDouble(int columnIndex, double x) throws SQLException {
         // sanity check.
@@ -4468,8 +4486,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // make sure the cursor is on a valid row
         checkCursor();
         Object obj = convertNumeric(Double.valueOf(x),
-        Types.DOUBLE,
-        RowSetMD.getColumnType(columnIndex));
+                Types.DOUBLE,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4478,7 +4496,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.math.BigDecimal</code> object.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4489,13 +4507,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
         // sanity check.
@@ -4504,8 +4522,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         Object obj = convertNumeric(x,
-        Types.NUMERIC,
-        RowSetMD.getColumnType(columnIndex));
+                Types.NUMERIC,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4514,7 +4532,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>String</code> object.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4523,18 +4541,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * must be called to insert the new row into this rowset and mark it
      * as inserted. Both of these methods must be called before the
      * cursor moves to another row.
-     * <P>
+     * <p>
      * The method <code>acceptChanges</code> must be called if the
      * updated values are to be written back to the underlying database.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateString(int columnIndex, String x) throws SQLException {
         // sanity check.
@@ -4549,7 +4567,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>byte</code> array.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4560,13 +4578,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBytes(int columnIndex, byte x[]) throws SQLException {
         // sanity check.
@@ -4585,7 +4603,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Date</code> object.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4596,14 +4614,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, (3) the type of the designated column is not
-     *            an SQL <code>DATE</code> or <code>TIMESTAMP</code>, or
-     *            (4) this rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, (3) the type of the designated column is not
+     *                      an SQL <code>DATE</code> or <code>TIMESTAMP</code>, or
+     *                      (4) this rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateDate(int columnIndex, java.sql.Date x) throws SQLException {
         // sanity check.
@@ -4612,8 +4630,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         Object obj = convertTemporal(x,
-        Types.DATE,
-        RowSetMD.getColumnType(columnIndex));
+                Types.DATE,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4622,7 +4640,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Time</code> object.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4633,14 +4651,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, (3) the type of the designated column is not
-     *            an SQL <code>TIME</code> or <code>TIMESTAMP</code>, or
-     *            (4) this rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, (3) the type of the designated column is not
+     *                      an SQL <code>TIME</code> or <code>TIMESTAMP</code>, or
+     *                      (4) this rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateTime(int columnIndex, Time x) throws SQLException {
         // sanity check.
@@ -4649,8 +4667,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         Object obj = convertTemporal(x,
-        Types.TIME,
-        RowSetMD.getColumnType(columnIndex));
+                Types.TIME,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4659,7 +4677,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Timestamp</code> object.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4670,15 +4688,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, (3) the type of the designated column is not
-     *            an SQL <code>DATE</code>, <code>TIME</code>, or
-     *            <code>TIMESTAMP</code>, or (4) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, (3) the type of the designated column is not
+     *                      an SQL <code>DATE</code>, <code>TIME</code>, or
+     *                      <code>TIMESTAMP</code>, or (4) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
         // sanity check.
@@ -4687,8 +4705,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         Object obj = convertTemporal(x,
-        Types.TIMESTAMP,
-        RowSetMD.getColumnType(columnIndex));
+                Types.TIMESTAMP,
+                RowSetMD.getColumnType(columnIndex));
 
         getCurrentRow().setColumnObject(columnIndex, obj);
     }
@@ -4697,7 +4715,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * ASCII stream value.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4708,10 +4726,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
-     * @param length the number of one-byte ASCII characters in the stream
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
+     * @param length      the number of one-byte ASCII characters in the stream
      * @throws SQLException if this method is invoked
      */
     public void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
@@ -4722,7 +4740,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
 
         if (isString(RowSetMD.getColumnType(columnIndex)) == false &&
-        isBinary(RowSetMD.getColumnType(columnIndex)) == false) {
+                isBinary(RowSetMD.getColumnType(columnIndex)) == false) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
         }
 
@@ -4746,7 +4764,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.io.InputStream</code> object.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4757,18 +4775,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value; must be a <code>java.io.InputStream</code>
-     *          containing <code>BINARY</code>, <code>VARBINARY</code>, or
-     *          <code>LONGVARBINARY</code> data
-     * @param length the length of the stream in bytes
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value; must be a <code>java.io.InputStream</code>
+     *                    containing <code>BINARY</code>, <code>VARBINARY</code>, or
+     *                    <code>LONGVARBINARY</code> data
+     * @param length      the length of the stream in bytes
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, (3) the data in the stream is not binary, or
-     *            (4) this rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, (3) the data in the stream is not binary, or
+     *                      (4) this rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
-    public void updateBinaryStream(int columnIndex, InputStream x,int length) throws SQLException {
+    public void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
         // sanity Check
         checkIndex(columnIndex);
         // make sure the cursor is on a valid row
@@ -4795,7 +4813,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.io.Reader</code> object.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4806,18 +4824,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value; must be a <code>java.io.Reader</code>
-     *          containing <code>BINARY</code>, <code>VARBINARY</code>,
-     *          <code>LONGVARBINARY</code>, <code>CHAR</code>, <code>VARCHAR</code>,
-     *          or <code>LONGVARCHAR</code> data
-     * @param length the length of the stream in characters
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value; must be a <code>java.io.Reader</code>
+     *                    containing <code>BINARY</code>, <code>VARBINARY</code>,
+     *                    <code>LONGVARBINARY</code>, <code>CHAR</code>, <code>VARCHAR</code>,
+     *                    or <code>LONGVARCHAR</code> data
+     * @param length      the length of the stream in characters
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, (3) the data in the stream is not a binary or
-     *            character type, or (4) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, (3) the data in the stream is not a binary or
+     *                      character type, or (4) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
         // sanity Check
@@ -4826,7 +4844,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         checkCursor();
 
         if (isString(RowSetMD.getColumnType(columnIndex)) == false &&
-        isBinary(RowSetMD.getColumnType(columnIndex)) == false) {
+                isBinary(RowSetMD.getColumnType(columnIndex)) == false) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.dtypemismt").toString());
         }
 
@@ -4852,7 +4870,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * the number of digits to the right of the decimal point and is ignored
      * if the new column value is not a type that will be mapped to an SQL
      * <code>DECIMAL</code> or <code>NUMERIC</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4863,15 +4881,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
-     * @param scale the number of digits to the right of the decimal point (for
-     *              <code>DECIMAL</code> and <code>NUMERIC</code> types only)
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
+     * @param scale       the number of digits to the right of the decimal point (for
+     *                    <code>DECIMAL</code> and <code>NUMERIC</code> types only)
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateObject(int columnIndex, Object x, int scale) throws SQLException {
         // sanity check.
@@ -4881,7 +4899,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
         int type = RowSetMD.getColumnType(columnIndex);
         if (type == Types.DECIMAL || type == Types.NUMERIC) {
-            ((BigDecimal)x).setScale(scale);
+            ((BigDecimal) x).setScale(scale);
         }
         getCurrentRow().setColumnObject(columnIndex, x);
     }
@@ -4890,7 +4908,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Object</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -4901,13 +4919,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param x the new column value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param x           the new column value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateObject(int columnIndex, Object x) throws SQLException {
         // sanity check.
@@ -4922,7 +4940,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated nullable column in the current row or the
      * insert row of this <code>CachedRowSetImpl</code> object with
      * <code>null</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4932,11 +4950,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * and the database.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
+     *                   SQL name of a column in this rowset, ignoring case
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateNull(String columnName) throws SQLException {
         updateNull(getColIdxByName(columnName));
@@ -4946,7 +4964,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>boolean</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4957,12 +4975,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBoolean(String columnName, boolean x) throws SQLException {
         updateBoolean(getColIdxByName(columnName), x);
@@ -4972,7 +4990,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>byte</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -4983,12 +5001,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateByte(String columnName, byte x) throws SQLException {
         updateByte(getColIdxByName(columnName), x);
@@ -4998,7 +5016,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>short</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -5009,12 +5027,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateShort(String columnName, short x) throws SQLException {
         updateShort(getColIdxByName(columnName), x);
@@ -5024,7 +5042,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>int</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -5035,12 +5053,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateInt(String columnName, int x) throws SQLException {
         updateInt(getColIdxByName(columnName), x);
@@ -5050,7 +5068,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>long</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -5061,12 +5079,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateLong(String columnName, long x) throws SQLException {
         updateLong(getColIdxByName(columnName), x);
@@ -5076,7 +5094,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>float</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -5087,12 +5105,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateFloat(String columnName, float x) throws SQLException {
         updateFloat(getColIdxByName(columnName), x);
@@ -5102,7 +5120,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>double</code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5113,12 +5131,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateDouble(String columnName, double x) throws SQLException {
         updateDouble(getColIdxByName(columnName), x);
@@ -5128,7 +5146,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.math.BigDecimal</code> object.
-     * <P>
+     * <p>
      * This method updates a column value in the current row or the insert
      * row of this rowset, but it does not update the database.
      * If the cursor is on a row in the rowset, the
@@ -5139,12 +5157,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBigDecimal(String columnName, BigDecimal x) throws SQLException {
         updateBigDecimal(getColIdxByName(columnName), x);
@@ -5154,7 +5172,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>String</code> object.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5165,12 +5183,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateString(String columnName, String x) throws SQLException {
         updateString(getColIdxByName(columnName), x);
@@ -5180,7 +5198,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>byte</code> array.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5191,12 +5209,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBytes(String columnName, byte x[]) throws SQLException {
         updateBytes(getColIdxByName(columnName), x);
@@ -5206,7 +5224,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Date</code> object.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5217,14 +5235,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, (3) the type
-     *            of the designated column is not an SQL <code>DATE</code> or
-     *            <code>TIMESTAMP</code>, or (4) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, (3) the type
+     *                      of the designated column is not an SQL <code>DATE</code> or
+     *                      <code>TIMESTAMP</code>, or (4) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateDate(String columnName, java.sql.Date x) throws SQLException {
         updateDate(getColIdxByName(columnName), x);
@@ -5234,7 +5252,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Time</code> object.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5245,14 +5263,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, (3) the type
-     *            of the designated column is not an SQL <code>TIME</code> or
-     *            <code>TIMESTAMP</code>, or (4) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, (3) the type
+     *                      of the designated column is not an SQL <code>TIME</code> or
+     *                      <code>TIMESTAMP</code>, or (4) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateTime(String columnName, Time x) throws SQLException {
         updateTime(getColIdxByName(columnName), x);
@@ -5262,7 +5280,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Timestamp</code> object.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5273,17 +5291,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if the given column index is out of bounds or
-     *            the cursor is not on one of this rowset's rows or its
-     *            insert row
+     *                      the cursor is not on one of this rowset's rows or its
+     *                      insert row
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, (3) the type
-     *            of the designated column is not an SQL <code>DATE</code>,
-     *            <code>TIME</code>, or <code>TIMESTAMP</code>, or (4) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, (3) the type
+     *                      of the designated column is not an SQL <code>DATE</code>,
+     *                      <code>TIME</code>, or <code>TIMESTAMP</code>, or (4) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateTimestamp(String columnName, Timestamp x) throws SQLException {
         updateTimestamp(getColIdxByName(columnName), x);
@@ -5293,7 +5311,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * ASCII stream value.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5304,13 +5322,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
-     * @param length the number of one-byte ASCII characters in the stream
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
+     * @param length     the number of one-byte ASCII characters in the stream
      */
     public void updateAsciiStream(String columnName,
-    InputStream x,
-    int length) throws SQLException {
+                                  InputStream x,
+                                  int length) throws SQLException {
         updateAsciiStream(getColIdxByName(columnName), x, length);
     }
 
@@ -5318,7 +5336,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.io.InputStream</code> object.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5329,16 +5347,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value; must be a <code>java.io.InputStream</code>
-     *          containing <code>BINARY</code>, <code>VARBINARY</code>, or
-     *          <code>LONGVARBINARY</code> data
-     * @param length the length of the stream in bytes
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value; must be a <code>java.io.InputStream</code>
+     *                   containing <code>BINARY</code>, <code>VARBINARY</code>, or
+     *                   <code>LONGVARBINARY</code> data
+     * @param length     the length of the stream in bytes
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, (3) the data
-     *            in the stream is not binary, or (4) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, (3) the data
+     *                      in the stream is not binary, or (4) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
         updateBinaryStream(getColIdxByName(columnName), x, length);
@@ -5348,7 +5366,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.io.Reader</code> object.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5359,21 +5377,21 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param reader the new column value; must be a
-     * <code>java.io.Reader</code> containing <code>BINARY</code>,
-     * <code>VARBINARY</code>, <code>LONGVARBINARY</code>, <code>CHAR</code>,
-     * <code>VARCHAR</code>, or <code>LONGVARCHAR</code> data
-     * @param length the length of the stream in characters
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param reader     the new column value; must be a
+     *                   <code>java.io.Reader</code> containing <code>BINARY</code>,
+     *                   <code>VARBINARY</code>, <code>LONGVARBINARY</code>, <code>CHAR</code>,
+     *                   <code>VARCHAR</code>, or <code>LONGVARCHAR</code> data
+     * @param length     the length of the stream in characters
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, (3) the data
-     *            in the stream is not a binary or character type, or (4) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, (3) the data
+     *                      in the stream is not a binary or character type, or (4) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateCharacterStream(String columnName,
-    Reader reader,
-    int length) throws SQLException {
+                                      Reader reader,
+                                      int length) throws SQLException {
         updateCharacterStream(getColIdxByName(columnName), reader, length);
     }
 
@@ -5383,8 +5401,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>Object</code> value.  The <code>scale</code> parameter
      * indicates the number of digits to the right of the decimal point
      * and is ignored if the new column value is not a type that will be
-     *  mapped to an SQL <code>DECIMAL</code> or <code>NUMERIC</code> value.
-     * <P>
+     * mapped to an SQL <code>DECIMAL</code> or <code>NUMERIC</code> value.
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5395,14 +5413,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
-     * @param scale the number of digits to the right of the decimal point (for
-     *              <code>DECIMAL</code> and <code>NUMERIC</code> types only)
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
+     * @param scale      the number of digits to the right of the decimal point (for
+     *                   <code>DECIMAL</code> and <code>NUMERIC</code> types only)
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateObject(String columnName, Object x, int scale) throws SQLException {
         updateObject(getColIdxByName(columnName), x, scale);
@@ -5412,7 +5430,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Object</code> value.
-     * <P>
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -5423,12 +5441,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param x the new column value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param x          the new column value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateObject(String columnName, Object x) throws SQLException {
         updateObject(getColIdxByName(columnName), x);
@@ -5441,32 +5459,32 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * position after the last row or before the first row, the new row will
      * be inserted at the end of the rowset.  This method also notifies
      * listeners registered with this rowset that the row has changed.
-     * <P>
+     * <p>
      * The cursor must be on the insert row when this method is called.
      *
      * @throws SQLException if (1) the cursor is not on the insert row,
-     *            (2) one or more of the non-nullable columns in the insert
-     *            row has not been given a value, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) one or more of the non-nullable columns in the insert
+     *                      row has not been given a value, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void insertRow() throws SQLException {
         int pos;
 
         if (onInsertRow == false ||
-            insertRow.isCompleteRow(RowSetMD) == false) {
-                throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.failedins").toString());
+                insertRow.isCompleteRow(RowSetMD) == false) {
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.failedins").toString());
         }
         // Added the setting of parameters that are passed
         // to setXXX methods after an empty CRS Object is
         // created through RowSetMetaData object
-        Object [] toInsert = getParams();
+        Object[] toInsert = getParams();
 
-        for(int i = 0;i < toInsert.length; i++) {
-          insertRow.setColumnObject(i+1,toInsert[i]);
+        for (int i = 0; i < toInsert.length; i++) {
+            insertRow.setColumnObject(i + 1, toInsert[i]);
         }
 
         Row insRow = new Row(RowSetMD.getColumnCount(),
-        insertRow.getOrigRow());
+                insertRow.getOrigRow());
         insRow.setInserted();
         /*
          * The new row is inserted into the RowSet
@@ -5491,14 +5509,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Marks the current row of this <code>CachedRowSetImpl</code> object as
      * updated and notifies listeners registered with this rowset that the
      * row has changed.
-     * <P>
+     * <p>
      * This method  cannot be called when the cursor is on the insert row, and
      * it should be called before the cursor moves to another row.  If it is
      * called after the cursor moves to another row, this method has no effect,
      * and the updates made before the cursor moved will be lost.
      *
      * @throws SQLException if the cursor is on the insert row or this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateRow() throws SQLException {
         // make sure we aren't on the insert row
@@ -5506,7 +5524,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.updateins").toString());
         }
 
-        ((Row)getCurrentRow()).setUpdated();
+        ((Row) getCurrentRow()).setUpdated();
 
         // notify the listeners that the row changed.
         notifyRowChanged();
@@ -5516,22 +5534,22 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Deletes the current row from this <code>CachedRowSetImpl</code> object and
      * notifies listeners registered with this rowset that a row has changed.
      * This method cannot be called when the cursor is on the insert row.
-     * <P>
+     * <p>
      * This method marks the current row as deleted, but it does not delete
      * the row from the underlying data source.  The method
      * <code>acceptChanges</code> must be called to delete the row in
      * the data source.
      *
      * @throws SQLException if (1) this method is called when the cursor
-     *            is on the insert row, before the first row, or after the
-     *            last row or (2) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      is on the insert row, before the first row, or after the
+     *                      last row or (2) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void deleteRow() throws SQLException {
         // make sure the cursor is on a valid row
         checkCursor();
 
-        ((Row)getCurrentRow()).setDeleted();
+        ((Row) getCurrentRow()).setDeleted();
         ++numDeleted;
 
         // notify the listeners that the row changed.
@@ -5546,7 +5564,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * this rowset.
      *
      * @throws SQLException if the cursor is on the insert row, before the
-     *            first row, or after the last row
+     *                      first row, or after the last row
      */
     public void refreshRow() throws SQLException {
         // make sure we are on a row
@@ -5557,7 +5575,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
         }
 
-        Row currentRow = (Row)getCurrentRow();
+        Row currentRow = (Row) getCurrentRow();
         // just undo any changes made to this row.
         currentRow.clearUpdated();
 
@@ -5573,7 +5591,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * has already been called, this method has no effect.
      *
      * @throws SQLException if the cursor is on the insert row, before the
-     *            first row, or after the last row
+     *                      first row, or after the last row
      */
     public void cancelRowUpdates() throws SQLException {
         // make sure we are on a row
@@ -5584,7 +5602,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
         }
 
-        Row currentRow = (Row)getCurrentRow();
+        Row currentRow = (Row) getCurrentRow();
         if (currentRow.getUpdated() == true) {
             currentRow.clearUpdated();
             notifyRowChanged();
@@ -5595,7 +5613,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Moves the cursor for this <code>CachedRowSetImpl</code> object
      * to the insert row.  The current row in the rowset is remembered
      * while the cursor is on the insert row.
-     * <P>
+     * <p>
      * The insert row is a special row associated with an updatable
      * rowset.  It is essentially a buffer where a new row may
      * be constructed by calling the appropriate <code>updateXXX</code>
@@ -5604,7 +5622,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * must be assigned a value.  In order for the new row to become part
      * of this rowset, the method <code>insertRow</code> must be called
      * before the cursor is moved back to the rowset.
-     * <P>
+     * <p>
      * Only certain methods may be invoked while the cursor is on the insert
      * row; many methods throw an exception if they are called while the
      * cursor is there.  In addition to the <code>updateXXX</code>
@@ -5615,7 +5633,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * undetermined.
      *
      * @throws SQLException if this <code>CachedRowSetImpl</code> object is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void moveToInsertRow() throws SQLException {
         if (getConcurrency() == ResultSet.CONCUR_READ_ONLY) {
@@ -5644,7 +5662,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Moves the cursor for this <code>CachedRowSetImpl</code> object to
      * the current row.  The current row is the row the cursor was on
      * when the method <code>moveToInsertRow</code> was called.
-     * <P>
+     * <p>
      * Calling this method has no effect unless it is called while the
      * cursor is on the insert row.
      *
@@ -5677,20 +5695,19 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * appropriate.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param map a <code>java.util.Map</code> object showing the mapping
-     *            from SQL type names to classes in the Java programming
-     *            language
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param map         a <code>java.util.Map</code> object showing the mapping
+     *                    from SQL type names to classes in the Java programming
+     *                    language
      * @return an <code>Object</code> representing the SQL value
      * @throws SQLException if the given column index is out of bounds or
-     *            the cursor is not on one of this rowset's rows or its
-     *            insert row
+     *                      the cursor is not on one of this rowset's rows or its
+     *                      insert row
      */
-     public Object getObject(int columnIndex,
-                             Map<String,Class<?>> map)
-         throws SQLException
-     {
+    public Object getObject(int columnIndex,
+                            Map<String, Class<?>> map)
+            throws SQLException {
         Object value;
 
         // sanity check.
@@ -5707,7 +5724,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             return null;
         }
         if (value instanceof Struct) {
-            Struct s = (Struct)value;
+            Struct s = (Struct) value;
 
             // look up the class in the map
             Class<?> c = map.get(s.getSQLTypeName());
@@ -5716,7 +5733,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 SQLData obj = null;
                 try {
                     obj = (SQLData) ReflectUtil.newInstance(c);
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     throw new SQLException("Unable to Instantiate: ", ex);
                 }
                 // get the attributes from the struct
@@ -5725,7 +5742,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 SQLInputImpl sqlInput = new SQLInputImpl(attribs, map);
                 // read the values...
                 obj.readSQL(sqlInput, s.getSQLTypeName());
-                return (Object)obj;
+                return (Object) obj;
             }
         }
         return value;
@@ -5737,13 +5754,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the Java programming language.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
      * @return a <code>Ref</code> object representing an SQL<code> REF</code> value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) the designated column does not store an
-     *            SQL <code>REF</code> value
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>REF</code> value
      * @see #getRef(String)
      */
     public Ref getRef(int columnIndex) throws SQLException {
@@ -5759,7 +5776,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         }
 
         setLastValueNull(false);
-        value = (Ref)(getCurrentRow().getColumnObject(columnIndex));
+        value = (Ref) (getCurrentRow().getColumnObject(columnIndex));
 
         // check for SQL NULL
         if (value == null) {
@@ -5776,13 +5793,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the Java programming language.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
      * @return a <code>Blob</code> object representing an SQL <code>BLOB</code> value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) the designated column does not store an
-     *            SQL <code>BLOB</code> value
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>BLOB</code> value
      * @see #getBlob(String)
      */
     public Blob getBlob(int columnIndex) throws SQLException {
@@ -5799,7 +5816,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         }
 
         setLastValueNull(false);
-        value = (Blob)(getCurrentRow().getColumnObject(columnIndex));
+        value = (Blob) (getCurrentRow().getColumnObject(columnIndex));
 
         // check for SQL NULL
         if (value == null) {
@@ -5816,13 +5833,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the Java programming language.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
      * @return a <code>Clob</code> object representing an SQL <code>CLOB</code> value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) the designated column does not store an
-     *            SQL <code>CLOB</code> value
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>CLOB</code> value
      * @see #getClob(String)
      */
     public Clob getClob(int columnIndex) throws SQLException {
@@ -5839,7 +5856,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         }
 
         setLastValueNull(false);
-        value = (Clob)(getCurrentRow().getColumnObject(columnIndex));
+        value = (Clob) (getCurrentRow().getColumnObject(columnIndex));
 
         // check for SQL NULL
         if (value == null) {
@@ -5856,14 +5873,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the Java programming language.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
      * @return an <code>Array</code> object representing an SQL
-     *         <code>ARRAY</code> value
+     * <code>ARRAY</code> value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) the designated column does not store an
-     *            SQL <code>ARRAY</code> value
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>ARRAY</code> value
      * @see #getArray(String)
      */
     public Array getArray(int columnIndex) throws SQLException {
@@ -5879,7 +5896,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         }
 
         setLastValueNull(false);
-        value = (Array)(getCurrentRow().getColumnObject(columnIndex));
+        value = (Array) (getCurrentRow().getColumnObject(columnIndex));
 
         // check for SQL NULL
         if (value == null) {
@@ -5898,18 +5915,18 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * appropriate.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param map a <code>java.util.Map</code> object showing the mapping
-     *        from SQL type names to classes in the Java programming
-     *        language
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param map        a <code>java.util.Map</code> object showing the mapping
+     *                   from SQL type names to classes in the Java programming
+     *                   language
      * @return an <code>Object</code> representing the SQL value
      * @throws SQLException if the given column name is not the name of
-     *         a column in this rowset or the cursor is not on one of
-     *         this rowset's rows or its insert row
+     *                      a column in this rowset or the cursor is not on one of
+     *                      this rowset's rows or its insert row
      */
     public Object getObject(String columnName,
-                            Map<String,Class<?>> map)
-    throws SQLException {
+                            Map<String, Class<?>> map)
+            throws SQLException {
         return getObject(getColIdxByName(columnName), map);
     }
 
@@ -5919,12 +5936,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the Java programming language.
      *
      * @param colName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
+     *                SQL name of a column in this rowset, ignoring case
      * @return a <code>Ref</code> object representing an SQL<code> REF</code> value
-     * @throws SQLException  if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the column value
-     *            is not an SQL <code>REF</code> value
+     * @throws SQLException if (1) the given column name is not the name of
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the column value
+     *                      is not an SQL <code>REF</code> value
      * @see #getRef(int)
      */
     public Ref getRef(String colName) throws SQLException {
@@ -5937,12 +5954,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the Java programming language.
      *
      * @param colName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
+     *                SQL name of a column in this rowset, ignoring case
      * @return a <code>Blob</code> object representing an SQL <code>BLOB</code> value
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>BLOB</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>BLOB</code> value
      * @see #getBlob(int)
      */
     public Blob getBlob(String colName) throws SQLException {
@@ -5955,13 +5972,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the Java programming language.
      *
      * @param colName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
+     *                SQL name of a column in this rowset, ignoring case
      * @return a <code>Clob</code> object representing an SQL
-     *         <code>CLOB</code> value
+     * <code>CLOB</code> value
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>CLOB</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>CLOB</code> value
      * @see #getClob(int)
      */
     public Clob getClob(String colName) throws SQLException {
@@ -5974,13 +5991,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in the Java programming langugage.
      *
      * @param colName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
+     *                SQL name of a column in this rowset, ignoring case
      * @return an <code>Array</code> object representing an SQL
-     *         <code>ARRAY</code> value
+     * <code>ARRAY</code> value
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>ARRAY</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>ARRAY</code> value
      * @see #getArray(int)
      */
     public Array getArray(String colName) throws SQLException {
@@ -5994,17 +6011,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * appropriate millisecond value for the date.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
-     * @param cal the <code>java.util.Calendar</code> object to use in
-     *            constructing the date
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
+     * @param cal         the <code>java.util.Calendar</code> object to use in
+     *                    constructing the date
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>DATE</code> or
-     *            <code>TIMESTAMP</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>DATE</code> or
+     *                      <code>TIMESTAMP</code> value
      */
     public java.sql.Date getDate(int columnIndex, Calendar cal) throws SQLException {
         Object value;
@@ -6024,13 +6041,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         }
 
         value = convertTemporal(value,
-        RowSetMD.getColumnType(columnIndex),
-        Types.DATE);
+                RowSetMD.getColumnType(columnIndex),
+                Types.DATE);
 
         // create a default calendar
         Calendar defaultCal = Calendar.getInstance();
         // set this Calendar to the time we have
-        defaultCal.setTime((java.util.Date)value);
+        defaultCal.setTime((java.util.Date) value);
 
         /*
          * Now we can pull the pieces of the date out
@@ -6055,16 +6072,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * appropriate millisecond value for the date.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param cal the <code>java.util.Calendar</code> object to use in
-     *            constructing the date
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param cal        the <code>java.util.Calendar</code> object to use in
+     *                   constructing the date
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>DATE</code> or
-     *            <code>TIMESTAMP</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>DATE</code> or
+     *                      <code>TIMESTAMP</code> value
      */
     public java.sql.Date getDate(String columnName, Calendar cal) throws SQLException {
         return getDate(getColIdxByName(columnName), cal);
@@ -6077,17 +6094,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * appropriate millisecond value for the date.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
-     * @param cal the <code>java.util.Calendar</code> object to use in
-     *            constructing the date
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
+     * @param cal         the <code>java.util.Calendar</code> object to use in
+     *                    constructing the date
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>TIME</code> or
-     *            <code>TIMESTAMP</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TIME</code> or
+     *                      <code>TIMESTAMP</code> value
      */
     public Time getTime(int columnIndex, Calendar cal) throws SQLException {
         Object value;
@@ -6107,13 +6124,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         }
 
         value = convertTemporal(value,
-        RowSetMD.getColumnType(columnIndex),
-        Types.TIME);
+                RowSetMD.getColumnType(columnIndex),
+                Types.TIME);
 
         // create a default calendar
         Calendar defaultCal = Calendar.getInstance();
         // set the time in the default calendar
-        defaultCal.setTime((java.util.Date)value);
+        defaultCal.setTime((java.util.Date) value);
 
         /*
          * Now we can pull the pieces of the date out
@@ -6134,16 +6151,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * appropriate millisecond value for the date.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param cal the <code>java.util.Calendar</code> object to use in
-     *            constructing the date
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param cal        the <code>java.util.Calendar</code> object to use in
+     *                   constructing the date
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>TIME</code> or
-     *            <code>TIMESTAMP</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TIME</code> or
+     *                      <code>TIMESTAMP</code> value
      */
     public Time getTime(String columnName, Calendar cal) throws SQLException {
         return getTime(getColIdxByName(columnName), cal);
@@ -6156,17 +6173,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * appropriate millisecond value for the date.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in the rowset
-     * @param cal the <code>java.util.Calendar</code> object to use in
-     *            constructing the date
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in the rowset
+     * @param cal         the <code>java.util.Calendar</code> object to use in
+     *                    constructing the date
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>TIME</code> or
-     *            <code>TIMESTAMP</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>TIME</code> or
+     *                      <code>TIMESTAMP</code> value
      */
     public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
         Object value;
@@ -6186,13 +6203,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         }
 
         value = convertTemporal(value,
-        RowSetMD.getColumnType(columnIndex),
-        Types.TIMESTAMP);
+                RowSetMD.getColumnType(columnIndex),
+                Types.TIMESTAMP);
 
         // create a default calendar
         Calendar defaultCal = Calendar.getInstance();
         // set the time in the default calendar
-        defaultCal.setTime((java.util.Date)value);
+        defaultCal.setTime((java.util.Date) value);
 
         /*
          * Now we can pull the pieces of the date out
@@ -6217,16 +6234,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * millisecond value for the date.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param cal the <code>java.util.Calendar</code> object to use in
-     *            constructing the date
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param cal        the <code>java.util.Calendar</code> object to use in
+     *                   constructing the date
      * @return the column value; if the value is SQL <code>NULL</code>,
-     *         the result is <code>null</code>
+     * the result is <code>null</code>
      * @throws SQLException if (1) the given column name is not the name of
-     *            a column in this rowset, (2) the cursor is not on one of
-     *            this rowset's rows or its insert row, or (3) the designated
-     *            column does not store an SQL <code>DATE</code>,
-     *            <code>TIME</code>, or <code>TIMESTAMP</code> value
+     *                      a column in this rowset, (2) the cursor is not on one of
+     *                      this rowset's rows or its insert row, or (3) the designated
+     *                      column does not store an SQL <code>DATE</code>,
+     *                      <code>TIME</code>, or <code>TIMESTAMP</code> value
      */
     public Timestamp getTimestamp(String columnName, Calendar cal) throws SQLException {
         return getTimestamp(getColIdxByName(columnName), cal);
@@ -6243,10 +6260,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * to its underlying data source.
      *
      * @return the <code>Connection</code> object passed to this rowset;
-     *         may be <code>null</code> if there is no connection
+     * may be <code>null</code> if there is no connection
      * @throws SQLException if an error occurs
      */
-    public Connection getConnection() throws SQLException{
+    public Connection getConnection() throws SQLException {
         return conn;
     }
 
@@ -6255,12 +6272,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * with the given <code>RowSetMetaData</code> object.
      *
      * @param md a <code>RowSetMetaData</code> object instance containing
-     *            metadata about the columsn in the rowset
+     *           metadata about the columsn in the rowset
      * @throws SQLException if invalid meta data is supplied to the
-     *            rowset
+     *                      rowset
      */
     public void setMetaData(RowSetMetaData md) throws SQLException {
-        RowSetMD =(RowSetMetaDataImpl) md;
+        RowSetMD = (RowSetMetaDataImpl) md;
     }
 
     /**
@@ -6275,7 +6292,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @return the original result set of the rowset
      * @throws SQLException if an error occurs produce the
-     *           <code>ResultSet</code> object
+     *                      <code>ResultSet</code> object
      */
     public ResultSet getOriginal() throws SQLException {
         CachedRowSetImpl crs = new CachedRowSetImpl();
@@ -6290,11 +6307,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         int colCount = RowSetMD.getColumnCount();
         Row orig;
 
-        for (Iterator<?> i = rvh.iterator(); i.hasNext();) {
-            orig = new Row(colCount, ((Row)i.next()).getOrigRow());
+        for (Iterator<?> i = rvh.iterator(); i.hasNext(); ) {
+            orig = new Row(colCount, ((Row) i.next()).getOrigRow());
             crs.rvh.add(orig);
         }
-        return (ResultSet)crs;
+        return (ResultSet) crs;
     }
 
     /**
@@ -6321,11 +6338,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         //crs.setWriter(null);
 
         Row orig = new Row(RowSetMD.getColumnCount(),
-        getCurrentRow().getOrigRow());
+                getCurrentRow().getOrigRow());
 
         crs.rvh.add(orig);
 
-        return (ResultSet)crs;
+        return (ResultSet) crs;
 
     }
 
@@ -6340,7 +6357,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
         }
 
-        Row row = (Row)getCurrentRow();
+        Row row = (Row) getCurrentRow();
         makeRowOriginal(row);
 
         // this can happen if deleted rows are being shown
@@ -6376,8 +6393,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @throws SQLException if an error occurs
      */
     public void setOriginal() throws SQLException {
-        for (Iterator<?> i = rvh.iterator(); i.hasNext();) {
-            Row row = (Row)i.next();
+        for (Iterator<?> i = rvh.iterator(); i.hasNext(); ) {
+            Row row = (Row) i.next();
             makeRowOriginal(row);
             // remove deleted rows from the collection.
             if (row.getDeleted() == true) {
@@ -6396,7 +6413,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * rowset.
      *
      * @return a <code>String</code> object that identifies the table from
-     *         which this <code>CachedRowSetImpl</code> object was derived
+     * which this <code>CachedRowSetImpl</code> object was derived
      * @throws SQLException if an error occurs
      */
     public String getTableName() throws SQLException {
@@ -6408,8 +6425,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * to the given table name.
      *
      * @param tabName a <code>String</code> object that identifies the
-     *          table from which this <code>CachedRowSetImpl</code> object
-     *          was derived
+     *                table from which this <code>CachedRowSetImpl</code> object
+     *                was derived
      * @throws SQLException if an error occurs
      */
     public void setTableName(String tabName) throws SQLException {
@@ -6424,14 +6441,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * row in this <code>CachedRowSetImpl</code> object.
      *
      * @return an array of column numbers that constitutes a primary
-     *           key for this rowset. This array should be empty
-     *           if no column is representitive of a primary key
+     * key for this rowset. This array should be empty
+     * if no column is representitive of a primary key
      * @throws SQLException if the rowset is empty or no columns
-     *           are designated as primary keys
+     *                      are designated as primary keys
      * @see #setKeyColumns
      */
     public int[] getKeyColumns() throws SQLException {
-        int[]keyColumns  = this.keyCols;
+        int[] keyColumns = this.keyCols;
         return (keyColumns == null) ? null : Arrays.copyOf(keyColumns, keyColumns.length);
     }
 
@@ -6443,16 +6460,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * in this rowset.
      *
      * @param keys an array of <code>int</code> indicating the
-     *        columns that form a primary key for this
-     *        <code>CachedRowSetImpl</code> object; every
-     *        element in the array must be greater than
-     *        <code>0</code> and less than or equal to the number
-     *        of columns in this rowset
+     *             columns that form a primary key for this
+     *             <code>CachedRowSetImpl</code> object; every
+     *             element in the array must be greater than
+     *             <code>0</code> and less than or equal to the number
+     *             of columns in this rowset
      * @throws SQLException if any of the numbers in the
-     *            given array is not valid for this rowset
+     *                      given array is not valid for this rowset
      * @see #getKeyColumns
      */
-    public void setKeyColumns(int [] keys) throws SQLException {
+    public void setKeyColumns(int[] keys) throws SQLException {
         int numCols = 0;
         if (RowSetMD != null) {
             numCols = RowSetMD.getColumnCount();
@@ -6462,9 +6479,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         keyCols = new int[keys.length];
         for (int i = 0; i < keys.length; i++) {
             if (RowSetMD != null && (keys[i] <= 0 ||
-            keys[i] > numCols)) {
+                    keys[i] > numCols)) {
                 throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcol").toString() +
-                keys[i]);
+                        keys[i]);
             }
             keyCols[i] = keys[i];
         }
@@ -6474,7 +6491,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>Ref</code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -6485,13 +6502,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param ref the new column <code>java.sql.Ref</code> value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param ref         the new column <code>java.sql.Ref</code> value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *        (2) the cursor is not on one of this rowset's rows or its
-     *        insert row, or (3) this rowset is
-     *        <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateRef(int columnIndex, Ref ref) throws SQLException {
         // sanity check.
@@ -6509,7 +6526,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>double</code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -6520,12 +6537,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param ref the new column <code>java.sql.Ref</code> value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param ref        the new column <code>java.sql.Ref</code> value
      * @throws SQLException if (1) the given column name does not match the
-     *        name of a column in this rowset, (2) the cursor is not on
-     *        one of this rowset's rows or its insert row, or (3) this
-     *        rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateRef(String columnName, Ref ref) throws SQLException {
         updateRef(getColIdxByName(columnName), ref);
@@ -6535,7 +6552,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>double</code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -6546,13 +6563,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param c the new column <code>Clob</code> value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param c           the new column <code>Clob</code> value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *        (2) the cursor is not on one of this rowset's rows or its
-     *        insert row, or (3) this rowset is
-     *        <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateClob(int columnIndex, Clob c) throws SQLException {
         // sanity check.
@@ -6564,11 +6581,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // We need to be checking DatabaseMetaData.locatorsUpdatorCopy()
         // or through RowSetMetaData.locatorsUpdatorCopy()
 
-        if(dbmslocatorsUpdateCopy){
-           getCurrentRow().setColumnObject(columnIndex, new SerialClob(c));
-        }
-        else{
-           throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.opnotsupp").toString());
+        if (dbmslocatorsUpdateCopy) {
+            getCurrentRow().setColumnObject(columnIndex, new SerialClob(c));
+        } else {
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.opnotsupp").toString());
         }
     }
 
@@ -6576,7 +6592,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>double</code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -6587,12 +6603,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param c the new column <code>Clob</code> value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param c          the new column <code>Clob</code> value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateClob(String columnName, Clob c) throws SQLException {
         updateClob(getColIdxByName(columnName), c);
@@ -6602,7 +6618,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.sql.Blob</code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -6613,13 +6629,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param b the new column <code>Blob</code> value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param b           the new column <code>Blob</code> value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBlob(int columnIndex, Blob b) throws SQLException {
         // sanity check.
@@ -6631,11 +6647,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // We need to be checking DatabaseMetaData.locatorsUpdatorCopy()
         // or through RowSetMetaData.locatorsUpdatorCopy()
 
-        if(dbmslocatorsUpdateCopy){
-           getCurrentRow().setColumnObject(columnIndex, new SerialBlob(b));
-        }
-        else{
-           throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.opnotsupp").toString());
+        if (dbmslocatorsUpdateCopy) {
+            getCurrentRow().setColumnObject(columnIndex, new SerialBlob(b));
+        } else {
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.opnotsupp").toString());
         }
     }
 
@@ -6643,7 +6658,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.sql.Blob </code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -6654,12 +6669,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param b the new column <code>Blob</code> value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param b          the new column <code>Blob</code> value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateBlob(String columnName, Blob b) throws SQLException {
         updateBlob(getColIdxByName(columnName), b);
@@ -6669,7 +6684,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.sql.Array</code> values.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -6680,13 +6695,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnIndex the first column is <code>1</code>, the second
-     *        is <code>2</code>, and so on; must be <code>1</code> or larger
-     *        and equal to or less than the number of columns in this rowset
-     * @param a the new column <code>Array</code> value
+     *                    is <code>2</code>, and so on; must be <code>1</code> or larger
+     *                    and equal to or less than the number of columns in this rowset
+     * @param a           the new column <code>Array</code> value
      * @throws SQLException if (1) the given column index is out of bounds,
-     *            (2) the cursor is not on one of this rowset's rows or its
-     *            insert row, or (3) this rowset is
-     *            <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) this rowset is
+     *                      <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateArray(int columnIndex, Array a) throws SQLException {
         // sanity check.
@@ -6704,7 +6719,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Sets the designated column in either the current row or the insert
      * row of this <code>CachedRowSetImpl</code> object with the given
      * <code>java.sql.Array</code> value.
-     *
+     * <p>
      * This method updates a column value in either the current row or
      * the insert row of this rowset, but it does not update the
      * database.  If the cursor is on a row in the rowset, the
@@ -6715,12 +6730,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * cursor moves to another row.
      *
      * @param columnName a <code>String</code> object that must match the
-     *        SQL name of a column in this rowset, ignoring case
-     * @param a the new column <code>Array</code> value
+     *                   SQL name of a column in this rowset, ignoring case
+     * @param a          the new column <code>Array</code> value
      * @throws SQLException if (1) the given column name does not match the
-     *            name of a column in this rowset, (2) the cursor is not on
-     *            one of this rowset's rows or its insert row, or (3) this
-     *            rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
+     *                      name of a column in this rowset, (2) the cursor is not on
+     *                      one of this rowset's rows or its insert row, or (3) this
+     *                      rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
      */
     public void updateArray(String columnName, Array a) throws SQLException {
         updateArray(getColIdxByName(columnName), a);
@@ -6735,9 +6750,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @return a java.net.URL object containing the resource reference described by
      * the URL
      * @throws SQLException if (1) the given column index is out of bounds,
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>DATALINK</code> value.
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>DATALINK</code> value.
      * @see #getURL(String)
      */
     public java.net.URL getURL(int columnIndex) throws SQLException {
@@ -6755,7 +6770,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         }
 
         setLastValueNull(false);
-        value = (java.net.URL)(getCurrentRow().getColumnObject(columnIndex));
+        value = (java.net.URL) (getCurrentRow().getColumnObject(columnIndex));
 
         // check for SQL NULL
         if (value == null) {
@@ -6774,10 +6789,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @return a java.net.URL object containing the resource reference described by
      * the URL
      * @throws SQLException if (1) the given column name not the name of a column
-     * in this rowset, or
-     * (2) the cursor is not on one of this rowset's rows or its
-     * insert row, or (3) the designated column does not store an
-     * SQL <code>DATALINK</code> value.
+     *                      in this rowset, or
+     *                      (2) the cursor is not on one of this rowset's rows or its
+     *                      insert row, or (3) the designated column does not store an
+     *                      SQL <code>DATALINK</code> value.
      * @see #getURL(int)
      */
     public java.net.URL getURL(String columnName) throws SQLException {
@@ -6801,13 +6816,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * methods. All <code>SQLWarnings</code> can be obtained using the
      * <code>getWarnings</code> method which tracks warnings generated
      * by the underlying JDBC driver.
-     * @return the first SQLWarning or null
      *
+     * @return the first SQLWarning or null
      */
     public RowSetWarning getRowSetWarnings() {
         try {
             notifyCursorMoved();
-        } catch (SQLException e) {} // mask exception
+        } catch (SQLException e) {
+        } // mask exception
         return rowsetWarning;
     }
 
@@ -6828,12 +6844,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         // else user has to explicitly set the table name.
 
         int indexFrom, indexComma;
-        String strTablename ="";
+        String strTablename = "";
         command = command.trim();
 
         // Query can be a select, insert or  update
 
-        if(command.toLowerCase().startsWith("select")) {
+        if (command.toLowerCase().startsWith("select")) {
             // look for "from" keyword, after that look for a
             // comma after from. If comma is there don't set
             // table name else isolate table name.
@@ -6841,22 +6857,21 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             indexFrom = command.toLowerCase().indexOf("from");
             indexComma = command.indexOf(",", indexFrom);
 
-            if(indexComma == -1) {
+            if (indexComma == -1) {
                 // implies only one table
-                strTablename = (command.substring(indexFrom+"from".length(),command.length())).trim();
+                strTablename = (command.substring(indexFrom + "from".length(), command.length())).trim();
 
                 String tabName = strTablename;
 
                 int idxWhere = tabName.toLowerCase().indexOf("where");
 
                 /**
-                  * Adding the addtional check for conditions following the table name.
-                  * If a condition is found truncate it.
-                  **/
+                 * Adding the addtional check for conditions following the table name.
+                 * If a condition is found truncate it.
+                 **/
 
-                if(idxWhere != -1)
-                {
-                   tabName = tabName.substring(0,idxWhere).trim();
+                if (idxWhere != -1) {
+                    tabName = tabName.substring(0, idxWhere).trim();
                 }
 
                 strTablename = tabName;
@@ -6865,9 +6880,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 //strTablename="";
             }
 
-        } else if(command.toLowerCase().startsWith("insert")) {
+        } else if (command.toLowerCase().startsWith("insert")) {
             //strTablename="";
-        } else if(command.toLowerCase().startsWith("update")) {
+        } else if (command.toLowerCase().startsWith("update")) {
             //strTablename="";
         }
         return strTablename;
@@ -6907,55 +6922,55 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Unsets the designated parameter to the given int array.
      * This was set using <code>setMatchColumn</code>
      * as the column which will form the basis of the join.
-     * <P>
+     * <p>
      * The parameter value unset by this method should be same
      * as was set.
      *
      * @param columnIdxes the index into this rowset
-     *        object's internal representation of parameter values
+     *                    object's internal representation of parameter values
      * @throws SQLException if an error occurs or the
-     *  parameter index is out of bounds or if the columnIdx is
-     *  not the same as set using <code>setMatchColumn(int [])</code>
+     *                      parameter index is out of bounds or if the columnIdx is
+     *                      not the same as set using <code>setMatchColumn(int [])</code>
      */
     public void unsetMatchColumn(int[] columnIdxes) throws SQLException {
 
-         int i_val;
-         for( int j= 0 ;j < columnIdxes.length; j++) {
+        int i_val;
+        for (int j = 0; j < columnIdxes.length; j++) {
             i_val = (Integer.parseInt(iMatchColumns.get(j).toString()));
-            if(columnIdxes[j] != i_val) {
-               throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols").toString());
+            if (columnIdxes[j] != i_val) {
+                throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols").toString());
             }
-         }
+        }
 
-         for( int i = 0;i < columnIdxes.length ;i++) {
+        for (int i = 0; i < columnIdxes.length; i++) {
             iMatchColumns.set(i, -1);
-         }
+        }
     }
 
-   /**
+    /**
      * Unsets the designated parameter to the given String array.
      * This was set using <code>setMatchColumn</code>
      * as the column which will form the basis of the join.
-     * <P>
+     * <p>
      * The parameter value unset by this method should be same
      * as was set.
      *
      * @param columnIdxes the index into this rowset
-     *        object's internal representation of parameter values
+     *                    object's internal representation of parameter values
      * @throws SQLException if an error occurs or the
-     *  parameter index is out of bounds or if the columnName is
-     *  not the same as set using <code>setMatchColumn(String [])</code>
+     *                      parameter index is out of bounds or if the columnName is
+     *                      not the same as set using <code>setMatchColumn(String [])</code>
      */
     public void unsetMatchColumn(String[] columnIdxes) throws SQLException {
 
-        for(int j = 0 ;j < columnIdxes.length; j++) {
-           if( !columnIdxes[j].equals(strMatchColumns.get(j)) ){
-              throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols").toString());
-           }
+        for (int j = 0; j < columnIdxes.length; j++) {
+            if (!columnIdxes[j].equals(strMatchColumns.get(j))) {
+                throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols").toString());
+            }
         }
 
-        for(int i = 0 ; i < columnIdxes.length; i++) {
-           strMatchColumns.set(i,null);
+        for (int i = 0; i < columnIdxes.length; i++) {
+            strMatchColumns.set(i, null);
         }
     }
 
@@ -6965,16 +6980,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * for this rowset.
      *
      * @return a <code>String</code> array object that contains the column names
-     *         for the rowset which has this the match columns
-     *
+     * for the rowset which has this the match columns
      * @throws SQLException if an error occurs or column name is not set
      */
     public String[] getMatchColumnNames() throws SQLException {
 
-        String []str_temp = new String[strMatchColumns.size()];
+        String[] str_temp = new String[strMatchColumns.size()];
 
-        if( strMatchColumns.get(0) == null) {
-           throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.setmatchcols").toString());
+        if (strMatchColumns.get(0) == null) {
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.setmatchcols").toString());
         }
 
         strMatchColumns.copyInto(str_temp);
@@ -6986,27 +7000,26 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>setMatchColumn(int [])</code> for this rowset.
      *
      * @return a <code>int</code> array object that contains the column ids
-     *         for the rowset which has this as the match columns.
-     *
+     * for the rowset which has this as the match columns.
      * @throws SQLException if an error occurs or column index is not set
      */
     public int[] getMatchColumnIndexes() throws SQLException {
 
-        Integer []int_temp = new Integer[iMatchColumns.size()];
-        int [] i_temp = new int[iMatchColumns.size()];
+        Integer[] int_temp = new Integer[iMatchColumns.size()];
+        int[] i_temp = new int[iMatchColumns.size()];
         int i_val;
 
         i_val = iMatchColumns.get(0);
 
-        if( i_val == -1 ) {
-           throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.setmatchcols").toString());
+        if (i_val == -1) {
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.setmatchcols").toString());
         }
 
 
         iMatchColumns.copyInto(int_temp);
 
-        for(int i = 0; i < int_temp.length; i++) {
-           i_temp[i] = (int_temp[i]).intValue();
+        for (int i = 0; i < int_temp.length; i++) {
+            i_temp[i] = (int_temp[i]).intValue();
         }
 
         return i_temp;
@@ -7017,54 +7030,54 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * This forms the basis of the join for the
      * <code>JoinRowSet</code> as the column which will form the basis of the
      * join.
-     * <P>
+     * <p>
      * The parameter value set by this method is stored internally and
      * will be supplied as the appropriate parameter in this rowset's
      * command when the method <code>getMatchColumnIndexes</code> is called.
      *
      * @param columnIdxes the indexes into this rowset
-     *        object's internal representation of parameter values; the
-     *        first parameter is 0, the second is 1, and so on; must be
-     *        <code>0</code> or greater
+     *                    object's internal representation of parameter values; the
+     *                    first parameter is 0, the second is 1, and so on; must be
+     *                    <code>0</code> or greater
      * @throws SQLException if an error occurs or the
-     *                         parameter index is out of bounds
+     *                      parameter index is out of bounds
      */
     public void setMatchColumn(int[] columnIdxes) throws SQLException {
 
-        for(int j = 0 ; j < columnIdxes.length; j++) {
-           if( columnIdxes[j] < 0 ) {
-              throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols1").toString());
-           }
+        for (int j = 0; j < columnIdxes.length; j++) {
+            if (columnIdxes[j] < 0) {
+                throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols1").toString());
+            }
         }
-        for(int i = 0 ;i < columnIdxes.length; i++) {
-           iMatchColumns.add(i,columnIdxes[i]);
+        for (int i = 0; i < columnIdxes.length; i++) {
+            iMatchColumns.add(i, columnIdxes[i]);
         }
     }
 
     /**
      * Sets the designated parameter to the given String array.
-     *  This forms the basis of the join for the
+     * This forms the basis of the join for the
      * <code>JoinRowSet</code> as the column which will form the basis of the
      * join.
-     * <P>
+     * <p>
      * The parameter value set by this method is stored internally and
      * will be supplied as the appropriate parameter in this rowset's
      * command when the method <code>getMatchColumn</code> is called.
      *
      * @param columnNames the name of the column into this rowset
-     *        object's internal representation of parameter values
+     *                    object's internal representation of parameter values
      * @throws SQLException if an error occurs or the
-     *  parameter index is out of bounds
+     *                      parameter index is out of bounds
      */
     public void setMatchColumn(String[] columnNames) throws SQLException {
 
-        for(int j = 0; j < columnNames.length; j++) {
-           if( columnNames[j] == null || columnNames[j].equals("")) {
-              throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols2").toString());
-           }
+        for (int j = 0; j < columnNames.length; j++) {
+            if (columnNames[j] == null || columnNames[j].equals("")) {
+                throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols2").toString());
+            }
         }
-        for( int i = 0; i < columnNames.length; i++) {
-           strMatchColumns.add(i,columnNames[i]);
+        for (int i = 0; i < columnNames.length; i++) {
+            strMatchColumns.add(i, columnNames[i]);
         }
     }
 
@@ -7074,21 +7087,21 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * object.  This forms the basis of the join for the
      * <code>JoinRowSet</code> as the column which will form the basis of the
      * join.
-     * <P>
+     * <p>
      * The parameter value set by this method is stored internally and
      * will be supplied as the appropriate parameter in this rowset's
      * command when the method <code>getMatchColumn</code> is called.
      *
      * @param columnIdx the index into this rowset
-     *        object's internal representation of parameter values; the
-     *        first parameter is 0, the second is 1, and so on; must be
-     *        <code>0</code> or greater
+     *                  object's internal representation of parameter values; the
+     *                  first parameter is 0, the second is 1, and so on; must be
+     *                  <code>0</code> or greater
      * @throws SQLException if an error occurs or the
-     *                         parameter index is out of bounds
+     *                      parameter index is out of bounds
      */
     public void setMatchColumn(int columnIdx) throws SQLException {
         // validate, if col is ok to be set
-        if(columnIdx < 0) {
+        if (columnIdx < 0) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols1").toString());
         } else {
             // set iMatchColumn
@@ -7102,19 +7115,19 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * object.  This forms the basis of the join for the
      * <code>JoinRowSet</code> as the column which will form the basis of the
      * join.
-     * <P>
+     * <p>
      * The parameter value set by this method is stored internally and
      * will be supplied as the appropriate parameter in this rowset's
      * command when the method <code>getMatchColumn</code> is called.
      *
      * @param columnName the name of the column into this rowset
-     *        object's internal representation of parameter values
+     *                   object's internal representation of parameter values
      * @throws SQLException if an error occurs or the
-     *  parameter index is out of bounds
+     *                      parameter index is out of bounds
      */
     public void setMatchColumn(String columnName) throws SQLException {
         // validate, if col is ok to be set
-        if(columnName == null || (columnName= columnName.trim()).equals("") ) {
+        if (columnName == null || (columnName = columnName.trim()).equals("")) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.matchcols2").toString());
         } else {
             // set strMatchColumn
@@ -7127,25 +7140,25 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Unsets the designated parameter to the given <code>int</code>
      * object.  This was set using <code>setMatchColumn</code>
      * as the column which will form the basis of the join.
-     * <P>
+     * <p>
      * The parameter value unset by this method should be same
      * as was set.
      *
      * @param columnIdx the index into this rowset
-     *        object's internal representation of parameter values
+     *                  object's internal representation of parameter values
      * @throws SQLException if an error occurs or the
-     *  parameter index is out of bounds or if the columnIdx is
-     *  not the same as set using <code>setMatchColumn(int)</code>
+     *                      parameter index is out of bounds or if the columnIdx is
+     *                      not the same as set using <code>setMatchColumn(int)</code>
      */
     public void unsetMatchColumn(int columnIdx) throws SQLException {
         // check if we are unsetting the SAME column
-        if(! iMatchColumns.get(0).equals(Integer.valueOf(columnIdx) )  ) {
+        if (!iMatchColumns.get(0).equals(Integer.valueOf(columnIdx))) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.unsetmatch").toString());
-        } else if(strMatchColumns.get(0) != null) {
+        } else if (strMatchColumns.get(0) != null) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.unsetmatch1").toString());
         } else {
-                // that is, we are unsetting it.
-               iMatchColumns.set(0, -1);
+            // that is, we are unsetting it.
+            iMatchColumns.set(0, -1);
         }
     }
 
@@ -7153,23 +7166,23 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * Unsets the designated parameter to the given <code>String</code>
      * object.  This was set using <code>setMatchColumn</code>
      * as the column which will form the basis of the join.
-     * <P>
+     * <p>
      * The parameter value unset by this method should be same
      * as was set.
      *
      * @param columnName the index into this rowset
-     *        object's internal representation of parameter values
+     *                   object's internal representation of parameter values
      * @throws SQLException if an error occurs or the
-     *  parameter index is out of bounds or if the columnName is
-     *  not the same as set using <code>setMatchColumn(String)</code>
+     *                      parameter index is out of bounds or if the columnName is
+     *                      not the same as set using <code>setMatchColumn(String)</code>
      */
     public void unsetMatchColumn(String columnName) throws SQLException {
         // check if we are unsetting the same column
         columnName = columnName.trim();
 
-        if(!((strMatchColumns.get(0)).equals(columnName))) {
+        if (!((strMatchColumns.get(0)).equals(columnName))) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.unsetmatch").toString());
-        } else if(iMatchColumns.get(0) > 0) {
+        } else if (iMatchColumns.get(0) > 0) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.unsetmatch2").toString());
         } else {
             strMatchColumns.set(0, null);   // that is, we are unsetting it.
@@ -7183,19 +7196,19 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <p>
      * The source of the event can be retrieved with the method event.getSource.
      *
-     * @param event a <code>RowSetEvent</code> object that contains the
-     *     <code>RowSet</code> object that is the source of the events
+     * @param event   a <code>RowSetEvent</code> object that contains the
+     *                <code>RowSet</code> object that is the source of the events
      * @param numRows when populating, the number of rows interval on which the
-     *     <code>CachedRowSet</code> populated should fire; the default value
-     *     is zero; cannot be less than <code>fetchSize</code> or zero
+     *                <code>CachedRowSet</code> populated should fire; the default value
+     *                is zero; cannot be less than <code>fetchSize</code> or zero
      */
     public void rowSetPopulated(RowSetEvent event, int numRows) throws SQLException {
 
-        if( numRows < 0 || numRows < getFetchSize()) {
-           throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.numrows").toString());
+        if (numRows < 0 || numRows < getFetchSize()) {
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.numrows").toString());
         }
 
-        if(size() % numRows == 0) {
+        if (size() % numRows == 0) {
             RowSetEvent event_temp = new RowSetEvent(this);
             event = event_temp;
             notifyRowSetChanged();
@@ -7208,7 +7221,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * method, an additional parameter is provided to allow starting position within
      * the <code>ResultSet</code> from where to populate the CachedRowSet
      * instance.
-     *
+     * <p>
      * This method is an alternative to the method <code>execute</code>
      * for filling the rowset with data.  The method <code>populate</code>
      * does not require that the properties needed by the method
@@ -7218,23 +7231,23 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * which to get data and thus does not need to use the properties
      * required for setting up a connection and executing this
      * <code>CachedRowSetImpl</code> object's command.
-     * <P>
+     * <p>
      * After populating this rowset with data, the method
      * <code>populate</code> sets the rowset's metadata and
      * then sends a <code>RowSetChangedEvent</code> object
      * to all registered listeners prior to returning.
      *
-     * @param data the <code>ResultSet</code> object containing the data
-     *             to be read into this <code>CachedRowSetImpl</code> object
+     * @param data  the <code>ResultSet</code> object containing the data
+     *              to be read into this <code>CachedRowSetImpl</code> object
      * @param start the integer specifing the position in the
-     *        <code>ResultSet</code> object to popultate the
-     *        <code>CachedRowSetImpl</code> object.
+     *              <code>ResultSet</code> object to popultate the
+     *              <code>CachedRowSetImpl</code> object.
      * @throws SQLException if an error occurs; or the max row setting is
-     *          violated while populating the RowSet.Also id the start position
-     *          is negative.
+     *                      violated while populating the RowSet.Also id the start position
+     *                      is negative.
      * @see #execute
      */
-     public void populate(ResultSet data, int start) throws SQLException{
+    public void populate(ResultSet data, int start) throws SQLException {
 
         int rowsFetched;
         Row currentRow;
@@ -7245,52 +7258,49 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         int mRows;
 
         cursorPos = 0;
-        if(populatecallcount == 0){
-            if(start < 0){
-               throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.startpos").toString());
+        if (populatecallcount == 0) {
+            if (start < 0) {
+                throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.startpos").toString());
             }
-            if(getMaxRows() == 0){
-               data.absolute(start);
-               while(data.next()){
-                   totalRows++;
-               }
-               totalRows++;
+            if (getMaxRows() == 0) {
+                data.absolute(start);
+                while (data.next()) {
+                    totalRows++;
+                }
+                totalRows++;
             }
             startPos = start;
         }
-        populatecallcount = populatecallcount +1;
+        populatecallcount = populatecallcount + 1;
         resultSet = data;
-        if((endPos - startPos) >= getMaxRows() && (getMaxRows() > 0)){
+        if ((endPos - startPos) >= getMaxRows() && (getMaxRows() > 0)) {
             endPos = prevEndPos;
             pagenotend = false;
             return;
         }
 
-        if((maxRowsreached != getMaxRows() || maxRowsreached != totalRows) && pagenotend) {
-           startPrev = start - getPageSize();
+        if ((maxRowsreached != getMaxRows() || maxRowsreached != totalRows) && pagenotend) {
+            startPrev = start - getPageSize();
         }
 
-        if( pageSize == 0){
-           prevEndPos = endPos;
-           endPos = start + getMaxRows() ;
-        }
-        else{
+        if (pageSize == 0) {
+            prevEndPos = endPos;
+            endPos = start + getMaxRows();
+        } else {
             prevEndPos = endPos;
             endPos = start + getPageSize();
         }
 
 
-        if (start == 1){
+        if (start == 1) {
             resultSet.beforeFirst();
+        } else {
+            resultSet.absolute(start - 1);
         }
-        else {
-            resultSet.absolute(start -1);
-        }
-        if( pageSize == 0) {
-           rvh = new Vector<Object>(getMaxRows());
+        if (pageSize == 0) {
+            rvh = new Vector<Object>(getMaxRows());
 
-        }
-        else{
+        } else {
             rvh = new Vector<Object>(getPageSize());
         }
 
@@ -7312,7 +7322,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         rowsFetched = 0;
         currentRow = null;
 
-        if(!data.next() && mRows == 0){
+        if (!data.next() && mRows == 0) {
             endPos = prevEndPos;
             pagenotend = false;
             return;
@@ -7320,25 +7330,24 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
         data.previous();
 
-        while ( data.next()) {
+        while (data.next()) {
 
             currentRow = new Row(numCols);
-          if(pageSize == 0){
-            if ( rowsFetched >= mRows && mRows > 0) {
-                rowsetWarning.setNextException(new SQLException("Populating rows "
-                + "setting has exceeded max row setting"));
-                break;
+            if (pageSize == 0) {
+                if (rowsFetched >= mRows && mRows > 0) {
+                    rowsetWarning.setNextException(new SQLException("Populating rows "
+                            + "setting has exceeded max row setting"));
+                    break;
+                }
+            } else {
+                if ((rowsFetched >= pageSize) || (maxRowsreached >= mRows && mRows > 0)) {
+                    rowsetWarning.setNextException(new SQLException("Populating rows "
+                            + "setting has exceeded max row setting"));
+                    break;
+                }
             }
-          }
-          else {
-              if ( (rowsFetched >= pageSize) ||( maxRowsreached >= mRows && mRows > 0)) {
-                rowsetWarning.setNextException(new SQLException("Populating rows "
-                + "setting has exceeded max row setting"));
-                break;
-            }
-          }
 
-            for ( i = 1; i <= numCols; i++) {
+            for (i = 1; i <= numCols; i++) {
                 /*
                  * check if the user has set a map. If no map
                  * is set then use plain getObject. This lets
@@ -7356,15 +7365,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                  * store - right now only structs have been tested
                  */
                 if (obj instanceof Struct) {
-                    obj = new SerialStruct((Struct)obj, map);
+                    obj = new SerialStruct((Struct) obj, map);
                 } else if (obj instanceof SQLData) {
-                    obj = new SerialStruct((SQLData)obj, map);
+                    obj = new SerialStruct((SQLData) obj, map);
                 } else if (obj instanceof Blob) {
-                    obj = new SerialBlob((Blob)obj);
+                    obj = new SerialBlob((Blob) obj);
                 } else if (obj instanceof Clob) {
-                    obj = new SerialClob((Clob)obj);
+                    obj = new SerialClob((Clob) obj);
                 } else if (obj instanceof Array) {
-                    obj = new SerialArray((Array)obj, map);
+                    obj = new SerialArray((Array) obj, map);
                 }
 
                 currentRow.initColumnObject(i, obj);
@@ -7373,37 +7382,37 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             maxRowsreached++;
             rvh.add(currentRow);
         }
-        numRows = rowsFetched ;
+        numRows = rowsFetched;
         // Also rowsFetched should be equal to rvh.size()
         // notify any listeners that the rowset has changed
         notifyRowSetChanged();
 
-     }
+    }
 
     /**
      * The nextPage gets the next page, that is a <code>CachedRowSetImpl</code> object
      * containing the number of rows specified by page size.
+     *
      * @return boolean value true indicating whether there are more pages to come and
-     *         false indicating that this is the last page.
+     * false indicating that this is the last page.
      * @throws SQLException if an error occurs or this called before calling populate.
      */
-     public boolean nextPage() throws SQLException {
+    public boolean nextPage() throws SQLException {
 
-         if (populatecallcount == 0){
-             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.nextpage").toString());
-         }
-         // Fix for 6554186
-         onFirstPage = false;
-         if(callWithCon){
+        if (populatecallcount == 0) {
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.nextpage").toString());
+        }
+        // Fix for 6554186
+        onFirstPage = false;
+        if (callWithCon) {
             crsReader.setStartPosition(endPos);
-            crsReader.readData((RowSetInternal)this);
+            crsReader.readData((RowSetInternal) this);
             resultSet = null;
-         }
-         else {
-            populate(resultSet,endPos);
-         }
-         return pagenotend;
-     }
+        } else {
+            populate(resultSet, endPos);
+        }
+        return pagenotend;
+    }
 
     /**
      * This is the setter function for setting the size of the page, which specifies
@@ -7412,7 +7421,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @param size which is the page size
      * @throws SQLException if size is less than zero or greater than max rows.
      */
-     public void setPageSize (int size) throws SQLException {
+    public void setPageSize(int size) throws SQLException {
         if (size < 0) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.pagesize").toString());
         }
@@ -7420,7 +7429,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.pagesize1").toString());
         }
         pageSize = size;
-     }
+    }
 
     /**
      * This is the getter function for the size of the page.
@@ -7435,11 +7444,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * Retrieves the data present in the page prior to the page from where it is
      * called.
+     *
      * @return boolean value true if it retrieves the previous page, flase if it
-     *         is on the first page.
+     * is on the first page.
      * @throws SQLException if it is called before populate is called or ResultSet
-     *         is of type <code>ResultSet.TYPE_FORWARD_ONLY</code> or if an error
-     *         occurs.
+     *                      is of type <code>ResultSet.TYPE_FORWARD_ONLY</code> or if an error
+     *                      occurs.
      */
     public boolean previousPage() throws SQLException {
         int pS;
@@ -7449,51 +7459,47 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         pS = getPageSize();
         mR = maxRowsreached;
 
-        if (populatecallcount == 0){
-             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.nextpage").toString());
-         }
+        if (populatecallcount == 0) {
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.nextpage").toString());
+        }
 
-        if( !callWithCon){
-           if(resultSet.getType() == ResultSet.TYPE_FORWARD_ONLY){
-               throw new SQLException (resBundle.handleGetObject("cachedrowsetimpl.fwdonly").toString());
-           }
+        if (!callWithCon) {
+            if (resultSet.getType() == ResultSet.TYPE_FORWARD_ONLY) {
+                throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.fwdonly").toString());
+            }
         }
 
         pagenotend = true;
 
-        if(startPrev < startPos ){
-                onFirstPage = true;
-               return false;
-            }
+        if (startPrev < startPos) {
+            onFirstPage = true;
+            return false;
+        }
 
-        if(onFirstPage){
+        if (onFirstPage) {
             return false;
         }
 
         rem = mR % pS;
 
-        if(rem == 0){
+        if (rem == 0) {
             maxRowsreached -= (2 * pS);
-            if(callWithCon){
+            if (callWithCon) {
                 crsReader.setStartPosition(startPrev);
-                crsReader.readData((RowSetInternal)this);
+                crsReader.readData((RowSetInternal) this);
                 resultSet = null;
-            }
-            else {
-               populate(resultSet,startPrev);
+            } else {
+                populate(resultSet, startPrev);
             }
             return true;
-        }
-        else
-        {
+        } else {
             maxRowsreached -= (pS + rem);
-            if(callWithCon){
+            if (callWithCon) {
                 crsReader.setStartPosition(startPrev);
-                crsReader.readData((RowSetInternal)this);
+                crsReader.readData((RowSetInternal) this);
                 resultSet = null;
-            }
-            else {
-               populate(resultSet,startPrev);
+            } else {
+                populate(resultSet, startPrev);
             }
             return true;
         }
@@ -7582,7 +7588,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     }
     */
 
-     /**
+    /**
      * Retrieves the first page of data as specified by the page size.
      * @return boolean value true if present on first page, false otherwise
      * @throws SQLException if it called before populate or ResultSet is of
@@ -7678,9 +7684,10 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     }
     */
 
-   /**
+    /**
      * Sets the status for the row on which the cursor is positioned. The insertFlag is used
      * to mention the toggle status for this row
+     *
      * @param insertFlag if it is true  - marks this row as inserted
      *                   if it is false - marks it as not a newly inserted row
      * @throws SQLException if an error occurs while doing this operation
@@ -7689,19 +7696,20 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
         checkCursor();
 
-        if(onInsertRow == true)
-          throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
+        if (onInsertRow == true)
+            throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
 
-        if( insertFlag ) {
-          ((Row)getCurrentRow()).setInserted();
+        if (insertFlag) {
+            ((Row) getCurrentRow()).setInserted();
         } else {
-          ((Row)getCurrentRow()).clearInserted();
+            ((Row) getCurrentRow()).clearInserted();
         }
     }
 
     /**
      * Retrieves the value of the designated <code>SQL XML</code> parameter as a
      * <code>SQLXML</code> object in the Java programming language.
+     *
      * @param columnIndex the first column is 1, the second is 2, ...
      * @return a SQLXML object that maps an SQL XML value
      * @throws SQLException if a database access error occurs
@@ -7714,6 +7722,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * Retrieves the value of the designated <code>SQL XML</code> parameter as a
      * <code>SQLXML</code> object in the Java programming language.
+     *
      * @param colName the name of the column from which to retrieve the value
      * @return a SQLXML object that maps an SQL XML value
      * @throws SQLException if a database access error occurs
@@ -7729,7 +7738,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param columnIndex the first column is 1, the second 2, ...
      * @return the column value if the value is a SQL <code>NULL</code> the
-     *     value returned is <code>null</code>
+     * value returned is <code>null</code>
      * @throws SQLException if a database access error occurs
      * @since 6.0
      */
@@ -7744,7 +7753,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param columnName the name of the column
      * @return the column value if the value is a SQL <code>NULL</code> the
-     *     value returned is <code>null</code>
+     * value returned is <code>null</code>
      * @throws SQLException if a database access error occurs
      * @since 6.0
      */
@@ -7760,7 +7769,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * to update the database.
      *
      * @param columnIndex the first column is 1, the second 2, ...
-     * @param x the column value
+     * @param x           the column value
      * @throws SQLException if a database access occurs
      * @since 6.0
      */
@@ -7776,7 +7785,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * to update the database.
      *
      * @param columnName the name of the column
-     * @param x the column value
+     * @param x          the column value
      * @throws SQLException if a database access occurs
      * @since 6.0
      */
@@ -7786,7 +7795,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
     /**
      * Retrieves the holdability of this ResultSet object
-     * @return  either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
+     *
+     * @return either ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
      * @throws SQLException if a database error occurs
      * @since 6.0
      */
@@ -7797,6 +7807,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * Retrieves whether this ResultSet object has been closed. A ResultSet is closed if the
      * method close has been called on it, or if it is automatically closed.
+     *
      * @return true if this ResultSet object is closed; false if it is still open
      * @throws SQLException if a database access error occurs
      * @since 6.0
@@ -7808,8 +7819,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * This method is used for updating columns that support National Character sets.
      * It can be used for updating NCHAR,NVARCHAR and LONGNVARCHAR columns.
+     *
      * @param columnIndex the first column is 1, the second 2, ...
-     * @param nString the value for the column to be updated
+     * @param nString     the value for the column to be updated
      * @throws SQLException if a database access error occurs
      * @since 6.0
      */
@@ -7820,8 +7832,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * This method is used for updating columns that support National Character sets.
      * It can be used for updating NCHAR,NVARCHAR and LONGNVARCHAR columns.
+     *
      * @param columnName name of the Column
-     * @param nString the value for the column to be updated
+     * @param nString    the value for the column to be updated
      * @throws SQLException if a database access error occurs
      * @since 6.0
      */
@@ -7845,13 +7858,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     /**
      * This method is used for updating SQL <code>NCLOB</code>  type that maps
      * to <code>java.sql.Types.NCLOB</code>
+     *
      * @param columnName name of the column
-     * @param nClob the value for the column to be updated
+     * @param nClob      the value for the column to be updated
      * @throws SQLException if a database access error occurs
      * @since 6.0
      */
     public void updateNClob(String columnName, NClob nClob) throws SQLException {
-       throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
     }
 
     /**
@@ -7861,8 +7875,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      *
      * @param i the first column is 1, the second is 2, ...
      * @return a <code>NClob</code> object representing the SQL
-     *         <code>NCLOB</code> value in the specified column
-     * @exception SQLException if a database access error occurs
+     * <code>NCLOB</code> value in the specified column
+     * @throws SQLException if a database access error occurs
      * @since 6.0
      */
     public NClob getNClob(int i) throws SQLException {
@@ -7870,7 +7884,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     }
 
 
-   /**
+    /**
      * Retrieves the value of the designated column in the current row
      * of this <code>ResultSet</code> object as a <code>NClob</code> object
      * in the Java programming language.
@@ -7878,7 +7892,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @param colName the name of the column from which to retrieve the value
      * @return a <code>NClob</code> object representing the SQL <code>NCLOB</code>
      * value in the specified column
-     * @exception SQLException if a database access error occurs
+     * @throws SQLException if a database access error occurs
      * @since 6.0
      */
     public NClob getNClob(String colName) throws SQLException {
@@ -7894,29 +7908,31 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
     }
 
 
-   /**
-      * Sets the designated parameter to the given <code>java.sql.SQLXML</code> object. The driver converts this to an
-      * SQL <code>XML</code> value when it sends it to the database.
-      * @param parameterIndex index of the first parameter is 1, the second is 2, ...
-      * @param xmlObject a <code>SQLXML</code> object that maps an SQL <code>XML</code> value
-      * @throws SQLException if a database access error occurs
-      * @since 1.6
-      */
-     public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
-         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-     }
+    /**
+     * Sets the designated parameter to the given <code>java.sql.SQLXML</code> object. The driver converts this to an
+     * SQL <code>XML</code> value when it sends it to the database.
+     *
+     * @param parameterIndex index of the first parameter is 1, the second is 2, ...
+     * @param xmlObject      a <code>SQLXML</code> object that maps an SQL <code>XML</code> value
+     * @throws SQLException if a database access error occurs
+     * @since 1.6
+     */
+    public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
-   /**
+    /**
      * Sets the designated parameter to the given <code>java.sql.SQLXML</code> object. The driver converts this to an
      * <code>SQL XML</code> value when it sends it to the database.
+     *
      * @param parameterName the name of the parameter
-     * @param xmlObject a <code>SQLXML</code> object that maps an <code>SQL XML</code> value
+     * @param xmlObject     a <code>SQLXML</code> object that maps an <code>SQL XML</code> value
      * @throws SQLException if a database access error occurs
      * @since 1.6
      */
     public void setSQLXML(String parameterName, SQLXML xmlObject) throws SQLException {
-         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-     }
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
 
     /**
@@ -7925,29 +7941,28 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * to the database
      *
      * @param parameterIndex the first parameter is 1, the second is 2, ...
-     * @param x the parameter value
+     * @param x              the parameter value
      * @throws SQLException if a database access error occurs
-     *
      * @since 1.6
      */
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
-         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-     }
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
 
     /**
-    * Sets the designated parameter to the given <code>java.sql.RowId</code> object. The
-    * driver converts this to a SQL <code>ROWID</code> when it sends it to the
-    * database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @throws SQLException if a database access error occurs
-    * @since 1.6
-    */
-   public void setRowId(String parameterName, RowId x) throws SQLException {
-         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-     }
+     * Sets the designated parameter to the given <code>java.sql.RowId</code> object. The
+     * driver converts this to a SQL <code>ROWID</code> when it sends it to the
+     * database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException if a database access error occurs
+     * @since 1.6
+     */
+    public void setRowId(String parameterName, RowId x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
 
     /**
@@ -7955,7 +7970,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>Reader</code> reads the data till end-of-file is reached. The
      * driver does the necessary conversion from Java character format to
      * the national character set in the database.
-
+     *
      * <P><B>Note:</B> This stream object can either be a standard
      * Java stream object or your own subclass that implements the
      * standard interface.
@@ -7964,36 +7979,37 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>setNCharacterStream</code> which takes a length parameter.
      *
      * @param parameterIndex of the first parameter is 1, the second is 2, ...
-     * @param value the parameter value
-     * @throws SQLException if the driver does not support national
-     *         character sets;  if the driver can detect that a data conversion
-     *  error could occur ; if a database access error occurs; or
-     * this method is called on a closed <code>PreparedStatement</code>
-     * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
+     * @param value          the parameter value
+     * @throws SQLException                    if the driver does not support national
+     *                                         character sets;  if the driver can detect that a data conversion
+     *                                         error could occur ; if a database access error occurs; or
+     *                                         this method is called on a closed <code>PreparedStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
      * @since 1.6
      */
-     public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-     }
+    }
 
 
     /**
-    * Sets the designated parameter to a <code>java.sql.NClob</code> object. The object
-    * implements the <code>java.sql.NClob</code> interface. This <code>NClob</code>
-    * object maps to a SQL <code>NCLOB</code>.
-    * @param parameterName the name of the column to be set
-    * @param value the parameter value
-    * @throws SQLException if the driver does not support national
-    *         character sets;  if the driver can detect that a data conversion
-    *  error could occur; or if a database access error occurs
-    * @since 1.6
-    */
+     * Sets the designated parameter to a <code>java.sql.NClob</code> object. The object
+     * implements the <code>java.sql.NClob</code> interface. This <code>NClob</code>
+     * object maps to a SQL <code>NCLOB</code>.
+     *
+     * @param parameterName the name of the column to be set
+     * @param value         the parameter value
+     * @throws SQLException if the driver does not support national
+     *                      character sets;  if the driver can detect that a data conversion
+     *                      error could occur; or if a database access error occurs
+     * @since 1.6
+     */
     public void setNClob(String parameterName, NClob value) throws SQLException {
-         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-     }
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
 
-  /**
+    /**
      * Retrieves the value of the designated column in the current row
      * of this <code>ResultSet</code> object as a
      * <code>java.io.Reader</code> object.
@@ -8001,16 +8017,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * accessing  <code>NCHAR</code>,<code>NVARCHAR</code>
      * and <code>LONGNVARCHAR</code> columns.
      *
+     * @param columnIndex the first column is 1, the second is 2, ...
      * @return a <code>java.io.Reader</code> object that contains the column
      * value; if the value is SQL <code>NULL</code>, the value returned is
      * <code>null</code> in the Java programming language.
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @exception SQLException if a database access error occurs
+     * @throws SQLException if a database access error occurs
      * @since 1.6
      */
     public Reader getNCharacterStream(int columnIndex) throws SQLException {
-       throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-     }
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
 
     /**
@@ -8025,12 +8041,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @return a <code>java.io.Reader</code> object that contains the column
      * value; if the value is SQL <code>NULL</code>, the value returned is
      * <code>null</code> in the Java programming language
-     * @exception SQLException if a database access error occurs
+     * @throws SQLException if a database access error occurs
      * @since 1.6
      */
     public Reader getNCharacterStream(String columnName) throws SQLException {
-       throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-     }
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
 
     /**
@@ -8040,8 +8056,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * row. The updater methods do not update the underlying database; instead
      * the <code>updateRow</code> or <code>insertRow</code> methods are called
      * to update the database.
+     *
      * @param columnIndex the first column is 1, the second 2, ...
-     * @param xmlObject the value for the column to be updated
+     * @param xmlObject   the value for the column to be updated
      * @throws SQLException if a database access error occurs
      * @since 1.6
      */
@@ -8058,7 +8075,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * to update the database.
      *
      * @param columnName the name of the column
-     * @param xmlObject the column value
+     * @param xmlObject  the column value
      * @throws SQLException if a database access occurs
      * @since 1.6
      */
@@ -8066,7 +8083,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
     }
 
-     /**
+    /**
      * Retrieves the value of the designated column in the current row
      * of this <code>ResultSet</code> object as
      * a <code>String</code> in the Java programming language.
@@ -8077,7 +8094,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @param columnIndex the first column is 1, the second is 2, ...
      * @return the column value; if the value is SQL <code>NULL</code>, the
      * value returned is <code>null</code>
-     * @exception SQLException if a database access error occurs
+     * @throws SQLException if a database access error occurs
      * @since 1.6
      */
     public String getNString(int columnIndex) throws SQLException {
@@ -8095,65 +8112,65 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * @param columnName the SQL name of the column
      * @return the column value; if the value is SQL <code>NULL</code>, the
      * value returned is <code>null</code>
-     * @exception SQLException if a database access error occurs
+     * @throws SQLException if a database access error occurs
      * @since 1.6
      */
     public String getNString(String columnName) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
     }
 
-     /**
-       * Updates the designated column with a character stream value, which will
-       * have the specified number of bytes. The driver does the necessary conversion
-       * from Java character format to the national character set in the database.
-       * It is intended for use when updating NCHAR,NVARCHAR and LONGNVARCHAR columns.
-       * The updater methods are used to update column values in the current row or
-       * the insert row. The updater methods do not update the underlying database;
-       * instead the updateRow or insertRow methods are called to update the database.
-       *
-       * @param columnIndex - the first column is 1, the second is 2, ...
-       * @param x - the new column value
-       * @param length - the length of the stream
-       * @exception SQLException if a database access error occurs
-       * @since 1.6
-       */
-       public void updateNCharacterStream(int columnIndex,
-                            Reader x,
-                            long length)
-                            throws SQLException {
-          throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-       }
+    /**
+     * Updates the designated column with a character stream value, which will
+     * have the specified number of bytes. The driver does the necessary conversion
+     * from Java character format to the national character set in the database.
+     * It is intended for use when updating NCHAR,NVARCHAR and LONGNVARCHAR columns.
+     * The updater methods are used to update column values in the current row or
+     * the insert row. The updater methods do not update the underlying database;
+     * instead the updateRow or insertRow methods are called to update the database.
+     *
+     * @param columnIndex - the first column is 1, the second is 2, ...
+     * @param x           - the new column value
+     * @param length      - the length of the stream
+     * @throws SQLException if a database access error occurs
+     * @since 1.6
+     */
+    public void updateNCharacterStream(int columnIndex,
+                                       Reader x,
+                                       long length)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
-     /**
-       * Updates the designated column with a character stream value, which will
-       * have the specified number of bytes. The driver does the necessary conversion
-       * from Java character format to the national character set in the database.
-       * It is intended for use when updating NCHAR,NVARCHAR and LONGNVARCHAR columns.
-       * The updater methods are used to update column values in the current row or
-       * the insert row. The updater methods do not update the underlying database;
-       * instead the updateRow or insertRow methods are called to update the database.
-       *
-       * @param columnName - name of the Column
-       * @param x - the new column value
-       * @param length - the length of the stream
-       * @exception SQLException if a database access error occurs
-       * @since 1.6
-       */
-       public void updateNCharacterStream(String columnName,
-                            Reader x,
-                            long length)
-                            throws SQLException {
-          throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
-       }
+    /**
+     * Updates the designated column with a character stream value, which will
+     * have the specified number of bytes. The driver does the necessary conversion
+     * from Java character format to the national character set in the database.
+     * It is intended for use when updating NCHAR,NVARCHAR and LONGNVARCHAR columns.
+     * The updater methods are used to update column values in the current row or
+     * the insert row. The updater methods do not update the underlying database;
+     * instead the updateRow or insertRow methods are called to update the database.
+     *
+     * @param columnName - name of the Column
+     * @param x          - the new column value
+     * @param length     - the length of the stream
+     * @throws SQLException if a database access error occurs
+     * @since 1.6
+     */
+    public void updateNCharacterStream(String columnName,
+                                       Reader x,
+                                       long length)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.opnotysupp").toString());
+    }
 
-     /**
+    /**
      * Updates the designated column with a character stream value.   The
      * driver does the necessary conversion from Java character format to
      * the national character set in the database.
      * It is intended for use when
      * updating  <code>NCHAR</code>,<code>NVARCHAR</code>
      * and <code>LONGNVARCHAR</code> columns.
-     *
+     * <p>
      * The updater methods are used to update column values in the
      * current row or the insert row.  The updater methods do not
      * update the underlying database; instead the <code>updateRow</code> or
@@ -8164,15 +8181,15 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>updateNCharacterStream</code> which takes a length parameter.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code> or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code> or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateNCharacterStream(int columnIndex,
-                             Reader x) throws SQLException {
+                                       Reader x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8183,7 +8200,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * It is intended for use when
      * updating  <code>NCHAR</code>,<code>NVARCHAR</code>
      * and <code>LONGNVARCHAR</code> columns.
-     *
+     * <p>
      * The updater methods are used to update column values in the
      * current row or the insert row.  The updater methods do not
      * update the underlying database; instead the <code>updateRow</code> or
@@ -8194,17 +8211,17 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
      * <code>updateNCharacterStream</code> which takes a length parameter.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the la
-bel is the name of the column
-     * @param reader the <code>java.io.Reader</code> object containing
-     *        the new column value
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code> or this method is called on a closed result set
-      * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    bel is the name of the column
+     * @param reader      the <code>java.io.Reader</code> object containing
+     *                    the new column value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code> or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateNCharacterStream(String columnLabel,
-                             Reader reader) throws SQLException {
+                                       Reader reader) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8230,16 +8247,16 @@ bel is the name of the column
      *
      * @param columnIndex the first column is 1, the second is 2, ...
      * @param inputStream An object that contains the data to set the parameter
-     * value to.
-     * @param length the number of bytes in the parameter data.
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    value to.
+     * @param length      the number of bytes in the parameter data.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException{
+    public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8263,13 +8280,13 @@ bel is the name of the column
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the label is the name of the column
      * @param inputStream An object that contains the data to set the parameter
-     * value to.
-     * @param length the number of bytes in the parameter data.
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    value to.
+     * @param length      the number of bytes in the parameter data.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
@@ -8288,7 +8305,7 @@ bel is the name of the column
      * Java stream object or your own subclass that implements the
      * standard interface.
      *
-     *  <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
      * it might be more efficient to use a version of
      * <code>updateBlob</code> which takes a length parameter.
      * <p>
@@ -8299,12 +8316,12 @@ bel is the name of the column
      *
      * @param columnIndex the first column is 1, the second is 2, ...
      * @param inputStream An object that contains the data to set the parameter
-     * value to.
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    value to.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
@@ -8322,7 +8339,7 @@ bel is the name of the column
      * <P><B>Note:</B> This stream object can either be a standard
      * Java stream object or your own subclass that implements the
      * standard interface.
-     *   <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
      * it might be more efficient to use a version of
      * <code>updateBlob</code> which takes a length parameter.
      * <p>
@@ -8332,14 +8349,14 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the la
-bel is the name of the column
+     *                    bel is the name of the column
      * @param inputStream An object that contains the data to set the parameter
-     * value to.
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    value to.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
@@ -8365,16 +8382,16 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param reader An object that contains the data to set the parameter value to.
-     * @param length the number of characters in the parameter data.
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param reader      An object that contains the data to set the parameter value to.
+     * @param length      the number of characters in the parameter data.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateClob(int columnIndex,  Reader reader, long length) throws SQLException {
+    public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8397,20 +8414,20 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the label is the name of the column
-     * @param reader An object that contains the data to set the parameter value to.
-     * @param length the number of characters in the parameter data.
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param reader      An object that contains the data to set the parameter value to.
+     * @param length      the number of characters in the parameter data.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateClob(String columnLabel,  Reader reader, long length) throws SQLException {
+    public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
-   /**
+    /**
      * Updates the designated column using the given <code>Reader</code>
      * object.
      * When a very large UNICODE value is input to a <code>LONGVARCHAR</code>
@@ -8422,7 +8439,7 @@ bel is the name of the column
      * <P><B>Note:</B> This stream object can either be a standard
      * Java stream object or your own subclass that implements the
      * standard interface.
-     *   <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
      * it might be more efficient to use a version of
      * <code>updateClob</code> which takes a length parameter.
      * <p>
@@ -8432,15 +8449,15 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param reader An object that contains the data to set the parameter value to.
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param reader      An object that contains the data to set the parameter value to.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateClob(int columnIndex,  Reader reader) throws SQLException {
+    public void updateClob(int columnIndex, Reader reader) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8456,7 +8473,7 @@ bel is the name of the column
      * <P><B>Note:</B> This stream object can either be a standard
      * Java stream object or your own subclass that implements the
      * standard interface.
-     *  <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
      * it might be more efficient to use a version of
      * <code>updateClob</code> which takes a length parameter.
      * <p>
@@ -8466,20 +8483,20 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the la
-bel is the name of the column
-     * @param reader An object that contains the data to set the parameter value to.
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    bel is the name of the column
+     * @param reader      An object that contains the data to set the parameter value to.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateClob(String columnLabel,  Reader reader) throws SQLException {
+    public void updateClob(String columnLabel, Reader reader) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
-   /**
+    /**
      * Updates the designated column using the given <code>Reader</code>
      * object, which is the given number of characters long.
      * When a very large UNICODE value is input to a <code>LONGVARCHAR</code>
@@ -8498,18 +8515,18 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnIndex the first column is 1, the second 2, ...
-     * @param reader An object that contains the data to set the parameter value to.
-     * @param length the number of characters in the parameter data.
-     * @throws SQLException if the driver does not support national
-     *         character sets;  if the driver can detect that a data conversion
-     *  error could occur; this method is called on a closed result set,
-     * if a database access error occurs or
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param reader      An object that contains the data to set the parameter value to.
+     * @param length      the number of characters in the parameter data.
+     * @throws SQLException                    if the driver does not support national
+     *                                         character sets;  if the driver can detect that a data conversion
+     *                                         error could occur; this method is called on a closed result set,
+     *                                         if a database access error occurs or
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateNClob(int columnIndex,  Reader reader, long length) throws SQLException {
+    public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8532,18 +8549,18 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the label is the name of the column
-     * @param reader An object that contains the data to set the parameter value to.
-     * @param length the number of characters in the parameter data.
-     * @throws SQLException if the driver does not support national
-     *         character sets;  if the driver can detect that a data conversion
-     *  error could occur; this method is called on a closed result set;
-     *  if a database access error occurs or
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param reader      An object that contains the data to set the parameter value to.
+     * @param length      the number of characters in the parameter data.
+     * @throws SQLException                    if the driver does not support national
+     *                                         character sets;  if the driver can detect that a data conversion
+     *                                         error could occur; this method is called on a closed result set;
+     *                                         if a database access error occurs or
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateNClob(String columnLabel,  Reader reader, long length) throws SQLException {
+    public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8569,17 +8586,17 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnIndex the first column is 1, the second 2, ...
-     * @param reader An object that contains the data to set the parameter value to.
-     * @throws SQLException if the driver does not support national
-     *         character sets;  if the driver can detect that a data conversion
-     *  error could occur; this method is called on a closed result set,
-     * if a database access error occurs or
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param reader      An object that contains the data to set the parameter value to.
+     * @throws SQLException                    if the driver does not support national
+     *                                         character sets;  if the driver can detect that a data conversion
+     *                                         error could occur; this method is called on a closed result set,
+     *                                         if a database access error occurs or
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateNClob(int columnIndex,  Reader reader) throws SQLException {
+    public void updateNClob(int columnIndex, Reader reader) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8605,22 +8622,22 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the la
-bel is the name of the column
-     * @param reader An object that contains the data to set the parameter value to.
-     * @throws SQLException if the driver does not support national
-     *         character sets;  if the driver can detect that a data conversion
-     *  error could occur; this method is called on a closed result set;
-     *  if a database access error occurs or
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    bel is the name of the column
+     * @param reader      An object that contains the data to set the parameter value to.
+     * @throws SQLException                    if the driver does not support national
+     *                                         character sets;  if the driver can detect that a data conversion
+     *                                         error could occur; this method is called on a closed result set;
+     *                                         if a database access error occurs or
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-    public void updateNClob(String columnLabel,  Reader reader) throws SQLException {
+    public void updateNClob(String columnLabel, Reader reader) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
-        /**
+    /**
      * Updates the designated column with an ascii stream value, which will have
      * the specified number of bytes.
      * The updater methods are used to update column values in the
@@ -8629,18 +8646,18 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @param length      the length of the stream
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateAsciiStream(int columnIndex,
-                           InputStream x,
-                           long length) throws SQLException {
+                                  InputStream x,
+                                  long length) throws SQLException {
 
     }
 
@@ -8653,18 +8670,18 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @param length      the length of the stream
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateBinaryStream(int columnIndex,
-                            InputStream x,
-                            long length) throws SQLException {
+                                   InputStream x,
+                                   long length) throws SQLException {
     }
 
     /**
@@ -8676,18 +8693,18 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @param length      the length of the stream
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateCharacterStream(int columnIndex,
-                             Reader x,
-                             long length) throws SQLException {
+                                      Reader x,
+                                      long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8700,23 +8717,24 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the la
-bel is the name of the column
-     * @param reader the <code>java.io.Reader</code> object containing
-     *        the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    bel is the name of the column
+     * @param reader      the <code>java.io.Reader</code> object containing
+     *                    the new column value
+     * @param length      the length of the stream
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateCharacterStream(String columnLabel,
-                             Reader reader,
-                             long length) throws SQLException {
+                                      Reader reader,
+                                      long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
-     /**
+
+    /**
      * Updates the designated column with an ascii stream value, which will have
      * the specified number of bytes..
      * The updater methods are used to update column values in the
@@ -8725,18 +8743,18 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the label is the name of the column
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @param length      the length of the stream
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateAsciiStream(String columnLabel,
-                           InputStream x,
-                           long length) throws SQLException {
+                                  InputStream x,
+                                  long length) throws SQLException {
     }
 
     /**
@@ -8748,18 +8766,18 @@ bel is the name of the column
      * <code>insertRow</code> methods are called to update the database.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the label is the name of the column
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @param length      the length of the stream
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateBinaryStream(String columnLabel,
-                            InputStream x,
-                            long length) throws SQLException {
+                                   InputStream x,
+                                   long length) throws SQLException {
     }
 
     /**
@@ -8774,16 +8792,16 @@ bel is the name of the column
      * <code>updateBinaryStream</code> which takes a length parameter.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateBinaryStream(int columnIndex,
-                            InputStream x) throws SQLException {
+                                   InputStream x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8800,17 +8818,17 @@ bel is the name of the column
      * <code>updateBinaryStream</code> which takes a length parameter.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the la
-bel is the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    bel is the name of the column
+     * @param x           the new column value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateBinaryStream(String columnLabel,
-                            InputStream x) throws SQLException {
+                                   InputStream x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8826,16 +8844,16 @@ bel is the name of the column
      * <code>updateCharacterStream</code> which takes a length parameter.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateCharacterStream(int columnIndex,
-                             Reader x) throws SQLException {
+                                      Reader x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8851,18 +8869,18 @@ bel is the name of the column
      * <code>updateCharacterStream</code> which takes a length parameter.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the la
-bel is the name of the column
-     * @param reader the <code>java.io.Reader</code> object containing
-     *        the new column value
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    bel is the name of the column
+     * @param reader      the <code>java.io.Reader</code> object containing
+     *                    the new column value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateCharacterStream(String columnLabel,
-                             Reader reader) throws SQLException {
+                                      Reader reader) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8878,16 +8896,16 @@ bel is the name of the column
      * <code>updateAsciiStream</code> which takes a length parameter.
      *
      * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * @param x           the new column value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateAsciiStream(int columnIndex,
-                           InputStream x) throws SQLException {
+                                  InputStream x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
     }
 
@@ -8903,118 +8921,116 @@ bel is the name of the column
      * <code>updateAsciiStream</code> which takes a length parameter.
      *
      * @param columnLabel the label for the column specified with the SQL AS clause.  If the SQL AS clause was not specified, then the la
-bel is the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs,
-     * the result set concurrency is <code>CONCUR_READ_ONLY</code>
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     *                    bel is the name of the column
+     * @param x           the new column value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         the result set concurrency is <code>CONCUR_READ_ONLY</code>
+     *                                         or this method is called on a closed result set
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
     public void updateAsciiStream(String columnLabel,
-                           InputStream x) throws SQLException {
+                                  InputStream x) throws SQLException {
 
     }
 
-   /**
-  * Sets the designated parameter to the given <code>java.net.URL</code> value.
-  * The driver converts this to an SQL <code>DATALINK</code> value
-  * when it sends it to the database.
-  *
-  * @param parameterIndex the first parameter is 1, the second is 2, ...
-  * @param x the <code>java.net.URL</code> object to be set
-  * @exception SQLException if a database access error occurs or
-  * this method is called on a closed <code>PreparedStatement</code>
-  * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-  * @since 1.4
-  */
-  public void setURL(int parameterIndex, java.net.URL x) throws SQLException{
+    /**
+     * Sets the designated parameter to the given <code>java.net.URL</code> value.
+     * The driver converts this to an SQL <code>DATALINK</code> value
+     * when it sends it to the database.
+     *
+     * @param parameterIndex the first parameter is 1, the second is 2, ...
+     * @param x              the <code>java.net.URL</code> object to be set
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>PreparedStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.4
+     */
+    public void setURL(int parameterIndex, java.net.URL x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-  /**
-  * Sets the designated parameter to a <code>Reader</code> object.
-  * This method differs from the <code>setCharacterStream (int, Reader)</code> method
-  * because it informs the driver that the parameter value should be sent to
-  * the server as a <code>NCLOB</code>.  When the <code>setCharacterStream</code> method is used, the
-  * driver may have to do extra work to determine whether the parameter
-  * data should be sent to the server as a <code>LONGNVARCHAR</code> or a <code>NCLOB</code>
-  * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-  * it might be more efficient to use a version of
-  * <code>setNClob</code> which takes a length parameter.
-  *
-  * @param parameterIndex index of the first parameter is 1, the second is 2, ...
-  * @param reader An object that contains the data to set the parameter value to.
-  * @throws SQLException if parameterIndex does not correspond to a parameter
-  * marker in the SQL statement;
-  * if the driver does not support national character sets;
-  * if the driver can detect that a data conversion
-  *  error could occur;  if a database access error occurs or
-  * this method is called on a closed <code>PreparedStatement</code>
-  * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-  *
-  * @since 1.6
-  */
-  public void setNClob(int parameterIndex, Reader reader)
-    throws SQLException{
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object.
+     * This method differs from the <code>setCharacterStream (int, Reader)</code> method
+     * because it informs the driver that the parameter value should be sent to
+     * the server as a <code>NCLOB</code>.  When the <code>setCharacterStream</code> method is used, the
+     * driver may have to do extra work to determine whether the parameter
+     * data should be sent to the server as a <code>LONGNVARCHAR</code> or a <code>NCLOB</code>
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setNClob</code> which takes a length parameter.
+     *
+     * @param parameterIndex index of the first parameter is 1, the second is 2, ...
+     * @param reader         An object that contains the data to set the parameter value to.
+     * @throws SQLException                    if parameterIndex does not correspond to a parameter
+     *                                         marker in the SQL statement;
+     *                                         if the driver does not support national character sets;
+     *                                         if the driver can detect that a data conversion
+     *                                         error could occur;  if a database access error occurs or
+     *                                         this method is called on a closed <code>PreparedStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setNClob(int parameterIndex, Reader reader)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-  /**
-  * Sets the designated parameter to a <code>Reader</code> object.  The <code>reader</code> must contain  the number
-             * of characters specified by length otherwise a <code>SQLException</code> will be
-            * generated when the <code>CallableStatement</code> is executed.
-            * This method differs from the <code>setCharacterStream (int, Reader, int)</code> method
-            * because it informs the driver that the parameter value should be sent to
-            * the server as a <code>NCLOB</code>.  When the <code>setCharacterStream</code> method is used, the
-            * driver may have to do extra work to determine whether the parameter
-            * data should be send to the server as a <code>LONGNVARCHAR</code> or a <code>NCLOB</code>
-            *
-            * @param parameterName the name of the parameter to be set
-            * @param reader An object that contains the data to set the parameter value to.
-            * @param length the number of characters in the parameter data.
-            * @throws SQLException if parameterIndex does not correspond to a parameter
-            * marker in the SQL statement; if the length specified is less than zero;
-            * if the driver does not support national
-            *         character sets;  if the driver can detect that a data conversion
-            *  error could occur; if a database access error occurs or
-            * this method is called on a closed <code>CallableStatement</code>
-            * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-            * this method
-            * @since 1.6
-            */
-            public void setNClob(String parameterName, Reader reader, long length)
-    throws SQLException{
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object.  The <code>reader</code> must contain  the number
+     * of characters specified by length otherwise a <code>SQLException</code> will be
+     * generated when the <code>CallableStatement</code> is executed.
+     * This method differs from the <code>setCharacterStream (int, Reader, int)</code> method
+     * because it informs the driver that the parameter value should be sent to
+     * the server as a <code>NCLOB</code>.  When the <code>setCharacterStream</code> method is used, the
+     * driver may have to do extra work to determine whether the parameter
+     * data should be send to the server as a <code>LONGNVARCHAR</code> or a <code>NCLOB</code>
+     *
+     * @param parameterName the name of the parameter to be set
+     * @param reader        An object that contains the data to set the parameter value to.
+     * @param length        the number of characters in the parameter data.
+     * @throws SQLException                    if parameterIndex does not correspond to a parameter
+     *                                         marker in the SQL statement; if the length specified is less than zero;
+     *                                         if the driver does not support national
+     *                                         character sets;  if the driver can detect that a data conversion
+     *                                         error could occur; if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @since 1.6
+     */
+    public void setNClob(String parameterName, Reader reader, long length)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-  * Sets the designated parameter to a <code>Reader</code> object.
-  * This method differs from the <code>setCharacterStream (int, Reader)</code> method
-  * because it informs the driver that the parameter value should be sent to
-  * the server as a <code>NCLOB</code>.  When the <code>setCharacterStream</code> method is used, the
-  * driver may have to do extra work to determine whether the parameter
-  * data should be send to the server as a <code>LONGNVARCHAR</code> or a <code>NCLOB</code>
-  * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-  * it might be more efficient to use a version of
-  * <code>setNClob</code> which takes a length parameter.
-  *
-  * @param parameterName the name of the parameter
-  * @param reader An object that contains the data to set the parameter value to.
-  * @throws SQLException if the driver does not support national character sets;
-  * if the driver can detect that a data conversion
-  *  error could occur;  if a database access error occurs or
-  * this method is called on a closed <code>CallableStatement</code>
-  * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-  *
-  * @since 1.6
-  */
-  public void setNClob(String parameterName, Reader reader)
-    throws SQLException{
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object.
+     * This method differs from the <code>setCharacterStream (int, Reader)</code> method
+     * because it informs the driver that the parameter value should be sent to
+     * the server as a <code>NCLOB</code>.  When the <code>setCharacterStream</code> method is used, the
+     * driver may have to do extra work to determine whether the parameter
+     * data should be send to the server as a <code>LONGNVARCHAR</code> or a <code>NCLOB</code>
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setNClob</code> which takes a length parameter.
+     *
+     * @param parameterName the name of the parameter
+     * @param reader        An object that contains the data to set the parameter value to.
+     * @throws SQLException                    if the driver does not support national character sets;
+     *                                         if the driver can detect that a data conversion
+     *                                         error could occur;  if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setNClob(String parameterName, Reader reader)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
     /**
@@ -9026,445 +9042,446 @@ bel is the name of the column
      * the server as a <code>NCLOB</code>.  When the <code>setCharacterStream</code> method is used, the
      * driver may have to do extra work to determine whether the parameter
      * data should be sent to the server as a <code>LONGNVARCHAR</code> or a <code>NCLOB</code>
-     * @param parameterIndex index of the first parameter is 1, the second is 2, ...
-     * @param reader An object that contains the data to set the parameter value to.
-     * @param length the number of characters in the parameter data.
-     * @throws SQLException if parameterIndex does not correspond to a parameter
-     * marker in the SQL statement; if the length specified is less than zero;
-     * if the driver does not support national character sets;
-     * if the driver can detect that a data conversion
-     *  error could occur;  if a database access error occurs or
-     * this method is called on a closed <code>PreparedStatement</code>
-     * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
      *
+     * @param parameterIndex index of the first parameter is 1, the second is 2, ...
+     * @param reader         An object that contains the data to set the parameter value to.
+     * @param length         the number of characters in the parameter data.
+     * @throws SQLException                    if parameterIndex does not correspond to a parameter
+     *                                         marker in the SQL statement; if the length specified is less than zero;
+     *                                         if the driver does not support national character sets;
+     *                                         if the driver can detect that a data conversion
+     *                                         error could occur;  if a database access error occurs or
+     *                                         this method is called on a closed <code>PreparedStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
      * @since 1.6
      */
-     public void setNClob(int parameterIndex, Reader reader, long length)
-       throws SQLException{
+    public void setNClob(int parameterIndex, Reader reader, long length)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
     /**
      * Sets the designated parameter to a <code>java.sql.NClob</code> object. The driver converts this to
-a
+     * a
      * SQL <code>NCLOB</code> value when it sends it to the database.
+     *
      * @param parameterIndex of the first parameter is 1, the second is 2, ...
-     * @param value the parameter value
+     * @param value          the parameter value
      * @throws SQLException if the driver does not support national
-     *         character sets;  if the driver can detect that a data conversion
-     *  error could occur ; or if a database access error occurs
+     *                      character sets;  if the driver can detect that a data conversion
+     *                      error could occur ; or if a database access error occurs
      * @since 1.6
      */
-     public void setNClob(int parameterIndex, NClob value) throws SQLException{
+    public void setNClob(int parameterIndex, NClob value) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
-   /**
-  * Sets the designated parameter to the given <code>String</code> object.
-  * The driver converts this to a SQL <code>NCHAR</code> or
-  * <code>NVARCHAR</code> or <code>LONGNVARCHAR</code> value
-  * (depending on the argument's
-  * size relative to the driver's limits on <code>NVARCHAR</code> values)
-  * when it sends it to the database.
-  *
-  * @param parameterIndex of the first parameter is 1, the second is 2, ...
-  * @param value the parameter value
-  * @throws SQLException if the driver does not support national
-  *         character sets;  if the driver can detect that a data conversion
-  *  error could occur ; or if a database access error occurs
-  * @since 1.6
-  */
-  public void setNString(int parameterIndex, String value) throws SQLException{
+    /**
+     * Sets the designated parameter to the given <code>String</code> object.
+     * The driver converts this to a SQL <code>NCHAR</code> or
+     * <code>NVARCHAR</code> or <code>LONGNVARCHAR</code> value
+     * (depending on the argument's
+     * size relative to the driver's limits on <code>NVARCHAR</code> values)
+     * when it sends it to the database.
+     *
+     * @param parameterIndex of the first parameter is 1, the second is 2, ...
+     * @param value          the parameter value
+     * @throws SQLException if the driver does not support national
+     *                      character sets;  if the driver can detect that a data conversion
+     *                      error could occur ; or if a database access error occurs
+     * @since 1.6
+     */
+    public void setNString(int parameterIndex, String value) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-  * Sets the designated parameter to the given <code>String</code> object.
-  * The driver converts this to a SQL <code>NCHAR</code> or
-  * <code>NVARCHAR</code> or <code>LONGNVARCHAR</code>
-  * @param parameterName the name of the column to be set
-  * @param value the parameter value
-  * @throws SQLException if the driver does not support national
-  *         character sets;  if the driver can detect that a data conversion
-  *  error could occur; or if a database access error occurs
-  * @since 1.6
-  */
- public void setNString(String parameterName, String value)
-         throws SQLException{
+    /**
+     * Sets the designated parameter to the given <code>String</code> object.
+     * The driver converts this to a SQL <code>NCHAR</code> or
+     * <code>NVARCHAR</code> or <code>LONGNVARCHAR</code>
+     *
+     * @param parameterName the name of the column to be set
+     * @param value         the parameter value
+     * @throws SQLException if the driver does not support national
+     *                      character sets;  if the driver can detect that a data conversion
+     *                      error could occur; or if a database access error occurs
+     * @since 1.6
+     */
+    public void setNString(String parameterName, String value)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-  * Sets the designated parameter to a <code>Reader</code> object. The
-  * <code>Reader</code> reads the data till end-of-file is reached. The
-  * driver does the necessary conversion from Java character format to
-  * the national character set in the database.
-  * @param parameterIndex of the first parameter is 1, the second is 2, ...
-  * @param value the parameter value
-  * @param length the number of characters in the parameter data.
-  * @throws SQLException if the driver does not support national
-  *         character sets;  if the driver can detect that a data conversion
-  *  error could occur ; or if a database access error occurs
-  * @since 1.6
-  */
-  public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException{
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object. The
+     * <code>Reader</code> reads the data till end-of-file is reached. The
+     * driver does the necessary conversion from Java character format to
+     * the national character set in the database.
+     *
+     * @param parameterIndex of the first parameter is 1, the second is 2, ...
+     * @param value          the parameter value
+     * @param length         the number of characters in the parameter data.
+     * @throws SQLException if the driver does not support national
+     *                      character sets;  if the driver can detect that a data conversion
+     *                      error could occur ; or if a database access error occurs
+     * @since 1.6
+     */
+    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-  * Sets the designated parameter to a <code>Reader</code> object. The
-  * <code>Reader</code> reads the data till end-of-file is reached. The
-  * driver does the necessary conversion from Java character format to
-  * the national character set in the database.
-  * @param parameterName the name of the column to be set
-  * @param value the parameter value
-  * @param length the number of characters in the parameter data.
-  * @throws SQLException if the driver does not support national
-  *         character sets;  if the driver can detect that a data conversion
-  *  error could occur; or if a database access error occurs
-  * @since 1.6
-  */
- public void setNCharacterStream(String parameterName, Reader value, long length)
-         throws SQLException{
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object. The
+     * <code>Reader</code> reads the data till end-of-file is reached. The
+     * driver does the necessary conversion from Java character format to
+     * the national character set in the database.
+     *
+     * @param parameterName the name of the column to be set
+     * @param value         the parameter value
+     * @param length        the number of characters in the parameter data.
+     * @throws SQLException if the driver does not support national
+     *                      character sets;  if the driver can detect that a data conversion
+     *                      error could occur; or if a database access error occurs
+     * @since 1.6
+     */
+    public void setNCharacterStream(String parameterName, Reader value, long length)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-  /**
-  * Sets the designated parameter to a <code>Reader</code> object. The
-  * <code>Reader</code> reads the data till end-of-file is reached. The
-  * driver does the necessary conversion from Java character format to
-  * the national character set in the database.
-
-  * <P><B>Note:</B> This stream object can either be a standard
-  * Java stream object or your own subclass that implements the
-  * standard interface.
-  * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-  * it might be more efficient to use a version of
-  * <code>setNCharacterStream</code> which takes a length parameter.
-  *
-  * @param parameterName the name of the parameter
-  * @param value the parameter value
-  * @throws SQLException if the driver does not support national
-  *         character sets;  if the driver can detect that a data conversion
-  *  error could occur ; if a database access error occurs; or
-  * this method is called on a closed <code>CallableStatement</code>
-  * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-  * @since 1.6
-  */
-  public void setNCharacterStream(String parameterName, Reader value) throws SQLException{
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object. The
+     * <code>Reader</code> reads the data till end-of-file is reached. The
+     * driver does the necessary conversion from Java character format to
+     * the national character set in the database.
+     *
+     * <P><B>Note:</B> This stream object can either be a standard
+     * Java stream object or your own subclass that implements the
+     * standard interface.
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setNCharacterStream</code> which takes a length parameter.
+     *
+     * @param parameterName the name of the parameter
+     * @param value         the parameter value
+     * @throws SQLException                    if the driver does not support national
+     *                                         character sets;  if the driver can detect that a data conversion
+     *                                         error could occur ; if a database access error occurs; or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setNCharacterStream(String parameterName, Reader value) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-  /**
-    * Sets the designated parameter to the given <code>java.sql.Timestamp</code> value,
-    * using the given <code>Calendar</code> object.  The driver uses
-    * the <code>Calendar</code> object to construct an SQL <code>TIMESTAMP</code> value,
-    * which the driver then sends to the database.  With a
-    * a <code>Calendar</code> object, the driver can calculate the timestamp
-    * taking into account a custom timezone.  If no
-    * <code>Calendar</code> object is specified, the driver uses the default
-    * timezone, which is that of the virtual machine running the application.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @param cal the <code>Calendar</code> object the driver will use
-    *            to construct the timestamp
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getTimestamp
-    * @since 1.4
-    */
+    /**
+     * Sets the designated parameter to the given <code>java.sql.Timestamp</code> value,
+     * using the given <code>Calendar</code> object.  The driver uses
+     * the <code>Calendar</code> object to construct an SQL <code>TIMESTAMP</code> value,
+     * which the driver then sends to the database.  With a
+     * a <code>Calendar</code> object, the driver can calculate the timestamp
+     * taking into account a custom timezone.  If no
+     * <code>Calendar</code> object is specified, the driver uses the default
+     * timezone, which is that of the virtual machine running the application.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @param cal           the <code>Calendar</code> object the driver will use
+     *                      to construct the timestamp
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getTimestamp
+     * @since 1.4
+     */
     public void setTimestamp(String parameterName, Timestamp x, Calendar cal)
-       throws SQLException{
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
     /**
-    * Sets the designated parameter to a <code>Reader</code> object.  The <code>reader</code> must contain  the number
-               * of characters specified by length otherwise a <code>SQLException</code> will be
-               * generated when the <code>CallableStatement</code> is executed.
-              * This method differs from the <code>setCharacterStream (int, Reader, int)</code> method
-              * because it informs the driver that the parameter value should be sent to
-              * the server as a <code>CLOB</code>.  When the <code>setCharacterStream</code> method is used, the
-              * driver may have to do extra work to determine whether the parameter
-              * data should be send to the server as a <code>LONGVARCHAR</code> or a <code>CLOB</code>
-              * @param parameterName the name of the parameter to be set
-              * @param reader An object that contains the data to set the parameter value to.
-              * @param length the number of characters in the parameter data.
-              * @throws SQLException if parameterIndex does not correspond to a parameter
-              * marker in the SQL statement; if the length specified is less than zero;
-              * a database access error occurs or
-              * this method is called on a closed <code>CallableStatement</code>
-              * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-              * this method
-              *
-              * @since 1.6
-              */
-      public  void setClob(String parameterName, Reader reader, long length)
-      throws SQLException{
+     * Sets the designated parameter to a <code>Reader</code> object.  The <code>reader</code> must contain  the number
+     * of characters specified by length otherwise a <code>SQLException</code> will be
+     * generated when the <code>CallableStatement</code> is executed.
+     * This method differs from the <code>setCharacterStream (int, Reader, int)</code> method
+     * because it informs the driver that the parameter value should be sent to
+     * the server as a <code>CLOB</code>.  When the <code>setCharacterStream</code> method is used, the
+     * driver may have to do extra work to determine whether the parameter
+     * data should be send to the server as a <code>LONGVARCHAR</code> or a <code>CLOB</code>
+     *
+     * @param parameterName the name of the parameter to be set
+     * @param reader        An object that contains the data to set the parameter value to.
+     * @param length        the number of characters in the parameter data.
+     * @throws SQLException                    if parameterIndex does not correspond to a parameter
+     *                                         marker in the SQL statement; if the length specified is less than zero;
+     *                                         a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @since 1.6
+     */
+    public void setClob(String parameterName, Reader reader, long length)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
-  /**
-    * Sets the designated parameter to the given <code>java.sql.Clob</code> object.
-    * The driver converts this to an SQL <code>CLOB</code> value when it
-    * sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x a <code>Clob</code> object that maps an SQL <code>CLOB</code> value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @since 1.6
-    */
-    public void setClob (String parameterName, Clob x) throws SQLException{
+    /**
+     * Sets the designated parameter to the given <code>java.sql.Clob</code> object.
+     * The driver converts this to an SQL <code>CLOB</code> value when it
+     * sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             a <code>Clob</code> object that maps an SQL <code>CLOB</code> value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @since 1.6
+     */
+    public void setClob(String parameterName, Clob x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-    * Sets the designated parameter to a <code>Reader</code> object.
-    * This method differs from the <code>setCharacterStream (int, Reader)</code> method
-    * because it informs the driver that the parameter value should be sent to
-    * the server as a <code>CLOB</code>.  When the <code>setCharacterStream</code> method is used, the
-    * driver may have to do extra work to determine whether the parameter
-    * data should be send to the server as a <code>LONGVARCHAR</code> or a <code>CLOB</code>
-    *
-    * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-    * it might be more efficient to use a version of
-    * <code>setClob</code> which takes a length parameter.
-    *
-    * @param parameterName the name of the parameter
-    * @param reader An object that contains the data to set the parameter value to.
-    * @throws SQLException if a database access error occurs or this method is called on
-    * a closed <code>CallableStatement</code>
-    *
-    * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-    * @since 1.6
-    */
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object.
+     * This method differs from the <code>setCharacterStream (int, Reader)</code> method
+     * because it informs the driver that the parameter value should be sent to
+     * the server as a <code>CLOB</code>.  When the <code>setCharacterStream</code> method is used, the
+     * driver may have to do extra work to determine whether the parameter
+     * data should be send to the server as a <code>LONGVARCHAR</code> or a <code>CLOB</code>
+     *
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setClob</code> which takes a length parameter.
+     *
+     * @param parameterName the name of the parameter
+     * @param reader        An object that contains the data to set the parameter value to.
+     * @throws SQLException                    if a database access error occurs or this method is called on
+     *                                         a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
     public void setClob(String parameterName, Reader reader)
-      throws SQLException{
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-
- /**
-    * Sets the designated parameter to the given <code>java.sql.Date</code> value
-    * using the default time zone of the virtual machine that is running
-    * the application.
-    * The driver converts this
-    * to an SQL <code>DATE</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getDate
-    * @since 1.4
-    */
-    public void setDate(String parameterName, java.sql.Date x)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
- /**
-    * Sets the designated parameter to the given <code>java.sql.Date</code> value,
-    * using the given <code>Calendar</code> object.  The driver uses
-    * the <code>Calendar</code> object to construct an SQL <code>DATE</code> value,
-    * which the driver then sends to the database.  With a
-    * a <code>Calendar</code> object, the driver can calculate the date
-    * taking into account a custom timezone.  If no
-    * <code>Calendar</code> object is specified, the driver uses the default
-    * timezone, which is that of the virtual machine running the application.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @param cal the <code>Calendar</code> object the driver will use
-    *            to construct the date
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getDate
-    * @since 1.4
-    */
-   public void setDate(String parameterName, java.sql.Date x, Calendar cal)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
- /**
-    * Sets the designated parameter to the given <code>java.sql.Time</code> value.
-    * The driver converts this
-    * to an SQL <code>TIME</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getTime
-    * @since 1.4
-    */
-   public void setTime(String parameterName, Time x)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
- /**
-    * Sets the designated parameter to the given <code>java.sql.Time</code> value,
-    * using the given <code>Calendar</code> object.  The driver uses
-    * the <code>Calendar</code> object to construct an SQL <code>TIME</code> value,
-    * which the driver then sends to the database.  With a
-    * a <code>Calendar</code> object, the driver can calculate the time
-    * taking into account a custom timezone.  If no
-    * <code>Calendar</code> object is specified, the driver uses the default
-    * timezone, which is that of the virtual machine running the application.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @param cal the <code>Calendar</code> object the driver will use
-    *            to construct the time
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getTime
-    * @since 1.4
-    */
-   public void setTime(String parameterName, Time x, Calendar cal)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-   /**
-   * Sets the designated parameter to a <code>Reader</code> object.
-   * This method differs from the <code>setCharacterStream (int, Reader)</code> method
-   * because it informs the driver that the parameter value should be sent to
-   * the server as a <code>CLOB</code>.  When the <code>setCharacterStream</code> method is used, the
-   * driver may have to do extra work to determine whether the parameter
-   * data should be sent to the server as a <code>LONGVARCHAR</code> or a <code>CLOB</code>
-   *
-   * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-   * it might be more efficient to use a version of
-   * <code>setClob</code> which takes a length parameter.
-   *
-   * @param parameterIndex index of the first parameter is 1, the second is 2, ...
-   * @param reader An object that contains the data to set the parameter value to.
-   * @throws SQLException if a database access error occurs, this method is called on
-   * a closed <code>PreparedStatement</code>or if parameterIndex does not correspond to a parameter
-   * marker in the SQL statement
-   *
-   * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-   * @since 1.6
-   */
-   public void setClob(int parameterIndex, Reader reader)
-     throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
 
     /**
-   * Sets the designated parameter to a <code>Reader</code> object.  The reader must contain  the number
-   * of characters specified by length otherwise a <code>SQLException</code> will be
-   * generated when the <code>PreparedStatement</code> is executed.
-   *This method differs from the <code>setCharacterStream (int, Reader, int)</code> method
-   * because it informs the driver that the parameter value should be sent to
-   * the server as a <code>CLOB</code>.  When the <code>setCharacterStream</code> method is used, the
-   * driver may have to do extra work to determine whether the parameter
-   * data should be sent to the server as a <code>LONGVARCHAR</code> or a <code>CLOB</code>
-   * @param parameterIndex index of the first parameter is 1, the second is 2, ...
-   * @param reader An object that contains the data to set the parameter value to.
-   * @param length the number of characters in the parameter data.
-   * @throws SQLException if a database access error occurs, this method is called on
-   * a closed <code>PreparedStatement</code>, if parameterIndex does not correspond to a parameter
-   * marker in the SQL statement, or if the length specified is less than zero.
-   *
-   * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-   * @since 1.6
-   */
-   public void setClob(int parameterIndex, Reader reader, long length)
-     throws SQLException{
+     * Sets the designated parameter to the given <code>java.sql.Date</code> value
+     * using the default time zone of the virtual machine that is running
+     * the application.
+     * The driver converts this
+     * to an SQL <code>DATE</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getDate
+     * @since 1.4
+     */
+    public void setDate(String parameterName, java.sql.Date x)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-    * Sets the designated parameter to a <code>InputStream</code> object.  The inputstream must contain  the number
-    * of characters specified by length otherwise a <code>SQLException</code> will be
-    * generated when the <code>PreparedStatement</code> is executed.
-    * This method differs from the <code>setBinaryStream (int, InputStream, int)</code>
-    * method because it informs the driver that the parameter value should be
-    * sent to the server as a <code>BLOB</code>.  When the <code>setBinaryStream</code> method is used,
-    * the driver may have to do extra work to determine whether the parameter
-    * data should be sent to the server as a <code>LONGVARBINARY</code> or a <code>BLOB</code>
-    * @param parameterIndex index of the first parameter is 1,
-    * the second is 2, ...
-    * @param inputStream An object that contains the data to set the parameter
-    * value to.
-    * @param length the number of bytes in the parameter data.
-    * @throws SQLException if a database access error occurs,
-    * this method is called on a closed <code>PreparedStatement</code>,
-    * if parameterIndex does not correspond
-    * to a parameter marker in the SQL statement,  if the length specified
-    * is less than zero or if the number of bytes in the inputstream does not match
-    * the specified length.
-    * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-    *
-    * @since 1.6
-    */
+    /**
+     * Sets the designated parameter to the given <code>java.sql.Date</code> value,
+     * using the given <code>Calendar</code> object.  The driver uses
+     * the <code>Calendar</code> object to construct an SQL <code>DATE</code> value,
+     * which the driver then sends to the database.  With a
+     * a <code>Calendar</code> object, the driver can calculate the date
+     * taking into account a custom timezone.  If no
+     * <code>Calendar</code> object is specified, the driver uses the default
+     * timezone, which is that of the virtual machine running the application.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @param cal           the <code>Calendar</code> object the driver will use
+     *                      to construct the date
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getDate
+     * @since 1.4
+     */
+    public void setDate(String parameterName, java.sql.Date x, Calendar cal)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given <code>java.sql.Time</code> value.
+     * The driver converts this
+     * to an SQL <code>TIME</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getTime
+     * @since 1.4
+     */
+    public void setTime(String parameterName, Time x)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given <code>java.sql.Time</code> value,
+     * using the given <code>Calendar</code> object.  The driver uses
+     * the <code>Calendar</code> object to construct an SQL <code>TIME</code> value,
+     * which the driver then sends to the database.  With a
+     * a <code>Calendar</code> object, the driver can calculate the time
+     * taking into account a custom timezone.  If no
+     * <code>Calendar</code> object is specified, the driver uses the default
+     * timezone, which is that of the virtual machine running the application.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @param cal           the <code>Calendar</code> object the driver will use
+     *                      to construct the time
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getTime
+     * @since 1.4
+     */
+    public void setTime(String parameterName, Time x, Calendar cal)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object.
+     * This method differs from the <code>setCharacterStream (int, Reader)</code> method
+     * because it informs the driver that the parameter value should be sent to
+     * the server as a <code>CLOB</code>.  When the <code>setCharacterStream</code> method is used, the
+     * driver may have to do extra work to determine whether the parameter
+     * data should be sent to the server as a <code>LONGVARCHAR</code> or a <code>CLOB</code>
+     *
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setClob</code> which takes a length parameter.
+     *
+     * @param parameterIndex index of the first parameter is 1, the second is 2, ...
+     * @param reader         An object that contains the data to set the parameter value to.
+     * @throws SQLException                    if a database access error occurs, this method is called on
+     *                                         a closed <code>PreparedStatement</code>or if parameterIndex does not correspond to a parameter
+     *                                         marker in the SQL statement
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setClob(int parameterIndex, Reader reader)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+    /**
+     * Sets the designated parameter to a <code>Reader</code> object.  The reader must contain  the number
+     * of characters specified by length otherwise a <code>SQLException</code> will be
+     * generated when the <code>PreparedStatement</code> is executed.
+     * This method differs from the <code>setCharacterStream (int, Reader, int)</code> method
+     * because it informs the driver that the parameter value should be sent to
+     * the server as a <code>CLOB</code>.  When the <code>setCharacterStream</code> method is used, the
+     * driver may have to do extra work to determine whether the parameter
+     * data should be sent to the server as a <code>LONGVARCHAR</code> or a <code>CLOB</code>
+     *
+     * @param parameterIndex index of the first parameter is 1, the second is 2, ...
+     * @param reader         An object that contains the data to set the parameter value to.
+     * @param length         the number of characters in the parameter data.
+     * @throws SQLException                    if a database access error occurs, this method is called on
+     *                                         a closed <code>PreparedStatement</code>, if parameterIndex does not correspond to a parameter
+     *                                         marker in the SQL statement, or if the length specified is less than zero.
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setClob(int parameterIndex, Reader reader, long length)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to a <code>InputStream</code> object.  The inputstream must contain  the number
+     * of characters specified by length otherwise a <code>SQLException</code> will be
+     * generated when the <code>PreparedStatement</code> is executed.
+     * This method differs from the <code>setBinaryStream (int, InputStream, int)</code>
+     * method because it informs the driver that the parameter value should be
+     * sent to the server as a <code>BLOB</code>.  When the <code>setBinaryStream</code> method is used,
+     * the driver may have to do extra work to determine whether the parameter
+     * data should be sent to the server as a <code>LONGVARBINARY</code> or a <code>BLOB</code>
+     *
+     * @param parameterIndex index of the first parameter is 1,
+     *                       the second is 2, ...
+     * @param inputStream    An object that contains the data to set the parameter
+     *                       value to.
+     * @param length         the number of bytes in the parameter data.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         this method is called on a closed <code>PreparedStatement</code>,
+     *                                         if parameterIndex does not correspond
+     *                                         to a parameter marker in the SQL statement,  if the length specified
+     *                                         is less than zero or if the number of bytes in the inputstream does not match
+     *                                         the specified length.
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
     public void setBlob(int parameterIndex, InputStream inputStream, long length)
-       throws SQLException{
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-    * Sets the designated parameter to a <code>InputStream</code> object.
-    * This method differs from the <code>setBinaryStream (int, InputStream)</code>
-    * method because it informs the driver that the parameter value should be
-    * sent to the server as a <code>BLOB</code>.  When the <code>setBinaryStream</code> method is used,
-    * the driver may have to do extra work to determine whether the parameter
-    * data should be sent to the server as a <code>LONGVARBINARY</code> or a <code>BLOB</code>
-    *
-    * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-    * it might be more efficient to use a version of
-    * <code>setBlob</code> which takes a length parameter.
-    *
-    * @param parameterIndex index of the first parameter is 1,
-    * the second is 2, ...
-    * @param inputStream An object that contains the data to set the parameter
-    * value to.
-    * @throws SQLException if a database access error occurs,
-    * this method is called on a closed <code>PreparedStatement</code> or
-    * if parameterIndex does not correspond
-    * to a parameter marker in the SQL statement,
-    * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-    *
-    * @since 1.6
-    */
+    /**
+     * Sets the designated parameter to a <code>InputStream</code> object.
+     * This method differs from the <code>setBinaryStream (int, InputStream)</code>
+     * method because it informs the driver that the parameter value should be
+     * sent to the server as a <code>BLOB</code>.  When the <code>setBinaryStream</code> method is used,
+     * the driver may have to do extra work to determine whether the parameter
+     * data should be sent to the server as a <code>LONGVARBINARY</code> or a <code>BLOB</code>
+     *
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setBlob</code> which takes a length parameter.
+     *
+     * @param parameterIndex index of the first parameter is 1,
+     *                       the second is 2, ...
+     * @param inputStream    An object that contains the data to set the parameter
+     *                       value to.
+     * @throws SQLException                    if a database access error occurs,
+     *                                         this method is called on a closed <code>PreparedStatement</code> or
+     *                                         if parameterIndex does not correspond
+     *                                         to a parameter marker in the SQL statement,
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
     public void setBlob(int parameterIndex, InputStream inputStream)
-       throws SQLException{
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-    * Sets the designated parameter to a <code>InputStream</code> object.  The <code>inputstream</code> must contain  the number
+    /**
+     * Sets the designated parameter to a <code>InputStream</code> object.  The <code>inputstream</code> must contain  the number
      * of characters specified by length, otherwise a <code>SQLException</code> will be
      * generated when the <code>CallableStatement</code> is executed.
      * This method differs from the <code>setBinaryStream (int, InputStream, int)</code>
@@ -9474,645 +9491,632 @@ a
      * data should be sent to the server as a <code>LONGVARBINARY</code> or a <code>BLOB</code>
      *
      * @param parameterName the name of the parameter to be set
-     * the second is 2, ...
-     *
-     * @param inputStream An object that contains the data to set the parameter
-     * value to.
-     * @param length the number of bytes in the parameter data.
-     * @throws SQLException  if parameterIndex does not correspond
-     * to a parameter marker in the SQL statement,  or if the length specified
-     * is less than zero; if the number of bytes in the inputstream does not match
-     * the specified length; if a database access error occurs or
-     * this method is called on a closed <code>CallableStatement</code>
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     *
+     *                      the second is 2, ...
+     * @param inputStream   An object that contains the data to set the parameter
+     *                      value to.
+     * @param length        the number of bytes in the parameter data.
+     * @throws SQLException                    if parameterIndex does not correspond
+     *                                         to a parameter marker in the SQL statement,  or if the length specified
+     *                                         is less than zero; if the number of bytes in the inputstream does not match
+     *                                         the specified length; if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
      */
-     public void setBlob(String parameterName, InputStream inputStream, long length)
-        throws SQLException{
+    public void setBlob(String parameterName, InputStream inputStream, long length)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-
- /**
-    * Sets the designated parameter to the given <code>java.sql.Blob</code> object.
-    * The driver converts this to an SQL <code>BLOB</code> value when it
-    * sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x a <code>Blob</code> object that maps an SQL <code>BLOB</code> value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @since 1.6
-    */
-   public void setBlob (String parameterName, Blob x) throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
- /**
-    * Sets the designated parameter to a <code>InputStream</code> object.
-    * This method differs from the <code>setBinaryStream (int, InputStream)</code>
-    * method because it informs the driver that the parameter value should be
-    * sent to the server as a <code>BLOB</code>.  When the <code>setBinaryStream</code> method is used,
-    * the driver may have to do extra work to determine whether the parameter
-    * data should be send to the server as a <code>LONGVARBINARY</code> or a <code>BLOB</code>
-    *
-    * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-    * it might be more efficient to use a version of
-    * <code>setBlob</code> which takes a length parameter.
-    *
-    * @param parameterName the name of the parameter
-    * @param inputStream An object that contains the data to set the parameter
-    * value to.
-    * @throws SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-    *
-    * @since 1.6
-    */
-    public void setBlob(String parameterName, InputStream inputStream)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
 
     /**
-    * Sets the value of the designated parameter with the given object. The second
-    * argument must be an object type; for integral values, the
-    * <code>java.lang</code> equivalent objects should be used.
-    *
-    * <p>The given Java object will be converted to the given targetSqlType
-    * before being sent to the database.
-    *
-    * If the object has a custom mapping (is of a class implementing the
-    * interface <code>SQLData</code>),
-    * the JDBC driver should call the method <code>SQLData.writeSQL</code> to write it
-    * to the SQL data stream.
-    * If, on the other hand, the object is of a class implementing
-    * <code>Ref</code>, <code>Blob</code>, <code>Clob</code>,  <code>NClob</code>,
-    *  <code>Struct</code>, <code>java.net.URL</code>,
-    * or <code>Array</code>, the driver should pass it to the database as a
-    * value of the corresponding SQL type.
-    * <P>
-    * Note that this method may be used to pass datatabase-
-    * specific abstract data types.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the object containing the input parameter value
-    * @param targetSqlType the SQL type (as defined in java.sql.Types) to be
-    * sent to the database. The scale argument may further qualify this type.
-    * @param scale for java.sql.Types.DECIMAL or java.sql.Types.NUMERIC types,
-    *          this is the number of digits after the decimal point.  For all other
-    *          types, this value will be ignored.
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if <code>targetSqlType</code> is
-    * a <code>ARRAY</code>, <code>BLOB</code>, <code>CLOB</code>,
-    * <code>DATALINK</code>, <code>JAVA_OBJECT</code>, <code>NCHAR</code>,
-    * <code>NCLOB</code>, <code>NVARCHAR</code>, <code>LONGNVARCHAR</code>,
-    *  <code>REF</code>, <code>ROWID</code>, <code>SQLXML</code>
-    * or  <code>STRUCT</code> data type and the JDBC driver does not support
-    * this data type
-    * @see Types
-    * @see #getObject
-    * @since 1.4
-    */
-    public void setObject(String parameterName, Object x, int targetSqlType, int scale)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
-
- /**
-    * Sets the value of the designated parameter with the given object.
-    * This method is like the method <code>setObject</code>
-    * above, except that it assumes a scale of zero.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the object containing the input parameter value
-    * @param targetSqlType the SQL type (as defined in java.sql.Types) to be
-    *                      sent to the database
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if <code>targetSqlType</code> is
-    * a <code>ARRAY</code>, <code>BLOB</code>, <code>CLOB</code>,
-    * <code>DATALINK</code>, <code>JAVA_OBJECT</code>, <code>NCHAR</code>,
-    * <code>NCLOB</code>, <code>NVARCHAR</code>, <code>LONGNVARCHAR</code>,
-    *  <code>REF</code>, <code>ROWID</code>, <code>SQLXML</code>
-    * or  <code>STRUCT</code> data type and the JDBC driver does not support
-    * this data type
-    * @see #getObject
-    * @since 1.4
-    */
-    public void setObject(String parameterName, Object x, int targetSqlType)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
- /**
-   * Sets the value of the designated parameter with the given object.
-   * The second parameter must be of type <code>Object</code>; therefore, the
-   * <code>java.lang</code> equivalent objects should be used for built-in types.
-   *
-   * <p>The JDBC specification specifies a standard mapping from
-   * Java <code>Object</code> types to SQL types.  The given argument
-   * will be converted to the corresponding SQL type before being
-   * sent to the database.
-   *
-   * <p>Note that this method may be used to pass datatabase-
-   * specific abstract data types, by using a driver-specific Java
-   * type.
-   *
-   * If the object is of a class implementing the interface <code>SQLData</code>,
-   * the JDBC driver should call the method <code>SQLData.writeSQL</code>
-   * to write it to the SQL data stream.
-   * If, on the other hand, the object is of a class implementing
-   * <code>Ref</code>, <code>Blob</code>, <code>Clob</code>,  <code>NClob</code>,
-   *  <code>Struct</code>, <code>java.net.URL</code>,
-   * or <code>Array</code>, the driver should pass it to the database as a
-   * value of the corresponding SQL type.
-   * <P>
-   * This method throws an exception if there is an ambiguity, for example, if the
-   * object is of a class implementing more than one of the interfaces named above.
-   *
-   * @param parameterName the name of the parameter
-   * @param x the object containing the input parameter value
-   * @exception SQLException if a database access error occurs,
-   * this method is called on a closed <code>CallableStatement</code> or if the given
-   *            <code>Object</code> parameter is ambiguous
-   * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-   * this method
-   * @see #getObject
-   * @since 1.4
-   */
-   public void setObject(String parameterName, Object x) throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-    /**
-    * Sets the designated parameter to the given input stream, which will have
-    * the specified number of bytes.
-    * When a very large ASCII value is input to a <code>LONGVARCHAR</code>
-    * parameter, it may be more practical to send it via a
-    * <code>java.io.InputStream</code>. Data will be read from the stream
-    * as needed until end-of-file is reached.  The JDBC driver will
-    * do any necessary conversion from ASCII to the database char format.
-    *
-    * <P><B>Note:</B> This stream object can either be a standard
-    * Java stream object or your own subclass that implements the
-    * standard interface.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the Java input stream that contains the ASCII parameter value
-    * @param length the number of bytes in the stream
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @since 1.4
-    */
-   public void setAsciiStream(String parameterName, InputStream x, int length)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
- /**
-    * Sets the designated parameter to the given input stream, which will have
-    * the specified number of bytes.
-    * When a very large binary value is input to a <code>LONGVARBINARY</code>
-    * parameter, it may be more practical to send it via a
-    * <code>java.io.InputStream</code> object. The data will be read from the stream
-    * as needed until end-of-file is reached.
-    *
-    * <P><B>Note:</B> This stream object can either be a standard
-    * Java stream object or your own subclass that implements the
-    * standard interface.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the java input stream which contains the binary parameter value
-    * @param length the number of bytes in the stream
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @since 1.4
-    */
-   public void setBinaryStream(String parameterName, InputStream x,
-                        int length) throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
-  /**
-    * Sets the designated parameter to the given <code>Reader</code>
-    * object, which is the given number of characters long.
-    * When a very large UNICODE value is input to a <code>LONGVARCHAR</code>
-    * parameter, it may be more practical to send it via a
-    * <code>java.io.Reader</code> object. The data will be read from the stream
-    * as needed until end-of-file is reached.  The JDBC driver will
-    * do any necessary conversion from UNICODE to the database char format.
-    *
-    * <P><B>Note:</B> This stream object can either be a standard
-    * Java stream object or your own subclass that implements the
-    * standard interface.
-    *
-    * @param parameterName the name of the parameter
-    * @param reader the <code>java.io.Reader</code> object that
-    *        contains the UNICODE data used as the designated parameter
-    * @param length the number of characters in the stream
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @since 1.4
-    */
-   public void setCharacterStream(String parameterName,
-                           Reader reader,
-                           int length) throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
-  /**
-   * Sets the designated parameter to the given input stream.
-   * When a very large ASCII value is input to a <code>LONGVARCHAR</code>
-   * parameter, it may be more practical to send it via a
-   * <code>java.io.InputStream</code>. Data will be read from the stream
-   * as needed until end-of-file is reached.  The JDBC driver will
-   * do any necessary conversion from ASCII to the database char format.
-   *
-   * <P><B>Note:</B> This stream object can either be a standard
-   * Java stream object or your own subclass that implements the
-   * standard interface.
-   * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-   * it might be more efficient to use a version of
-   * <code>setAsciiStream</code> which takes a length parameter.
-   *
-   * @param parameterName the name of the parameter
-   * @param x the Java input stream that contains the ASCII parameter value
-   * @exception SQLException if a database access error occurs or
-   * this method is called on a closed <code>CallableStatement</code>
-   * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
+     * Sets the designated parameter to the given <code>java.sql.Blob</code> object.
+     * The driver converts this to an SQL <code>BLOB</code> value when it
+     * sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             a <code>Blob</code> object that maps an SQL <code>BLOB</code> value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
      * @since 1.6
-  */
-  public void setAsciiStream(String parameterName, InputStream x)
-          throws SQLException{
+     */
+    public void setBlob(String parameterName, Blob x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-
- /**
-    * Sets the designated parameter to the given input stream.
-    * When a very large binary value is input to a <code>LONGVARBINARY</code>
-    * parameter, it may be more practical to send it via a
-    * <code>java.io.InputStream</code> object. The data will be read from the
-    * stream as needed until end-of-file is reached.
-    *
-    * <P><B>Note:</B> This stream object can either be a standard
-    * Java stream object or your own subclass that implements the
-    * standard interface.
-    * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-    * it might be more efficient to use a version of
-    * <code>setBinaryStream</code> which takes a length parameter.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the java input stream which contains the binary parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-    * @since 1.6
-    */
-   public void setBinaryStream(String parameterName, InputStream x)
-   throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
-
- /**
-    * Sets the designated parameter to the given <code>Reader</code>
-    * object.
-    * When a very large UNICODE value is input to a <code>LONGVARCHAR</code>
-    * parameter, it may be more practical to send it via a
-    * <code>java.io.Reader</code> object. The data will be read from the stream
-    * as needed until end-of-file is reached.  The JDBC driver will
-    * do any necessary conversion from UNICODE to the database char format.
-    *
-    * <P><B>Note:</B> This stream object can either be a standard
-    * Java stream object or your own subclass that implements the
-    * standard interface.
-    * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
-    * it might be more efficient to use a version of
-    * <code>setCharacterStream</code> which takes a length parameter.
-    *
-    * @param parameterName the name of the parameter
-    * @param reader the <code>java.io.Reader</code> object that contains the
-    *        Unicode data
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @throws SQLFeatureNotSupportedException  if the JDBC driver does not support this method
-    * @since 1.6
-    */
-   public void setCharacterStream(String parameterName,
-                         Reader reader) throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-   /**
-    * Sets the designated parameter to the given
-    * <code>java.math.BigDecimal</code> value.
-    * The driver converts this to an SQL <code>NUMERIC</code> value when
-    * it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getBigDecimal
-    * @since 1.4
-    */
-   public void setBigDecimal(String parameterName, BigDecimal x) throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
-
- /**
-    * Sets the designated parameter to the given Java <code>String</code> value.
-    * The driver converts this
-    * to an SQL <code>VARCHAR</code> or <code>LONGVARCHAR</code> value
-    * (depending on the argument's
-    * size relative to the driver's limits on <code>VARCHAR</code> values)
-    * when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getString
-    * @since 1.4
-    */
-   public void setString(String parameterName, String x) throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
-
- /**
-    * Sets the designated parameter to the given Java array of bytes.
-    * The driver converts this to an SQL <code>VARBINARY</code> or
-    * <code>LONGVARBINARY</code> (depending on the argument's size relative
-    * to the driver's limits on <code>VARBINARY</code> values) when it sends
-    * it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getBytes
-    * @since 1.4
-    */
-   public void setBytes(String parameterName, byte x[]) throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
-
-
-
- /**
-    * Sets the designated parameter to the given <code>java.sql.Timestamp</code> value.
-    * The driver
-    * converts this to an SQL <code>TIMESTAMP</code> value when it sends it to the
-    * database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getTimestamp
-    * @since 1.4
-    */
-   public void setTimestamp(String parameterName, Timestamp x)
-       throws SQLException{
-        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
 
     /**
-    * Sets the designated parameter to SQL <code>NULL</code>.
-    *
-    * <P><B>Note:</B> You must specify the parameter's SQL type.
-    *
-    * @param parameterName the name of the parameter
-    * @param sqlType the SQL type code defined in <code>java.sql.Types</code>
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @since 1.4
-    */
-   public void setNull(String parameterName, int sqlType) throws SQLException {
+     * Sets the designated parameter to a <code>InputStream</code> object.
+     * This method differs from the <code>setBinaryStream (int, InputStream)</code>
+     * method because it informs the driver that the parameter value should be
+     * sent to the server as a <code>BLOB</code>.  When the <code>setBinaryStream</code> method is used,
+     * the driver may have to do extra work to determine whether the parameter
+     * data should be send to the server as a <code>LONGVARBINARY</code> or a <code>BLOB</code>
+     *
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setBlob</code> which takes a length parameter.
+     *
+     * @param parameterName the name of the parameter
+     * @param inputStream   An object that contains the data to set the parameter
+     *                      value to.
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setBlob(String parameterName, InputStream inputStream)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-
- /**
-    * Sets the designated parameter to SQL <code>NULL</code>.
-    * This version of the method <code>setNull</code> should
-    * be used for user-defined types and REF type parameters.  Examples
-    * of user-defined types include: STRUCT, DISTINCT, JAVA_OBJECT, and
-    * named array types.
-    *
-    * <P><B>Note:</B> To be portable, applications must give the
-    * SQL type code and the fully-qualified SQL type name when specifying
-    * a NULL user-defined or REF parameter.  In the case of a user-defined type
-    * the name is the type name of the parameter itself.  For a REF
-    * parameter, the name is the type name of the referenced type.  If
-    * a JDBC driver does not need the type code or type name information,
-    * it may ignore it.
-    *
-    * Although it is intended for user-defined and Ref parameters,
-    * this method may be used to set a null parameter of any JDBC type.
-    * If the parameter does not have a user-defined or REF type, the given
-    * typeName is ignored.
-    *
-    *
-    * @param parameterName the name of the parameter
-    * @param sqlType a value from <code>java.sql.Types</code>
-    * @param typeName the fully-qualified name of an SQL user-defined type;
-    *        ignored if the parameter is not a user-defined type or
-    *        SQL <code>REF</code> value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @since 1.4
-    */
-   public void setNull (String parameterName, int sqlType, String typeName)
-       throws SQLException{
+    /**
+     * Sets the value of the designated parameter with the given object. The second
+     * argument must be an object type; for integral values, the
+     * <code>java.lang</code> equivalent objects should be used.
+     *
+     * <p>The given Java object will be converted to the given targetSqlType
+     * before being sent to the database.
+     * <p>
+     * If the object has a custom mapping (is of a class implementing the
+     * interface <code>SQLData</code>),
+     * the JDBC driver should call the method <code>SQLData.writeSQL</code> to write it
+     * to the SQL data stream.
+     * If, on the other hand, the object is of a class implementing
+     * <code>Ref</code>, <code>Blob</code>, <code>Clob</code>,  <code>NClob</code>,
+     * <code>Struct</code>, <code>java.net.URL</code>,
+     * or <code>Array</code>, the driver should pass it to the database as a
+     * value of the corresponding SQL type.
+     * <p>
+     * Note that this method may be used to pass datatabase-
+     * specific abstract data types.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the object containing the input parameter value
+     * @param targetSqlType the SQL type (as defined in java.sql.Types) to be
+     *                      sent to the database. The scale argument may further qualify this type.
+     * @param scale         for java.sql.Types.DECIMAL or java.sql.Types.NUMERIC types,
+     *                      this is the number of digits after the decimal point.  For all other
+     *                      types, this value will be ignored.
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if <code>targetSqlType</code> is
+     *                                         a <code>ARRAY</code>, <code>BLOB</code>, <code>CLOB</code>,
+     *                                         <code>DATALINK</code>, <code>JAVA_OBJECT</code>, <code>NCHAR</code>,
+     *                                         <code>NCLOB</code>, <code>NVARCHAR</code>, <code>LONGNVARCHAR</code>,
+     *                                         <code>REF</code>, <code>ROWID</code>, <code>SQLXML</code>
+     *                                         or  <code>STRUCT</code> data type and the JDBC driver does not support
+     *                                         this data type
+     * @see Types
+     * @see #getObject
+     * @since 1.4
+     */
+    public void setObject(String parameterName, Object x, int targetSqlType, int scale)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
-
- /**
-    * Sets the designated parameter to the given Java <code>boolean</code> value.
-    * The driver converts this
-    * to an SQL <code>BIT</code> or <code>BOOLEAN</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @see #getBoolean
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @since 1.4
-    */
-   public void setBoolean(String parameterName, boolean x) throws SQLException{
+    /**
+     * Sets the value of the designated parameter with the given object.
+     * This method is like the method <code>setObject</code>
+     * above, except that it assumes a scale of zero.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the object containing the input parameter value
+     * @param targetSqlType the SQL type (as defined in java.sql.Types) to be
+     *                      sent to the database
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if <code>targetSqlType</code> is
+     *                                         a <code>ARRAY</code>, <code>BLOB</code>, <code>CLOB</code>,
+     *                                         <code>DATALINK</code>, <code>JAVA_OBJECT</code>, <code>NCHAR</code>,
+     *                                         <code>NCLOB</code>, <code>NVARCHAR</code>, <code>LONGNVARCHAR</code>,
+     *                                         <code>REF</code>, <code>ROWID</code>, <code>SQLXML</code>
+     *                                         or  <code>STRUCT</code> data type and the JDBC driver does not support
+     *                                         this data type
+     * @see #getObject
+     * @since 1.4
+     */
+    public void setObject(String parameterName, Object x, int targetSqlType)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
-
- /**
-    * Sets the designated parameter to the given Java <code>byte</code> value.
-    * The driver converts this
-    * to an SQL <code>TINYINT</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getByte
-    * @since 1.4
-    */
-   public void setByte(String parameterName, byte x) throws SQLException{
+    /**
+     * Sets the value of the designated parameter with the given object.
+     * The second parameter must be of type <code>Object</code>; therefore, the
+     * <code>java.lang</code> equivalent objects should be used for built-in types.
+     *
+     * <p>The JDBC specification specifies a standard mapping from
+     * Java <code>Object</code> types to SQL types.  The given argument
+     * will be converted to the corresponding SQL type before being
+     * sent to the database.
+     *
+     * <p>Note that this method may be used to pass datatabase-
+     * specific abstract data types, by using a driver-specific Java
+     * type.
+     * <p>
+     * If the object is of a class implementing the interface <code>SQLData</code>,
+     * the JDBC driver should call the method <code>SQLData.writeSQL</code>
+     * to write it to the SQL data stream.
+     * If, on the other hand, the object is of a class implementing
+     * <code>Ref</code>, <code>Blob</code>, <code>Clob</code>,  <code>NClob</code>,
+     * <code>Struct</code>, <code>java.net.URL</code>,
+     * or <code>Array</code>, the driver should pass it to the database as a
+     * value of the corresponding SQL type.
+     * <p>
+     * This method throws an exception if there is an ambiguity, for example, if the
+     * object is of a class implementing more than one of the interfaces named above.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the object containing the input parameter value
+     * @throws SQLException                    if a database access error occurs,
+     *                                         this method is called on a closed <code>CallableStatement</code> or if the given
+     *                                         <code>Object</code> parameter is ambiguous
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getObject
+     * @since 1.4
+     */
+    public void setObject(String parameterName, Object x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-
-
- /**
-    * Sets the designated parameter to the given Java <code>short</code> value.
-    * The driver converts this
-    * to an SQL <code>SMALLINT</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getShort
-    * @since 1.4
-    */
-   public void setShort(String parameterName, short x) throws SQLException{
+    /**
+     * Sets the designated parameter to the given input stream, which will have
+     * the specified number of bytes.
+     * When a very large ASCII value is input to a <code>LONGVARCHAR</code>
+     * parameter, it may be more practical to send it via a
+     * <code>java.io.InputStream</code>. Data will be read from the stream
+     * as needed until end-of-file is reached.  The JDBC driver will
+     * do any necessary conversion from ASCII to the database char format.
+     *
+     * <P><B>Note:</B> This stream object can either be a standard
+     * Java stream object or your own subclass that implements the
+     * standard interface.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the Java input stream that contains the ASCII parameter value
+     * @param length        the number of bytes in the stream
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @since 1.4
+     */
+    public void setAsciiStream(String parameterName, InputStream x, int length)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-    * Sets the designated parameter to the given Java <code>int</code> value.
-    * The driver converts this
-    * to an SQL <code>INTEGER</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getInt
-    * @since 1.4
-    */
-   public void setInt(String parameterName, int x) throws SQLException{
+    /**
+     * Sets the designated parameter to the given input stream, which will have
+     * the specified number of bytes.
+     * When a very large binary value is input to a <code>LONGVARBINARY</code>
+     * parameter, it may be more practical to send it via a
+     * <code>java.io.InputStream</code> object. The data will be read from the stream
+     * as needed until end-of-file is reached.
+     *
+     * <P><B>Note:</B> This stream object can either be a standard
+     * Java stream object or your own subclass that implements the
+     * standard interface.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the java input stream which contains the binary parameter value
+     * @param length        the number of bytes in the stream
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @since 1.4
+     */
+    public void setBinaryStream(String parameterName, InputStream x,
+                                int length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-    * Sets the designated parameter to the given Java <code>long</code> value.
-    * The driver converts this
-    * to an SQL <code>BIGINT</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getLong
-    * @since 1.4
-    */
-   public void setLong(String parameterName, long x) throws SQLException{
+    /**
+     * Sets the designated parameter to the given <code>Reader</code>
+     * object, which is the given number of characters long.
+     * When a very large UNICODE value is input to a <code>LONGVARCHAR</code>
+     * parameter, it may be more practical to send it via a
+     * <code>java.io.Reader</code> object. The data will be read from the stream
+     * as needed until end-of-file is reached.  The JDBC driver will
+     * do any necessary conversion from UNICODE to the database char format.
+     *
+     * <P><B>Note:</B> This stream object can either be a standard
+     * Java stream object or your own subclass that implements the
+     * standard interface.
+     *
+     * @param parameterName the name of the parameter
+     * @param reader        the <code>java.io.Reader</code> object that
+     *                      contains the UNICODE data used as the designated parameter
+     * @param length        the number of characters in the stream
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @since 1.4
+     */
+    public void setCharacterStream(String parameterName,
+                                   Reader reader,
+                                   int length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-    * Sets the designated parameter to the given Java <code>float</code> value.
-    * The driver converts this
-    * to an SQL <code>FLOAT</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getFloat
-    * @since 1.4
-    */
-   public void setFloat(String parameterName, float x) throws SQLException{
+    /**
+     * Sets the designated parameter to the given input stream.
+     * When a very large ASCII value is input to a <code>LONGVARCHAR</code>
+     * parameter, it may be more practical to send it via a
+     * <code>java.io.InputStream</code>. Data will be read from the stream
+     * as needed until end-of-file is reached.  The JDBC driver will
+     * do any necessary conversion from ASCII to the database char format.
+     *
+     * <P><B>Note:</B> This stream object can either be a standard
+     * Java stream object or your own subclass that implements the
+     * standard interface.
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setAsciiStream</code> which takes a length parameter.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the Java input stream that contains the ASCII parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setAsciiStream(String parameterName, InputStream x)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
 
- /**
-    * Sets the designated parameter to the given Java <code>double</code> value.
-    * The driver converts this
-    * to an SQL <code>DOUBLE</code> value when it sends it to the database.
-    *
-    * @param parameterName the name of the parameter
-    * @param x the parameter value
-    * @exception SQLException if a database access error occurs or
-    * this method is called on a closed <code>CallableStatement</code>
-    * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-    * this method
-    * @see #getDouble
-    * @since 1.4
-    */
-   public void setDouble(String parameterName, double x) throws SQLException{
+    /**
+     * Sets the designated parameter to the given input stream.
+     * When a very large binary value is input to a <code>LONGVARBINARY</code>
+     * parameter, it may be more practical to send it via a
+     * <code>java.io.InputStream</code> object. The data will be read from the
+     * stream as needed until end-of-file is reached.
+     *
+     * <P><B>Note:</B> This stream object can either be a standard
+     * Java stream object or your own subclass that implements the
+     * standard interface.
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setBinaryStream</code> which takes a length parameter.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the java input stream which contains the binary parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setBinaryStream(String parameterName, InputStream x)
+            throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
-   }
+    }
 
-   /**
+
+    /**
+     * Sets the designated parameter to the given <code>Reader</code>
+     * object.
+     * When a very large UNICODE value is input to a <code>LONGVARCHAR</code>
+     * parameter, it may be more practical to send it via a
+     * <code>java.io.Reader</code> object. The data will be read from the stream
+     * as needed until end-of-file is reached.  The JDBC driver will
+     * do any necessary conversion from UNICODE to the database char format.
+     *
+     * <P><B>Note:</B> This stream object can either be a standard
+     * Java stream object or your own subclass that implements the
+     * standard interface.
+     * <P><B>Note:</B> Consult your JDBC driver documentation to determine if
+     * it might be more efficient to use a version of
+     * <code>setCharacterStream</code> which takes a length parameter.
+     *
+     * @param parameterName the name of the parameter
+     * @param reader        the <code>java.io.Reader</code> object that contains the
+     *                      Unicode data
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support this method
+     * @since 1.6
+     */
+    public void setCharacterStream(String parameterName,
+                                   Reader reader) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+    /**
+     * Sets the designated parameter to the given
+     * <code>java.math.BigDecimal</code> value.
+     * The driver converts this to an SQL <code>NUMERIC</code> value when
+     * it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getBigDecimal
+     * @since 1.4
+     */
+    public void setBigDecimal(String parameterName, BigDecimal x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java <code>String</code> value.
+     * The driver converts this
+     * to an SQL <code>VARCHAR</code> or <code>LONGVARCHAR</code> value
+     * (depending on the argument's
+     * size relative to the driver's limits on <code>VARCHAR</code> values)
+     * when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getString
+     * @since 1.4
+     */
+    public void setString(String parameterName, String x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java array of bytes.
+     * The driver converts this to an SQL <code>VARBINARY</code> or
+     * <code>LONGVARBINARY</code> (depending on the argument's size relative
+     * to the driver's limits on <code>VARBINARY</code> values) when it sends
+     * it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getBytes
+     * @since 1.4
+     */
+    public void setBytes(String parameterName, byte x[]) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given <code>java.sql.Timestamp</code> value.
+     * The driver
+     * converts this to an SQL <code>TIMESTAMP</code> value when it sends it to the
+     * database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getTimestamp
+     * @since 1.4
+     */
+    public void setTimestamp(String parameterName, Timestamp x)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+    /**
+     * Sets the designated parameter to SQL <code>NULL</code>.
+     *
+     * <P><B>Note:</B> You must specify the parameter's SQL type.
+     *
+     * @param parameterName the name of the parameter
+     * @param sqlType       the SQL type code defined in <code>java.sql.Types</code>
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @since 1.4
+     */
+    public void setNull(String parameterName, int sqlType) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to SQL <code>NULL</code>.
+     * This version of the method <code>setNull</code> should
+     * be used for user-defined types and REF type parameters.  Examples
+     * of user-defined types include: STRUCT, DISTINCT, JAVA_OBJECT, and
+     * named array types.
+     *
+     * <P><B>Note:</B> To be portable, applications must give the
+     * SQL type code and the fully-qualified SQL type name when specifying
+     * a NULL user-defined or REF parameter.  In the case of a user-defined type
+     * the name is the type name of the parameter itself.  For a REF
+     * parameter, the name is the type name of the referenced type.  If
+     * a JDBC driver does not need the type code or type name information,
+     * it may ignore it.
+     * <p>
+     * Although it is intended for user-defined and Ref parameters,
+     * this method may be used to set a null parameter of any JDBC type.
+     * If the parameter does not have a user-defined or REF type, the given
+     * typeName is ignored.
+     *
+     * @param parameterName the name of the parameter
+     * @param sqlType       a value from <code>java.sql.Types</code>
+     * @param typeName      the fully-qualified name of an SQL user-defined type;
+     *                      ignored if the parameter is not a user-defined type or
+     *                      SQL <code>REF</code> value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @since 1.4
+     */
+    public void setNull(String parameterName, int sqlType, String typeName)
+            throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java <code>boolean</code> value.
+     * The driver converts this
+     * to an SQL <code>BIT</code> or <code>BOOLEAN</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getBoolean
+     * @since 1.4
+     */
+    public void setBoolean(String parameterName, boolean x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java <code>byte</code> value.
+     * The driver converts this
+     * to an SQL <code>TINYINT</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getByte
+     * @since 1.4
+     */
+    public void setByte(String parameterName, byte x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java <code>short</code> value.
+     * The driver converts this
+     * to an SQL <code>SMALLINT</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getShort
+     * @since 1.4
+     */
+    public void setShort(String parameterName, short x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java <code>int</code> value.
+     * The driver converts this
+     * to an SQL <code>INTEGER</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getInt
+     * @since 1.4
+     */
+    public void setInt(String parameterName, int x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java <code>long</code> value.
+     * The driver converts this
+     * to an SQL <code>BIGINT</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getLong
+     * @since 1.4
+     */
+    public void setLong(String parameterName, long x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java <code>float</code> value.
+     * The driver converts this
+     * to an SQL <code>FLOAT</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getFloat
+     * @since 1.4
+     */
+    public void setFloat(String parameterName, float x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+
+    /**
+     * Sets the designated parameter to the given Java <code>double</code> value.
+     * The driver converts this
+     * to an SQL <code>DOUBLE</code> value when it sends it to the database.
+     *
+     * @param parameterName the name of the parameter
+     * @param x             the parameter value
+     * @throws SQLException                    if a database access error occurs or
+     *                                         this method is called on a closed <code>CallableStatement</code>
+     * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
+     *                                         this method
+     * @see #getDouble
+     * @since 1.4
+     */
+    public void setDouble(String parameterName, double x) throws SQLException {
+        throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("cachedrowsetimpl.featnotsupp").toString());
+    }
+
+    /**
      * This method re populates the resBundle
      * during the deserialization process
-     *
      */
     private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
         // Default state initialization happens here
         ois.defaultReadObject();
         // Initialization of transient Res Bundle happens here .
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 
@@ -10127,5 +10131,5 @@ a
         throw new SQLFeatureNotSupportedException("Not supported yet.");
     }
 
-    static final long serialVersionUID =1884577171200622428L;
+    static final long serialVersionUID = 1884577171200622428L;
 }

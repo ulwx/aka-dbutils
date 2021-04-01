@@ -53,10 +53,10 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
 
     private JdbcRowSetResourceBundle resBundle;
 
-    public WebRowSetXmlReader(){
+    public WebRowSetXmlReader() {
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
     }
@@ -67,21 +67,21 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
      * notifications of parse events to the rowset's
      * <code>XmlReaderDocHandler</code>, which will build the rowset as
      * an XML document.
-     * <P>
+     * <p>
      * This method is called internally by the method
      * <code>WebRowSet.readXml</code>.
-     * <P>
+     * <p>
      * If a parsing error occurs, the exception thrown will include
      * information for locating the error in the original XML document.
      *
      * @param caller the <code>WebRowSet</code> object to be parsed, whose
-     *        <code>xmlReader</code> field must contain a reference to
-     *        this <code>XmlReader</code> object
+     *               <code>xmlReader</code> field must contain a reference to
+     *               this <code>XmlReader</code> object
      * @param reader the <code>java.io.Reader</code> object from which
-     *        the parser will get its input
-     * @exception SQLException if a database access error occurs or
-     *            this <code>WebRowSetXmlReader</code> object is not the
-     *            reader for the given rowset
+     *               the parser will get its input
+     * @throws SQLException if a database access error occurs or
+     *                      this <code>WebRowSetXmlReader</code> object is not the
+     *                      reader for the given rowset
      * @see XmlReaderContentHandler
      */
     public void readXML(WebRowSet caller, Reader reader) throws SQLException {
@@ -95,16 +95,16 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
             // Crimson(J2SE 1.4.x) / Xerces(J2SE 1.5.x).
             InputSource is = new InputSource(reader);
             DefaultHandler dh = new XmlErrorHandler();
-            XmlReaderContentHandler hndr = new XmlReaderContentHandler((RowSet)caller);
+            XmlReaderContentHandler hndr = new XmlReaderContentHandler((RowSet) caller);
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
             factory.setValidating(true);
-            SAXParser parser = factory.newSAXParser() ;
+            SAXParser parser = factory.newSAXParser();
 
             parser.setProperty(
-                               "http://java.sun.com/xml/jaxp/properties/schemaLanguage", "http://www.w3.org/2001/XMLSchema");
+                    "http://java.sun.com/xml/jaxp/properties/schemaLanguage", "http://www.w3.org/2001/XMLSchema");
 
-            XMLReader reader1 = parser.getXMLReader() ;
+            XMLReader reader1 = parser.getXMLReader();
             reader1.setEntityResolver(new XmlResolver());
             reader1.setContentHandler(hndr);
 
@@ -113,26 +113,25 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
             reader1.parse(is);
 
         } catch (SAXParseException err) {
-            System.out.println (MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{ err.getMessage (), err.getLineNumber(), err.getSystemId()}));
+            System.out.println(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getMessage(), err.getLineNumber(), err.getSystemId()}));
             err.printStackTrace();
             throw new SQLException(err.getMessage());
 
         } catch (SAXException e) {
-            Exception   x = e;
-            if (e.getException () != null)
+            Exception x = e;
+            if (e.getException() != null)
                 x = e.getException();
-            x.printStackTrace ();
+            x.printStackTrace();
             throw new SQLException(x.getMessage());
 
         }
 
         // Will be here if trying to write beyond the RowSet limits
 
-         catch (ArrayIndexOutOfBoundsException aie) {
-              throw new SQLException(resBundle.handleGetObject("wrsxmlreader.invalidcp").toString());
-        }
-        catch (Throwable e) {
-            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.readxml").toString() , e.getMessage()));
+        catch (ArrayIndexOutOfBoundsException aie) {
+            throw new SQLException(resBundle.handleGetObject("wrsxmlreader.invalidcp").toString());
+        } catch (Throwable e) {
+            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.readxml").toString(), e.getMessage()));
         }
 
     }
@@ -144,23 +143,23 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
      * notifications of parse events to the rowset's
      * <code>XmlReaderDocHandler</code>, which will build the rowset as
      * an XML document.
-     * <P>
+     * <p>
      * Using streams is a much faster way than using <code>java.io.Reader</code>
-     * <P>
+     * <p>
      * This method is called internally by the method
      * <code>WebRowSet.readXml</code>.
-     * <P>
+     * <p>
      * If a parsing error occurs, the exception thrown will include
      * information for locating the error in the original XML document.
      *
-     * @param caller the <code>WebRowSet</code> object to be parsed, whose
-     *        <code>xmlReader</code> field must contain a reference to
-     *        this <code>XmlReader</code> object
+     * @param caller  the <code>WebRowSet</code> object to be parsed, whose
+     *                <code>xmlReader</code> field must contain a reference to
+     *                this <code>XmlReader</code> object
      * @param iStream the <code>java.io.InputStream</code> object from which
-     *        the parser will get its input
+     *                the parser will get its input
      * @throws SQLException if a database access error occurs or
-     *            this <code>WebRowSetXmlReader</code> object is not the
-     *            reader for the given rowset
+     *                      this <code>WebRowSetXmlReader</code> object is not the
+     *                      reader for the given rowset
      * @see XmlReaderContentHandler
      */
     public void readXML(WebRowSet caller, InputStream iStream) throws SQLException {
@@ -168,17 +167,17 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
             InputSource is = new InputSource(iStream);
             DefaultHandler dh = new XmlErrorHandler();
 
-            XmlReaderContentHandler hndr = new XmlReaderContentHandler((RowSet)caller);
+            XmlReaderContentHandler hndr = new XmlReaderContentHandler((RowSet) caller);
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
             factory.setValidating(true);
 
-            SAXParser parser = factory.newSAXParser() ;
+            SAXParser parser = factory.newSAXParser();
 
             parser.setProperty("http://java.sun.com/xml/jaxp/properties/schemaLanguage",
-                     "http://www.w3.org/2001/XMLSchema");
+                    "http://www.w3.org/2001/XMLSchema");
 
-            XMLReader reader1 = parser.getXMLReader() ;
+            XMLReader reader1 = parser.getXMLReader();
             reader1.setEntityResolver(new XmlResolver());
             reader1.setContentHandler(hndr);
 
@@ -187,34 +186,31 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
             reader1.parse(is);
 
         } catch (SAXParseException err) {
-            System.out.println (MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getLineNumber(), err.getSystemId() }));
-            System.out.println("   " + err.getMessage ());
+            System.out.println(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.parseerr").toString(), new Object[]{err.getLineNumber(), err.getSystemId()}));
+            System.out.println("   " + err.getMessage());
             err.printStackTrace();
             throw new SQLException(err.getMessage());
 
         } catch (SAXException e) {
-            Exception   x = e;
-            if (e.getException () != null)
+            Exception x = e;
+            if (e.getException() != null)
                 x = e.getException();
-            x.printStackTrace ();
+            x.printStackTrace();
             throw new SQLException(x.getMessage());
 
         }
 
         // Will be here if trying to write beyond the RowSet limits
 
-         catch (ArrayIndexOutOfBoundsException aie) {
-              throw new SQLException(resBundle.handleGetObject("wrsxmlreader.invalidcp").toString());
-        }
-
-        catch (Throwable e) {
-            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.readxml").toString() , e.getMessage()));
+        catch (ArrayIndexOutOfBoundsException aie) {
+            throw new SQLException(resBundle.handleGetObject("wrsxmlreader.invalidcp").toString());
+        } catch (Throwable e) {
+            throw new SQLException(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.readxml").toString(), e.getMessage()));
         }
     }
 
     /**
      * For code coverage purposes only right now
-     *
      */
 
     public void readData(RowSetInternal caller) {
@@ -223,15 +219,14 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
     /**
      * This method re populates the resBundle
      * during the deserialization process
-     *
      */
     private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
         // Default state initialization happens here
         ois.defaultReadObject();
         // Initialization of transient Res Bundle happens here .
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 

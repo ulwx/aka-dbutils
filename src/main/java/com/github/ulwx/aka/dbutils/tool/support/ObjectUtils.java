@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
+import com.github.ulwx.aka.dbutils.tool.support.deepequal.DeepEquals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +27,13 @@ import java.util.*;
 public class ObjectUtils {
     private static final Logger log = LoggerFactory.getLogger(ObjectUtils.class);
 
-    public static String toString(Object obj){
+    public static String toString(Object obj) {
+        if(obj==null){
+            return null;
+        }
         return toJsonString(obj);
     }
+
     public static boolean isPrimitiveWapper(Class t) {
         if (t == Integer.class || t == Boolean.class || t == Long.class
 
@@ -39,6 +44,11 @@ public class ObjectUtils {
         return false;
 
     }
+
+    public static boolean deepEquals(Object src, Object dest) {
+        return DeepEquals.deepEquals(src, dest);
+    }
+
     public static Map<String, Object> fromJavaBeanToMap(Object obj) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(moduleForMapper);
@@ -48,6 +58,7 @@ public class ObjectUtils {
         Map<String, Object> fieldMap = mapper.convertValue(obj, Map.class);
         return fieldMap;
     }
+
     public static Map<String, Object> getMapFromResultSet(ResultSet rs) {
 
         Map<String, Object> map = new HashMap<String, Object>();
@@ -57,7 +68,7 @@ public class ObjectUtils {
 
             for (int i = 0; i < rsMeta.getColumnCount(); i++) {
                 String columnName = rsMeta.getColumnLabel(i + 1);
-               // log.debug("columnName=" + columnName + ",val=" + rs.getObject(columnName));
+                // log.debug("columnName=" + columnName + ",val=" + rs.getObject(columnName));
 
                 map.put(columnName, rs.getObject(columnName));
             }
@@ -69,14 +80,16 @@ public class ObjectUtils {
         return map;
 
     }
-    public static boolean isDateType(Class type){
-        if(type==Date.class || type==LocalDate.class || type ==LocalDateTime.class||
-            type==LocalTime.class ){
+
+    public static boolean isDateType(Class type) {
+        if (type == Date.class || type == LocalDate.class || type == LocalDateTime.class ||
+                type == LocalTime.class) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
+
     public static Object[] toObjectArray(Object source) {
         if (source instanceof Object[]) {
             return (Object[]) source;
@@ -99,6 +112,7 @@ public class ObjectUtils {
         }
         return newArray;
     }
+
     public static String toJavascriptString(Object obj) throws Exception {
 
         String resultStr = "";
@@ -180,17 +194,19 @@ public class ObjectUtils {
         return "{" + StringUtils.trimLeadingString(resultStr, ",") + "}";
     }
 
-    public static String toJsonString(Object obj){
-       return  toJsonString(obj,true);
+    public static String toJsonString(Object obj) {
+        return toJsonString(obj, true);
     }
+
     public static boolean isEmpty(Object[] array) {
         return (array == null || array.length == 0);
     }
+
     /**
      * 搜索本类或所有父类里指定的属性 ，从本类开始找，再一级级搜索父类
      *
-     * @param srcClass         : javabean对象
-     * @param fieldName      : 属性名
+     * @param srcClass        : javabean对象
+     * @param fieldName       : 属性名
      * @param fromParentClass 从哪个基类开始查找
      * @return 父类中的属性对象
      */
@@ -210,20 +226,23 @@ public class ObjectUtils {
         }
         return null;
     }
-    public static String toJsonString(Object obj, boolean includeNull) {
-        return  toJsonString(obj,includeNull,false,false);
-    }
-    public static String toPrettyJsonString(Object obj) {
 
-        return  toJsonString(obj,false,false,true);
+    public static String toJsonString(Object obj, boolean includeNull) {
+        return toJsonString(obj, includeNull, false, false);
     }
-    public static String toJsonString(Object obj, boolean includeNull, boolean ifNullToDefault,boolean prettyOutPut) {
+
+    public static String toPrettyJsonString(Object obj) {
+        if(obj==null) return null;
+        return toJsonString(obj, false, false, true);
+    }
+
+    public static String toJsonString(Object obj, boolean includeNull, boolean ifNullToDefault, boolean prettyOutPut) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             mapper.registerModule(moduleForMapper);
             mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
             mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-            if(prettyOutPut) {
+            if (prettyOutPut) {
                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
             }
             if (!includeNull) {
@@ -243,7 +262,9 @@ public class ObjectUtils {
         return "";
 
     }
+
     public static SimpleModule moduleForMapper = new SimpleModule();
+
     static {
 
         moduleForMapper.addSerializer(LocalDate.class, Converter.LocalDateSerializer.instance);
@@ -259,7 +280,7 @@ public class ObjectUtils {
 }
 
 
-class Converter{
+class Converter {
 
 
     public static class MyNullArrayJsonSerializer extends JsonSerializer<Object> {
@@ -524,6 +545,7 @@ class Converter{
         }
 
     }
+
     public static class LocalTimeSerializer extends JsonSerializer<LocalTime> {
 
         public static LocalTimeSerializer instance = new LocalTimeSerializer();

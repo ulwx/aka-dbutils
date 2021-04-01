@@ -1,23 +1,26 @@
 package com.github.ulwx.aka.dbutils.tool.support.type;
 
 public class TLong {
-	private Long value=0l;
+    private Long value = 0l;
 
 
-	public TLong(){
-		
-	}
-	public TLong(Long val){
-		this.value=val;
-	}
-	
-	public Long getValue() {
-		return value;
-	}
-	public void setValue(Long value) {
-		this.value = value;
-	}
-	public String toString(){
-		return value+"";
-	}
+    public TLong() {
+
+    }
+
+    public TLong(Long val) {
+        this.value = val;
+    }
+
+    public Long getValue() {
+        return value;
+    }
+
+    public void setValue(Long value) {
+        this.value = value;
+    }
+
+    public String toString() {
+        return value + "";
+    }
 }

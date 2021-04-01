@@ -10,8 +10,8 @@ import java.sql.Connection;
 
 public class MDataBaseFactory {
     private DataSource dataSource;
-    private  String tableNameRule= DbConst.TableNameRules.underline_to_camel;
-    private  String tableColumRule=DbConst.TableColumRules.underline_to_camel;
+    private String tableNameRule = DbConst.TableNameRules.underline_to_camel;
+    private String tableColumRule = DbConst.TableColumRules.underline_to_camel;
 
     public MDataBaseFactory(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -37,9 +37,9 @@ public class MDataBaseFactory {
         this.tableColumRule = tableColumRule;
     }
 
-    public MDataBase getDatabase(Connection connection, boolean autoCommit, boolean externalControlClose){
-        DataBaseImpl dataBase=new DataBaseImpl();
-        dataBase.connectDb(connection,externalControlClose);
+    public MDataBase getDatabase(Connection connection, boolean autoCommit, boolean externalControlClose) {
+        DataBaseImpl dataBase = new DataBaseImpl();
+        dataBase.connectDb(connection, externalControlClose);
         dataBase.setAutoCommit(autoCommit);
         return new MDataBaseImpl(dataBase);
 

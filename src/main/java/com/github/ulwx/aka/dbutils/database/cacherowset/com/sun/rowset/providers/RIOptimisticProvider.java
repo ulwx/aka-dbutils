@@ -67,14 +67,14 @@ import java.io.Serializable;
  * Standard disconnected <code>RowSet</code> implementations may opt to use this
  * <code>SyncProvider</code> implementation in one of two ways:
  * <OL>
- *  <LI>By specifically calling the <code>setSyncProvider</code> method
-    defined in the <code>CachedRowSet</code> interface
+ * <LI>By specifically calling the <code>setSyncProvider</code> method
+ * defined in the <code>CachedRowSet</code> interface
  * <pre>
  *     CachedRowset crs = new FooCachedRowSetImpl();
  *     crs.setSyncProvider("com.sun.rowset.providers.RIOptimisticProvider");
  * </pre>
- *  <LI>By specifying it in the constructor of the <code>RowSet</code>
- *      implementation
+ * <LI>By specifying it in the constructor of the <code>RowSet</code>
+ * implementation
  * <pre>
  *     CachedRowset crs = new FooCachedRowSetImpl(
  *                         "com.sun.rowset.providers.RIOptimisticProvider");
@@ -83,16 +83,15 @@ import java.io.Serializable;
  * Note that because the <code>RIOptimisticProvider</code> implementation is
  * the default provider, it will always be the provider when no provider ID is
  * specified to the constructor.
- * <P>
+ * <p>
  * See the standard <code>RowSet</code> reference implementations in the
  * <code>com.sun.rowset</code> package for more details.
  *
- * @author  Jonathan Bruce
+ * @author Jonathan Bruce
  * @see SyncProvider
  * @see SyncProviderException
  * @see SyncFactory
  * @see SyncFactoryException
- *
  */
 public final class RIOptimisticProvider extends SyncProvider implements Serializable {
 
@@ -123,17 +122,17 @@ public final class RIOptimisticProvider extends SyncProvider implements Serializ
      * Creates an <code>RIOptimisticProvider</code> object initialized with the
      * fully qualified class name of this <code>SyncProvider</code> implementation
      * and a default reader and writer.
-     * <P>
+     * <p>
      * This provider is available to all disconnected <code>RowSet</code> implementations
-     *  as the default persistence provider.
+     * as the default persistence provider.
      */
     public RIOptimisticProvider() {
         providerID = this.getClass().getName();
         reader = new CachedRowSetReader();
         writer = new CachedRowSetWriter();
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
     }
@@ -154,12 +153,13 @@ public final class RIOptimisticProvider extends SyncProvider implements Serializ
      * write changes made to the <code>Rowset</code> object back to the data source.
      *
      * @return the <code>javax.sql.RowSetWriter</code> object for this
-     *     <code>RIOptimisticProvider</code> object
+     * <code>RIOptimisticProvider</code> object
      */
     public RowSetWriter getRowSetWriter() {
         try {
             writer.setReader(reader);
-        } catch (java.sql.SQLException e) {}
+        } catch (java.sql.SQLException e) {
+        }
         return writer;
     }
 
@@ -169,7 +169,7 @@ public final class RIOptimisticProvider extends SyncProvider implements Serializ
      * populate a <code>RowSet</code> object using this <code>RIOptimisticProvider</code>.
      *
      * @return the <code>javax.sql.RowSetReader</code> object for this
-     *     <code>RIOptimisticProvider</code> object
+     * <code>RIOptimisticProvider</code> object
      */
     public RowSetReader getRowSetReader() {
         return reader;
@@ -191,19 +191,19 @@ public final class RIOptimisticProvider extends SyncProvider implements Serializ
      * <code>SyncProvider</code> classifications.
      *
      * @param datasource_lock An <code>int</code> indicating the level of locking to be
-     *        set; must be one of the following constants:
-     * <PRE>
-     *       SyncProvider.DATASOURCE_NO_LOCK,
-     *       SyncProvider.DATASOURCE_ROW_LOCK,
-     *       SyncProvider.DATASOURCE_TABLE_LOCK,
-     *       SyncProvider.DATASOURCE_DB_LOCk
-     * </PRE>
+     *                        set; must be one of the following constants:
+     *                        <PRE>
+     *                        SyncProvider.DATASOURCE_NO_LOCK,
+     *                        SyncProvider.DATASOURCE_ROW_LOCK,
+     *                        SyncProvider.DATASOURCE_TABLE_LOCK,
+     *                        SyncProvider.DATASOURCE_DB_LOCk
+     *                        </PRE>
      * @throws SyncProviderException if the parameter specified is not
-     *           <code>SyncProvider.DATASOURCE_NO_LOCK</code>
+     *                               <code>SyncProvider.DATASOURCE_NO_LOCK</code>
      */
     public void setDataSourceLock(int datasource_lock) throws SyncProviderException {
-        if(datasource_lock != SyncProvider.DATASOURCE_NO_LOCK ) {
-          throw new SyncProviderException(resBundle.handleGetObject("riop.locking").toString());
+        if (datasource_lock != SyncProvider.DATASOURCE_NO_LOCK) {
+            throw new SyncProviderException(resBundle.handleGetObject("riop.locking").toString());
         }
     }
 
@@ -213,7 +213,7 @@ public final class RIOptimisticProvider extends SyncProvider implements Serializ
      * abstract class.
      *
      * @return <code>SyncProvider.DATASOURCE_NO_LOCK</code>.
-     *     The reference implementation does not support data source locks.
+     * The reference implementation does not support data source locks.
      */
     public int getDataSourceLock() throws SyncProviderException {
         return SyncProvider.DATASOURCE_NO_LOCK;
@@ -225,8 +225,8 @@ public final class RIOptimisticProvider extends SyncProvider implements Serializ
      * abstract class.
      *
      * @return <code>SyncProvider.NONUPDATABLE_VIEW_SYNC</code>. The
-     *     the reference implementation does not support updating tables
-     *     that are the source of a view.
+     * the reference implementation does not support updating tables
+     * that are the source of a view.
      */
     public int supportsUpdatableView() {
         return SyncProvider.NONUPDATABLE_VIEW_SYNC;
@@ -247,7 +247,7 @@ public final class RIOptimisticProvider extends SyncProvider implements Serializ
      * Synchronization Provider
      *
      * @return the <code>String</code> detailing the vendor name of this
-     *      SyncProvider
+     * SyncProvider
      */
     public String getVendor() {
         return this.vendorName;
@@ -258,12 +258,13 @@ public final class RIOptimisticProvider extends SyncProvider implements Serializ
         ois.defaultReadObject();
         // Initialization of transient Res Bundle happens here .
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 
     }
-    static final long serialVersionUID =-3143367176751761936L;
+
+    static final long serialVersionUID = -3143367176751761936L;
 
 }

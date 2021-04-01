@@ -1,18 +1,15 @@
 package com.github.ulwx.aka.dbutils.database;
 
 import com.github.ulwx.aka.dbutils.database.DataBase.SQLType;
-import com.github.ulwx.aka.dbutils.database.MDMethods.MapNestOptions;
-import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
-import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
-import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
-import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions.InsertOptions;
-import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions.InsertOptions.ReturnFlag;
+import com.github.ulwx.aka.dbutils.database.MDMethods.*;
+import com.github.ulwx.aka.dbutils.database.MDMethods.InsertOptions.ReturnFlag;
 import com.github.ulwx.aka.dbutils.database.annotation.AkaParam;
 import com.github.ulwx.aka.dbutils.database.nsql.NSQL;
 import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
 import com.github.ulwx.aka.dbutils.tool.MD;
 import com.github.ulwx.aka.dbutils.tool.support.NumberUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
+import com.github.ulwx.aka.dbutils.tool.support.type.*;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -26,24 +23,25 @@ import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MapperFactory {
     private static Logger log = LoggerFactory.getLogger(DataBase.class);
 
     public static <T> T getMapper(Class<T> mapperType, MDataBase mDataBase) {
-        if (!AkaMapper.class.isAssignableFrom(mapperType)){
-            throw new DbException("aka-dbutils mapper必须继承自"+AkaMapper.class.getName()+"!");
+        if (!AkaMapper.class.isAssignableFrom(mapperType)) {
+            throw new DbException("aka-dbutils mapper必须继承自" + AkaMapper.class.getName() + "!");
         }
         MapperProxy<T> mapperProxy = new MapperProxy<T>(mDataBase, mapperType);
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(mapperType);
-        enhancer.setCallback( mapperProxy);
+        enhancer.setCallback(mapperProxy);
         T mapperObj = (T) enhancer.create();
-        ((AkaMapper)mapperObj).setMdDataBase(mDataBase);
+        ((AkaMapper) mapperObj).setMdDataBase(mDataBase);
         return mapperObj;
     }
 
-    public static class MapperProxy<T> implements  MethodInterceptor, Serializable {
+    public static class MapperProxy<T> implements MethodInterceptor, Serializable {
 
         private static final long serialVersionUID = -6424540398559729839L;
         private final MDataBase mDataBase;
@@ -54,28 +52,31 @@ public class MapperFactory {
             this.mapperType = mapperType;
         }
 
-        private String methodInfo(Method method){
-           return method.getDeclaringClass().getName()+"#"+method.getName()+"(...)";
+        private String methodInfo(Method method) {
+            return method.getDeclaringClass().getName() + "#" + method.getName() + "(...)";
         }
+
         @Override
         public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-            return invoke(obj,method,args,proxy);
+            return invoke(obj, method, args, proxy);
         }
-        public Object invoke(Object proxy, Method method, Object[] args,MethodProxy mthodProxy) throws Throwable {
+
+        public Object invoke(Object proxy, Method method, Object[] args, MethodProxy mthodProxy) throws Throwable {
             if (Object.class.equals(method.getDeclaringClass())) {
                 return method.invoke(this, args);
             } else if (method.isDefault()) {
                 return invokeDefaultMethod(proxy, method, args);
             }
-            if(proxy instanceof AkaMapper){
-                if(method.getDeclaringClass()==AkaMapper.class){
-                    return mthodProxy.invokeSuper(proxy,args);
+            if (proxy instanceof AkaMapper) {
+                if (method.getDeclaringClass() == AkaMapper.class) {
+                    return mthodProxy.invokeSuper(proxy, args);
                 }
-            }else{
-                throw new DbException("类"+mapperType.getName()+"必须继承"+AkaMapper.class.getName()+"接口！");
+            } else {
+                throw new DbException("类" + mapperType.getName() + "必须继承" + AkaMapper.class.getName() + "接口！");
             }
-            if(!Modifier.isAbstract(method.getModifiers())){
-                return mthodProxy.invokeSuper(proxy,args);
+            if (!Modifier.isAbstract(method.getModifiers())) {
+
+                return mthodProxy.invokeSuper(proxy, args);
             }
 
             String methodName = method.getName();
@@ -103,7 +104,7 @@ public class MapperFactory {
                                 continue;
                             }
                         }
-                        throw new DbException(methodInfo(method)+"方法的参数类型[" + parmGenericType.getTypeName() + "]不被支持！方法参数类型可以定义Map<String,Object>类型!");
+                        throw new DbException(methodInfo(method) + "方法的参数类型[" + parmGenericType.getTypeName() + "]不被支持！方法参数类型可以定义Map<String,Object>类型!");
 
                     } else if (arg instanceof PageOptions || PageOptions.class.isAssignableFrom(parmType)) {
                         pageOptions = (PageOptions) arg;
@@ -142,7 +143,7 @@ public class MapperFactory {
                             }
                             if (componetType != null) {
                                 if (!SqlUtils.checkedSimpleType(componetType)) {
-                                    throw new DbException(methodInfo(method)+"方法声明的形参类型如果为List类型或数组类型，则其中元素类型必须为java简单类型！");
+                                    throw new DbException(methodInfo(method) + "方法声明的形参类型如果为List类型或数组类型，则其中元素类型必须为java简单类型！");
                                 } else {
                                     argMap.put(argName, arg);
                                 }
@@ -152,14 +153,14 @@ public class MapperFactory {
                         } else if (!isJavaClass(parmType)) {//如果为自定义的java类型，转换成参数Map<String,Object>
                             argMap.putAll(MD.map(arg));
                         } else {
-                            throw new DbException(methodInfo(method)+"方法的参数类型[" + parmType.getTypeName() + "]不被支持！");
+                            throw new DbException(methodInfo(method) + "方法的参数类型[" + parmType.getTypeName() + "]不被支持！");
                         }
 
                     }
                 }
             }
             return this.executeMdMethod(mdMethodName, argMap, method.getGenericReturnType(), pageOptions,
-                    mapNestOptions, insertOptions, dataBase,method);
+                    mapNestOptions, insertOptions, dataBase, method);
 
         }
 
@@ -195,8 +196,8 @@ public class MapperFactory {
             String sqlTxt = nsql.getExeSql();
             Map<Integer, Object> nargs = nsql.getArgs();
             if (litComponetType instanceof Class) {
-                Class types0ClassType = (Class) litComponetType;
-                if (Map.class.isAssignableFrom(types0ClassType)) {
+                Class typesClassType = (Class) litComponetType;
+                if (Map.class.isAssignableFrom(typesClassType)) {
                     if (pageOptions == null && mapNestOptions == null) {
                         return dataBase.queryMap(sqlTxt, nargs);
                     } else if (pageOptions != null && mapNestOptions == null) {
@@ -204,13 +205,13 @@ public class MapperFactory {
                                 nargs, pageOptions.getPage(),
                                 pageOptions.getPerPage(), pageOptions.getPageBean(), countSql);
                     } else {
-                        throw new DbException(methodInfo(method)+"方法如果返回List<Map<String,Object>>类型，则方法不能定义MapNestOptions类型形参！");
+                        throw new DbException(methodInfo(method) + "方法如果返回List<Map<String,Object>>类型，则方法不能定义MapNestOptions类型形参！");
                     }
-                } else if (Iterable.class.isAssignableFrom(types0ClassType)
-                        || types0ClassType.isArray()) {
-                    throw new DbException(methodInfo(method)+"方法返回的泛型类型List<>里元素类型只能为Map<String,Object>或自定义类型，" +
-                            "如：List<Map<String,Object>> , List<User>。");
-                } else if (!isJavaClass(types0ClassType)) {//自定义类型
+                } else if (Iterable.class.isAssignableFrom(typesClassType)
+                        || typesClassType.isArray()) {
+                    throw new DbException(methodInfo(method) + "方法返回的泛型类型定义非法，可以定义为List<X>，X只能为Map<String,Object>，自定义类型，或Integer等原始类型的封装类型" +
+                            "如：List<Map<String,Object>> ,List<User>,List<String>,List<Integer>。");
+                } else if (!isJavaClass(typesClassType)) {//自定义类型
                     if (pageOptions == null && mapNestOptions == null) {
                         return dataBase.queryList((Class) litComponetType, sqlTxt, nargs);
                     } else if (pageOptions != null && mapNestOptions == null) {
@@ -236,7 +237,7 @@ public class MapperFactory {
                                     sqlTxt, nargs, one2OneOpts, pageOptions.getPage(),
                                     pageOptions.getPerPage(), pageOptions.getPageBean(), countSql);
                         } else if (mapNestOptions instanceof One2ManyMapNestOptions) {
-                            throw new DbException(methodInfo(method)+"方法为一对多关联查询，方法不支持分页功能，即不能定义PageOptions类型形参，相关解决方法请参考帮助文档！");
+                            throw new DbException(methodInfo(method) + "方法为一对多关联查询，方法不支持分页功能，即不能定义PageOptions类型形参，相关解决方法请参考帮助文档！");
                         } else {
 
                         }
@@ -270,9 +271,9 @@ public class MapperFactory {
             Map<Integer, Object> nargs = nsql.getArgs();
 
             if (sqlType == SQLType.SELECT) {
-                String errMsg = methodInfo(method)+"为查询方法，其定义的返回类型不支持，" +
-                        "返回类型只能定义为：DataBaseSet,List<User>,List<Map<String,Object>>,User形式的类型，" +
-                        "这里假设User为自定义类型！";
+                String errMsg = methodInfo(method) + "为查询方法，其定义的返回类型不支持！" +
+                        "返回类型只能定义为DataBaseSet或List<X>,其中X为Map<String,Object>类型，自定义类型，" +
+                        "或Integer等原始类型的封装类型，如：List<Map<String,Object>>,List<User>,List<String>,List<Integer>。";
                 if (returnType instanceof Class) {
                     Class returnClass = (Class) returnType;
                     if (returnClass == DataBaseSet.class) {
@@ -303,48 +304,91 @@ public class MapperFactory {
                     Type[] types = parameterizedType.getActualTypeArguments();
                     Class rawTypeClass = (Class) parameterizedType.getRawType();
                     if (List.class.isAssignableFrom(rawTypeClass)) {
+                        Type inType = null;
                         String countSql = this.getCountSql(pageOptions, args);
-                        return this.returnListTypeHandler(types[0], mapNestOptions, pageOptions,
-                                dataBase, nsql, countSql, errMsg,method);
+                        if (types[0] == Integer.class) {
+                            inType = TInteger.class;
+                        } else if (types[0] == String.class) {
+                            inType = TString.class;
+                        } else if (types[0] == Double.class) {
+                            inType = TDouble.class;
+                        } else if (types[0] == Long.class) {
+                            inType = TLong.class;
+                        } else if (types[0] == Float.class) {
+                            inType = TFloat.class;
+                        } else {
+                            inType = types[0];
+                        }
+                        Object ret = this.returnListTypeHandler(inType, mapNestOptions, pageOptions,
+                                dataBase, nsql, countSql, errMsg, method);
+                        if (ret != null && List.class.isAssignableFrom(ret.getClass())) {
+                            List list = (List) ret;
+                            if (list.size() > 0) {
+                                Class list0Type = list.get(0).getClass();
+                                if (list0Type == TInteger.class && types[0] == Integer.class) {
+                                    ret = list.stream().map(i -> {
+                                        return ((TInteger) i).getValue();
+                                    }).collect(Collectors.toList());
+                                } else if (list0Type == TLong.class && types[0] == Long.class) {
+                                    ret = list.stream().map(i -> {
+                                        return ((TLong) i).getValue();
+                                    }).collect(Collectors.toList());
+                                } else if (list0Type == TFloat.class && types[0] == Float.class) {
+                                    ret = list.stream().map(i -> {
+                                        return ((TFloat) i).getValue();
+                                    }).collect(Collectors.toList());
+                                } else if (list0Type == TDouble.class && types[0] == Double.class) {
+                                    ret = list.stream().map(i -> {
+                                        return ((TDouble) i).getValue();
+                                    }).collect(Collectors.toList());
+                                } else if (list0Type == TString.class && types[0] == String.class) {
+                                    ret = list.stream().map(i -> {
+                                        return ((TString) i).getValue();
+                                    }).collect(Collectors.toList());
+                                }
+                            }
+                        }
+                        return ret;
                     }
                 }//
                 throw new DbException(errMsg);
             } else if (sqlType == SQLType.INSERT || sqlType == SQLType.UPDATE ||
                     sqlType == SQLType.DELETE) {
                 if (pageOptions != null || mapNestOptions != null) {
-                    throw new DbException(methodInfo(method)+"方法对应的SQL语句为更新操作，所以方法定义的形参类型不能有PageOptions和MapNestOptions类型！");
+                    throw new DbException(methodInfo(method) + "方法对应的SQL语句为更新操作，所以方法定义的形参类型不能有PageOptions和MapNestOptions类型！");
                 }
                 if (returnType instanceof Class) {
                     Class t = (Class) returnType;
-                    Object ret=null;
+                    Object ret = null;
                     if (t == int.class || t == Integer.class || t == long.class || t == Long.class
                             || t == void.class) {
                         if (sqlType == SQLType.INSERT) {
                             if (insertOptions != null && insertOptions.getReturnFlag() == ReturnFlag.AutoKey) {
-                                ret=dataBase.insertReturnKey(sqlTxt, nargs);;
-                            }else{
-                                ret=dataBase.insert(sqlTxt, nargs);
+                                ret = dataBase.insertReturnKey(sqlTxt, nargs);
+                                ;
+                            } else {
+                                ret = dataBase.insert(sqlTxt, nargs);
                             }
 
                         } else if (sqlType == SQLType.UPDATE) {
-                            ret= dataBase.update(sqlTxt, nargs);
+                            ret = dataBase.update(sqlTxt, nargs);
                         } else if (sqlType == SQLType.DELETE) {
-                            ret= dataBase.del(sqlTxt, nargs);
+                            ret = dataBase.del(sqlTxt, nargs);
 
-                        }else{
+                        } else {
                             ////
                         }
-                        if(t==void.class){
+                        if (t == void.class) {
                             return null;
-                        }else{
-                            ret=NumberUtils.convertNumberToTargetClass((Number) ret,t);
+                        } else {
+                            ret = NumberUtils.convertNumberToTargetClass((Number) ret, t);
                             return ret;
                         }
                     }
                 }
-                throw new DbException(methodInfo(method)+"为更新方法，则返回类型只能为int/Integer,long/Long,void类型");
+                throw new DbException(methodInfo(method) + "为更新方法，则返回类型只能为int/Integer,long/Long,void类型");
             } else {
-                throw new DbException(methodInfo(method)+"方法对应的语句类型" + sqlType + "不支持!");
+                throw new DbException(methodInfo(method) + "方法对应的语句类型" + sqlType + "不支持!");
             }
 
 

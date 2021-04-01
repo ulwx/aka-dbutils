@@ -22,7 +22,7 @@ public class DataBaseFactory {
     public static DataBase getDataBase(String dbPoolName) throws DbException {
         DataBase db = new TransactionDataBase();
         try {
-            if(StringUtils.isEmpty(dbPoolName)){
+            if (StringUtils.isEmpty(dbPoolName)) {
                 return getDataBase();
             }
             db.connectDb(dbPoolName);

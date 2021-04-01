@@ -55,7 +55,6 @@ public class JdbcRowSetResourceBundle implements Serializable {
 
     /**
      * The constructor initializes to this object
-     *
      */
     private static volatile JdbcRowSetResourceBundle jpResBundle;
 
@@ -84,7 +83,7 @@ public class JdbcRowSetResourceBundle implements Serializable {
      * The variable where the default resource bundle will
      * be placed.
      **/
-    private static final String PATH = JdbcRowSetResourceBundle.class.getPackage().getName()+"/RowSetResourceBundle";
+    private static final String PATH = JdbcRowSetResourceBundle.class.getPackage().getName() + "/RowSetResourceBundle";
 
     /**
      * The constructor which initializes the resource bundle.
@@ -92,9 +91,9 @@ public class JdbcRowSetResourceBundle implements Serializable {
      * Design Pattern.
      *
      * @throws IOException if unable to load the ResourceBundle
-     * according to locale or the default one.
+     *                     according to locale or the default one.
      */
-    private JdbcRowSetResourceBundle () throws IOException {
+    private JdbcRowSetResourceBundle() throws IOException {
         // Try to load the resource bundle according
         // to the locale. Else if no bundle found according
         // to the locale load the default.
@@ -106,10 +105,10 @@ public class JdbcRowSetResourceBundle implements Serializable {
         Locale locale = Locale.getDefault();
 
         // Load appropriate bundle according to locale
-         propResBundle = (PropertyResourceBundle) ResourceBundle.getBundle(PATH,
-                           locale, Thread.currentThread().getContextClassLoader());
+        propResBundle = (PropertyResourceBundle) ResourceBundle.getBundle(PATH,
+                locale, Thread.currentThread().getContextClassLoader());
 
-   }
+    }
 
     /**
      * This method is used to get a handle to the
@@ -120,16 +119,16 @@ public class JdbcRowSetResourceBundle implements Serializable {
      * @throws IOException if unable to find the RowSetResourceBundle.properties
      */
     public static JdbcRowSetResourceBundle getJdbcRowSetResourceBundle()
-    throws IOException {
+            throws IOException {
 
-         if(jpResBundle == null){
-             synchronized(JdbcRowSetResourceBundle.class) {
-                if(jpResBundle == null){
+        if (jpResBundle == null) {
+            synchronized (JdbcRowSetResourceBundle.class) {
+                if (jpResBundle == null) {
                     jpResBundle = new JdbcRowSetResourceBundle();
                 } //end if
-             } //end synchronized block
-         } //end if
-         return jpResBundle;
+            } //end synchronized block
+        } //end if
+        return jpResBundle;
     }
 
     /**
@@ -141,7 +140,7 @@ public class JdbcRowSetResourceBundle implements Serializable {
      */
     @SuppressWarnings("rawtypes")
     public Enumeration getKeys() {
-       return propResBundle.getKeys();
+        return propResBundle.getKeys();
     }
 
 
@@ -154,7 +153,7 @@ public class JdbcRowSetResourceBundle implements Serializable {
      * according to the key passed.
      */
     public Object handleGetObject(String key) {
-       return propResBundle.handleGetObject(key);
+        return propResBundle.handleGetObject(key);
     }
 
     static final long serialVersionUID = 436199386225359954L;

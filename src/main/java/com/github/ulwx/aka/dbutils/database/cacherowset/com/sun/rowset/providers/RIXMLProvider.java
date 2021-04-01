@@ -42,7 +42,7 @@ import java.sql.SQLException;
  * This synchronization provider is registered with the
  * <code>SyncFactory</code> by default as the
  * <code>com.sun.rowset.providers.RIXMLProvider</code>.
- * <P>
+ * <p>
  * A <code>WebRowSet</code> object uses an <code>RIXMLProvider</code> implementation
  * to read an XML data source or to write itself in XML format using the
  * <code>WebRowSet</code> XML schema definition available at
@@ -70,7 +70,7 @@ import java.sql.SQLException;
  * See the standard <code>RowSet</code> reference implementations in the
  * <code>com.sun.rowset</code> package for more details.
  *
- * @author  Jonathan Bruce
+ * @author Jonathan Bruce
  * @see SyncProvider
  * @see SyncProviderException
  * @see SyncFactory
@@ -105,8 +105,8 @@ public final class RIXMLProvider extends SyncProvider {
     public RIXMLProvider() {
         providerID = this.getClass().getName();
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
     }
@@ -116,7 +116,7 @@ public final class RIXMLProvider extends SyncProvider {
      * the fully qualified class name of this provider implementation.
      *
      * @return a <code>String</code> object with the fully specified class name of
-     *           this <code>RIOptimisticProvider</code> implementation
+     * this <code>RIOptimisticProvider</code> implementation
      */
     public String getProviderID() {
         return providerID;
@@ -174,15 +174,14 @@ public final class RIXMLProvider extends SyncProvider {
      * facilities to the XML data source, the lowest grade is returned.
      *
      * @return the <code>SyncProvider</code> syncronization grade of this
-     *     provider; must be one of the following constants:
-     *       <PRE>
-     *          SyncProvider.GRADE_NONE,
-     *          SyncProvider.GRADE_MODIFIED_AT_COMMIT,
-     *          SyncProvider.GRADE_CHECK_ALL_AT_COMMIT,
-     *          SyncProvider.GRADE_LOCK_WHEN_MODIFIED,
-     *          SyncProvider.GRADE_LOCK_WHEN_LOADED
-     *       </PRE>
-     *
+     * provider; must be one of the following constants:
+     * <PRE>
+     * SyncProvider.GRADE_NONE,
+     * SyncProvider.GRADE_MODIFIED_AT_COMMIT,
+     * SyncProvider.GRADE_CHECK_ALL_AT_COMMIT,
+     * SyncProvider.GRADE_LOCK_WHEN_MODIFIED,
+     * SyncProvider.GRADE_LOCK_WHEN_LOADED
+     * </PRE>
      */
     public int getProviderGrade() {
         return SyncProvider.GRADE_NONE;
@@ -190,7 +189,6 @@ public final class RIXMLProvider extends SyncProvider {
 
     /**
      * Returns the default UPDATABLE_VIEW behavior of this reader
-     *
      */
     public int supportsUpdatableView() {
         return SyncProvider.NONUPDATABLE_VIEW_SYNC;
@@ -226,7 +224,7 @@ public final class RIXMLProvider extends SyncProvider {
         return null;
     }
 
-  /**
+    /**
      * Returns the release version ID of the Reference Implementation Optimistic
      * Synchronization Provider.
      *
@@ -241,7 +239,7 @@ public final class RIXMLProvider extends SyncProvider {
      * Syncchronication Provider
      *
      * @return the <code>String</code> detailing the vendor name of this
-     *      SyncProvider
+     * SyncProvider
      */
     public String getVendor() {
         return this.vendorName;

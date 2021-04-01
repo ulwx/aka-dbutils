@@ -36,13 +36,14 @@ public class MDbTransactionManager {
             return ret;
 
         } catch (Exception e) {
-            rollback();
+            rollback(e);
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
             end();
         }
     }
+
     /**
      * 如果当前上下文没有事务，则新开启一个事务执行serviceLogic#call()逻辑，否则把serviceLogic#call()加入到
      * 当前上下文事务里执行。
@@ -57,13 +58,14 @@ public class MDbTransactionManager {
             serviceLogic.call();
             commit();
         } catch (Exception e) {
-            rollback();
+            rollback(e);
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
             end();
         }
     }
+
     /**
      * 总是新开启一个事务执行ServiceLogic#call()的逻辑。如果当前上下文里存在事务则挂起，
      * 执行当前新建事务完成以后，上下文事务恢复再执行。如果运行新建事务时抛出异常，新建的事务会回滚，并且会再次抛出异常，
@@ -72,14 +74,14 @@ public class MDbTransactionManager {
      * @param serviceLogic 业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
      * @throws DbException
      */
-    public static void execute(PROPAGATION propagation,ServiceLogic serviceLogic)
+    public static void execute(PROPAGATION propagation, ServiceLogic serviceLogic)
             throws DbException {
         try {
             start(propagation);
             serviceLogic.call();
             commit();
         } catch (Exception e) {
-            rollback();
+            rollback(e);
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
@@ -96,7 +98,7 @@ public class MDbTransactionManager {
      * @return
      * @throws DbException
      */
-    public static <R> R execute(PROPAGATION propagation,ServiceLogicHasReturnValue<R> serviceLogic)
+    public static <R> R execute(PROPAGATION propagation, ServiceLogicHasReturnValue<R> serviceLogic)
             throws DbException {
         try {
             start(propagation);
@@ -105,14 +107,13 @@ public class MDbTransactionManager {
             return ret;
 
         } catch (Exception e) {
-            rollback();
+            rollback(e);
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
             end();
         }
     }
-
 
 
     /**
@@ -122,192 +123,216 @@ public class MDbTransactionManager {
      */
     private static void start(PROPAGATION propagation) {
 
-        Stack<Map<String, DataBaseDecorator>> stack = DbContext.getTransactionContextStack();
-        Map<String, DataBaseDecorator> parentContext = DbContext.getTransactionContextStackTopContext(stack);
-        Map<String, DataBaseDecorator> curContext = new LinkedHashMap<>();
+        Stack<Map<String, TransactionContextElem>> stack = DbContext.getTransactionContextStack();
+        Map<String, TransactionContextElem> parentContext = DbContext.getTransactionContextStackTopContext(stack);
+        Map<String, TransactionContextElem> curContext = new LinkedHashMap<>();
         // 生成新的事务上下文
         stack.add(curContext);
         StackTraceElement[] StackTraceElements = (new Throwable()).getStackTrace();
         StackTraceElement callMethodInfo = StackTraceElements[2];
         int level = 0;
-        int nestLevel=-1;
+        int nestLevel = -1;
+        TransactionContextInfo parentStart=null;
         if (propagation == PROPAGATION.REQUIRES_NEW) {
             level = 0;
-            nestLevel=-1;
+            nestLevel = -1;
         } else if (propagation == PROPAGATION.REQUIRED || propagation == PROPAGATION.NESTED) {
             if (parentContext != null) {
-                TransactionDataBaseTrace parentStart= ((TransactionDataBaseTrace) parentContext.get(_transaction_start));
+                parentStart = ((TransactionContextInfo) parentContext.get(_transaction_start));
                 Assert.notNull(parentStart);
-                level = parentStart.getInfo().getLevel()+1;
-                if(propagation == PROPAGATION.NESTED){
-                    nestLevel=0;
-                }else if(propagation == PROPAGATION.REQUIRED){
-                    if(parentStart.getInfo().getNestedLevel()>=0) {
-                        nestLevel = parentStart.getInfo().getNestedLevel() + 1;
+                level = parentStart.getLevel() + 1;
+                if (propagation == PROPAGATION.NESTED) {
+                    nestLevel = 0;
+                } else if (propagation == PROPAGATION.REQUIRED) {
+                    if (parentStart.getNestedLevel() >= 0) {
+                        nestLevel = parentStart.getNestedLevel() + 1;
                     }
                 }
             } else {
                 level = 0;
                 // 说明是新事务
-                if(propagation == PROPAGATION.REQUIRED ) {
+                if (propagation == PROPAGATION.REQUIRED) {
                     nestLevel = -1;
-                }else if(propagation == PROPAGATION.NESTED){
-                    nestLevel =  0 ;
+                } else if (propagation == PROPAGATION.NESTED) {
+                    nestLevel = 0;
                 }
             }
 
         }
-        TransactionDataBaseTrace transactionStart = new TransactionDataBaseTrace(callMethodInfo, level);
+        TransactionContextInfo transactionStart = new TransactionContextInfo(callMethodInfo, level);
         if (propagation == PROPAGATION.NESTED) {
-            transactionStart.getInfo().setNestedStart(true);//表明是嵌套事务
-            transactionStart.getInfo().setNestedLevel(0);//嵌套事务开始时，nestLevel=0；
-            transactionStart.getInfo().setNestedStartSavepointName(RandomUtils.genUUID());
-        }else{
-            transactionStart.getInfo().setNestedLevel(nestLevel);
+            transactionStart.setNestedStart(true);//表明是嵌套事务
+            transactionStart.setNestedLevel(0);//嵌套事务开始时，nestLevel=0；
+            transactionStart.setNestedStartSavepointName(RandomUtils.genUUID());
+        } else {
+            transactionStart.setNestedLevel(nestLevel);
         }
         curContext.put(_transaction_start, transactionStart);
-
+        String startStr=getStartStr((TransactionContextInfo)curContext.get(_transaction_start));
         log.debug("trans-start:context："
-                + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + level);
+                + ObjectUtils.toJsonString(curContext.keySet()) +":start["+startStr+"]:level=" + level);
 
     }
 
-    private static void commit() {
+    private static String getStartStr(TransactionContextInfo dataBaseTrace){
+        Map map=new HashMap();
+        map.put("needRollBack",dataBaseTrace.isNeedRollBack());
+        map.put("nestedStart",dataBaseTrace.isNestedStart());
+        map.put("nestedLevel",dataBaseTrace.getNestedLevel());
+        map.put("nestedStartSavepointName",dataBaseTrace.getNestedStartSavepointName());
+        return ObjectUtils.toString(map);
+    }
+    private static void commit() throws Exception{
 
-        Stack<Map<String, DataBaseDecorator>> stack = DbContext.getTransactionContextStack();
+        Stack<Map<String, TransactionContextElem>> stack = DbContext.getTransactionContextStack();
 
-        Map<String, DataBaseDecorator> curContext = DbContext.getTransactionContextStackTopContext(stack);
+        Map<String, TransactionContextElem> curContext = DbContext.getTransactionContextStackTopContext(stack);
         if (curContext == null) {
             throw new DbException("当前事务栈里事务上下文为空！");
         }
         StackTraceElement[] StackTraceElements = (new Throwable()).getStackTrace();
         StackTraceElement callMethodInfo = StackTraceElements[1];
-        TransactionDataBaseTrace transactonStartDbTrace = (TransactionDataBaseTrace) curContext
+        TransactionContextInfo transactonStartDbTrace = (TransactionContextInfo) curContext
                 .get(_transaction_start);
 
-        if (transactonStartDbTrace.getInfo().getLevel() > 0) {//////////////////
-            if(transactonStartDbTrace.getInfo().isNestedStart() &&
-                    transactonStartDbTrace.getInfo().isNeedRollBack()){
-                throw new DbException("nested transaction need rollback to savepoint...");
-            }else {
+        if (transactonStartDbTrace.getLevel() > 0) {//////////////////
+            if (transactonStartDbTrace.isNestedStart() &&
+                    transactonStartDbTrace.isNeedRollBack()) {
+                throw transactonStartDbTrace.getNeedRollBackForException();
+            } else {
                 log.debug(Thread.currentThread().getId() + ":child transaction not committed:context:"
-                        + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + transactonStartDbTrace.getInfo().getLevel());
+                        + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + transactonStartDbTrace.getLevel());
             }
             return;
         }
         //如果为顶级上下文
-        TransactionDataBaseTrace transactonStart = (TransactionDataBaseTrace) curContext.get(_transaction_start);
-        if (transactonStart.getInfo().isNeedRollBack()) {
-            throw new DbException("transaction need rollback...");
+        TransactionContextInfo transactonStart = (TransactionContextInfo) curContext.get(_transaction_start);
+        if (transactonStart.isNeedRollBack()) {
+            throw transactonStart.getNeedRollBackForException();
         }
         log.debug("context:" + ObjectUtils.toJsonString(curContext.keySet()) + ":level="
-                + transactonStartDbTrace.getInfo().getLevel() + " ready to commmit ...");
-        hand(curContext,(DataBase db)->{
+                + transactonStartDbTrace.getLevel() + " ready to commmit ...");
+        hand(curContext, (DataBase db) -> {
             db.commit();
         });
         log.debug("trans-commit-finished:context:"
-                + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + transactonStartDbTrace.getInfo().getLevel());
+                + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + transactonStartDbTrace.getLevel());
     }
 
-    private static void rollback() {
-        Stack<Map<String, DataBaseDecorator>> stack = DbContext.getTransactionContextStack();
-        Map<String, DataBaseDecorator> curContext = DbContext.getTransactionContextStackTopContext(stack);
+    private static void rollback(Exception forExcpetion) {
+        Stack<Map<String, TransactionContextElem>> stack = DbContext.getTransactionContextStack();
+        Map<String, TransactionContextElem> curContext = DbContext.getTransactionContextStackTopContext(stack);
         if (curContext == null) {
             throw new DbException("当前栈里事务上下文为空！");
         }
         StackTraceElement[] StackTraceElements = (new Throwable()).getStackTrace();
         StackTraceElement callMethodInfo = StackTraceElements[1];
-        TransactionDataBaseTrace transactonStartDbTrace = (TransactionDataBaseTrace) curContext
+        TransactionContextInfo transactonStartDbTrace = (TransactionContextInfo) curContext
                 .get(_transaction_start);
 
-        if (transactonStartDbTrace.getInfo().getLevel() > 0) {
+        if (transactonStartDbTrace.getLevel() > 0) {
 
-            if(transactonStartDbTrace.getInfo().isNestedStart()){//嵌套事务
+            if (transactonStartDbTrace.isNestedStart()) {//嵌套事务
                 //回滚到保存点
-                hand(curContext,(DataBase db)->{
-                    db.rollbackToSavepoint(transactonStartDbTrace.getInfo().
-                            getNestedStartSavepointName());
+                String savePointName=transactonStartDbTrace.
+                        getNestedStartSavepointName();
+                log.error("rollback to "+savePointName+" for exception:"+forExcpetion,forExcpetion);
+                hand(curContext, (DataBase db) -> {
+                    db.rollbackToSavepoint(savePointName);
                 });
-                transactonStartDbTrace.getInfo().setNeedRollBack(false);
+
+                transactonStartDbTrace.setNeedRollBack(false);
+                transactonStartDbTrace.setNeedRollBackForException(null);
                 log.debug(Thread.currentThread().getId()
-                        + ":context" +ObjectUtils.toJsonString(curContext.keySet())+
-                        ":child nested transaction rollback to savepoint:level=" + transactonStartDbTrace.getInfo().getLevel());
-            }else{
-                transactonStartDbTrace.getInfo().setNeedRollBack(true);
-                log.debug(Thread.currentThread().getId()+
-                        ":context" +ObjectUtils.toJsonString(curContext.keySet())
-                        + ":child transaction not rollback:level=" + transactonStartDbTrace.getInfo().getLevel());
+                        + ":context" + ObjectUtils.toJsonString(curContext.keySet()) +
+                        ":child nested transaction rollback to savepoint:level=" + transactonStartDbTrace.getLevel());
+            } else {
+                transactonStartDbTrace.setNeedRollBack(true);
+                transactonStartDbTrace.setNeedRollBackForException(forExcpetion);
+                log.debug(Thread.currentThread().getId() +
+                        ":context" + ObjectUtils.toJsonString(curContext.keySet())
+                        + ":child transaction not rollback:level=" + transactonStartDbTrace.getLevel());
             }
             return;
         }
         //如果为顶级上下文
-        log.debug("context:" + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + transactonStartDbTrace.getInfo().getLevel() + " ready to rollback ...");
-        hand(curContext,(DataBase db)->{
+        log.error("rollback to for exception:"+forExcpetion,forExcpetion);
+        log.debug("context:" + ObjectUtils.toJsonString(curContext.keySet())
+                + ":level=" + transactonStartDbTrace.getLevel() + " ready to rollback ...");
+        hand(curContext, (DataBase db) -> {
             db.rollback();
         });
         log.debug(Thread.currentThread().getId() + ":trans-rollback-finished:context:"
                 + ObjectUtils.toJsonString(curContext.keySet()) + ":level="
-                + transactonStartDbTrace.getInfo().getLevel());
+                + transactonStartDbTrace.getLevel());
     }
 
-    private static void hand(Map<String, DataBaseDecorator> curContext, Consumer<DataBase> consumer){
+    private static void hand(Map<String, TransactionContextElem> curContext, Consumer<DataBase> consumer) {
         List<DataBaseDecorator> listDB = new ArrayList<>();
         for (String key : curContext.keySet()) {
             if (key.equals(_transaction_start)) {
                 continue;
             }
-            DataBaseDecorator db = curContext.get(key);
+            DataBaseDecorator db = (DataBaseDecorator)curContext.get(key);
             listDB.add(db);
         }
         for (int i = listDB.size() - 1; i >= 0; i--) {
             consumer.accept(listDB.get(i).getContentDataBase());
         }
     }
+
     private static void end() {
-        Stack<Map<String, DataBaseDecorator>> stack = DbContext.getTransactionContextStack();
-        Map<String, DataBaseDecorator> curContext = DbContext.getTransactionContextStackTopContext(stack);
+        Stack<Map<String, TransactionContextElem>> stack = DbContext.getTransactionContextStack();
+        Map<String, TransactionContextElem> curContext = DbContext.getTransactionContextStackTopContext(stack);
         if (curContext == null) {
             throw new DbException("当前栈里事务上下文为空！");
         }
         StackTraceElement[] StackTraceElements = (new Throwable()).getStackTrace();
         StackTraceElement callMethodInfo = StackTraceElements[1];
-        TransactionDataBaseTrace transactonStartDbTrace = (TransactionDataBaseTrace) curContext
+        TransactionContextInfo transactonStartDbTrace = (TransactionContextInfo) curContext
                 .get(_transaction_start);
 
-        if (transactonStartDbTrace.getInfo().getLevel() > 0) {//如果是子事务上下文
+        if (transactonStartDbTrace.getLevel() > 0) {//如果是子事务上下文
             if (stack.size() <= 1) {
                 throw new DbException("事务上下文栈必须存在顶级事务上下文！");
             }
 
             curContext = stack.pop();// 弹出
             String popKeys = ObjectUtils.toJsonString(curContext.keySet());
-            Map<String, DataBaseDecorator> parentContext = DbContext.getTransactionContextStackTopContext(stack);
+            Map<String, TransactionContextElem> parentContext = DbContext.getTransactionContextStackTopContext(stack);
             int curlLevel = 0;
-            TransactionDataBaseTrace trasactionStart = (TransactionDataBaseTrace) curContext.remove(_transaction_start);
+            TransactionContextInfo trasactionStart = (TransactionContextInfo) curContext.remove(_transaction_start);
             if (trasactionStart != null) {
-                curlLevel = trasactionStart.getInfo().getLevel();
-                boolean needRollBack = transactonStartDbTrace.getInfo().isNeedRollBack();
-                TransactionDataBaseTrace parentTrasactionStart =
-                        (TransactionDataBaseTrace) parentContext.get(_transaction_start);
-                parentTrasactionStart.getInfo().setNeedRollBack(needRollBack);
+                curlLevel = trasactionStart.getLevel();
+                boolean needRollBack = transactonStartDbTrace.isNeedRollBack();
+                Exception forException=transactonStartDbTrace.getNeedRollBackForException();
+                TransactionContextInfo parentTrasactionStart =
+                        (TransactionContextInfo) parentContext.get(_transaction_start);
+                if(needRollBack) {
+                    parentTrasactionStart.setNeedRollBackForException(forException);
+                    parentTrasactionStart.setNeedRollBack(needRollBack);
+                }
             }
             parentContext.putAll(curContext);
-
-            log.debug(Thread.currentThread().getId() + ":trans-end:context:" + popKeys + ":level=" + curlLevel + ",pop up!");
+            String startStr=getStartStr(trasactionStart);
+            log.debug(Thread.currentThread().getId() + ":trans-end:context:" + popKeys+":start["+startStr+"]"
+                    + ":level=" + curlLevel + ",pop up!");
             curContext.clear();
             return;
 
         } else {// 说明是顶级事务上下文
             int curlLevel = 0;
+            String startStr=getStartStr((TransactionContextInfo)curContext.get(_transaction_start));
             log.debug("context:" + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + curlLevel + " ready to close ...");
 
-            hand(curContext,(DataBase db)->{
-                    db.setAutoCommit(true);
-                    db.close();
+            hand(curContext, (DataBase db) -> {
+                db.setAutoCommit(true);
+                db.close();
             });
             curContext = stack.pop();// 弹出
             String popKeys = ObjectUtils.toJsonString(curContext.keySet());
-            log.debug("trans-end-closed:context:" + popKeys + ":level=" + curlLevel);
+
+            log.debug("trans-end-closed:context:" + popKeys +":start["+startStr+"]"+ ":level=" + curlLevel);
             curContext.clear();
         }
     }

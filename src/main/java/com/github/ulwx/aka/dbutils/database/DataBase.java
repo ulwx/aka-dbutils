@@ -16,10 +16,13 @@ import java.util.Map;
 public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     public static enum SQLType {
-        OTHER,INSERT, UPDATE,DELETE, SELECT, STORE_DPROCEDURE,SCRIPT
+        OTHER, INSERT, UPDATE, DELETE, SELECT, STORE_DPROCEDURE, SCRIPT
     }
+
     public static enum ConnectType {
-        POOL, DATASOURCE, CONNECTION
+        POOL, //从连接池获取连接
+        DATASOURCE, //从数据源获取连接
+        CONNECTION //从外部传入连接
     }
 
     public static enum MainSlaveModeConnectMode {
@@ -36,7 +39,18 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     String getDbPoolName();
 
+    /**
+     * 是否主从模式，true为主从模式（dbpool.xml里有主从库配置），false非主从模式（dbpool.xml里没有从库配置）
+     * @return
+     */
     boolean isMainSlaveMode();
+
+    /**
+     * 是否连接到主库，主从模式时（isMainSlaveMode()返回true），true表明连接到主库，false连接到从库。
+     * 如果非主从模式isMainSlaveMode()返回false，固定返回true。
+     * @return
+     */
+    Boolean connectedToMaster();
 
     void setMainSlaveMode(boolean mainSlaveMode);
 
@@ -55,6 +69,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     default boolean isExternalControlConClose() {
         return false;
     }
+
     /**
      * 从dbpool.xml里设置的连接池获得连接
      *
@@ -87,13 +102,13 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
                           PageBean pageBean, String countSql) throws DbException;
 
-    <T> List<T> queryListOne2One(Class<T> clazz,  String sqlQuery, Map<Integer, Object> vParameters,
+    <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
                                  One2OneMapNestOptions one2OneMapNestOptions,
                                  int page, int perPage, PageBean pageBean, String countSql)
             throws DbException;
 
-    <T> List<T> queryListOne2Many(Class<T> clazz,String sqlQuery,
-                                  Map<Integer, Object> vParameters,One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException;
+    <T> List<T> queryListOne2Many(Class<T> clazz, String sqlQuery,
+                                  Map<Integer, Object> vParameters, One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException;
 
     <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException;
 
@@ -102,7 +117,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     int update(String sqltext, Map<Integer, Object> vParameters) throws DbException;
 
     void callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
-                      List<DataBaseSet> returnDataBaseSets) throws DbException;
+                       List<DataBaseSet> returnDataBaseSets) throws DbException;
 
     int insert(String sqltext, Map<Integer, Object> vParameters) throws DbException;
 
@@ -111,6 +126,13 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     int[] update(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException;
 
+    /**
+     * 批量插入
+     * @param sqltxts
+     * @param vParametersArray
+     * @return
+     * @throws DbException
+     */
     int[] insert(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException;
 
 
@@ -125,12 +147,13 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     /**
      * 执行脚本
-     * @param reader    sql脚本输入reader
+     *
+     * @param reader       sql脚本输入reader
      * @param throwWarning 脚本执行时如果出现warning，是否退出并回滚
      * @return 返回执行成功的结果，出错返回异常
      * @throws DbException
      */
-    String exeScript(Reader reader, boolean throwWarning,Map<String, Object> args) throws DbException ;
+    String exeScript(Reader reader, boolean throwWarning, Map<String, Object> args) throws DbException;
 
 
     /**
@@ -163,11 +186,14 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     /**
      * 得到保存点信息；
+     *
      * @return
      */
     Map<String, Savepoint> getSavepoint();
+
     /**
      * 设置保存点
+     *
      * @param savepointName 保存点名称
      * @throws DbException
      */
@@ -175,12 +201,15 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     /**
      * 释放并删除指定名称的savepoint
+     *
      * @param savepointName
      * @throws DbException
      */
     void releaseSavepoint(String savepointName) throws DbException;
+
     /**
      * 用于事务回滚到保存点。
+     *
      * @throws DbException
      */
     void rollbackToSavepoint(String savepointName) throws DbException;
@@ -209,6 +238,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     /**
      * 返回当前连接，如果force=true，若当前没有连接，则新生成一个连接；force=false，若连接
      * 不存在或已经关闭则会返回null。
+     *
      * @param force
      * @return
      */

@@ -76,7 +76,7 @@ public class WebRowSetImpl extends CachedRowSetImpl implements WebRowSet {
      * capabilities.
      *
      * @throws SQLException if an error occurs in configuring the default
-     * synchronization providers for relational and XML providers.
+     *                      synchronization providers for relational and XML providers.
      */
     public WebRowSetImpl() throws SQLException {
         super();
@@ -94,24 +94,24 @@ public class WebRowSetImpl extends CachedRowSetImpl implements WebRowSet {
      * this hashtable is empty or is <code>null</code> the default constructor is invoked.
      *
      * @throws SQLException if an error occurs in configuring the specified
-     * synchronization providers for the relational and XML providers; or
-     * if the Hashtanle is null
+     *                      synchronization providers for the relational and XML providers; or
+     *                      if the Hashtanle is null
      */
     @SuppressWarnings("rawtypes")
     public WebRowSetImpl(Hashtable env) throws SQLException {
 
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 
-        if ( env == null) {
+        if (env == null) {
             throw new SQLException(resBundle.handleGetObject("webrowsetimpl.nullhash").toString());
         }
 
         String providerName =
-            (String)env.get(SyncFactory.ROWSET_SYNC_PROVIDER);
+                (String) env.get(SyncFactory.ROWSET_SYNC_PROVIDER);
 
         // set the Reader, this maybe overridden latter
         provider = SyncFactory.getInstance(providerName);
@@ -120,24 +120,24 @@ public class WebRowSetImpl extends CachedRowSetImpl implements WebRowSet {
         // xmlWriter = provider.getRowSetWriter();
     }
 
-   /**
-    * Populates this <code>WebRowSet</code> object with the
-    * data in the given <code>ResultSet</code> object and writes itself
-    * to the given <code>java.io.Writer</code> object in XML format.
-    * This includes the rowset's data,  properties, and metadata.
-    *
-    * @throws SQLException if an error occurs writing out the rowset
-    *          contents to XML
-    */
+    /**
+     * Populates this <code>WebRowSet</code> object with the
+     * data in the given <code>ResultSet</code> object and writes itself
+     * to the given <code>java.io.Writer</code> object in XML format.
+     * This includes the rowset's data,  properties, and metadata.
+     *
+     * @throws SQLException if an error occurs writing out the rowset
+     *                      contents to XML
+     */
     public void writeXml(ResultSet rs, Writer writer)
-        throws SQLException {
-            // WebRowSetImpl wrs = new WebRowSetImpl();
-            this.populate(rs);
+            throws SQLException {
+        // WebRowSetImpl wrs = new WebRowSetImpl();
+        this.populate(rs);
 
-            // Store the cursor position before writing
-            curPosBfrWrite = this.getRow();
+        // Store the cursor position before writing
+        curPosBfrWrite = this.getRow();
 
-            this.writeXml(writer);
+        this.writeXml(writer);
     }
 
     /**
@@ -146,7 +146,7 @@ public class WebRowSetImpl extends CachedRowSetImpl implements WebRowSet {
      * includes the rowset's data,  properties, and metadata.
      *
      * @throws SQLException if an error occurs writing out the rowset
-     *          contents to XML
+     *                      contents to XML
      */
     public void writeXml(Writer writer) throws SQLException {
         // %%%
@@ -175,19 +175,19 @@ public class WebRowSetImpl extends CachedRowSetImpl implements WebRowSet {
         // Xml that is used when a WRS is instantiated.
         //WebRowSetXmlReader xmlReader = getXmlReader();
         try {
-             if (reader != null) {
+            if (reader != null) {
                 xmlReader.readXML(this, reader);
 
                 // Position is before the first row
                 // The cursor position is to be stored while serializng
                 // and deserializing the WebRowSet Object.
-                if(curPosBfrWrite == 0) {
-                   this.beforeFirst();
+                if (curPosBfrWrite == 0) {
+                    this.beforeFirst();
                 }
 
                 // Return the position back to place prior to callin writeXml
                 else {
-                   this.absolute(curPosBfrWrite);
+                    this.absolute(curPosBfrWrite);
                 }
 
             } else {
@@ -199,28 +199,29 @@ public class WebRowSetImpl extends CachedRowSetImpl implements WebRowSet {
     }
 
     // Stream based methods
+
     /**
      * Reads a stream based XML input to populate this <code>WebRowSet</code>
      * object.
      *
      * @throws SQLException if a data source access error occurs
-     * @throws IOException if a IO exception occurs
+     * @throws IOException  if a IO exception occurs
      */
     public void readXml(InputStream iStream) throws SQLException, IOException {
         if (iStream != null) {
             xmlReader.readXML(this, iStream);
 
             // Position is before the first row
-                // The cursor position is to be stored while serializng
-                // and deserializing the WebRowSet Object.
-                if(curPosBfrWrite == 0) {
-                   this.beforeFirst();
-                }
+            // The cursor position is to be stored while serializng
+            // and deserializing the WebRowSet Object.
+            if (curPosBfrWrite == 0) {
+                this.beforeFirst();
+            }
 
-                // Return the position back to place prior to callin writeXml
-                else {
-                   this.absolute(curPosBfrWrite);
-                }
+            // Return the position back to place prior to callin writeXml
+            else {
+                this.absolute(curPosBfrWrite);
+            }
 
         } else {
             throw new SQLException(resBundle.handleGetObject("webrowsetimpl.invalidrd").toString());
@@ -234,7 +235,7 @@ public class WebRowSetImpl extends CachedRowSetImpl implements WebRowSet {
      * <code>WebRowSet</code> for XML proceessing
      *
      * @throws SQLException if a datasource access error occurs
-     * @throws IOException if an IO exception occurs
+     * @throws IOException  if an IO exception occurs
      */
     public void writeXml(OutputStream oStream) throws SQLException, IOException {
         if (xmlWriter != null) {
@@ -256,29 +257,28 @@ public class WebRowSetImpl extends CachedRowSetImpl implements WebRowSet {
      * This includes the rowset's data,  properties, and metadata.
      *
      * @throws SQLException if a datasource access error occurs
-     * @throws IOException if an IO exception occurs
+     * @throws IOException  if an IO exception occurs
      */
     public void writeXml(ResultSet rs, OutputStream oStream) throws SQLException, IOException {
-            this.populate(rs);
+        this.populate(rs);
 
-            // Store the cursor position before writing
-            curPosBfrWrite = this.getRow();
+        // Store the cursor position before writing
+        curPosBfrWrite = this.getRow();
 
-            this.writeXml(oStream);
+        this.writeXml(oStream);
     }
 
     /**
      * This method re populates the resBundle
      * during the deserialization process
-     *
      */
     private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
         // Default state initialization happens here
         ois.defaultReadObject();
         // Initialization of transient Res Bundle happens here .
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 

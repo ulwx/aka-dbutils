@@ -13,9 +13,11 @@ import java.util.*;
 public class NFunction {
 
     private static Logger log = LoggerFactory.getLogger(NFunction.class);
+
     public static class Options {
 
     }
+
     public static boolean isNotEmpty(Object obj) {
         if (obj == null) return false;
         if (obj instanceof String) {
@@ -55,7 +57,7 @@ public class NFunction {
     }
 
     public static String argValue(String groupStr, Map<String, Object> args,
-                                        String arrayToStringDelimeter,MDMehtodOptions options ) {
+                                  String arrayToStringDelimeter, MDMehtodOptions options) {
         String key = groupStr.trim();
         String retValue = "";
         boolean prePercentSigns = false;
@@ -163,7 +165,7 @@ public class NFunction {
                 ////
             } else {
                 if (val instanceof String) {
-                    val =  SqlUtils.encodeSQLStr(val.toString());
+                    val = SqlUtils.encodeSQLStr(val.toString());
                     if (prePercentSigns) {
                         val = "%" + val;
                     }
@@ -179,13 +181,13 @@ public class NFunction {
                 }
             }
 
-            retValue = val+"";
+            retValue = val + "";
         }
         return retValue;
     }
 
-    public static String trimRight(String s,int len){
-        return s.substring(0,s.length()-len);
+    public static String trimRight(String s, int len) {
+        return s.substring(0, s.length() - len);
     }
 
     public static void main(String[] args) {
@@ -197,8 +199,8 @@ public class NFunction {
         map.put("ints", new Integer[]{123, 456, 678});
         MDMehtodOptions options = new MDMehtodOptions();
         options.setSource("md:xxx");
-        map.put(MDMehtodOptions.class.getName(),options);
-        String ret = argValue("%like%", map, ",",options);
+        map.put(MDMehtodOptions.class.getName(), options);
+        String ret = argValue("%like%", map, ",", options);
         System.out.println(ret);
     }
 }

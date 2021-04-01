@@ -3,7 +3,7 @@ package com.github.ulwx.aka.dbutils.database;
 
 public class ScriptOption {
     private String source;
-    private boolean fromMDMethod=true;
+    private boolean fromMDMethod = true;
 
     public boolean isFromMDMethod() {
         return fromMDMethod;

@@ -290,7 +290,7 @@ public final class MDTemplate {
             if (StringUtils.hasText(mdContent)) {
                 return parseFromMdFileToJavaSource(packageName, className, mdContent);
             } else {
-                throw new DbException("无法根据" + packageName + "." + className + "获取到md文件");
+                throw new DbException("无法根据" + filePahtMd + "获取到md文件内容");
             }
 
         } catch (Exception e) {
@@ -321,7 +321,7 @@ public final class MDTemplate {
      */
     public static String getResultString(String mdPath, String methodName, Map<String, Object> args) throws Exception {
 
-        Class<?> clazz = CompilerTask.preCompileSingle(mdPath);
+        Class<?> clazz = CompilerTask.preCompileSingle(mdPath, CompilerTask.UseThirdpartCompilerTool);
         if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
             log.debug("mdPath=" + mdPath + ",methodName=" + methodName + ",args=" + ObjectUtils.toString(args) + ",class=" + clazz);
         }

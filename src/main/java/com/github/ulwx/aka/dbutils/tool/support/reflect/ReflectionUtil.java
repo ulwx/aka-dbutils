@@ -14,19 +14,23 @@ import java.util.Map;
 
 public class ReflectionUtil {
 
-    public static <T, R> String getFieldName(CGetFun<T, R>  function) {
-        return getFieldName((Serializable)function);
+    public static <T, R> String getFieldName(CGetFun<T, R> function) {
+        return getFieldName((Serializable) function);
     }
-    public static <R> String getFieldName( GetFun<R> function) {
-        return getFieldName((Serializable)function);
+
+    public static <R> String getFieldName(GetFun<R> function) {
+        return getFieldName((Serializable) function);
     }
+
     private static <T, R> String getFieldName(Serializable function) {
         Field field = ReflectionUtil.getField(function);
         return field.getName();
     }
+
     private static Field getField(Serializable function) {
         return ReflectionUtil.findField(function);
     }
+
     private static Field findField(Serializable function) {
         Field field = null;
         String fieldName = null;
@@ -52,7 +56,7 @@ public class ReflectionUtil {
             String declaredClass = serializedLambda.getImplClass().replace("/", ".");
             Class<?> aClass = Class.forName(declaredClass);
             //第4步  找到对应的字段
-            field= ObjectUtils.getDeclaredField(aClass, fieldName, aClass);
+            field = ObjectUtils.getDeclaredField(aClass, fieldName, aClass);
 
         } catch (Exception e) {
         }
@@ -62,6 +66,7 @@ public class ReflectionUtil {
         }
         throw new NoSuchFieldError(fieldName);
     }
+
     public static Method[] getClassMethods(Class<?> cls) {
         Map<String, Method> uniqueMethods = new HashMap<>();
         Class<?> currentClass = cls;
@@ -104,51 +109,50 @@ public class ReflectionUtil {
 
     private static String getSignature(Method method) {
         StringBuilder sb = new StringBuilder();
-        if(Modifier.isSynchronized(method.getModifiers())){
+        if (Modifier.isSynchronized(method.getModifiers())) {
             sb.append("synchronized  ");
         }
-        if(Modifier.isPublic(method.getModifiers())){
+        if (Modifier.isPublic(method.getModifiers())) {
             sb.append("public  ");
 
-        } else if(Modifier.isProtected(method.getModifiers())){
+        } else if (Modifier.isProtected(method.getModifiers())) {
             sb.append("protected  ");
-        } else if(Modifier.isPrivate(method.getModifiers())){
+        } else if (Modifier.isPrivate(method.getModifiers())) {
             sb.append("private  ");
         }
-        if(method.getTypeParameters().length>0){
+        if (method.getTypeParameters().length > 0) {
             sb.append("<");
-            for(int i=0; i<method.getTypeParameters().length; i++){
-                if(i==0){
+            for (int i = 0; i < method.getTypeParameters().length; i++) {
+                if (i == 0) {
                     sb.append(method.getTypeParameters()[i].getTypeName());
-                }else{
-                    sb.append(","+method.getTypeParameters()[i].getTypeName());
+                } else {
+                    sb.append("," + method.getTypeParameters()[i].getTypeName());
                 }
             }
             sb.append(">");
         }
-        if(Modifier.isFinal(method.getModifiers())){
+        if (Modifier.isFinal(method.getModifiers())) {
             sb.append("final  ");
         }
 
 
-
-       if(Modifier.isStatic(method.getModifiers())){
-           sb.append("static ");
-       }
+        if (Modifier.isStatic(method.getModifiers())) {
+            sb.append("static ");
+        }
         Type returnType = method.getGenericReturnType();
         if (returnType != null) {
             sb.append(returnType.getTypeName()).append(' ');
         }
-        sb.append(method.getName()+"(");
-        Parameter[]  parameters=method.getParameters();
-       // Class<?>[] parameters = method.getParameterTypes();
+        sb.append(method.getName() + "(");
+        Parameter[] parameters = method.getParameters();
+        // Class<?>[] parameters = method.getParameterTypes();
         for (int i = 0; i < parameters.length; i++) {
             if (i == 0) {
                 sb.append(' ');
             } else {
                 sb.append(',');
             }
-            sb.append(parameters[i].getParameterizedType().getTypeName()+" "+parameters[i].getName());
+            sb.append(parameters[i].getParameterizedType().getTypeName() + " " + parameters[i].getName());
         }
         sb.append(")");
         return sb.toString();
@@ -171,14 +175,15 @@ public class ReflectionUtil {
         }
         return true;
     }
-    public static void main(String[] args) throws Exception{
+
+    public static void main(String[] args) throws Exception {
         Domain domain = new Domain();
-        String s=ReflectionUtil.getFieldName(domain::getName);
-        String s2=ReflectionUtil.getFieldName(domain::getName);
-        String s3=ReflectionUtil.getFieldName(Domain::getName);
+        String s = ReflectionUtil.getFieldName(domain::getName);
+        String s2 = ReflectionUtil.getFieldName(domain::getName);
+        String s3 = ReflectionUtil.getFieldName(Domain::getName);
         MD.of(Domain::getName);
 
-        System.out.println("s="+s+",s2="+s2+",s3="+s3);
+        System.out.println("s=" + s + ",s2=" + s2 + ",s3=" + s3);
 
         getClassMethods(MDataBase.class);
 

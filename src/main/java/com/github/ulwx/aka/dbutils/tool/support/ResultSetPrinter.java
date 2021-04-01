@@ -1,5 +1,6 @@
 package com.github.ulwx.aka.dbutils.tool.support;
 
+import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -7,7 +8,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ResultSetPrinter {
-    public static void printResultSet(ResultSet rs)  {
+    public static void printResultSet(ResultSet rs) {
+        printResultSet(rs, null);
+    }
+
+    public static void printResultSet(ResultSet rs, PrintWriter writer) {
         try {
             ResultSetMetaData resultSetMetaData = rs.getMetaData();
             // 获取列数
@@ -30,21 +35,34 @@ public class ResultSetPrinter {
                 // 缓存这一行.
                 results.add(columnStr);
             }
-            printColumnName(resultSetMetaData, columnMaxLengths);
-            printSeparator(columnMaxLengths);
+            printColumnName(resultSetMetaData, columnMaxLengths, writer);
+            printSeparator(columnMaxLengths, writer);
             // 遍历集合输出结果
             Iterator<String[]> iterator = results.iterator();
             String[] columnStr;
             while (iterator.hasNext()) {
                 columnStr = iterator.next();
                 for (int i = 0; i < ColumnCount; i++) {
-                    System.out.printf("|%-" + columnMaxLengths[i] + "s", columnStr[i]);
+                    String str = String.format("|%-" + columnMaxLengths[i] + "s", columnStr[i], columnStr[i]);
+                    if (writer != null) {
+                        writer.printf(str);
+                    } else {
+                        System.out.printf(str);
+                    }
                 }
-                System.out.println("|");
+                if (writer != null) {
+                    writer.println("|");
+                } else {
+                    System.out.println("|");
+                }
             }
-            printSeparator(columnMaxLengths);
+            printSeparator(columnMaxLengths, writer);
+            if (writer == null) {
+                System.out.print("\n");
+            } else {
+                writer.print("\n");
+            }
         } catch (SQLException exception) {
-            exception.printStackTrace();
         }
     }
 
@@ -55,14 +73,23 @@ public class ResultSetPrinter {
      * @param columnMaxLengths  每一列最大长度的字符串的长度.
      * @throws SQLException
      */
-    private static void printColumnName(ResultSetMetaData resultSetMetaData, int[] columnMaxLengths) throws SQLException {
+    private static void printColumnName(ResultSetMetaData resultSetMetaData,
+                                        int[] columnMaxLengths, PrintWriter writer) throws SQLException {
         int columnCount = resultSetMetaData.getColumnCount();
         for (int i = 0; i < columnCount; i++) {
-            String colName=resultSetMetaData.getColumnName(i + 1);
-            columnMaxLengths[i]=Math.max(columnMaxLengths[i],colName.length());
-            System.out.printf("|%-" + columnMaxLengths[i] + "s", colName);
+            String colName = resultSetMetaData.getColumnName(i + 1);
+            columnMaxLengths[i] = Math.max(columnMaxLengths[i], colName.length());
+            if (writer == null) {
+                System.out.printf("|%-" + columnMaxLengths[i] + "s", colName);
+            } else {
+                writer.printf("|%-" + columnMaxLengths[i] + "s", colName);
+            }
         }
-        System.out.println("|");
+        if (writer == null) {
+            System.out.println("|");
+        } else {
+            writer.println("|");
+        }
     }
 
     /**
@@ -70,13 +97,26 @@ public class ResultSetPrinter {
      *
      * @param columnMaxLengths 保存结果集中每一列的最长的字符串的长度.
      */
-    private static void printSeparator(int[] columnMaxLengths) {
+    private static void printSeparator(int[] columnMaxLengths, PrintWriter writer) {
         for (int i = 0; i < columnMaxLengths.length; i++) {
-            System.out.print("+");
+            if (writer == null) {
+                System.out.print("+");
+            } else {
+                writer.print("+");
+            }
             for (int j = 0; j < columnMaxLengths[i]; j++) {
-                System.out.print("-");
+                if (writer == null) {
+                    System.out.print("-");
+                } else {
+                    writer.print("-");
+                }
             }
         }
-        System.out.println("+");
+        if (writer == null) {
+            System.out.println("+");
+        } else {
+            writer.println("+");
+        }
+
     }
 }

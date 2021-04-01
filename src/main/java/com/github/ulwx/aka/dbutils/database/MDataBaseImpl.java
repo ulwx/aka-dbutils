@@ -166,7 +166,6 @@ public class MDataBaseImpl implements MDataBase {
     }
 
 
-
     @Override
     public <T> List<T> queryList(Class<T> clazz, String mdFullMethodName, Map<String, Object> args, int page,
                                  int perPage, PageBean pageBean, String countSqlMdFullMethodName) throws DbException {
@@ -179,7 +178,7 @@ public class MDataBaseImpl implements MDataBase {
     public <T> List<T> queryListOne2One(Class<T> clazz, String mdFullMethodName, Map<String, Object> args,
                                         One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
-        return this.dataBase.queryListOne2One(clazz,  nsql.getExeSql(), nsql.getArgs(), one2OneMapNestOptions);
+        return this.dataBase.queryListOne2One(clazz, nsql.getExeSql(), nsql.getArgs(), one2OneMapNestOptions);
     }
 
     @Override
@@ -190,7 +189,7 @@ public class MDataBaseImpl implements MDataBase {
 
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
         String countSql = getCountSql(countSqlMdFullMethodName, args);
-        return this.dataBase.queryListOne2One(clazz,  nsql.getExeSql(),
+        return this.dataBase.queryListOne2One(clazz, nsql.getExeSql(),
                 nsql.getArgs(), one2OneMapNestOptions, page, perPage, pageBean, countSql);
     }
 
@@ -201,7 +200,7 @@ public class MDataBaseImpl implements MDataBase {
                                          Map<String, Object> args,
                                          One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
-        return this.dataBase.queryListOne2Many(clazz,nsql.getExeSql(), nsql.getArgs(), one2ManyMapNestOptions);
+        return this.dataBase.queryListOne2Many(clazz, nsql.getExeSql(), nsql.getArgs(), one2ManyMapNestOptions);
     }
 
 
@@ -400,6 +399,7 @@ public class MDataBaseImpl implements MDataBase {
     /**
      * 返回当前连接，如果force=true，若当前没有连接，则新生成一个连接；force=false，若连接
      * 不存在或已经关闭则会返回null。
+     *
      * @param force
      * @return
      */
@@ -490,6 +490,7 @@ public class MDataBaseImpl implements MDataBase {
 
     /**
      * 设置事务保存点，rollbackToSavepoint()方法会回滚到某个保存点，用于事务的局部回滚
+     *
      * @param savepointName 保存点
      * @throws DbException
      */
@@ -500,11 +501,10 @@ public class MDataBaseImpl implements MDataBase {
 
     @Override
     public void releaseSavepoint(String savepointName) throws DbException {
-         this.dataBase.releaseSavepoint(savepointName);
+        this.dataBase.releaseSavepoint(savepointName);
     }
 
     /**
-     *
      * @param savepointName
      * @throws DbException
      */

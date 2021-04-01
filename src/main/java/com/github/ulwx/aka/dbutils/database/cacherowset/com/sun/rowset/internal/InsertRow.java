@@ -44,69 +44,70 @@ import java.util.BitSet;
  */
 public class InsertRow extends BaseRow implements Serializable, Cloneable {
 
-/**
- * An internal <code>BitSet</code> object used to keep track of the
- * columns in this <code>InsertRow</code> object that have had a value
- * inserted.
- */
+    /**
+     * An internal <code>BitSet</code> object used to keep track of the
+     * columns in this <code>InsertRow</code> object that have had a value
+     * inserted.
+     */
     private BitSet colsInserted;
 
-/**
- * The number of columns in this <code>InsertRow</code> object.
- */
+    /**
+     * The number of columns in this <code>InsertRow</code> object.
+     */
     private int cols;
 
     private JdbcRowSetResourceBundle resBundle;
 
-/**
- * Creates an <code>InsertRow</code> object initialized with the
- * given number of columns, an array for keeping track of the
- * original values in this insert row, and a
- * <code>BitSet</code> object with the same number of bits as
- * there are columns.
- *
- * @param numCols an <code>int</code> indicating the number of columns
- *                in this <code>InsertRow</code> object
- */
+    /**
+     * Creates an <code>InsertRow</code> object initialized with the
+     * given number of columns, an array for keeping track of the
+     * original values in this insert row, and a
+     * <code>BitSet</code> object with the same number of bits as
+     * there are columns.
+     *
+     * @param numCols an <code>int</code> indicating the number of columns
+     *                in this <code>InsertRow</code> object
+     */
     public InsertRow(int numCols) {
         origVals = new Object[numCols];
         colsInserted = new BitSet(numCols);
         cols = numCols;
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
     }
 
-/**
- * Sets the bit in this <code>InsertRow</code> object's internal
- * <code>BitSet</code> object that corresponds to the specified column
- * in this <code>InsertRow</code> object. Setting a bit indicates
- * that a value has been set.
- *
- * @param col the number of the column to be marked as inserted;
- *            the first column is <code>1</code>
- */
+    /**
+     * Sets the bit in this <code>InsertRow</code> object's internal
+     * <code>BitSet</code> object that corresponds to the specified column
+     * in this <code>InsertRow</code> object. Setting a bit indicates
+     * that a value has been set.
+     *
+     * @param col the number of the column to be marked as inserted;
+     *            the first column is <code>1</code>
+     */
     protected void markColInserted(int col) {
         colsInserted.set(col);
     }
 
-/**
- * Indicates whether this <code>InsertRow</code> object has a value
- * for every column that cannot be null.
- * @param RowSetMD the <code>RowSetMetaData</code> object for the
- *                 <code>CachedRowSet</code> object that maintains this
- *                 <code>InsertRow</code> object
- * @return <code>true</code> if this <code>InsertRow</code> object is
- *         complete; <code>false</code> otherwise
- * @throws SQLException if there is an error accessing data
- */
+    /**
+     * Indicates whether this <code>InsertRow</code> object has a value
+     * for every column that cannot be null.
+     *
+     * @param RowSetMD the <code>RowSetMetaData</code> object for the
+     *                 <code>CachedRowSet</code> object that maintains this
+     *                 <code>InsertRow</code> object
+     * @return <code>true</code> if this <code>InsertRow</code> object is
+     * complete; <code>false</code> otherwise
+     * @throws SQLException if there is an error accessing data
+     */
     public boolean isCompleteRow(RowSetMetaData RowSetMD) throws SQLException {
         for (int i = 0; i < cols; i++) {
             if (colsInserted.get(i) == false &&
-                RowSetMD.isNullable(i + 1) ==
-                ResultSetMetaData.columnNoNulls) {
+                    RowSetMD.isNullable(i + 1) ==
+                            ResultSetMetaData.columnNoNulls) {
                 return false;
             }
 
@@ -114,28 +115,28 @@ public class InsertRow extends BaseRow implements Serializable, Cloneable {
         return true;
     }
 
-/**
- * Clears all the bits in the internal <code>BitSet</code> object
- * maintained by this <code>InsertRow</code> object.  Clearing all the bits
- * indicates that none of the columns have had a value inserted.
- */
+    /**
+     * Clears all the bits in the internal <code>BitSet</code> object
+     * maintained by this <code>InsertRow</code> object.  Clearing all the bits
+     * indicates that none of the columns have had a value inserted.
+     */
     public void initInsertRow() {
         for (int i = 0; i < cols; i++) {
             colsInserted.clear(i);
         }
     }
 
-/**
- * Retrieves the value of the designated column in this
- * <code>InsertRow</code> object.  If no value has been inserted
- * into the designated column, this method throws an
- * <code>SQLException</code>.
- *
- * @param idx the column number of the value to be retrieved;
- *            the first column is <code>1</code>
- * @throws SQLException if no value has been inserted into
- *                                   the designated column
- */
+    /**
+     * Retrieves the value of the designated column in this
+     * <code>InsertRow</code> object.  If no value has been inserted
+     * into the designated column, this method throws an
+     * <code>SQLException</code>.
+     *
+     * @param idx the column number of the value to be retrieved;
+     *            the first column is <code>1</code>
+     * @throws SQLException if no value has been inserted into
+     *                      the designated column
+     */
     public Object getColumnObject(int idx) throws SQLException {
         if (colsInserted.get(idx - 1) == false) {
             throw new SQLException(resBundle.handleGetObject("insertrow.novalue").toString());
@@ -143,20 +144,20 @@ public class InsertRow extends BaseRow implements Serializable, Cloneable {
         return (origVals[idx - 1]);
     }
 
-/**
- * Sets the element in this <code>InsertRow</code> object's
- * internal array of original values that corresponds to the
- * designated column with the given value.  If the third
- * argument is <code>true</code>,
- * which means that the cursor is on the insert row, this
- * <code>InsertRow</code> object's internal <code>BitSet</code> object
- * is set so that the bit corresponding to the column being set is
- * turned on.
- *
- * @param idx the number of the column in the insert row to be set;
- *              the first column is <code>1</code>
- * @param val the value to be set
- */
+    /**
+     * Sets the element in this <code>InsertRow</code> object's
+     * internal array of original values that corresponds to the
+     * designated column with the given value.  If the third
+     * argument is <code>true</code>,
+     * which means that the cursor is on the insert row, this
+     * <code>InsertRow</code> object's internal <code>BitSet</code> object
+     * is set so that the bit corresponding to the column being set is
+     * turned on.
+     *
+     * @param idx the number of the column in the insert row to be set;
+     *            the first column is <code>1</code>
+     * @param val the value to be set
+     */
     public void setColumnObject(int idx, Object val) {
         origVals[idx - 1] = val;
         markColInserted(idx - 1);
@@ -165,15 +166,14 @@ public class InsertRow extends BaseRow implements Serializable, Cloneable {
     /**
      * This method re populates the resBundle
      * during the deserialization process
-     *
      */
     private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
         // Default state initialization happens here
         ois.defaultReadObject();
         // Initialization of transient Res Bundle happens here .
         try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
+            resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+        } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
 

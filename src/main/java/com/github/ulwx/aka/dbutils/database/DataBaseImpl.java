@@ -1,5 +1,6 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.DbException.CODE;
 import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.CachedRowSetImpl;
@@ -29,6 +30,7 @@ import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;
 import java.util.function.Supplier;
@@ -53,8 +55,13 @@ public class DataBaseImpl implements DataBase {
     private boolean externalControlConClose = false;
     private ConnectType connectType = null;
     private Map<String, Savepoint> savePointMap = new LinkedHashMap<>();
-
+    private Boolean connectedToMaster=true;
     public DataBaseImpl() {
+    }
+
+    @Override
+    public Boolean connectedToMaster() {
+        return connectedToMaster;
     }
 
     private static Map<Integer, Object> toMap(Object... vParameters) {
@@ -111,22 +118,20 @@ public class DataBaseImpl implements DataBase {
     }
 
     public static String getCallerInf() {
-        // 3, 10, DbConst.filter, 1
-        int fromLevel = 3, upLevelNum = 0;
 
+        int fromLevel = 3, upLevelNum = 0;
         StackTraceElement stack[] = (new Throwable()).getStackTrace();// ;
         // 获取线程运行栈信息
         String str = "";
         if (stack.length > fromLevel) {
-            //com.github.ulwx.aka.dbutils.tool.MDbUtils.queryList(MDbUtils.java:107)
             for (int i = fromLevel; i < stack.length; i++) {
                 if (stack[i].getClassName().startsWith(DataBase.class.getPackage().getName())
                         || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
 
                     continue;
                 }
-                String tempInfo = "at "+getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" +
-                        stack[i].getFileName()+
+                String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" +
+                        stack[i].getFileName() +
                         ":"
                         + stack[i].getLineNumber() + ")";
                 if (upLevelNum == 0) {
@@ -162,7 +167,7 @@ public class DataBaseImpl implements DataBase {
         }
         className = className.substring(lastIndex);
         return className;
-       // return srcClassName;
+        // return srcClassName;
     }
 
     @Override
@@ -292,6 +297,7 @@ public class DataBaseImpl implements DataBase {
     private void fetchConnection() throws DbException {
         long start0 = System.currentTimeMillis();
         String msg = "";
+        this.connectedToMaster=true;
         try {
             if (this.isColsed()) {
                 conn = null;
@@ -304,24 +310,28 @@ public class DataBaseImpl implements DataBase {
                             if (this.sqlType != SQLType.SELECT) {
                                 throw new DbException("从库只能执行select语句执行！");
                             }
-                            msg = "获得从库链接";
+                            msg = "获取从库链接";
+                            this.connectedToMaster=false;
                             TResult<Connection> tResult = new TResult<>();
                             DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
                             this.conn = tResult.getValue();
                             this.dataSource = ds;
 
                         } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
-                            msg = "获得主库链接";
+                            msg = "获取主库链接";
+                            this.connectedToMaster=true;
                             DataSource datasource = this.getDataSourceFromPool(dbPoolName);
                             this.dataSource = datasource;
                         } else { //Connect_Auto
                             if (this.sqlType == SQLType.SELECT) {
                                 if (!this.getAutoCommit()) {//事务性操作
-                                    msg = "获得主库链接";
+                                    msg = "获取主库链接";
+                                    this.connectedToMaster=true;
                                     DataSource ds = this.getDataSourceFromPool(dbPoolName);
                                     this.dataSource = ds;
                                 } else {
-                                    msg = "获得从库链接";
+                                    msg = "获取从库链接";
+                                    this.connectedToMaster=false;
                                     TResult<Connection> tResult = new TResult<>();
                                     DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
                                     this.conn = tResult.getValue();
@@ -329,14 +339,16 @@ public class DataBaseImpl implements DataBase {
                                     ///
                                 }
                             } else { //update、delete、存储过程,脚本在主库上执行
-                                msg = "获得主库链接";
+                                msg = "获取主库链接";
+                                this.connectedToMaster=true;
                                 DataSource ds = this.getDataSourceFromPool(dbPoolName);
                                 this.dataSource = ds;
                             }
 
                         }
                     } else { //非主从库方式
-                        msg = "获得主库链接";
+                        msg = "获取主库链接";
+                        this.connectedToMaster=true;
                         DataSource datasource = this.getDataSourceFromPool(dbPoolName);
                         this.dataSource = datasource;
                     }
@@ -345,13 +357,15 @@ public class DataBaseImpl implements DataBase {
                     }
 
                 } else if (this.connectType == ConnectType.CONNECTION) {
+                    this.connectedToMaster=true;
                     if (this.isColsed()) {
                         msg = "数据库连接为空或已经关闭！";
                     } else {
-                        msg = "获得数据库库链接";
+                        msg = "获取数据库链接前面已获取";
                     }
                 } else if (this.connectType == ConnectType.DATASOURCE) {
-                    msg = "获得数据库库链接";
+                    this.connectedToMaster=true;
+                    msg = "获取数据库库链接";
                     conn = dataSource.getConnection();
                 } else {
                     throw new DbException("不支持的连接方式！" + this.connectType);
@@ -433,16 +447,38 @@ public class DataBaseImpl implements DataBase {
     @Override
     public DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
                                          PageBean pageBean, String countSql) throws DbException {
+        DataBaseSet ret = null;
+        this.configInterceptorForMehtod("queryForResultSet", String.class, Map.class,
+                int.class, int.class, PageBean.class, String.class);
+        try {
+            Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
+            return ret = new DataBaseSet(
+                    this.doCachedPageQuery(sqlQuery, args, page, perPage, pageBean, countSql));
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
-        return new DataBaseSet(
-                this.doCachedPageQuery(sqlQuery, args, page, perPage, pageBean, countSql));
     }
 
     @Override
     public DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
-        Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
-        return new DataBaseSet(doCachedQuery(sqlQuery, args));
+        DataBaseSet ret = null;
+        this.configInterceptorForMehtod("queryForResultSet", String.class, Map.class);
+        try {
+            Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
+            return ret = new DataBaseSet(doCachedQuery(sqlQuery, args));
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     /**
@@ -477,7 +513,19 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageBean,
                                  RowMapper<T> rowMapper, String countSql) throws DbException {
-        return this.doPageQueryObject(sqlQuery, args, page, perPage, pageBean, rowMapper, countSql);
+        this.configInterceptorForMehtod("queryList", String.class, Map.class,
+                int.class, int.class, PageBean.class, RowMapper.class, String.class);
+        List<T> ret = null;
+        try {
+            return ret = this.doPageQueryObject(sqlQuery, args, page, perPage, pageBean, rowMapper, countSql);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     private List<Map<String, Object>> doPageQueryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
@@ -498,7 +546,20 @@ public class DataBaseImpl implements DataBase {
     @Override
     public List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
                                               PageBean pageBean, String countSql) throws DbException {
-        return this.doPageQueryMap(sqlQuery, args, page, perPage, pageBean, countSql);
+        this.configInterceptorForMehtod("queryMap", Map.class,
+                int.class, int.class, PageBean.class, String.class);
+        List<Map<String, Object>> ret = null;
+        try {
+            return ret = this.doPageQueryMap(sqlQuery, args, page, perPage, pageBean, countSql);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
+
     }
 
     private CachedRowSet doCachedPageQuery(String sqlQuery, Collection<Object> vParameters, int page, int perPage,
@@ -618,7 +679,19 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
-        return this.doQueryClass(clazz, sqlQuery, vParameters);
+        List<T> ret = null;
+        this.configInterceptorForMehtod("queryList", Class.class, String.class, Map.class);
+        try {
+            return ret = this.doQueryClass(clazz, sqlQuery, vParameters);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
+
     }
 
     private <T> T doQueryClassOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
@@ -635,7 +708,19 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> T queryOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
-        return this.doQueryClassOne(clazz, sqlQuery, vParameters);
+        this.configInterceptorForMehtod("queryOne", Class.class, String.class, Map.class);
+        T ret = null;
+        try {
+            return ret = this.doQueryClassOne(clazz, sqlQuery, vParameters);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
+
     }
 
     private <T> List<T> doQueryClassForObject(Class<T> clazz, T selectObject, String[] whereProperteis, QueryOptions queryOptions) throws DbException {
@@ -714,7 +799,7 @@ public class DataBaseImpl implements DataBase {
             String sqlPrefix = one2OneMapNestOptions.getSqlPrefix();
             return this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, null);
         } else {
-            return this.doQueryClass(clazz, sqlQuery, vParameters,(QueryMapNestOne2One[])null,
+            return this.doQueryClass(clazz, sqlQuery, vParameters, (QueryMapNestOne2One[]) null,
                     null, null);
         }
 
@@ -723,7 +808,18 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
                                         One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
-        return this.doQueryClassOne2One(clazz, sqlQuery, vParameters, one2OneMapNestOptions);
+        this.configInterceptorForMehtod("queryListOne2One",
+                Class.class, String.class, Map.class, One2OneMapNestOptions.class);
+        List<T> ret = null;
+        try {
+            return ret = this.doQueryClassOne2One(clazz, sqlQuery, vParameters, one2OneMapNestOptions);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
     }
 
@@ -748,9 +844,26 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
-                                 PageBean pageBean, String countSql) throws DbException {
-        return this.doPageQueryClass(clazz, sqlQuery, vParameters, page, perPage, pageBean, countSql);
+    public <T> List<T> queryList(Class<T> clazz, String sqlQuery,
+                                 Map<Integer, Object> vParameters,
+                                 int page,
+                                 int perPage,
+                                 PageBean pageBean,
+                                 String countSql) throws DbException {
+
+        List<T> ret = null;
+        this.configInterceptorForMehtod("queryList", Class.class, String.class, Map.class,
+                int.class, int.class, PageBean.class, String.class);
+        try {
+            return ret = this.doPageQueryClass(clazz, sqlQuery, vParameters, page, perPage, pageBean, countSql);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     /**
@@ -791,10 +904,22 @@ public class DataBaseImpl implements DataBase {
         Assert.notNull(one2OneMapNestOptions);
         Assert.hasText(one2OneMapNestOptions.getSqlPrefix());
         Assert.notEmpty(one2OneMapNestOptions.getQueryMapNestOne2Ones());
+        this.configInterceptorForMehtod("queryListOne2One",
+                Class.class, String.class, Map.class, One2OneMapNestOptions.class,
+                int.class, int.class, PageBean.class, String.class);
+        List<T> ret = null;
+        try {
+            return ret = this.doPageQueryClass(clazz, one2OneMapNestOptions.getSqlPrefix(),
+                    sqlQuery, vParameters, one2OneMapNestOptions.getQueryMapNestOne2Ones(), page, perPage,
+                    pageBean, countSql);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        return this.doPageQueryClass(clazz, one2OneMapNestOptions.getSqlPrefix(),
-                sqlQuery, vParameters, one2OneMapNestOptions.getQueryMapNestOne2Ones(), page, perPage,
-                pageBean, countSql);
     }
 
     /**
@@ -874,8 +999,21 @@ public class DataBaseImpl implements DataBase {
         Assert.hasText(one2ManyMapNestOptions.getSqlPrefix());
         Assert.notEmpty(one2ManyMapNestOptions.getQueryMapNestOne2Manys());
         Assert.notEmpty(one2ManyMapNestOptions.getParentBeanKeys());
-        return this.doQueryClassOne2Many(clazz, one2ManyMapNestOptions.getSqlPrefix(),
-                one2ManyMapNestOptions.getParentBeanKeys(), sqlQuery, vParameters, one2ManyMapNestOptions.getQueryMapNestOne2Manys());
+        List<T> ret = null;
+        this.configInterceptorForMehtod("queryListOne2Many",
+                Class.class, String.class, Map.class, One2ManyMapNestOptions.class);
+        try {
+            return ret = this.doQueryClassOne2Many(clazz, one2ManyMapNestOptions.getSqlPrefix(),
+                    one2ManyMapNestOptions.getParentBeanKeys(), sqlQuery, vParameters, one2ManyMapNestOptions.getQueryMapNestOne2Manys());
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
+
     }
 
     private <T> List<T> doQueryObject(String sqlQuery, Collection<Object> vParameters,
@@ -935,7 +1073,18 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException {
-        return this.doQueryObject(sqlQuery, args, rowMapper);
+        this.configInterceptorForMehtod("queryList", String.class, Map.class, RowMapper.class);
+        List<T> ret = null;
+        try {
+            return ret = this.doQueryObject(sqlQuery, args, rowMapper);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     private List<Map<String, Object>> doQueryMap(String sqlQuery, Map<Integer, Object> args) throws DbException {
@@ -956,10 +1105,22 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args) throws DbException {
-        return this.doQueryMap(sqlQuery, args);
+        this.configInterceptorForMehtod("queryMap", Map.class);
+        List<Map<String, Object>> ret = null;
+        try {
+            return ret = this.doQueryMap(sqlQuery, args);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
-    private void resultSetPosition(boolean isPageQuery,ResultSet rs,int rsStart){
-        if(rsStart>0){
+
+    private void resultSetPosition(boolean isPageQuery, ResultSet rs, int rsStart) {
+        if (rsStart > 0) {
             throw new DbException("不支持结果集里定位操作！");
         }
     }
@@ -1009,7 +1170,7 @@ public class DataBaseImpl implements DataBase {
                                 String prefix = queryMapNest.getPrefix();
                                 if (prefix == null)
                                     prefix = "";
-                                String[] toPros = queryMapNest.getToPros();
+                                String[] toPros = queryMapNest.getToChildPros();
 
                                 if (mapRelation == MapNest.ONE_TO_ONE) {
 
@@ -1123,7 +1284,7 @@ public class DataBaseImpl implements DataBase {
                                 String prefix = queryMapNest.getPrefix();
                                 if (prefix == null)
                                     prefix = "";
-                                String[] toPros = queryMapNest.getToPros();
+                                String[] toPros = queryMapNest.getToChildPros();
 
                                 if (mapRelation == MapNest.ONE_TO_MANY) {
                                     if (name.equals(toPropertyName)) {
@@ -1347,11 +1508,22 @@ public class DataBaseImpl implements DataBase {
 
         PreparedStatement preStmt = this.getPreparedStatement(sqlQuery);
         String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
+        String debugSql = SqlUtils.generateDebugSql(sqlQuery, vParameters, this.getDataBaseType());
+        if (DbContext.getDebugSQLListener() != null) {
+            DbContext.getDebugSQLListener().accept(debugSql);
+        }
+
+        if(DbContext.getDBInterceptor()!=null){
+            DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
+            boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,false,debugSql);
+            if(!ret){
+                throw new DbException("被拦截", CODE.Intercepted);
+            }
+        }
         if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
             String line = System.getProperty("line.separator");
-
             log.debug("call info[" + getConnectInfo() + "][" + getCallerInf() + "]");
-            log.debug("debugSql[" + SqlUtils.generateDebugSql(sqlQuery, vParameters,this.getDataBaseType()) + "]");
+            log.debug("debugSql[" + debugSql + "]");
 
         }
         long start = System.currentTimeMillis();
@@ -1418,7 +1590,17 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public int del(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-        return this.executeBindDelete(sqltext, vParameters);
+        this.configInterceptorForMehtod("del", String.class, Map.class);
+        Integer ret = null;
+        try {
+            return ret = this.executeBindDelete(sqltext, vParameters);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
     }
 
     /**
@@ -1439,8 +1621,18 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public int update(String sqltext, Map<Integer, Object> vParameters) throws DbException {
+        Integer ret = null;
+        this.configInterceptorForMehtod("update", String.class, Map.class);
+        try {
+            return ret = this.executeBindUpdate(sqltext, vParameters);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        return this.executeBindUpdate(sqltext, vParameters);
     }
 
     /**
@@ -1526,17 +1718,29 @@ public class DataBaseImpl implements DataBase {
 
             // 注册输出参数
             String outParamStr = SqlUtils.registForStoredProc(outParms, cs);
+
+            Map<Integer, Object> inOutParms = new HashMap<Integer, Object>();
+            inOutParms.putAll(inParms);
+            inOutParms.putAll(outParms);
+            Collection<Object> args = CollectionUtils.getSortedValues(inOutParms);
+            String debugSql = SqlUtils.generateDebugSql(sqltext, args, this.getDataBaseType());
+            if (DbContext.getDebugSQLListener() != null) {
+                DbContext.getDebugSQLListener().accept(debugSql);
+            }
+
+            if(DbContext.getDBInterceptor()!=null){
+                DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
+                boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,false,debugSql);
+                if(!ret){
+                    throw new DbException("被拦截", CODE.Intercepted);
+                }
+            }
             if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                 String line = System.getProperty("line.separator");
                 log.debug(
                         "sql [" + sqltext + "]" + " in param[ " + inParamStr + " ]" + "out param[" + outParamStr + "]");
-                Map<Integer, Object> inOutParms = new HashMap<Integer, Object>();
-                inOutParms.putAll(inParms);
-                inOutParms.putAll(outParms);
-                Collection<Object> args = CollectionUtils.getSortedValues(inOutParms);
                 log.debug("[" + getConnectInfo() + "][" + getCallerInf() + "]");
-                log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, args,this.getDataBaseType()) + "]");
-                // }
+                log.debug("debugSql[" + debugSql + "]");
 
             }
             boolean flag = cs.execute();
@@ -1618,17 +1822,27 @@ public class DataBaseImpl implements DataBase {
      * @throws DbException
      */
     @Override
-    public void callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
+    public void callStoredPro(String sqltext, Map<String, Object> parms,
+                              Map<Integer, Object> outPramsValues,
                               List<DataBaseSet> returnDataBaseSets) throws DbException {
+        this.configInterceptorForMehtod("callStoredPro",
+                String.class, Map.class, Map.class, List.class);
+        try {
+            this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
 
-        this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(outPramsValues);
+        }
 
     }
 
     private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters) throws DbException {
-        return this.executeBindUpdate(sqltext, vParameters, false);
+        return this.executeBindUpdate(sqltext, vParameters, false, null);
     }
-
 
     /**
      * 执行更新操作
@@ -1639,7 +1853,7 @@ public class DataBaseImpl implements DataBase {
      * @return 返回两个元素的数组，0位置的元素为更新的个数，1位置的元素为主键（如果存在，否则为-1）
      * @throws DbException
      */
-    private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters, boolean innerUse) throws DbException {
+    private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters, boolean innerUse, Integer index) throws DbException {
 
         int count = 0;
         long[] twoInt = new long[]{-1, -1};
@@ -1649,16 +1863,27 @@ public class DataBaseImpl implements DataBase {
 
             String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
 
+            String debugSql = SqlUtils.generateDebugSql(sqltext, vParameters, this.getDataBaseType());
+            if (DbContext.getDebugSQLListener() != null) {
+                DbContext.getDebugSQLListener().accept(debugSql);
+            }
+            if(DbContext.getDBInterceptor()!=null){
+                DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
+                boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,false,debugSql);
+                if(!ret){
+                    Method mehod=DbContext.getDBInterceptorInfo().getInterceptedMethod();
+                    throw new DbException(mehod+"操作被拦截不能继续执行！", CODE.Intercepted);
+                }
+            }
             if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                String line = System.getProperty("line.separator");
                 log.debug("[" + getConnectInfo() + "][" + getCallerInf() + "]");
-                log.debug("debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters,this.getDataBaseType()) + "]");
+                log.debug((index != null ? "" + index + "." : "") + "debugSql[" + debugSql + "]");
 
             }
             long start = System.currentTimeMillis();
             count = preStmt.executeUpdate();
             if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                log.debug("sql执行时间:" + (System.currentTimeMillis() - start)+"，更新条数:"+count);
+                log.debug("sql执行时间:" + (System.currentTimeMillis() - start) + "，更新条数:" + count);
             }
             twoInt[0] = count;
             try {
@@ -1725,7 +1950,19 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public int insert(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-        return this.executeBindInsert(sqltext, vParameters);
+        this.configInterceptorForMehtod("insert", String.class, Map.class);
+        Integer ret = null;
+        try {
+            return ret = this.executeBindInsert(sqltext, vParameters);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
+
     }
 
 
@@ -2422,7 +2659,19 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public long insertReturnKey(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-        return this.executeBindInsertReturnKey(sqltext, vParameters);
+        this.configInterceptorForMehtod("insertReturnKey", String.class, Map.class);
+        Long ret = null;
+        try {
+            return ret = this.executeBindInsertReturnKey(sqltext, vParameters);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
+
     }
 
     private long executeBindOneInsert(String sqltext, Collection<Object> vParameters) throws DbException {
@@ -2477,7 +2726,7 @@ public class DataBaseImpl implements DataBase {
                 conn.rollback();
                 clearSavePoint();
                 if (DbContext.permitDebugLog())
-                    log.debug(this.getConnectInfo() + ":rollback..");
+                    log.debug(this.getConnectInfo() + ":rollbacked done!");
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -2530,7 +2779,7 @@ public class DataBaseImpl implements DataBase {
                 if (savePointMap.containsKey(savepointName) && savePointMap.get(savepointName) == null) {
                     Savepoint savepoint = conn.setSavepoint(savepointName);
                     if (DbContext.permitDebugLog()) {
-                        log.debug(this.getConnectInfo() + ":set Savepoint:" + savepointName + " ok!");
+                        log.debug(this.getConnectInfo() + ": Savepoint:" + savepointName + "  ok!");
                     }
                     this.savePointMap.put(savepointName, savepoint);
                 }
@@ -2553,7 +2802,7 @@ public class DataBaseImpl implements DataBase {
                     conn.rollback(savePointMap.get(savepointName));
                     savePointMap.remove(savepointName);
                     if (DbContext.permitDebugLog())
-                        log.debug("[" + this.getConnectInfo() + "]:rollback..to savepoint:" + savepointName);
+                        log.debug("[" + this.getConnectInfo() + "]:rollbacked..to savepoint done!" + savepointName);
                 }
             } catch (Exception e) {
                 if (e instanceof DbException) throw (DbException) e;
@@ -2599,7 +2848,7 @@ public class DataBaseImpl implements DataBase {
                 conn.commit();
                 clearSavePoint();
                 if (DbContext.permitDebugLog())
-                    log.debug("[" + this.getConnectInfo() + "]commit...");
+                    log.debug("[" + this.getConnectInfo() + "]commited done!");
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -2629,18 +2878,22 @@ public class DataBaseImpl implements DataBase {
             for (int m = 0; m < vParametersArray.size(); m++) {
 
                 Collection<Object> vParameters = vParametersArray.get(m);
-
+                String debugSql = SqlUtils.generateDebugSql(sqltext, vParameters, this.getDataBaseType());
+                if (DbContext.getDebugSQLListener() != null) {
+                    DbContext.getDebugSQLListener().accept(debugSql);
+                }
+                if(DbContext.getDBInterceptor()!=null){
+                    DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
+                    boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,true,debugSql);
+                    if(!ret){
+                        throw new DbException("被拦截", CODE.Intercepted);
+                    }
+                }
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-
                     log.debug("[" + this.getConnectInfo() + "][" + callInfo + "]");
-                    log.debug("" + m + ".debugSql[" + SqlUtils.generateDebugSql(sqltext, vParameters,this.getDataBaseType()) + "]");
+                    log.debug("" + m + ".debugSql[" + debugSql + "]");
                 }
-
                 String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
-                if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                    // log.debug(m + ".sql [" + sqltext + "] " + "sql param[ " + paramStr + " ]");
-                }
-
                 preStmt.addBatch();
             } // for
 
@@ -2725,7 +2978,7 @@ public class DataBaseImpl implements DataBase {
                         args = CollectionUtils.getSortedValues(vParametersArray[i]);
                     }
                 }
-                long[] twoInt = this.executeBindUpdate(sqltxts[i], args, true);
+                long[] twoInt = this.executeBindUpdate(sqltxts[i], args, true, i);
                 int ret = (int) twoInt[0];// 返回记录的行数
                 res[i] = ret;
             }
@@ -2769,14 +3022,34 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public int[] update(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
+        int[] ret = null;
+        this.configInterceptorForMehtod("update", String[].class, Map[].class);
+        try {
+            return ret = this.executeBindBatch(sqltxts, vParametersArray);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        return this.executeBindBatch(sqltxts, vParametersArray);
     }
 
     @Override
     public int[] insert(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
+        this.configInterceptorForMehtod("insert", String[].class, Map[].class);
+        int[] ret = null;
+        try {
+            return ret = this.executeBindBatch(sqltxts, vParametersArray);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        return this.update(sqltxts, vParametersArray);
     }
 
     /**
@@ -2803,12 +3076,35 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public int[] update(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException {
-        return this.executeBindBatch(sqltxt, vParametersList);
+        int[] ret = null;
+        this.configInterceptorForMehtod("update", String.class, List.class);
+        try {
+            return ret = this.executeBindBatch(sqltxt, vParametersList);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     @Override
     public int[] insert(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException {
-        return this.update(sqltxt, vParametersList);
+
+        int[] ret = null;
+        this.configInterceptorForMehtod("insert", String.class, List.class);
+        try {
+            return ret = this.executeBindBatch(sqltxt, vParametersList);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     /**
@@ -2822,22 +3118,83 @@ public class DataBaseImpl implements DataBase {
         return updateBatch(sqltxt);
     }
 
+
     @Override
     public int[] update(ArrayList<String> sqltxts) throws DbException {
-        return this.executeBatch(sqltxts);
+        int[] ret = null;
+        this.configInterceptorForMehtod("update", ArrayList.class);
+        try {
+            return ret = this.executeBatch(sqltxts);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
+
+    }
+
+    public void configInterceptorForMehtod(String mname, Class<?>... parameterTypes) {
+
+        try {
+            if(DbContext.getDBInterceptor()!=null) {
+                Method method = this.getClass().getMethod(mname, parameterTypes);
+                DBInterceptorInfo dbInterceptorInfo = new DBInterceptorInfo();
+                dbInterceptorInfo.setDataBase(this);
+                dbInterceptorInfo.setInterceptedMethod(method);
+                DbContext.setDBInterceptorInfo(dbInterceptorInfo);
+            }
+        } catch (NoSuchMethodException e) {
+            log.error("" + e, e);
+        }
+    }
+
+    private void configInterceptorForException(Exception e) {
+
+        if(DbContext.getDBInterceptor()!=null) {
+            DBInterceptorInfo dbInterceptorInfo = DbContext.getDBInterceptorInfo();
+            dbInterceptorInfo.setException(e);
+        }
+    }
+
+    private void configInterceptorForPostExecute(Object result) {
+
+        if (DbContext.getDBInterceptor()!= null ) {
+            DBInterceptorInfo dbInterceptorInfo = DbContext.getDBInterceptorInfo();
+            dbInterceptorInfo.setResult(result);
+            DBInterceptor dbInterceptor = DbContext.getDBInterceptor();
+            dbInterceptor.postDbOperationExeute(dbInterceptorInfo.getDataBase(),
+                    dbInterceptorInfo.getInterceptedMethod(),
+                    dbInterceptorInfo.getResult(),
+                    dbInterceptorInfo.getException(),
+                    dbInterceptorInfo.getDebugSql());
+            DbContext.removeDBInterceptorInfo();
+        }
 
     }
 
     @Override
     public int[] insert(ArrayList<String> sqltxts) throws DbException {
-        return this.update(sqltxts);
+
+        int[] ret = null;
+        this.configInterceptorForMehtod("insert", ArrayList.class);
+        try {
+            return ret = this.executeBatch(sqltxts);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
 
     }
 
     private int[] updateBatch(ArrayList<String> sqltxt) throws DbException {
-
         return this.executeBindBatch(sqltxt.toArray(new String[0]), null);
-
     }
 
     private PreparedStatement getPreparedStatement(String sqltxt) throws DbException {
@@ -2846,7 +3203,7 @@ public class DataBaseImpl implements DataBase {
 
             if (this.sqlType == SQLType.SELECT) {
                 this.fetchConnection();
-                ps = conn.prepareStatement(sqltxt,ResultSet.CONCUR_READ_ONLY);
+                ps = conn.prepareStatement(sqltxt, ResultSet.CONCUR_READ_ONLY);
             } else if (this.sqlType == SQLType.INSERT) {
                 this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
@@ -2958,264 +3315,585 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int insertBy(T insertObject) throws DbException {
-        return this.excuteInsertClass(insertObject);
+        this.configInterceptorForMehtod("insertBy", Object.class);
+        Integer ret = null;
+        try {
+            return ret = this.excuteInsertClass(insertObject);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     @Override
     public <T> long insertReturnKeyBy(T insertObject) throws DbException {
+        Long ret = null;
+        this.configInterceptorForMehtod("insertReturnKeyBy", Object.class);
+        try {
+            return ret = this.excuteInsertClassReturnKey(insertObject);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        return this.excuteInsertClassReturnKey(insertObject);
 
     }
 
     @Override
     public <T> int[] insertBy(T[] objs) throws DbException {
+        this.configInterceptorForMehtod("insertBy", Object[].class);
+        int[] ret = null;
+        try {
+            return ret = this.excuteInsertClass(objs);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        return this.excuteInsertClass(objs);
 
     }
 
     @Override
     public <T> int insertBy(T insertObject, Object[] insertProperties) throws DbException {
-        return this.excuteInsertClass(insertObject, getPNames(insertProperties), false);
+        this.configInterceptorForMehtod("insertBy", Object.class, Object[].class);
+        Integer ret = null;
+        try {
+            return ret = this.excuteInsertClass(insertObject, getPNames(insertProperties), false);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
 
     }
 
     @Override
     public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties) throws DbException {
+        Long ret = null;
+        this.configInterceptorForMehtod("insertReturnKeyBy", Object.class, Object[].class);
+        try {
+            return ret = this.excuteInsertClassReturnKey(insertObject, getPNames(insertProperties), false);
 
-        return this.excuteInsertClassReturnKey(insertObject, getPNames(insertProperties), false);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
     }
 
     @Override
     public <T> int[] insertBy(T[] objs, Object[] insertProperties) throws DbException {
-        return this.excuteInsertClass(objs, getPNames(insertProperties), false);
+        this.configInterceptorForMehtod("insertBy", Object[].class, Object[].class);
+        int[] ret = null;
+        try {
+            return ret = this.excuteInsertClass(objs, getPNames(insertProperties), false);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
 
     }
 
     @Override
     public <T> long insertReturnKeyBy(T insertObject, boolean includeNull) throws DbException {
-        return this.excuteInsertClassReturnKey(insertObject, null, !includeNull);
+        Long ret = null;
+        this.configInterceptorForMehtod("insertReturnKeyBy", Object.class, boolean.class);
+        try {
+            return ret = this.excuteInsertClassReturnKey(insertObject, null, !includeNull);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
 
     }
 
     @Override
     public <T> int insertBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
-        return this.excuteInsertClass(insertObject, getPNames(insertProperties), !includeNull);
+        this.configInterceptorForMehtod("insertBy", Object.class, Object[].class, boolean.class);
+        Integer ret = null;
+        try {
+            return ret = this.excuteInsertClass(insertObject, getPNames(insertProperties), !includeNull);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
 
     }
 
     @Override
     public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
-        return this.excuteInsertClassReturnKey(insertObject, getPNames(insertProperties), !includeNull);
+        Long ret = null;
+        this.configInterceptorForMehtod("insertReturnKeyBy", Object.class, Object[].class, boolean.class);
+        try {
+            return ret = this.excuteInsertClassReturnKey(insertObject, getPNames(insertProperties), !includeNull);
+
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
 
     }
 
     @Override
     public <T> int[] insertBy(T[] objs, boolean includeNull) throws DbException {
-        return this.excuteInsertClass(objs, (String[]) null, !includeNull);
+        this.configInterceptorForMehtod("insertBy", Object[].class, boolean.class);
+        int[] ret = null;
+        try {
+            return ret = this.excuteInsertClass(objs, (String[]) null, !includeNull);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
 
     }
 
     @Override
     public <T> int[] insertBy(T[] objs, Object[] insertProperties, boolean includeNull) throws DbException {
-        return this.excuteInsertClass(objs, getPNames(insertProperties), !includeNull);
+
+        int[] ret = null;
+        this.configInterceptorForMehtod("insertBy", Object[].class, Object[].class, boolean.class);
+        try {
+            return ret = this.excuteInsertClass(objs, getPNames(insertProperties), !includeNull);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
 
     }
 
     @Override
     public <T> int updateBy(T updateObject, Object[] whereProperteis) throws DbException {
-        return this.excuteUpdateClass(updateObject, getPNames(whereProperteis));
+        Integer ret = null;
+        this.configInterceptorForMehtod("updateBy", Object.class, Object[].class);
+        try {
+            return ret = this.excuteUpdateClass(updateObject, getPNames(whereProperteis));
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     @Override
     public <T> int updateBy(T updateObject, Object[] whereProperteis, Object[] properties) throws DbException {
-        return this.excuteUpdateClass(updateObject, getPNames(whereProperteis), getPNames(properties));
+        this.configInterceptorForMehtod("updateBy", Object.class, Object[].class, Object[].class);
+        Integer ret = null;
+        try {
+            return ret = this.excuteUpdateClass(updateObject, getPNames(whereProperteis), getPNames(properties));
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     @Override
     public <T> int[] updateBy(T[] objects, Object[] whereProperteis, Object[] properties) throws DbException {
-        return this.excuteUpdateClass(objects, getPNames(whereProperteis), getPNames(properties));
+        this.configInterceptorForMehtod("updateBy", Object[].class, Object[].class, Object[].class);
+        int[] ret = null;
+        try {
+            return ret = this.excuteUpdateClass(objects, getPNames(whereProperteis), getPNames(properties));
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     @Override
     public <T> int[] updateBy(T[] objects, Object[] whereProperteis) throws DbException {
-        return this.excuteUpdateClass(objects, getPNames(whereProperteis));
+        int[] ret = null;
+        this.configInterceptorForMehtod("updateBy", Object[].class, Object[].class);
+        try {
+            return ret = this.excuteUpdateClass(objects, getPNames(whereProperteis));
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
     }
 
     @Override
     public <T> int updateBy(T updateObject, Object[] whereProperties, boolean includeNull) throws DbException {
-        if (includeNull) {
-            return this.excuteUpdateWholeClass(updateObject, getPNames(whereProperties));
-        } else {
-            return this.updateBy(updateObject, whereProperties);
+        this.configInterceptorForMehtod("updateBy", Object.class, Object[].class, boolean.class);
+        Integer ret = null;
+        try {
+            if (includeNull) {
+                return ret = this.excuteUpdateWholeClass(updateObject, getPNames(whereProperties));
+            } else {
+                return ret = this.updateBy(updateObject, whereProperties);
+            }
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
         }
+
     }
 
     @Override
     public <T> int updateBy(T updateObject, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
-        if (includeNull) {
-            return this.excuteUpdateWholeClass(updateObject, getPNames(whereProperties), getPNames(updateProperties));
-        } else {
-            return this.updateBy(updateObject, whereProperties, updateProperties);
+        this.configInterceptorForMehtod("updateBy", Object.class, Object[].class, Object[].class, boolean.class);
+        Integer ret = null;
+        try {
+            if (includeNull) {
+                return ret = this.excuteUpdateWholeClass(updateObject, getPNames(whereProperties), getPNames(updateProperties));
+            } else {
+                return ret = this.excuteUpdateClass(updateObject, getPNames(whereProperties), getPNames(updateProperties));
+            }
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
         }
+
     }
 
     @Override
     public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
-        if (includeNull) {
-            return this.excuteUpdateWholeClass(updateObjects, getPNames(whereProperties), getPNames(updateProperties));
-        } else {
-            return this.updateBy(updateObjects, whereProperties, updateProperties);
+        this.configInterceptorForMehtod("updateBy", Object[].class, Object[].class, Object[].class,
+                boolean.class);
+        int[] ret = null;
+        try {
+            if (includeNull) {
+                return ret = this.excuteUpdateWholeClass(updateObjects, getPNames(whereProperties), getPNames(updateProperties));
+            } else {
+                return ret = this.excuteUpdateClass(updateObjects, getPNames(whereProperties), getPNames(updateProperties));
+            }
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
         }
+
     }
 
     @Override
     public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, boolean includeNull) throws DbException {
-        if (includeNull) {
-            return this.excuteUpdateWholeClass(updateObjects, getPNames(whereProperties));
-        } else {
-            return this.updateBy(updateObjects, whereProperties);
+        this.configInterceptorForMehtod("updateBy", Object[].class, Object[].class, boolean.class);
+        int[] ret = null;
+        try {
+            if (includeNull) {
+                return ret = this.excuteUpdateWholeClass(updateObjects, getPNames(whereProperties));
+            } else {
+                return ret = this.excuteUpdateClass(updateObjects, getPNames(whereProperties));
+            }
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
         }
+
+
     }
 
     @Override
     public <T> T queryOneBy(T selectObject, Object[] whereProperteis) throws DbException {
-        QueryOptions queryOptions = new QueryOptions();
-        queryOptions.setLimitOne(true);
-        List<T> list = this.doQueryClassForObject(selectObject, getPNames(whereProperteis), queryOptions);
-        if (list.size() > 0) {
-            return list.get(0);
-        } else {
-            return null;
+        this.configInterceptorForMehtod("queryOneBy", Object.class, Object[].class);
+        T ret = null;
+        try {
+            QueryOptions queryOptions = new QueryOptions();
+            queryOptions.setLimitOne(true);
+            List<T> list = this.doQueryClassForObject(selectObject, getPNames(whereProperteis), queryOptions);
+            if (list.size() > 0) {
+                return ret = list.get(0);
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
         }
+
 
     }
 
     @Override
     public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis) throws DbException {
+        this.configInterceptorForMehtod("queryListBy", Object.class, Object[].class);
+        List<T> ret = null;
+        try {
+            return ret = this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, getPNames(whereProperteis), null);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        return this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, getPNames(whereProperteis), null);
     }
 
     @Override
-    public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis, int page, int perPage, PageBean pb)
+    public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis,
+                                   int page, int perPage, PageBean pb)
             throws DbException {
-        String sql = "";
-        Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
+        List<T> ret = null;
+        this.configInterceptorForMehtod("queryListBy", Object.class, Object[].class,
+                int.class, int.class, PageBean.class);
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
-            Class<?> reflectClass = selectObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
-            }
-            this.sqlType = SQLType.SELECT;
-            this.fetchConnection();
-            sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass, getPNames(whereProperteis), vParameters,
-                    null, this.getDataBaseType());
-            DbContext.clearReflectClass();
 
+            String sql = "";
+            Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
+            try {
+                Class<?>[] handClassList = DbContext.getReflectClass();
+                Class<?> reflectClass = selectObject.getClass();
+                if (handClassList != null && handClassList.length > 0) {
+                    reflectClass = handClassList[0];
+                }
+                this.sqlType = SQLType.SELECT;
+                this.fetchConnection();
+                sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass, getPNames(whereProperteis), vParameters,
+                        null, this.getDataBaseType());
+                DbContext.clearReflectClass();
+
+            } catch (Exception e) {
+                if (e instanceof DbException) throw (DbException) e;
+                throw new DbException(e);
+            }
+            return ret = this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
         } catch (Exception e) {
-            if (e instanceof DbException) throw (DbException) e;
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
             throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
         }
-        return this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
+
 
     }
 
     @Override
     public <T> List<T> queryListBy(T selectObject, int page, int perPage, PageBean pb) throws DbException {
-        if (selectObject instanceof MdbOptions) {
-            MdbOptions mm = (MdbOptions) selectObject;
-            if (mm.selectOptions() != null) {
-                if (mm.selectOptions().limit() != null && mm.selectOptions().limit() >= 0) {
-                    throw new DbException("根据对象分页查询不能通过selectObject#selectOptions()#limit()指定limit！");
+        this.configInterceptorForMehtod("queryListBy", Object.class, int.class, int.class, PageBean.class);
+        List<T> ret = null;
+        try {
+            if (selectObject instanceof MdbOptions) {
+                MdbOptions mm = (MdbOptions) selectObject;
+                if (mm.selectOptions() != null) {
+                    if (mm.selectOptions().limit() != null && mm.selectOptions().limit() >= 0) {
+                        throw new DbException("根据对象分页查询不能通过selectObject#selectOptions()#limit()指定limit！");
+                    }
                 }
             }
-        }
-        String sql = "";
-        Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
-        try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
-            Class<?> reflectClass = selectObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
-            }
-            this.sqlType = SQLType.SELECT;
-            this.fetchConnection();
-            sql = SqlUtils.generateSelectSqlBySelectObject(this.dbPoolName, selectObject, reflectClass, vParameters,
-                    null, this.getDataBaseType());
+            String sql = "";
+            Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
+            try {
+                Class<?>[] handClassList = DbContext.getReflectClass();
+                Class<?> reflectClass = selectObject.getClass();
+                if (handClassList != null && handClassList.length > 0) {
+                    reflectClass = handClassList[0];
+                }
+                this.sqlType = SQLType.SELECT;
+                this.fetchConnection();
+                sql = SqlUtils.generateSelectSqlBySelectObject(this.dbPoolName, selectObject, reflectClass, vParameters,
+                        null, this.getDataBaseType());
 
-            DbContext.clearReflectClass();
+                DbContext.clearReflectClass();
+            } catch (Exception e) {
+                if (e instanceof DbException) throw (DbException) e;
+                throw new DbException(e);
+            }
+            return ret = this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
         } catch (Exception e) {
-            if (e instanceof DbException) throw (DbException) e;
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
             throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
         }
-        return this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
+
+
     }
 
     @Override
     public <T> List<T> queryListBy(T selectObject) throws DbException {
+        this.configInterceptorForMehtod("queryListBy", Object.class);
+        List<T> ret = null;
+        try {
+            return ret = this.doQueryClassForObject(selectObject, (QueryOptions) null);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
-        return this.doQueryClassForObject(selectObject, (QueryOptions) null);
     }
 
     @Override
     public <T> T queryOneBy(T selectObject) throws DbException {
-        QueryOptions queryOptions = new QueryOptions();
-        queryOptions.setLimitOne(true);
-        List<T> list = this.doQueryClassForObject(selectObject, queryOptions);
+        this.configInterceptorForMehtod("queryOneBy", Object.class);
+        T ret = null;
+        try {
+            QueryOptions queryOptions = new QueryOptions();
+            queryOptions.setLimitOne(true);
+            List<T> list = this.doQueryClassForObject(selectObject, queryOptions);
 
-        if (list.size() > 0) {
-            return list.get(0);
-        } else {
-            return null;
+            if (list.size() > 0) {
+                return ret = list.get(0);
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
         }
+
+
     }
 
     @Override
     public <T> int delBy(T deleteObject, Object[] whereProperteis) throws DbException {
-        return this.excuteDeleteClass(deleteObject, getPNames(whereProperteis));
+        this.configInterceptorForMehtod("delBy",
+                Object.class, Object[].class);
+        Integer ret = null;
+        try {
+            return ret = this.excuteDeleteClass(deleteObject, getPNames(whereProperteis));
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
     }
 
     @Override
     public <T> int[] delBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
-        return this.excuteDeleteClass(deleteObjects, getPNames(whereProperteis));
+        this.configInterceptorForMehtod("delBy",
+                Object[].class, Object[].class);
+        int[] ret = null;
+        try {
+            return ret = this.excuteDeleteClass(deleteObjects, getPNames(whereProperteis));
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
     }
 
     @Override
     public <T> int insertBy(T insertObject, boolean includeNull) throws DbException {
-        return this.excuteInsertClass(insertObject, null, !includeNull);
+        this.configInterceptorForMehtod("insertBy", Object.class, boolean.class);
+        Integer ret = null;
+        try {
+            return ret = this.excuteInsertClass(insertObject, null, !includeNull);
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
+
 
     }
 
     @Override
     public String exeScript(Reader reader, boolean throwWarning, Map<String, Object> args) throws DbException {
 
-        String ret = this.exeBatchSQLTemplate(() -> {
-            try {
-                this.sqlType = SQLType.SCRIPT;
-                this.fetchConnection();
-                ScriptRunner scriptRunner = new ScriptRunner(this.getConnection(false));
-                scriptRunner.setThrowWarning(throwWarning);
-                scriptRunner.setRemoveCRs(true);
-                scriptRunner.setArgs(args);
-                return scriptRunner.runScriptByLine(reader);
-            } catch (Exception e) {
-                if (e instanceof DbException) throw (DbException) e;
-                throw new DbException(e);
-            } finally {
+        this.configInterceptorForMehtod("exeScript", Reader.class, boolean.class, Map.class);
+        String ret = null;
+        try {
+            ret = this.exeBatchSQLTemplate(() -> {
                 try {
-                    reader.close();
-                } catch (Exception e2) {
-                    log.error("", e2);
+                    this.sqlType = SQLType.SCRIPT;
+                    this.fetchConnection();
+                    ScriptRunner scriptRunner = new ScriptRunner(this.getConnection(false));
+                    scriptRunner.setThrowWarning(throwWarning);
+                    scriptRunner.setRemoveCRs(true);
+                    scriptRunner.setArgs(args);
+                    return scriptRunner.runScriptByLine(reader);
+                } catch (Exception e) {
+                    if (e instanceof DbException) throw (DbException) e;
+                    throw new DbException(e);
+                } finally {
+                    try {
+                        reader.close();
+                    } catch (Exception e2) {
+                        log.error("", e2);
+                    }
                 }
-            }
-        });
-        return ret;
+            });
+            return ret;
+        } catch (Exception e) {
+            this.configInterceptorForException(e);
+            if (e instanceof DbException) throw e;
+            throw new DbException(e);
+        } finally {
+            this.configInterceptorForPostExecute(ret);
+        }
 
 
     }
@@ -3325,7 +4003,9 @@ public class DataBaseImpl implements DataBase {
                 BufferedReader lineReader = new BufferedReader(reader);
                 String line;
                 while ((line = lineReader.readLine()) != null) {
-                    handleLine(command, line);
+                    if(!handleLine(command, line)){
+                        return null;
+                    };
                 }
                 checkForMissingLineTerminator(command);
                 return this.resultWriter.toString();
@@ -3341,7 +4021,7 @@ public class DataBaseImpl implements DataBase {
             }
         }
 
-        private void handleLine(StringBuilder command, String line) throws Exception {
+        private boolean handleLine(StringBuilder command, String line) throws Exception {
             String trimmedLine = line.trim();
             if (lineIsComment(trimmedLine)) {
                 Matcher matcher = DELIMITER_PATTERN.matcher(trimmedLine);
@@ -3357,10 +4037,12 @@ public class DataBaseImpl implements DataBase {
                 command.append(LINE_SEPARATOR);
                 executePreparedStatement(command.toString());
                 command.setLength(0);
+
             } else if (trimmedLine.length() > 0) {
                 command.append(line);
                 command.append(LINE_SEPARATOR);
             }
+            return true;
         }
 
         private boolean lineIsComment(String trimmedLine) {
@@ -3411,24 +4093,37 @@ public class DataBaseImpl implements DataBase {
                 if (handArgs) {
                     String paramStr = SqlUtils.setToPreStatment(nsql.getArgs(), statement);
                 }
-
                 statement.setEscapeProcessing(escapeProcessing);
+                String debugSql = "";
+                if (handArgs) {
+                    Collection<Object> vParameters = CollectionUtils.getSortedValues(nsql.getArgs());
+                    debugSql = SqlUtils.generateDebugSql(preparedSql, vParameters, DataBaseImpl.this.getDataBaseType());
+                } else {
+                    debugSql = preparedSql;
+                }
+                if (DbContext.getDebugSQLListener() != null) {
+                    DbContext.getDebugSQLListener().accept(debugSql);
+                }
+
+                if(DbContext.getDBInterceptor()!=null){
+                    DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
+                    boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,true,debugSql);
+                    if(!ret){
+                        throw new DbException("被拦截", CODE.Intercepted);
+                    }
+                }
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                     if (handArgs) {
-                        Collection<Object> vParameters = CollectionUtils.getSortedValues(nsql.getArgs());
-                        log.debug("transactionId:" + transactionId + ":debugSql["
-                                + SqlUtils.generateDebugSql(preparedSql, vParameters,DataBaseImpl.this.getDataBaseType()) + "]");
+                        log.debug("transId:" + transactionId + ":debugSql[" + debugSql + "]");
                     } else {
-                        log.debug("transactionId:" +transactionId + ":debugSql[" + preparedSql + "]");
+                        log.debug("transId:" + transactionId + ":debugSql[" + debugSql + "]");
                     }
                 }
                 long start = System.currentTimeMillis();
-
                 boolean hasResults = statement.execute();
-
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
 
-                    log.debug("sql执行:" + (System.currentTimeMillis() - start)+(!hasResults?",更新条数:"+statement.getUpdateCount():""));
+                    log.debug("sql执行:" + (System.currentTimeMillis() - start) + (!hasResults ? ",更新条数:" + statement.getUpdateCount() : ""));
                 }
                 while (!(!hasResults && statement.getUpdateCount() == -1)) {
                     checkWarnings(statement);
@@ -3473,20 +4168,8 @@ public class DataBaseImpl implements DataBase {
                 if (rs == null) {
                     return;
                 }
-                ResultSetMetaData md = rs.getMetaData();
-                int cols = md.getColumnCount();
-                for (int i = 0; i < cols; i++) {
-                    String name = md.getColumnLabel(i + 1);
-                    resultPrint(name + "\t");
-                }
-                resultPrintln("");
-                while (rs.next()) {
-                    for (int i = 0; i < cols; i++) {
-                        String value = rs.getString(i + 1);
-                        resultPrint(value + "\t");
-                    }
-                    resultPrintln("");
-                }
+                ResultSetPrinter.printResultSet(rs, resultPrintWriter);
+
             } catch (Exception e) {
                 if (e instanceof DbException) throw (DbException) e;
                 throw new DbException("Error printing results: " + e, e);

@@ -7,27 +7,26 @@ import java.net.URLEncoder;
 public class EscapeUtil {
 
 
+    public static String escapeUrl(String parms, String charset) {
 
-	public static String escapeUrl(String parms, String charset) {
+        try {
 
-		try {
+            return URLEncoder.encode(parms, charset);
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            return "";
+        }
+    }
 
-			return URLEncoder.encode(parms, charset);
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			return "";
-		}
-	}
+    public static String unescapeUrl(String parms, String charset) {
 
-	public static String unescapeUrl(String parms, String charset) {
-
-		try {
-			return URLDecoder.decode(parms, charset);
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			return "";
-		}
-	}
+        try {
+            return URLDecoder.decode(parms, charset);
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            return "";
+        }
+    }
 
 
 }

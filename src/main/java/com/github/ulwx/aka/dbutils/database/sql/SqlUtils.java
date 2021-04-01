@@ -7,7 +7,6 @@ import com.github.ulwx.aka.dbutils.database.dialect.DBType;
 import com.github.ulwx.aka.dbutils.database.utils.DbConst;
 import com.github.ulwx.aka.dbutils.database.utils.Table2JavaNameUtils;
 import com.github.ulwx.aka.dbutils.tool.support.*;
-import com.github.ulwx.aka.dbutils.tool.support.type.TInteger;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
 import com.github.ulwx.aka.dbutils.tool.support.type.TString;
 import org.slf4j.Logger;
@@ -15,9 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.rowset.CachedRowSet;
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.Date;
 import java.util.*;
 
@@ -277,6 +274,33 @@ public class SqlUtils {
 
     }
 
+    public static Date sqlDateTojavaDate(java.sql.Date value) {
+        Date dateTime = new Date();
+        dateTime.setTime(value.getTime());
+        return dateTime;
+
+    }
+
+    public static LocalDate sqlDateToLocalDate(java.sql.Date value) {
+        Instant instant = value.toInstant();
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalDate localDate = instant.atZone(zoneId).toLocalDate();
+        return localDate;
+    }
+
+    public static LocalDateTime sqlTimestampToLocalDateTime(java.sql.Timestamp value) {
+        Instant instant = value.toInstant();
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalDateTime localDateTime = instant.atZone(zoneId).toLocalDateTime();
+        return localDateTime;
+    }
+
+    public static LocalTime sqlTimeToLocalTime(java.sql.Time value) {
+        Instant instant = value.toInstant();
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalTime localTime = instant.atZone(zoneId).toLocalTime();
+        return localTime;
+    }
 
     public static boolean checkedSimpleType(Class t) {
         if (simpleType.contains(t)) {
@@ -540,7 +564,7 @@ public class SqlUtils {
             }
             String columName = getColumName(dbpoolName, name);
             String labelName = prefix + columName;
-            String prefixName = prefix + name;
+            String prefixName = prefix + name;//根据属性名称
             if (!isExistColumn(rs, labelName)) { //优先使用labelName
                 if (labelName.equals(prefixName)) {
                     return null;
@@ -1335,13 +1359,13 @@ public class SqlUtils {
      *
      * @param sql
      * @param vParameters
-     * @param dbms 数据方言
+     * @param dbms        数据方言
      * @return
      */
     public static String generateDebugSql(String sql,
-                                          Collection<Object> vParameters,DBMS dbms) {
+                                          Collection<Object> vParameters, DBMS dbms) {
 
-        String paramStr = ""; // add by jda at 2007/12/15
+        String paramStr = "";
         StringBuilder sb = new StringBuilder(sql);
         if (vParameters != null && vParameters.size() > 0) {
             Iterator it = vParameters.iterator();
@@ -1519,7 +1543,10 @@ public class SqlUtils {
             return DataBase.SQLType.SELECT;
         } else if (StringUtils.startsWithIgnoreCase(sqltxt, "insert")) {
             return DataBase.SQLType.INSERT;
-        } else if (StringUtils.startsWithIgnoreCase(sqltxt, "update")) {
+        } else if (StringUtils.startsWithIgnoreCase(sqltxt, "update")
+                || StringUtils.startsWithIgnoreCase(sqltxt, "create")
+                || StringUtils.startsWithIgnoreCase(sqltxt, "drop")
+                || StringUtils.startsWithIgnoreCase(sqltxt, "alter")) {
             return DataBase.SQLType.UPDATE;
         } else if (StringUtils.startsWithIgnoreCase(sqltxt, "delete")) {
             return DataBase.SQLType.DELETE;

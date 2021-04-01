@@ -60,7 +60,7 @@ public class DbUtils extends BaseDao {
                                                String sqlQuery, Map<Integer, Object> vParameters,
                                                One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
         return execute(db -> {
-            return db.queryListOne2One(clazz,  sqlQuery, vParameters, one2OneMapNestOptions);
+            return db.queryListOne2One(clazz, sqlQuery, vParameters, one2OneMapNestOptions);
         }, dbpoolName);
     }
 
@@ -75,7 +75,7 @@ public class DbUtils extends BaseDao {
                                                One2OneMapNestOptions one2OneMapNestOptions,
                                                int page, int perPage, PageBean pageUtils, String countSql) throws DbException {
         return execute(db -> {
-            return db.queryListOne2One(clazz,  sqlQuery, vParameters, one2OneMapNestOptions, page, perPage, pageUtils, countSql);
+            return db.queryListOne2One(clazz, sqlQuery, vParameters, one2OneMapNestOptions, page, perPage, pageUtils, countSql);
         }, dbpoolName);
     }
 
@@ -83,7 +83,7 @@ public class DbUtils extends BaseDao {
                                                 String sqlQuery, Map<Integer, Object> vParameters,
                                                 One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
         return execute(db -> {
-            return db.queryListOne2Many(clazz,   sqlQuery, vParameters, one2ManyMapNestOptions);
+            return db.queryListOne2Many(clazz, sqlQuery, vParameters, one2ManyMapNestOptions);
         }, dbpoolName);
     }
 
@@ -106,9 +106,9 @@ public class DbUtils extends BaseDao {
     }
 
     public static void callStoredPro(String dbpoolName, String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues, List<DataBaseSet> returnDataBaseSets) throws DbException {
-         execute(db -> {
-             db.callStoredPro(sqltext, parms, outPramsValues, returnDataBaseSets);
-             return 1;
+        execute(db -> {
+            db.callStoredPro(sqltext, parms, outPramsValues, returnDataBaseSets);
+            return 1;
         }, dbpoolName);
     }
 
@@ -163,7 +163,7 @@ public class DbUtils extends BaseDao {
 
     public static String exeScript(String dbpoolName, Reader reader, Boolean throwWarning) throws DbException {
         return execute(db -> {
-            return db.exeScript(reader, throwWarning,null);
+            return db.exeScript(reader, throwWarning, null);
         }, dbpoolName);
     }
 
