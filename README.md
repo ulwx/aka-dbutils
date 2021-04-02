@@ -13,6 +13,7 @@ aka-dbutils功能点如下：
 - 支持多种数据库，如mysql、microsoft sql server、oracle、db2、h2、hsql、postgre、sybase、sqlite。
 - 支持主从数据库，事务内的语句和更新的语句在主库上执行，非事务性查询语句在从库执行。
 - 集成tomcat-jdbc连接池。
+- 支持savepoint操作方法
 - 内置强大的生成java bean的工具。可以从数据库的表生成对应的java bean。
 - 良好的日志输出，可以看到每条语句执行的时间，日志输出的SQL语句可以直接到数据库工具上执行，方便调试。
 - 支持SQL脚本执行方法。
@@ -26,7 +27,7 @@ aka-dbutils功能点如下：
 	<dependency>
 		<groupId>com.github.ulwx</groupId>
 		<artifactId>aka-dbutils</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.1</version>
 	</dependency>
 ```
 
@@ -107,12 +108,8 @@ public static void exportTables(
 **举例如下**：
 
 ```java
-SqlUtils.exportTables("dbutils-demo", 
-        "dbutils_demo", 
-        "c:/dbutils_demo",
-        "com.github.ulwx.aka.dbutils.demo.dao",
-        "utf-8",
-        true);
+SqlUtils.exportTables("dbutils-demo", "dbutils_demo", "c:/dbutils_demo",
+                                                                            "com.github.ulwx.aka.dbutils.demo.dao","utf-8",true);
 ```
 
 假设数据库里存在course表（假设为mysql）
@@ -222,7 +219,7 @@ public class CourseDao {
 
 ```
 
-CourseDao的delAll()和queryListFromMdFile()方法需要在md文件里编写SQL语句。md文件要存放于和CourseDao同级目录下（com.github.ulwx.aka.dbutils.demo.dao），md文件的名称的.md前面部分需与CourseDao类名一致。
+CourseDao的delAll()和queryListFromMdFile()方法需要在md文件里编写SQL语句。md文件要存放在和CourseDao同级目录下（即com.github.ulwx.aka.dbutils.demo.dao），md文件的名称的.md前面部分需与CourseDao类名一致。下面是上面示例⑤处使用的CourseDao.md文件，它是通过MD.md()方法生成的md文件地址来引用，MD.md()返回的为：com.github.ulwx.aka.dbutils.demo.dao.CourseDao.md
 
 **示例—CourseDao.md：**
 
@@ -264,14 +261,14 @@ select * from course where 1=1
 > public class CourseDaoMd {
 > 	public static String delAll(Map<String, Object> args)throws Exception{
 > 		String retString="";
-> 		MDMehtodOptions options = new MDMehtodOptions();
+>      	MDMehtodOptions options = new MDMehtodOptions();
 > 		options.setSource(trimRight("CourseDaoMd",2)+".md:delAll");
 > 		retString=retString+" delete from course";
 > 		return retString;
 > 	}
 > 	public static String queryListFromMdFile(Map<String, Object> args)throws Exception{
 > 		String retString="";
-> 		MDMehtodOptions options = new MDMehtodOptions();
+>      	MDMehtodOptions options = new MDMehtodOptions();
 > 		options.setSource(trimRight("CourseDaoMd",2)+".md:queryListFromMdFile");
 > 		retString=retString+" select * from course where 1=1";
 > 		if(  NFunction.isNotEmpty(args.get("myName"))  ){
