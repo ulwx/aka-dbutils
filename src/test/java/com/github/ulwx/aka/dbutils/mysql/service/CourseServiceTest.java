@@ -407,7 +407,7 @@ public class CourseServiceTest {
     public void testTransactionManagerExceptionMore(){
         MDbTransactionManager.execute(PROPAGATION.REQUIRED,()->{
             teacherDao.testUpdateInManager("12345678");
-             int f=1/0;
+             int f= 1/0;
         });
     }
 
