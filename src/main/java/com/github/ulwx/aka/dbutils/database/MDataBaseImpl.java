@@ -50,7 +50,6 @@ public class MDataBaseImpl implements MDataBase {
      * @param packageFullName :sql脚本所在都包，例如com.xx.yy
      * @param sqlFileName     ：sql脚本的文件名，例如 db.sql
      * @param throwWarning    脚本执行时如果出现warning，是否退出并回滚
-     * @param vParameters     脚本里用到的参数
      * @return 执行成功的结果 ，否则抛出异常
      * @throws DbException
      */
@@ -245,7 +244,7 @@ public class MDataBaseImpl implements MDataBase {
     /**
      * 根据type指定的接口生成动态代理。type接口里的方法映射到名称相同的md方法
      *
-     * @param type 指定接口，生成代理对象
+     * @param type 指定抽象接口，从而生成代理对象
      * @param <T>
      * @return 返回继承type接口的代理对象
      */
@@ -255,34 +254,7 @@ public class MDataBaseImpl implements MDataBase {
 
     }
 
-    /**
-     * 调用存储过程，用法如下：
-     * <code><pre>
-     * //parms参数可以按如下形式添加
-     * parms.put("1","中");//默认为in类型
-     * parms.put("2:in","国");
-     * parms.put("3:in",new Integer(3));
-     * parms.put("4:out",int.class);
-     * parms.put("5:out",java.util.data.class);
-     * parms.put("6:inout",new Long(44));
-     *
-     * //outPramsValues存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应，
-     * //上面的例子产生的输出参数如下：
-     * {
-     *   4:45556,
-     *   5:"2015-09-23 12:34:56"
-     *   6:34456
-     * }</pre></code>
-     *
-     * @param mdFullMethodName   在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
-     *                           其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
-     *                           冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
-     * @param parms              输入参数
-     * @param outPramsValues     存放输出参数的返回值，根据parms(输入法参数)里的out,inout对应，如果输入参数为上面的例子所示，那么outPramsValues可能输入如下：
-     * @param returnDataBaseSets 需返回值的结果集
-     * @return
-     * @throws DbException
-     */
+
 
     @Override
     public void callStoredPro(String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues,
@@ -450,7 +422,6 @@ public class MDataBaseImpl implements MDataBase {
      * 可以设置是否为事务操作，如果为事物操作，那么DataBaseMd里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
      * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
      *
-     * @return
      * @throws DbException
      */
     @Override

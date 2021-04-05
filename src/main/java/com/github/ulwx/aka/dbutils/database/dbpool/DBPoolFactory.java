@@ -59,15 +59,7 @@ public class DBPoolFactory {
         return dbpoolFactory;
     }
 
-    /**
-     * 向连接池列表添加一个新的池化（Pooled）数据源
-     *
-     * @param key
-     * @param configFile 配置文件名。为了简化参数输入与便于外部维护，可以把配置好的文件传入这里分析
-     */
-    public void add(String key, String configFile) {
-        // read config from file, and build a dbpool
-    }
+
 
     public boolean isMainSlaveMode(String poolName) {
         if (poolSlaveList != null && poolSlaveList.get(poolName) != null && poolSlaveList.get(poolName).size() > 0)
@@ -274,9 +266,9 @@ public class DBPoolFactory {
 
     /**
      * @param key  连接池名
-     * @param pros 返回的属性
-     * @return
-     * @throws DbException
+     * @param pros 存放返回的属性
+     * @return 返回DataSource对象
+     * @throws DbException 异常
      */
     public DataSource getDBPool(String key, Map<String, String> pros) throws DbException {
         try {
@@ -396,9 +388,9 @@ public class DBPoolFactory {
 
     /**
      * 根据连接池的名称选择从库
-     *
-     * @param poolName
-     * @return
+     * @param poolName 连接池名称
+     * @param result 返回从库的数据库连接
+     * @return 返回DataSource对象
      */
     public DataSource getSlaveDbPool(String poolName, TResult<Connection> result) {
         Map<String, DataSource> slaveDss = poolSlaveList.get(poolName);

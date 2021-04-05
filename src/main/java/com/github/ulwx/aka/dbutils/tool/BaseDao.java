@@ -25,7 +25,7 @@ public class BaseDao {
      * 根据deleteObject对象生成delete语句，删除相应的记录，其中whereProperties里指定的
      * 属性生成了delete的where条件部分，其中whereProperties里为null的属性也会包含。
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param deleteObject    根据deleteObject对象生成delete语句
      * @param whereProperties whereProperties里指定的属性生成了delete的where条件部分。
      * @param <T>
@@ -45,7 +45,7 @@ public class BaseDao {
      * 属性生成了delete的where条件部分，其中whereProperties里为null的属性也会包含。整个批量删除操作
      * 在一个事务里，数组里每个对象生成的delete语句执行失败，整个事务会回滚。
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param deleteObjects   根据deleteObjects对象数组生批量成delete语句
      * @param whereProperties whereProperties里指定的属性生成了delete的where条件部分
      * @param <T>
@@ -64,7 +64,7 @@ public class BaseDao {
     /**
      * 插入指定对象里所有值不会null属性到数据库
      *
-     * @param pollName     连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName     连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param insertObject 指定的插入对象，根据此对象反射生成insert语句，对象里所有不会null的属性会插入到数据库
      * @param <T>
      * @return 返回插入记录的行数（成功为1，不成功为0）
@@ -79,7 +79,7 @@ public class BaseDao {
     /**
      * 插入指定对象的指定属性到数据库，在insertProperties里指定哪些属性需要插入数据库，其中为null值的属性也会作为null值插入数据库。
      *
-     * @param pollName         连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param insertObject     指定的插入对象，根据此对象和insertProperties里指定的属性反射生成insert语句
      * @param insertProperties 在insertProperties里指定哪些属性需要插入数据库
      * @param <T>
@@ -96,7 +96,7 @@ public class BaseDao {
     /**
      * 插入指定对象里所有属性到数据库，根据includeNull指定是否包含null值的属性
      *
-     * @param pollName     连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName     连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param insertObject 指定的插入对象，根据此对象里的属性反射生成insert语句
      * @param includeNull  是否包含null值的属性，如果为true，表示insertObject里null值的属性将会以null值插入到数据库，为false，表示不包含null值的属性。
      * @param <T>
@@ -112,7 +112,7 @@ public class BaseDao {
     /**
      * 插入对象指定属性到数据库，根据此对象里的属性、insertProperties、includeNull三者反射生成insert语句
      *
-     * @param pollName         连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param insertObject     指定的插入的对象。根据此对象里的属性、insertProperties、includeNull三者反射生成insert语句
      * @param insertProperties 指定插入对象里哪些属性需要插入
      * @param includeNull      指定insertProperties里属性为null的值是否忽略。
@@ -130,7 +130,7 @@ public class BaseDao {
     /**
      * 批量插入多个相同类型对象到数据库，aka-dbutils根据此对象里的非null值的属性反射生成insert语句
      *
-     * @param pollName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName 连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param objs     待插入数据库的对象数组
      * @param <T>
      * @return 返回每个对象是否插入成功数组，数组里的某索引位置int值反映objs里对应对象是否插入成功的标志，1：表示成功  0：不是没有插入任何值
@@ -146,7 +146,7 @@ public class BaseDao {
      * 批量插入多个相同类型对象到数据库，aka-dbutils根据此对象里包含insertProperties里指定的属性反射生成insert语句，如果insertProperties
      * 里包含值为null的属性，也会插入数据库。
      *
-     * @param pollName         连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param objs             待插入数据库的对象数组
      * @param insertProperties 指定插入对象里哪些属性需要插入
      * @param <T>
@@ -164,7 +164,7 @@ public class BaseDao {
      * 批量插入多个相同类型对象到数据库，aka-dbutils根据此对象里的属性反射生成insert语句的values()语句部分，根据includeNull属性决定是否插入为
      * null值的属性。
      *
-     * @param pollName     连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName     连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param insertObject 指定的插入对象，根据此对象里的属性反射生成insert语句
      * @param includeNull  决定是否插入insertObject对象里为null值的属性。
      * @param <T>
@@ -181,7 +181,7 @@ public class BaseDao {
     /**
      * 根据对象里的insertProperties指定的属性反射生成insert语句，includeNull决定是否插入insertProperties里为null值的属性。
      *
-     * @param pollName         连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param insertObject     指定的插入对象，根据此对象里的insertProperties指定的属性反射生成insert语句
      * @param insertProperties 指定插入对象里哪些属性需要插入
      * @param includeNull      决定是否插入insertProperties里为null值的属性。
@@ -199,7 +199,7 @@ public class BaseDao {
     /**
      * 插入指定对象所有值不会null属性到数据库并返回生成的主键id
      *
-     * @param pollName     pollName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName     pollName 连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param insertObject 指定的插入对象，根据此对象里的属性反射生成insert语句，会忽略为null值的属性
      * @param <T>
      * @return 返回生成的主键id
@@ -214,7 +214,7 @@ public class BaseDao {
     /**
      * 插入指定对象里insertProperties指定的属性到数据库并返回生成的主键id，insertProperties里为null值的属性也会插入数据库
      *
-     * @param pollName         pollName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName         pollName 连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param insertObject     指定的插入对象，根据此对象里insertProperties指定的属性反射生成insert语句，insertProperties里为null值的属性也会插入数据库
      * @param insertProperties 指定哪些属性插入奥数据库
      * @param <T>
@@ -232,7 +232,7 @@ public class BaseDao {
     /**
      * 批量插入对象里的属性到数据库，includeNull决定是否插入null值的属性到数据库
      *
-     * @param pollName    pollName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName    pollName 连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param objs        批量插入的同类型对象数组
      * @param includeNull includeNull决定是否插入对象里为null值的属性到数据库
      * @param <T>
@@ -248,7 +248,7 @@ public class BaseDao {
     /**
      * 批量插入对象里insertProperties指定属性到数据库，includeNull决定insertProperties里为null值的属性是否插入到数据库
      *
-     * @param pollName         pollName 连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName         pollName 连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param objs             批量插入的同类型对象数组
      * @param insertProperties 指定对象里哪些属性插入奥数据库
      * @param includeNull      includeNull决定insertProperties里为null值的属性是否插入到数据库
@@ -270,7 +270,7 @@ public class BaseDao {
      *       <code>select * from course  where name='course33' and class_hours=13</code>
      *   </pre></blockquote><p>
      *
-     * @param pollName     连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName     连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param selectObject 根据传入的对象反射生成select语句，非空属性组成了where的条件部分
      * @param <T>
      * @return 返回查询的表记录所填充的对象列表，对象的类型与selectObject的类型一致。
@@ -295,7 +295,7 @@ public class BaseDao {
      *      select count(1) from (select * from course  where name='course_page') t
      *  </pre></blockquote>
      *
-     * @param pollName     连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName     连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param selectObject 根据此对象反射生成select语句，非空属性组成了where的条件部分
      * @param page         页码，从1开始
      * @param perPage      每页多少行记录
@@ -314,7 +314,7 @@ public class BaseDao {
      * 根据selectObject存在于whereProperties里的属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，whereProperties指定
      * 的属性即使在selectObject里值为空，也不会忽略，即生成形如"xxx=null"的条件。
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param selectObject    此对象反射生成select语句，whereProperties指定了哪些属性用于组成where的条件部分，不会其中忽略值为空的属性。
      * @param whereProperties whereProperties指定了哪些属性用于组成where的条件部分，不会其中忽略值为空的属性。
      * @param <T>
@@ -343,7 +343,7 @@ public class BaseDao {
      *         `select  count(1)   from  (select  *  from  course  where  name='course_page')
      * </pre></blockquote>
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param selectObject    此对象反射生成select语句，whereProperties指定了哪些属性用于组成where的条件部分，不会其中忽略值为空的属性。
      * @param whereProperties whereProperties指定了哪些属性用于组成where的条件部分，不会其中忽略值为空的属性。
      * @param page
@@ -368,7 +368,7 @@ public class BaseDao {
      *   </pre></blockquote><p>
      * aka-dbutils生成sql语句时进行了优化处理，使之从数据库只取一条。
      *
-     * @param pollName     连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName     连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param selectObject 根据传入的对象反射生成select语句，非空属性组成了where的条件部分
      * @param <T>
      * @return 查询一条记录并返回填充，对象的类型与selectObject的类型一致。
@@ -389,7 +389,7 @@ public class BaseDao {
      *   </pre></blockquote><p>
      * aka-dbutils生成sql语句时进行了优化处理，使之从数据库只取一条。
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param selectObject    此对象反射生成select语句，whereProperties指定了哪些属性用于组成where的条件部分，不会其中忽略值为空的属性。
      * @param whereProperties whereProperties指定了哪些属性用于组成where的条件部分，不会其中忽略值为空的属性。
      * @param <T>
@@ -411,7 +411,7 @@ public class BaseDao {
      * 属性来生成where条件部分（不要忽略whereProperties里值为null的属性），去除whereProperties里的属性，对象里的其它属性会生成update语句里的set语句部分，
      * 但会忽略其中值为null的属性。
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param updateObject    根据此对象生成update语句。去除whereProperties里的属性，对象里的其它属性会生成update语句里的set语句部分， 但会忽略其中值为null的属性。
      * @param whereProperties 指定对象里哪些属性来生成where条件部分（不要忽略whereProperties里值为null的属性）
      * @param <T>
@@ -429,7 +429,7 @@ public class BaseDao {
      * 根据指定对象更改新对应的表记录，aka-dbutils会根据对象生成更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），对象里除whereProperties里的其它属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param updateObject    根据对象生成update语句
      * @param whereProperties 指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param includeNull     根据includeNull决定set子句里是否包含null值的属性
@@ -449,7 +449,7 @@ public class BaseDao {
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），通过updateProperties指定对象里哪些属性生成update语句里的set语句部分，
      * 但会忽略updateProperties里存在值为null的属性。
      *
-     * @param pollName         连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param updateObject     根据对象生成update语句
      * @param whereProperties  指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param updateProperties 指定对象里哪些属性来生成set子句部分，会忽略值为null的属性
@@ -470,7 +470,7 @@ public class BaseDao {
      * 根据指定对象更改新对应的表记录，aka-dbutils会根据对象生成更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不要忽略whereProperties里值为null的属性），通过updateProperties里的属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      *
-     * @param pollName         连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param updateObject     根据对象生成update语句
      * @param whereProperties  指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param updateProperties 通过updateProperties指定对象里哪些属性生成update语句里的set语句部分。
@@ -492,7 +492,7 @@ public class BaseDao {
      * 属性来生成where条件部分，对象里除了whereProperties里属性之外的其它属性会生成update语句里的set语句部分，
      * 但会忽略存在值为null的属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性
      * @param objects         根据对象数组生成批量update语句
      * @param whereProperties 指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param <T>
@@ -509,7 +509,7 @@ public class BaseDao {
      * 根据指定对象数组更新对应的表记录，aka-dbutils会根据对象数组生成批量更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），通过updateProperties指定对象里哪些属性生成update语句里的set语句部分，但会忽略存在值为null的属性。
      *
-     * @param pollName         连接池的名字，对应dbpool.xml里<dbpool>的name属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
+     * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
      * @param objects          根据对象数组生成批量update语句
      * @param whereProperties  指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param updateProperties 通过updateProperties指定对象里哪些属性生成update语句里的set语句部分。
@@ -530,18 +530,18 @@ public class BaseDao {
      * 根据指定对象数组更新对应的表记录，aka-dbutils会根据对象数组生成批量的更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），除whereProperties里属性的其它属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      *
-     * @param pollName        连接池的名字，对应dbpool.xml里<dbpool>的name属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
-     * @param objects         根据对象数组生成update语句
+     * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
+     * @param updateObjects         根据对象数组生成update语句
      * @param whereProperties 指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param includeNull     根据includeNull决定set子句里是否包含null值的属性
      * @param <T>
      * @return 返回更新记录的条数
      * @throws DbException
      */
-    public static <T> int[] updateBy(String pollName, T[] objects, Object[] whereProperties,
+    public static <T> int[] updateBy(String pollName, T[] updateObjects, Object[] whereProperties,
                                      boolean includeNull) throws DbException {
         return execute(db -> {
-            return db.updateBy(objects, whereProperties, includeNull);
+            return db.updateBy(updateObjects, whereProperties, includeNull);
         }, pollName);
     }
 
@@ -549,8 +549,8 @@ public class BaseDao {
      * 根据指定对象数组更新对应的表记录，aka-dbutils会根据对象数组生成批量的更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），updateProperties里属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      *
-     * @param pollName         连接池的名字，对应dbpool.xml里<dbpool>的name属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
-     * @param objects          根据对象数组生成update语句
+     * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
+     * @param updateObjects          根据对象数组生成update语句
      * @param whereProperties  指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param updateProperties 通过updateProperties指定对象里哪些属性生成update语句里的set语句部分。
      * @param includeNull      根据includeNull决定set子句里是否包含null值的属性
@@ -558,10 +558,10 @@ public class BaseDao {
      * @return
      * @throws DbException
      */
-    public static <T> int[] updateBy(String pollName, T[] objects, Object[] whereProperties,
+    public static <T> int[] updateBy(String pollName, T[] updateObjects, Object[] whereProperties,
                                      Object[] updateProperties, boolean includeNull) throws DbException {
         return execute(db -> {
-            return db.updateBy(objects, whereProperties, updateProperties, includeNull);
+            return db.updateBy(updateObjects, whereProperties, updateProperties, includeNull);
         }, pollName);
     }
 

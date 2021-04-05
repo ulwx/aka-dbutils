@@ -266,7 +266,8 @@ public final class MDTemplate {
      *
      * @param packageName 指定包名 例如指定 com.github.ulwxbase.dao 则会去找com/ulwxbase/dao目录查找
      * @param className   指定生成的类名，例如SysRightDaoMd，会去查找packageName包路径下的SysRightDao.md文件
-     * @return
+     * @return 返回生成的java源码
+     * @throws Exception 异常
      */
     public static String parseFromMdFileToJavaSource(String packageName, String className) throws Exception {
 
@@ -311,13 +312,12 @@ public final class MDTemplate {
     }
 
     /**
-     * 获得md模板运行后的字符串
-     *
+     * 执行md方法返回方法执行后生成的字符串
      * @param mdPath     md文件的包路径全名称，例如，格式为： com.github.ulwx.database.test.SysRightDao.md
      * @param methodName 模板里的方法名，例如 getDataCount
      * @param args       Map对象用于存放参数
-     * @return
-     * @throws Exception
+     * @return  返回md方法生成的字符串
+     * @throws Exception 异常
      */
     public static String getResultString(String mdPath, String methodName, Map<String, Object> args) throws Exception {
 

@@ -27,7 +27,7 @@ public class QueryMapNestOne2Many extends MapNest {
      * 设置关联属性
      *
      * @param nestedBeanClassType    对应子关联类的Class类型
-     * @param toPropertyName         映射到主类的哪个属性名称，即关联属性。属性类型必须为List<X>类型，X为子关联类型，List里存放关联对象。
+     * @param toPropertyName         映射到主类的哪个属性名称，即关联属性。属性类型必须为List&lt;X&gt;类型，X为子关联类型，List里存放关联对象。
      * @param nestedBeanPropertyKeys 子关联类里哪些属性构成主键属性（可以是多个属性构成复合主键），如果为复合主键，以","隔开。
      *                               子关联属性其列表里关联对象的去重
      * @param sqlPrefix              指定一个sql语句的前缀，SQL语句select里这个前缀下的列会映射到子关联对象
@@ -48,7 +48,7 @@ public class QueryMapNestOne2Many extends MapNest {
      * 设置关联属性
      *
      * @param nestedBeanClassType    对应子关联类的Class类型
-     * @param toPropertyName         映射到主类的哪个属性名称，即关联属性。属性类型必须为List<X>类型，X为子关联类型，List里存放关联对象。
+     * @param toPropertyName         映射到主类的哪个属性名称，即关联属性。属性类型必须为List&lt;X&gt;类型，X为子关联类型，List里存放关联对象。
      * @param nestedBeanPropertyKeys 子关联类里哪些属性构成主键属性（可以是多个属性构成复合主键），如果为复合主键，以","隔开。
      *                               子关联属性其列表里关联对象的去重
      * @param sqlPrefix              指定一个sql语句的前缀，SQL语句select里这个前缀下的列会映射到子关联对象

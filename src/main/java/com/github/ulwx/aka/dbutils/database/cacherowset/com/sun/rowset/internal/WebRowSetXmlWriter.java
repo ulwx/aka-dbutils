@@ -1,27 +1,4 @@
-/*
- * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
+
 
 package com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.internal;
 
@@ -37,26 +14,14 @@ import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Stack;
 
-/**
- * An implementation of the <code>XmlWriter</code> interface, which writes a
- * <code>WebRowSet</code> object to an output stream as an XML document.
- */
+
 
 public class WebRowSetXmlWriter implements XmlWriter, Serializable {
 
-    /**
-     * The <code>java.io.Writer</code> object to which this <code>WebRowSetXmlWriter</code>
-     * object will write when its <code>writeXML</code> method is called. The value
-     * for this field is set with the <code>java.io.Writer</code> object given
-     * as the second argument to the <code>writeXML</code> method.
-     */
+
     private transient Writer writer;
 
-    /**
-     * The <code>java.util.Stack</code> object that this <code>WebRowSetXmlWriter</code>
-     * object will use for storing the tags to be used for writing the calling
-     * <code>WebRowSet</code> object as an XML document.
-     */
+
     private Stack<String> stack;
 
     private JdbcRowSetResourceBundle resBundle;
@@ -70,28 +35,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         }
     }
 
-    /**
-     * Writes the given <code>WebRowSet</code> object as an XML document
-     * using the given <code>java.io.Writer</code> object. The XML document
-     * will include the <code>WebRowSet</code> object's data, metadata, and
-     * properties.  If a data value has been updated, that information is also
-     * included.
-     * <p>
-     * This method is called by the <code>XmlWriter</code> object that is
-     * referenced in the calling <code>WebRowSet</code> object's
-     * <code>xmlWriter</code> field.  The <code>XmlWriter.writeXML</code>
-     * method passes to this method the arguments that were supplied to it.
-     *
-     * @param caller the <code>WebRowSet</code> object to be written; must
-     *               be a rowset for which this <code>WebRowSetXmlWriter</code> object
-     *               is the writer
-     * @param wrt    the <code>java.io.Writer</code> object to which
-     *               <code>caller</code> will be written
-     * @throws SQLException if a database access error occurs or
-     *                      this <code>WebRowSetXmlWriter</code> object is not the writer
-     *                      for the given rowset
-     * @see XmlWriter#writeXML
-     */
+
     public void writeXML(WebRowSet caller, Writer wrt)
             throws SQLException {
 
@@ -101,30 +45,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         writeRowSet(caller);
     }
 
-    /**
-     * Writes the given <code>WebRowSet</code> object as an XML document
-     * using the given <code>java.io.OutputStream</code> object. The XML document
-     * will include the <code>WebRowSet</code> object's data, metadata, and
-     * properties.  If a data value has been updated, that information is also
-     * included.
-     * <p>
-     * Using stream is a faster way than using <code>java.io.Writer<code/>
-     * <p>
-     * This method is called by the <code>XmlWriter</code> object that is
-     * referenced in the calling <code>WebRowSet</code> object's
-     * <code>xmlWriter</code> field.  The <code>XmlWriter.writeXML</code>
-     * method passes to this method the arguments that were supplied to it.
-     *
-     * @param caller  the <code>WebRowSet</code> object to be written; must
-     *                be a rowset for which this <code>WebRowSetXmlWriter</code> object
-     *                is the writer
-     * @param oStream the <code>java.io.OutputStream</code> object to which
-     *                <code>caller</code> will be written
-     * @throws SQLException if a database access error occurs or
-     *                      this <code>WebRowSetXmlWriter</code> object is not the writer
-     *                      for the given rowset
-     * @see XmlWriter#writeXML
-     */
+
     public void writeXML(WebRowSet caller, OutputStream oStream)
             throws SQLException {
 
@@ -134,9 +55,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         writeRowSet(caller);
     }
 
-    /**
-     * @throws SQLException if a database access error occurs
-     */
+
     private void writeRowSet(WebRowSet caller) throws SQLException {
 
         try {
@@ -166,9 +85,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         endTag("webRowSet");
     }
 
-    /**
-     * @throws SQLException if a database access error occurs
-     */
+
     private void writeProperties(WebRowSet caller) throws IOException {
 
         beginSection("properties");
@@ -255,9 +172,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         endSection("properties");
     }
 
-    /**
-     * @throws SQLException if a database access error occurs
-     */
+
     private void writeMetaData(WebRowSet caller) throws IOException {
         int columnCount;
 
@@ -299,9 +214,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         endSection("metadata");
     }
 
-    /**
-     * @throws SQLException if a database access error occurs
-     */
+
     private void writeData(WebRowSet caller) throws IOException {
         ResultSet rs;
 
@@ -443,10 +356,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         }
     }
 
-    /*
-     * This begins a new tag with a indent
-     *
-     */
+
     private void beginSection(String tag) throws IOException {
         // store the current tag
         setTag(tag);
@@ -457,10 +367,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         writer.write("<" + tag + ">\n");
     }
 
-    /*
-     * This closes a tag started by beginTag with a indent
-     *
-     */
+
     private void endSection(String tag) throws IOException {
         writeIndent(stack.size());
 
@@ -610,20 +517,13 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         emptyTag("emptyString");
     }
 
-    /**
-     * Purely for code coverage purposes..
-     */
+
     public boolean writeData(RowSetInternal caller) {
         return false;
     }
 
 
-    /**
-     * This function has been added for the processing of special characters
-     * lik <,>,'," and & in the data to be serialized. These have to be taken
-     * of specifically or else there will be parsing error while trying to read
-     * the contents of the XML file.
-     **/
+
 
     private String processSpecialCharacters(String s) {
 
@@ -654,10 +554,7 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
     }
 
 
-    /**
-     * This method re populates the resBundle
-     * during the deserialization process
-     */
+
     private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
         // Default state initialization happens here
         ois.defaultReadObject();

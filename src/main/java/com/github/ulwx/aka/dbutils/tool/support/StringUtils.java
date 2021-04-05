@@ -32,16 +32,15 @@ public abstract class StringUtils {
 
     /**
      * Check whether the given String has actual text. More specifically,
-     * returns <code>true</code> if the string not <code>null<code>,
+     * returns <code>true</code> if the string not <code>null</code>,
      * its length is greater than 0, and it contains at least one non-whitespace character.
-     * <p><pre>
+     * <pre>
      * StringUtils.hasText(null) = false
      * StringUtils.hasText("") = false
      * StringUtils.hasText(" ") = false
      * StringUtils.hasText("12345") = true
      * StringUtils.hasText(" 12345 ") = true
      * </pre>
-     * <p>
      * &#64;param str
      * the String to check (may be <code>null</code>)
      *
@@ -90,7 +89,7 @@ public abstract class StringUtils {
      *
      * <p>
      * For example,
-     * <code>indexOfDifference("i am a machine", "i am a robot") -> 7</code>
+     * <code>indexOfDifference("i am a machine", "i am a robot") -&gt; 7</code>
      * </p>
      *
      * <pre>
@@ -192,7 +191,7 @@ public abstract class StringUtils {
 
     /**
      * <p>
-     * Reverses a String as per {@link StrBuilder#reverse()}.
+     * Reverses a String
      * </p>
      *
      * <p>
@@ -247,7 +246,7 @@ public abstract class StringUtils {
      *
      * <p>
      * For example,
-     * <code>getCommonPrefix(new String[] {"i am a machine", "i am a robot"}) -> "i am a "</code>
+     * <code>getCommonPrefix(new String[] {"i am a machine", "i am a robot"}) -&gt; "i am a "</code>
      * </p>
      *
      * <pre>
@@ -312,7 +311,6 @@ public abstract class StringUtils {
      * @param searchStrings the Strings to find, may be null or empty
      * @return <code>true</code> if the String starts with any of the the
      * prefixes, case insensitive, or both <code>null</code>
-     * @see #startsWith(String, String)
      * @since 2.5
      */
     public static boolean startsWithAny(String string, String[] searchStrings) {
@@ -752,7 +750,7 @@ public abstract class StringUtils {
      *
      * <p>
      * For example,
-     * <code>indexOfDifference(new String[] {"i am a machine", "i am a robot"}) -> 7</code>
+     * <code>indexOfDifference(new String[] {"i am a machine", "i am a robot"}) -&gt; 7</code>
      * </p>
      *
      * <pre>
@@ -1095,7 +1093,7 @@ public abstract class StringUtils {
      *
      * @param str the input String (e.g. "myString")
      * @return the quoted String (e.g. "'myString'"), or
-     * <code>null<code> if the input was <code>null</code>
+     * <code>null</code> if the input was <code>null</code>
      */
     public static String quote(String str) {
         return (str != null ? "'" + str + "'" : null);
@@ -1147,7 +1145,7 @@ public abstract class StringUtils {
     }
 
     /**
-     * Extract the filename from the given path, e.g. "mypath/myfile.txt" ->
+     * Extract the filename from the given path, e.g. "mypath/myfile.txt" -&gt;
      * "myfile.txt".
      *
      * @param path the file path (may be <code>null</code>)
@@ -1163,7 +1161,7 @@ public abstract class StringUtils {
 
     /**
      * Extract the filename extension from the given path, e.g.
-     * "mypath/myfile.txt" -> "txt".
+     * "mypath/myfile.txt" -&gt; "txt".
      *
      * @param path the file path (may be <code>null</code>)
      * @return the extracted filename extension, or <code>null</code> if none
@@ -1178,7 +1176,7 @@ public abstract class StringUtils {
 
     /**
      * Strip the filename extension from the given path, e.g.
-     * "mypath/myfile.txt" -> "mypath/myfile".
+     * "mypath/myfile.txt" -&gt; "mypath/myfile".
      *
      * @param path the file path (may be <code>null</code>)
      * @return the path with stripped filename extension, or <code>null</code>
@@ -1849,7 +1847,7 @@ public abstract class StringUtils {
      * Compares two Strings, and returns the portion where they differ. (More
      * precisely, return the remainder of the second String, starting from where
      * it's different from the first.) or example, difference("i am a machine",
-     * "i am a robot") -> "robot".
+     * "i am a robot") -&gt; "robot".
      * <p>
      * <blockquote>
      *
@@ -2055,7 +2053,7 @@ public abstract class StringUtils {
      * 处理后的结果替换模式串里的相应的子串
      *
      * @param src              源字符串
-     * @param regex            匹配的正则表达式，如:&(\\d+;)([a-z)+)
+     * @param regex            匹配的正则表达式，如:&amp;(\\d+;)([a-z)+)
      * @param handleGroupIndex 要处理的组号
      * @param hander           处理回调函数
      * @param reservesGroups   保留的字模式串的组号,如果为空，则表明只用hander返回的字符串替换handleGroupIndex指定的组；
@@ -2139,9 +2137,7 @@ public abstract class StringUtils {
     /**
      * Abbreviates a String using ellipses. This will turn "Now is the time for
      * all good men" into "Now is the time for..."
-     * <p>
      * <blockquote>
-     *
      * <pre>
      * Specifically:
      *
@@ -2157,9 +2153,7 @@ public abstract class StringUtils {
      * StringUtils.abbreviate("abcdefg", 4) = "a..."
      * StringUtils.abbreviate("abcdefg", 3) = IllegalArgumentException
      * </pre>
-     *
      * </blockquote>
-     * </p>
      *
      * @param str
      * @param maxWidth
@@ -2323,7 +2317,7 @@ public abstract class StringUtils {
     }
 
     /**
-     * Replace all sub strings ignore case <br/>
+     * Replace all sub strings ignore case <br>
      * replaceIgnoreCase("AbcDECd", "Cd", "FF") = "AbFFEFF"
      */
     public static String replaceIgnoreCase(String text, String findtxt, String replacetxt) {

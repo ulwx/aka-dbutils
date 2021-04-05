@@ -15,7 +15,7 @@ public class DateTime implements Cloneable {
     }
 
     /**
-     * @param datetime yyyy-MM-dd HH:mm:ss
+     * @param dt yyyy-MM-dd HH:mm:ss
      */
     public DateTime(Date dt) {
         this();

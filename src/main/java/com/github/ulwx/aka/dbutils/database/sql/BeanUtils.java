@@ -87,11 +87,11 @@ public class BeanUtils {
 
     }
 
-    /**
-     * @param bean
-     * @param keyNames
+    /**指定javaBean的属性
+     * @param bean  javaBean对象
+     * @param keyNames  属性名称
      * @param compareToValues 以英文分号隔开
-     * @return
+     * @return 是否相等
      */
     public static boolean equals(Object bean, String[] keyNames, String compareToValues) {
         boolean b = false;
@@ -121,12 +121,6 @@ public class BeanUtils {
 
     }
 
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
 
-    }
 
 }

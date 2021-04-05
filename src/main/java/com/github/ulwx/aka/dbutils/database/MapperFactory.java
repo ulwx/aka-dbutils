@@ -28,6 +28,13 @@ import java.util.stream.Collectors;
 public class MapperFactory {
     private static Logger log = LoggerFactory.getLogger(DataBase.class);
 
+    /**
+     * 根据type指定的接口生成动态代理。type接口里的方法映射到名称相同的md方法
+     *
+     * @param mapperType 指定抽象接口的类型，从而生成代理对象
+     * @param <T>
+     * @return 返回继承type接口的代理对象
+     */
     public static <T> T getMapper(Class<T> mapperType, MDataBase mDataBase) {
         if (!AkaMapper.class.isAssignableFrom(mapperType)) {
             throw new DbException("aka-dbutils mapper必须继承自" + AkaMapper.class.getName() + "!");

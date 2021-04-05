@@ -178,10 +178,10 @@ public class MDMethods {
         }
 
         /**
-         * @param mdFullMethodNameForCountSql 可以指定四种类型的参数，<br/>
-         *                                    null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
-         *                                    数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
-         *                                    md方法地址：表示计算总数的SQL的md方法地址<br/>
+         * @param mdFullMethodNameForCountSql 可以指定四种类型的参数，<br>
+         *                                    null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br>
+         *                                    数字：则表明以指定的数字为总数，用于计算分页信息；<br>
+         *                                    md方法地址：表示计算总数的SQL的md方法地址<br>
          *                                    -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
          */
         public void setMdFullMethodNameForCountSql(String mdFullMethodNameForCountSql) {

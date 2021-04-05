@@ -1,27 +1,4 @@
-/*
- * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
+
 
 package com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.internal;
 
@@ -46,35 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
-/**
- * The document handler that receives parse events that an XML parser sends while it
- * is parsing an XML document representing a <code>WebRowSet</code> object. The
- * parser sends strings to this <code>XmlReaderContentHandler</code> and then uses
- * these strings as arguments for the <code>XmlReaderContentHandler</code> methods
- * it invokes. The final goal of the SAX parser working with an
- * <code>XmlReaderContentHandler</code> object is to read an XML document that represents
- * a <code>RowSet</code> object.
- * <p>
- * A rowset consists of its properties, metadata, and data values. An XML document
- * representating a rowset includes the values in these three categories along with
- * appropriate XML tags to identify them.  It also includes a top-level XML tag for
- * the rowset and three section tags identifying the three categories of values.
- * <p>
- * The tags in an XML document are hierarchical.
- * This means that the top-level tag, <code>RowSet</code>, is
- * followed by the three sections with appropriate tags, which are in turn each
- * followed by their constituent elements. For example, the <code>properties</code>
- * element will be followed by an element for each of the properties listed in
- * in this <code>XmlReaderContentHandler</code> object's <code>properties</code>
- * field.  The content of the other two fields, <code>colDef</code>, which lists
- * the rowset's metadata elements, and <code>data</code>, which lists the rowset's data
- * elements, are handled similarly .
- * <p>
- * This implementation of <code>XmlReaderContentHandler</code> provides the means for the
- * parser to determine which elements need to have a value set and then to set
- * those values. The methods in this class are all called by the parser; an
- * application programmer never calls them directly.
- */
+
 
 public class XmlReaderContentHandler extends DefaultHandler {
 
@@ -107,12 +56,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
     private String tempCommand;
     private Object[] upd;
 
-    /**
-     * A list of the properties for a rowset. There is a constant defined to
-     * correspond to each of these properties so that a <code>HashMap</code>
-     * object can be created to map the properties, which are strings, to
-     * the constants, which are integers.
-     */
+
     private String[] properties = {"command", "concurrency", "datasource",
             "escape-processing", "fetch-direction", "fetch-size",
             "isolation-level", "key-columns", "map",
@@ -123,151 +67,88 @@ public class XmlReaderContentHandler extends DefaultHandler {
             "sync-provider-vendor", "sync-provider-version",
             "sync-provider-grade", "data-source-lock"};
 
-    /**
-     * A constant representing the tag for the command property.
-     */
+
     private final static int CommandTag = 0;
 
-    /**
-     * A constant representing the tag for the concurrency property.
-     */
+
     private final static int ConcurrencyTag = 1;
 
-    /**
-     * A constant representing the tag for the datasource property.
-     */
+
     private final static int DatasourceTag = 2;
 
-    /**
-     * A constant representing the tag for the escape-processing property.
-     */
+
     private final static int EscapeProcessingTag = 3;
 
-    /**
-     * A constant representing the tag for the fetch-direction property.
-     */
+
     private final static int FetchDirectionTag = 4;
 
-    /**
-     * A constant representing the tag for the fetch-size property.
-     */
+
     private final static int FetchSizeTag = 5;
 
-    /**
-     * A constant representing the tag for the isolation-level property
-     */
+
     private final static int IsolationLevelTag = 6;
 
-    /**
-     * A constant representing the tag for the key-columns property.
-     */
+
     private final static int KeycolsTag = 7;
 
-    /**
-     * A constant representing the tag for the map property.
-     * This map is the type map that specifies the custom mapping
-     * for an SQL user-defined type.
-     */
+
     private final static int MapTag = 8;
 
-    /**
-     * A constant representing the tag for the max-field-size property.
-     */
+
     private final static int MaxFieldSizeTag = 9;
 
-    /**
-     * A constant representing the tag for the max-rows property.
-     */
+
     private final static int MaxRowsTag = 10;
 
-    /**
-     * A constant representing the tag for the query-timeout property.
-     */
+
     private final static int QueryTimeoutTag = 11;
 
-    /**
-     * A constant representing the tag for the read-only property.
-     */
+
     private final static int ReadOnlyTag = 12;
 
-    /**
-     * A constant representing the tag for the rowset-type property.
-     */
+
     private final static int RowsetTypeTag = 13;
 
-    /**
-     * A constant representing the tag for the show-deleted property.
-     */
+
     private final static int ShowDeletedTag = 14;
 
-    /**
-     * A constant representing the tag for the table-name property.
-     */
+
     private final static int TableNameTag = 15;
 
-    /**
-     * A constant representing the tag for the URL property.
-     */
+
     private final static int UrlTag = 16;
 
-    /**
-     * A constant representing the tag for the null property.
-     */
+
     private final static int PropNullTag = 17;
 
-    /**
-     * A constant representing the tag for the column property.
-     */
+
     private final static int PropColumnTag = 18;
 
-    /**
-     * A constant representing the tag for the type property.
-     */
+
     private final static int PropTypeTag = 19;
 
-    /**
-     * A constant representing the tag for the class property.
-     */
+
     private final static int PropClassTag = 20;
 
-    /**
-     * A constant representing the tag for the sync-provider.
-     */
+
     private final static int SyncProviderTag = 21;
 
-    /**
-     * A constant representing the tag for the sync-provider
-     * name
-     */
+
     private final static int SyncProviderNameTag = 22;
 
-    /**
-     * A constant representing the tag for the sync-provider
-     * vendor tag.
-     */
+
     private final static int SyncProviderVendorTag = 23;
 
-    /**
-     * A constant representing the tag for the sync-provider
-     * version tag.
-     */
+
     private final static int SyncProviderVersionTag = 24;
 
-    /**
-     * A constant representing the tag for the sync-provider
-     * grade tag.
-     */
+
     private final static int SyncProviderGradeTag = 25;
 
-    /**
-     * A constant representing the tag for the data source lock.
-     */
+
     private final static int DataSourceLock = 26;
 
-    /**
-     * A listing of the kinds of metadata information available about
-     * the columns in a <code>WebRowSet</code> object.
-     */
+
     private String[] colDef = {"column-count", "column-definition", "column-index",
             "auto-increment", "case-sensitive", "currency",
             "nullable", "signed", "searchable",
@@ -277,104 +158,64 @@ public class XmlReaderContentHandler extends DefaultHandler {
             "column-type-name", "null"};
 
 
-    /**
-     * A constant representing the tag for column-count.
-     */
+
     private final static int ColumnCountTag = 0;
 
-    /**
-     * A constant representing the tag for column-definition.
-     */
+
     private final static int ColumnDefinitionTag = 1;
 
-    /**
-     * A constant representing the tag for column-index.
-     */
+
     private final static int ColumnIndexTag = 2;
 
-    /**
-     * A constant representing the tag for auto-increment.
-     */
+
     private final static int AutoIncrementTag = 3;
 
-    /**
-     * A constant representing the tag for case-sensitive.
-     */
+
     private final static int CaseSensitiveTag = 4;
 
-    /**
-     * A constant representing the tag for currency.
-     */
+
     private final static int CurrencyTag = 5;
 
-    /**
-     * A constant representing the tag for nullable.
-     */
+
     private final static int NullableTag = 6;
 
-    /**
-     * A constant representing the tag for signed.
-     */
+
     private final static int SignedTag = 7;
 
-    /**
-     * A constant representing the tag for searchable.
-     */
+
     private final static int SearchableTag = 8;
 
-    /**
-     * A constant representing the tag for column-display-size.
-     */
+
     private final static int ColumnDisplaySizeTag = 9;
 
-    /**
-     * A constant representing the tag for column-label.
-     */
+
     private final static int ColumnLabelTag = 10;
 
-    /**
-     * A constant representing the tag for column-name.
-     */
+
     private final static int ColumnNameTag = 11;
 
-    /**
-     * A constant representing the tag for schema-name.
-     */
+
     private final static int SchemaNameTag = 12;
 
-    /**
-     * A constant representing the tag for column-precision.
-     */
+
     private final static int ColumnPrecisionTag = 13;
 
-    /**
-     * A constant representing the tag for column-scale.
-     */
+
     private final static int ColumnScaleTag = 14;
 
-    /**
-     * A constant representing the tag for table-name.
-     */
+
     private final static int MetaTableNameTag = 15;
 
-    /**
-     * A constant representing the tag for catalog-name.
-     */
+
     private final static int CatalogNameTag = 16;
 
-    /**
-     * A constant representing the tag for column-type.
-     */
+
     private final static int ColumnTypeTag = 17;
 
-    /**
-     * A constant representing the tag for column-type-name.
-     */
+
     private final static int ColumnTypeNameTag = 18;
 
-    /**
-     * A constant representing the tag for null.
-     */
+
     private final static int MetaNullTag = 19;
 
     private String[] data = {"currentRow", "columnValue", "insertRow", "deleteRow", "insdel", "updateRow", "null", "emptyString"};
@@ -388,55 +229,21 @@ public class XmlReaderContentHandler extends DefaultHandler {
     private final static int NullTag = 6;
     private final static int EmptyStringTag = 7;
 
-    /**
-     * A constant indicating the state of this <code>XmlReaderContentHandler</code>
-     * object in which it has not yet been called by the SAX parser and therefore
-     * has no indication of what type of input to expect from the parser next.
-     * <p>
-     * The state is set to <code>INITIAL</code> at the end of each
-     * section, which allows the sections to appear in any order and
-     * still be parsed correctly (except that metadata must be
-     * set before data values can be set).
-     */
+
     private final static int INITIAL = 0;
 
-    /**
-     * A constant indicating the state in which this <code>XmlReaderContentHandler</code>
-     * object expects the next input received from the
-     * SAX parser to be a string corresponding to one of the elements in
-     * <code>properties</code>.
-     */
+
     private final static int PROPERTIES = 1;
 
-    /**
-     * A constant indicating the state in which this <code>XmlReaderContentHandler</code>
-     * object expects the next input received from the
-     * SAX parser to be a string corresponding to one of the elements in
-     * <code>colDef</code>.
-     */
+
     private final static int METADATA = 2;
 
-    /**
-     * A constant indicating the state in which this <code>XmlReaderContentHandler</code>
-     * object expects the next input received from the
-     * SAX parser to be a string corresponding to one of the elements in
-     * <code>data</code>.
-     */
+
     private final static int DATA = 3;
 
     private JdbcRowSetResourceBundle resBundle;
 
-    /**
-     * Constructs a new <code>XmlReaderContentHandler</code> object that will
-     * assist the SAX parser in reading a <code>WebRowSet</code> object in the
-     * format of an XML document. In addition to setting some default values,
-     * this constructor creates three <code>HashMap</code> objects, one for
-     * properties, one for metadata, and one for data.  These hash maps map the
-     * strings sent by the SAX parser to integer constants so that they can be
-     * compared more efficiently in <code>switch</code> statements.
-     *
-     * @param r the <code>RowSet</code> object in XML format that will be read
-     */
+
     public XmlReaderContentHandler(RowSet r) {
         // keep the rowset we've been given
         rs = (WebRowSetImpl) r;
@@ -465,22 +272,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
         }
     }
 
-    /**
-     * Creates and initializes three new <code>HashMap</code> objects that map
-     * the strings returned by the SAX parser to <code>Integer</code>
-     * objects.  The strings returned by the parser will match the strings that
-     * are array elements in this <code>XmlReaderContentHandler</code> object's
-     * <code>properties</code>, <code>colDef</code>, or <code>data</code>
-     * fields. For each array element in these fields, there is a corresponding
-     * constant defined. It is to these constants that the strings are mapped.
-     * In the <code>HashMap</code> objects, the string is the key, and the
-     * integer is the value.
-     * <p>
-     * The purpose of the mapping is to make comparisons faster.  Because comparing
-     * numbers is more efficient than comparing strings, the strings returned
-     * by the parser are mapped to integers, which can then be used in a
-     * <code>switch</code> statement.
-     */
+
     private void initMaps() {
         int items, i;
 
@@ -516,36 +308,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
     }
 
 
-    /**
-     * Sets this <code>XmlReaderContentHandler</code> object's <code>tag</code>
-     * field if the given name is the key for a tag and this object's state
-     * is not <code>INITIAL</code>.  The field is set
-     * to the constant that corresponds to the given element name.
-     * If the state is <code>INITIAL</code>, the state is set to the given
-     * name, which will be one of the sections <code>PROPERTIES</code>,
-     * <code>METADATA</code>, or <code>DATA</code>.  In either case, this
-     * method puts this document handler in the proper state for calling
-     * the method <code>endElement</code>.
-     * <p>
-     * If the state is <code>DATA</code> and the tag is <code>RowTag</code>,
-     * <code>DelTag</code>, or <code>InsTag</code>, this method moves the
-     * rowset's cursor to the insert row and sets this
-     * <code>XmlReaderContentHandler</code> object's <code>idx</code>
-     * field to <code>0</code> so that it will be in the proper
-     * state when the parser calls the method <code>endElement</code>.
-     *
-     * @param lName      the name of the element; either (1) one of the array
-     *                   elements in the fields <code>properties</code>,
-     *                   <code>colDef</code>, or <code>data</code> or
-     *                   (2) one of the <code>RowSet</code> elements
-     *                   <code>"properties"</code>, <code>"metadata"</code>, or
-     *                   <code>"data"</code>
-     * @param attributes <code>org.xml.sax.AttributeList</code> objects that are
-     *                   attributes of the named section element; may be <code>null</code>
-     *                   if there are no attributes, which is the case for
-     *                   <code>WebRowSet</code> objects
-     * @throws SAXException if a general SAX error occurs
-     */
+
     public void startElement(String uri, String lName, String qName, Attributes attributes) throws SAXException {
         int tag;
         String name = "";
@@ -572,10 +335,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
                 break;
             case DATA:
 
-                /**
-                 * This has been added to clear out the values of the previous read
-                 * so that we should not add up values of data between different tags
-                 */
+
                 tempStr = "";
                 tempUpdate = "";
                 if (dataMap.get(name) == null) {
@@ -610,32 +370,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
 
     }
 
-    /**
-     * Sets the value for the given element if <code>name</code> is one of
-     * the array elements in the fields <code>properties</code>,
-     * <code>colDef</code>, or <code>data</code> and this
-     * <code>XmlReaderContentHandler</code> object's state is not
-     * <code>INITIAL</code>. If the state is <code>INITIAL</code>,
-     * this method does nothing.
-     * <p>
-     * If the state is <code>METADATA</code> and
-     * the argument supplied is <code>"metadata"</code>, the rowset's
-     * metadata is set. If the state is <code>PROPERTIES</code>, the
-     * appropriate property is set using the given name to determine
-     * the appropriate value. If the state is <code>DATA</code> and
-     * the argument supplied is <code>"data"</code>, this method sets
-     * the state to <code>INITIAL</code> and returns.  If the argument
-     * supplied is one of the elements in the field <code>data</code>,
-     * this method makes the appropriate changes to the rowset's data.
-     *
-     * @param lName the name of the element; either (1) one of the array
-     *              elements in the fields <code>properties</code>,
-     *              <code>colDef</code>, or <code>data</code> or
-     *              (2) one of the <code>RowSet</code> elements
-     *              <code>"properties"</code>, <code>"metadata"</code>, or
-     *              <code>"data"</code>
-     * @throws SAXException if a general SAX error occurs
-     */
+
     @SuppressWarnings("fallthrough")
     public void endElement(String uri, String lName, String qName) throws SAXException {
         int tag;
@@ -847,35 +582,14 @@ public class XmlReaderContentHandler extends DefaultHandler {
 
     }
 
-    /**
-     * Sets a property, metadata, or data value with the characters in
-     * the given array of characters, starting with the array element
-     * indicated by <code>start</code> and continuing for <code>length</code>
-     * number of characters.
-     * <p>
-     * The SAX parser invokes this method and supplies
-     * the character array, start position, and length parameter values it
-     * got from parsing the XML document.  An application programmer never
-     * invokes this method directly.
-     *
-     * @param ch     an array of characters supplied by the SAX parser, all or part of
-     *               which will be used to set a value
-     * @param start  the position in the given array at which to start
-     * @param length the number of consecutive characters to use
-     */
+
     public void characters(char[] ch, int start, int length) throws SAXException {
         try {
             switch (getState()) {
                 case PROPERTIES:
                     propertyValue = new String(ch, start, length);
 
-                    /**
-                     * This has been added for handling of special characters. When special
-                     * characters are encountered the characters function gets called for
-                     * each of the characters so we need to append the value got in the
-                     * previous call as it is the same data present between the start and
-                     * the end tag.
-                     **/
+
                     tempCommand = tempCommand.concat(propertyValue);
                     propertyValue = tempCommand;
 
@@ -936,17 +650,7 @@ public class XmlReaderContentHandler extends DefaultHandler {
 
     }
 
-    /**
-     * Retrieves the current state of this <code>XmlReaderContentHandler</code>
-     * object's rowset, which is stored in the document handler's
-     * <code>state</code> field.
-     *
-     * @return one of the following constants:
-     * <code>XmlReaderContentHandler.PROPERTIES</code>
-     * <code>XmlReaderContentHandler.METADATA</code>
-     * <code>XmlReaderContentHandler.DATA</code>
-     * <code>XmlReaderContentHandler.INITIAL</code>
-     */
+
     private int getState() {
         return state;
     }
@@ -1299,25 +1003,13 @@ public class XmlReaderContentHandler extends DefaultHandler {
         switch (getTag()) {
             case ColTag:
                 columnValue = new String(ch, start, len);
-                /**
-                 * This has been added for handling of special characters. When special
-                 * characters are encountered the characters function gets called for
-                 * each of the characters so we need to append the value got in the
-                 * previous call as it is the same data present between the start and
-                 * the end tag.
-                 **/
+
                 tempStr = tempStr.concat(columnValue);
                 break;
             case UpdTag:
                 upd = new Object[2];
 
-                /**
-                 * This has been added for handling of special characters. When special
-                 * characters are encountered the characters function gets called for
-                 * each of the characters so we need to append the value got in the
-                 * previous call as it is the same data present between the start and
-                 * the end tag.
-                 **/
+
 
                 tempUpdate = tempUpdate.concat(new String(ch, start, len));
                 upd[0] = Integer.valueOf(idx);
@@ -1394,51 +1086,29 @@ public class XmlReaderContentHandler extends DefaultHandler {
 
     }
 
-    /**
-     * Throws the given <code>SAXParseException</code> object. This
-     * exception was originally thrown by the SAX parser and is passed
-     * to the method <code>error</code> when the SAX parser invokes it.
-     *
-     * @param e the <code>SAXParseException</code> object to throw
-     */
+
     public void error(SAXParseException e) throws SAXParseException {
         throw e;
     }
 
     // dump warnings too
 
-    /**
-     * Prints a warning message to <code>System.out</code> giving the line
-     * number and uri for what caused the warning plus a message explaining
-     * the reason for the warning. This method is invoked by the SAX parser.
-     *
-     * @param err a warning generated by the SAX parser
-     */
+
     public void warning(SAXParseException err) throws SAXParseException {
         System.out.println(MessageFormat.format(resBundle.handleGetObject("xmlrch.warning").toString(), new Object[]{err.getMessage(), err.getLineNumber(), err.getSystemId()}));
     }
 
-    /**
-     *
-     */
+
     public void notationDecl(String name, String publicId, String systemId) {
 
     }
 
-    /**
-     *
-     */
+
     public void unparsedEntityDecl(String name, String publicId, String systemId, String notationName) {
 
     }
 
-    /**
-     * Returns the current row of this <code>Rowset</code>object.
-     * The ResultSet's cursor is positioned at the Row which is needed
-     *
-     * @return the <code>Row</code> object on which the <code>RowSet</code>
-     * implementation objects's cursor is positioned
-     */
+
     private Row getPresentRow(WebRowSetImpl rs) throws SQLException {
         //rs.setOriginalRow();
         // ResultSetMetaData rsmd = rs.getMetaData();

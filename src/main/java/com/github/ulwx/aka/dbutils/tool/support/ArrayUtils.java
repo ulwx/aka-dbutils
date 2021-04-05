@@ -603,7 +603,7 @@ public class ArrayUtils {
     /**
      * 把基本类型数组转换成封装类型数组
      *
-     * @param primitiveArray
+     * @param source
      * @return
      */
     public static Object[] toObjectArray(Object source) {

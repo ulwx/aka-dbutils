@@ -24,15 +24,15 @@ import java.util.SortedMap;
  * query result:</p>
  *
  * <ul>
- * <li> The result rows (<tt>getRows()</tt> and <tt>getRowsByIndex()</tt>)
- * <li> The column names (<tt>getColumnNames()</tt>)
- * <li> The number of rows in the result (<tt>getRowCount()</tt>)
+ * <li> The result rows (<code>getRows()</code> and <code>getRowsByIndex()</code>)
+ * <li> The column names (<code>getColumnNames()</code>)
+ * <li> The number of rows in the result (<code>getRowCount()</code>)
  * <li> An indication whether the rows returned represent the complete result
  *      or just a subset that is limited by a maximum row setting
- *      (<tt>isLimitedByMaxRows()</tt>)
+ *      (<code>isLimitedByMaxRows()</code>)
  * </ul>
  *
- * <p>An implementation of the <tt>Result</tt> interface provides a
+ * <p>An implementation of the <code>Result</code> interface provides a
  * <i>disconnected</i> view into the result of a query.
  *
  * @author Justyna Horwat
@@ -88,7 +88,7 @@ public interface Result {
     /**
      * Returns true if the query was limited by a maximum row setting
      *
-     * @return <tt>true</tt> if the query was limited by a maximum
+     * @return <code>true</code> if the query was limited by a maximum
      * row setting
      */
     public boolean isLimitedByMaxRows();

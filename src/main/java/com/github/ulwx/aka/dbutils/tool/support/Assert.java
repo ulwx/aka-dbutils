@@ -47,7 +47,7 @@ import java.util.Map;
  * </pre>
  * <p>
  * Mainly for internal use within the framework; consider Jakarta's Commons Lang
- * >= 2.0 for a more comprehensive suite of assertion utilities.
+ * &gt;= 2.0 for a more comprehensive suite of assertion utilities.
  *
  * @author Keith Donald
  * @author Juergen Hoeller

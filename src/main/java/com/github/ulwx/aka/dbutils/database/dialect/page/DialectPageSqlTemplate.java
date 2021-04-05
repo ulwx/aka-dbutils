@@ -7,9 +7,11 @@ public class DialectPageSqlTemplate {
 
     /**
      * Return pagination template of this Dialect
+     * @param dbms  DBMS对象
+     * @return  返回分页模板
      */
-    public static String initializePaginSQLTemplate(DBMS d) {
-        switch (d) {
+    public static String initializePaginSQLTemplate(DBMS dbms) {
+        switch (dbms) {
             case Cache71Dialect:
             case DB2390Dialect:
             case DB2390V8Dialect:
@@ -110,11 +112,14 @@ public class DialectPageSqlTemplate {
         }
     }
 
+
     /**
      * Return top limit sql template of this Dialect
+     * @param dbms  DBMS对象
+     * @return  返回top limit模板
      */
-    public static String initializeTopLimitSqlTemplate(DBMS d) {
-        switch (d) {
+    public static String initializeTopLimitSqlTemplate(DBMS dbms) {
+        switch (dbms) {
             case FrontBaseDialect:
             case JDataStoreDialect:
             case MckoiDialect:

@@ -405,17 +405,11 @@ public class SqlUtils {
     }
 
     /**
-     * 从某个数据库中导出javabean类，每个表的字段对应javabean相应的属性<br/>
+     * 从某个数据库中导出javabean类，每个表的字段对应javabean相应的属性<br>
      * 例子如下：
-     * <p>
      * <blockquote>
-     *
-     * <pre>
      * SqlUtils.exportTables("tt1", "feecenter", "e:/okok3", "u6.hwfee.domain.db","utf-8",false);
-     * </pre>
-     *
      * </blockquote>
-     * </p>
      *
      * @param pool                     dbpool.xml里连接池名称，如 tt1
      * @param schema                   导出的数据库名称
@@ -1055,18 +1049,23 @@ public class SqlUtils {
     }
 
     /**
+     *  根据对象生成更新的SQL语句
+     * @param dbpoolName 数据库连接池
      * @param properties        需更新的属性，如果为空，表明更新所有主键属性以外的属性
      * @param updateObject      需更新的对象
+     * @param reflectClass      如果不为null，则使用它生成表名，用于javaBean存在继承时指定哪个父类用于生成表名
      * @param whereProperteis   updateObject对象里为主键属性名，复合主键以","隔开，主键属性用于唯一标示一个对象，通过它生成where语句
      * @param returnvParameters 生成的参数，每个参数对应于生成语句的一个"?"字符
      * @param options           更新选项
      * @param ignoreNull        是否忽略为空的属性，即如果属性为空，则不生成对应属性的sql
-     * @return
-     * @throws Exception
+     * @param dataBaseType  DBMS对象
+     * @return 生成的SQL语句
+     * @throws Exception 异常
      */
     public static String generateUpdateSql(String dbpoolName, String[] properties,
                                            Object updateObject, Class reflectClass, String[] whereProperteis,
-                                           Map<Integer, Object> returnvParameters, UpdateOptions options, boolean ignoreNull,
+                                           Map<Integer, Object> returnvParameters,
+                                           UpdateOptions options, boolean ignoreNull,
                                            DBMS dataBaseType)
             throws Exception {
 
@@ -1152,14 +1151,17 @@ public class SqlUtils {
     }
 
     /**
-     * 生成插入sql语句
-     *
-     * @param properties        需更插入的属性，如果为空，表明更新所有主键属性以外的属性
-     * @param insertObject      需插入的对象
-     * @param returnvParameters 生成的参数，每个参数对应于生成语句的一个"?"字符
-     * @param options           更新选项
-     * @return
-     * @throws Exception
+     * 根据对象生成插入sql语句
+     * @param dbpoolName 数据库连接池名称
+     * @param properties  哪些属性需要更新
+     * @param insertObject 需插入的对象
+     * @param reflectClass 真实插入对象的class，用于在javaBean存在继承时，使用哪个继承层次的类名作为表名
+     * @param returnvParameters 生成的参数，每个参数对应于生成语句的相应位置的"?"字符
+     * @param options    更新选项
+     * @param ignoreNull  是否忽略properties属性里空值的属性更新到数据库
+     * @param dataBaseType DBMS对象
+     * @return  回根据对象生成的插入SQL语句
+     * @throws Exception  异常
      */
     public static String generateInsertSql(String dbpoolName, String[] properties,
                                            Object insertObject, Class reflectClass, Map<Integer, Object> returnvParameters,
@@ -1266,17 +1268,16 @@ public class SqlUtils {
     }
 
     /**
-     * 主要用于存储过程
-     *
-     * @param vParameters
-     * @param preStmt
-     * @return
-     * @throws SQLException
+     * 用于设置执行存储过程PreparedStatement的参数
+     * @param vParameters 参数
+     * @param preStmt  PreparedStatement对象
+     * @return  返回调试的字符串
+     * @throws SQLException 异常
      */
     public static String setToPreStatment(Map<Integer, Object> vParameters,
                                           PreparedStatement preStmt) throws SQLException {
 
-        String paramStr = ""; // add by jda at 2007/12/15
+        String paramStr = "";
         Set<Integer> keys = vParameters.keySet();
         List<Integer> keyList = new ArrayList<Integer>(keys);
         Collections.sort(keyList);// 排序
@@ -1356,11 +1357,10 @@ public class SqlUtils {
 
     /**
      * 生产预处理的sql的debug语句，也就是把?字符替换成实际的参数，主要用于调试
-     *
-     * @param sql
-     * @param vParameters
-     * @param dbms        数据方言
-     * @return
+     * @param sql  带?的sql语句
+     * @param vParameters  参数
+     * @param dbms  数据方言
+     * @return 返回debug sql。带?的sql里所有?都会填入参数
      */
     public static String generateDebugSql(String sql,
                                           Collection<Object> vParameters, DBMS dbms) {
@@ -1482,13 +1482,14 @@ public class SqlUtils {
 
     }
 
+
     /**
-     * 把rs的一行转换成一个javabean
-     *
-     * @param <T>
-     * @param clazz
-     * @param rs
-     * @return
+     *把rs的一行转换成一个javabean
+     * @param dbpoolName 数据库连接池
+     * @param clazz ResultSet的每行数据映射到类型为clazz的对象
+     * @param rs  需要抽取数据的ResultSet
+     * @param <T> 泛型
+     * @return  返回行数据映射的对象
      */
     public static <T> T getBeanFromResultSet(String dbpoolName, Class<T> clazz, ResultSet rs) {
 

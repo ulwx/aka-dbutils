@@ -26,7 +26,7 @@ public class SelOp {
      * 设置order by的属性名[或表列名称]，以英文逗号分隔。例如指定"abCd asc,mnXy desc"，
      * 这里的abCd,mnXy都为javaBean的属性名称，也可以指定 "ab_cd asc, mn_xy desc"，其中ab_cd和
      * mn_xy为列名
-     *
+     * @param orderByStr  排序列字符串， 例如指定"abCd asc,mnXy desc"
      * @return
      */
     public SelOp orderBy(String orderByStr) {
@@ -41,7 +41,7 @@ public class SelOp {
 
     /**
      * 可以指定limit，但对对象分页查询不能调用此方法，如：
-     * List<T> queryListBy(T selectObject, int page, int perPage, PageBean pb)方法的调用时，不能调用
+     * List&lt;T&gt; queryListBy(T selectObject, int page, int perPage, PageBean pb)方法的调用时，不能调用
      * selectObject#selectOptions()#limit()方法，否则会报错！
      *
      * @param n

@@ -116,15 +116,16 @@ public abstract class CollectionUtils {
      * 把一个map和一个给定的map合成 例如:
      *
      * <pre>
-     * Map<String,String[]> map=new HashMap<String,String[]>();
+     * Map&lt;String,String[]&gt; map=new HashMap&lt;String,String[]&gt;();
      * map.put("1",new String[]{"1"});
      * map.put("2",new String[]{"2"});
-     * Map<String,String[]> map2=new HashMap<String,String[]>();
+     * Map&lt;String,String[]&gt; map2=new HashMap&lt;String,String[]&gt;();
      * map2.put("1","222");
      * map2.put("2",new String[]{"23","45"});
      * Map map3=CollectionUtils.mergeMapIntoGivenMap(map, map2);
      * map3.get("1");// "1","222"
      * map3.get("2"); // "2","23","45"
+     * </pre>
      * @param givenMap
      * @param map
      * @return

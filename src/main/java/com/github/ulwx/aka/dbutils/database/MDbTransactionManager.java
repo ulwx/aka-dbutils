@@ -22,8 +22,8 @@ public class MDbTransactionManager {
      * 执行当前新建事务完成以后，上下文事务恢复再执行。如果运行新建事务时抛出异常，新建的事务会回滚，并且会再次
      * 抛出异常，此异常如果在外部不被捕获并处理的话，会引发外部的事务回滚。
      *
-     * @param serviceLogic 带有返回值的业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
-     * @param <R>
+     * @param serviceLogic  带有返回值的业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
+     * @param <R> 泛型R
      * @return
      * @throws DbException
      */
@@ -66,12 +66,13 @@ public class MDbTransactionManager {
         }
     }
 
+
     /**
      * 总是新开启一个事务执行ServiceLogic#call()的逻辑。如果当前上下文里存在事务则挂起，
      * 执行当前新建事务完成以后，上下文事务恢复再执行。如果运行新建事务时抛出异常，新建的事务会回滚，并且会再次抛出异常，
      * 此异常如果在外部不被捕获并处理的话，会引发外部的事务回滚。
-     *
-     * @param serviceLogic 业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
+     * @param propagation 事务传播级别
+     * @param serviceLogic  务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
      * @throws DbException
      */
     public static void execute(PROPAGATION propagation, ServiceLogic serviceLogic)
@@ -92,7 +93,7 @@ public class MDbTransactionManager {
     /**
      * 如果当前上下文没有事务，则新开启一个事务执行ServiceLogicHasReturnValue#call()逻辑，
      * 否则把ServiceLogicHasReturnValue#call()加入到当前上下文事务里执行。
-     *
+     * @param propagation  事务传播级别
      * @param serviceLogic 带有返回值的业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
      * @param <R>
      * @return

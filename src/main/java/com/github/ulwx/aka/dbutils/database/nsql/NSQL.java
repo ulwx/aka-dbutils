@@ -63,18 +63,17 @@ public final class NSQL {
     }
 
     /**
-     * 获取用于数据库执行的SQL语句
-     *
-     * @return
+     * 获取用于数据库执行的SQL语句，如SELECT `id`, `name` FROM `teacher` where name like ?
+     * @return 返回执行的SQL语句
      */
     public String getExeSql() {
         return sql_execute;
     }
 
     /**
-     * 获取用户定义的命名SQL语句
+     * 获取用户定义的命名SQL语句，如SELECT `id`, `name` FROM `teacher` where name like #{lname%}
      *
-     * @return
+     * @return  返回命名SQL语句，如 select * from t where
      */
     public String getNamingSql() {
         return sql_naming;
@@ -83,13 +82,13 @@ public final class NSQL {
 
     /**
      * 根据md文件里的方法名和参数，获取NSQL对象
-     *
-     * @param mdPathMethodName ：定位到md文件里的方法字符串，格式为：
+
+     * @param mdPathMethodName 定位到md文件里的方法字符串，格式为：
      *                         com.github.ulwx.database.test.SysRightDao.md:getDataCount,
      *                         表示在com/ulwx/database/test/SysRightDao.md文件里查找getDataCount的方法
-     * @param args             ：存放参数的map或JavaBean
-     * @return
-     * @throws Exception
+     * @param args             存放参数的map或JavaBean
+     * @return 返回NSQL对象
+     * @throws DbException 异常
      */
     public static NSQL getNSQL(String mdPathMethodName, Object args) throws DbException {
         String[] strs = mdPathMethodName.split(":");
@@ -108,8 +107,8 @@ public final class NSQL {
      * @param mdPath     ：md文件的包路径全名称，例如，格式为： com.github.ulwx.database.test.SysRightDao.md
      * @param methodName ：md里对应的方法名，例如 getDataCount
      * @param args       ：存放参数的map或JavaBean
-     * @return
-     * @throws Exception
+     * @return  返回NSQL对象
+     * @throws Exception  异常
      */
     public static NSQL getNSQL(String mdPath, String methodName, Object args) throws Exception {
 
@@ -140,12 +139,12 @@ public final class NSQL {
 
     /**
      * 分析命名SQL语句获取抽象NSQl实例；java(JDBC)提供SQL语句命名参数而是通过?标识参数位置，
-     * 通过此对象可以命名参数方式使用SQL语句，命名参数以#{[%]xxx[%]}形式，%用于like语句中。<br/>
+     * 通过此对象可以命名参数方式使用SQL语句，命名参数以#{[%]xxx[%]}形式，%用于like语句中。<br>
      * 例如：<blockquote><pre>
      * SELECT * FROM table WHERE name = #{ key1} AND email = #{key2} and phone like #{ %key3% };
-     * </blockquote></pre>
+     * </pre></blockquote>
      * 例如使用参数如下： <blockquote><pre>
-     *   Map&lt;String,Object&gt args=new HashMap&lt;String,Object&gt();
+     *   Map&lt;String,Object&gt; args=new HashMap&lt;String,Object&gt;();
      *   args.put("name","陈三");
      *   args.pub("age",123);
      *   如果isStoredProc为true，表明为存储过程，此时args里存放内容的如下：
@@ -154,12 +153,14 @@ public final class NSQL {
      *    "name:inout":"lilei",
      *    "money":out":Long.class
      *
-     *  }</blockquote></pre>
+     *  }</pre></blockquote>
      *
      * @param sqltxt sql语句
-     * @param args   参数
-     * @return
+     * @param args   sql语句里用到的参数
+     *  @param nsql  NSQL对象
+     * @return 返回NSQL对象
      */
+
     public static NSQL parseSql(String sqltxt, final Map<String, Object> args, NSQL nsql) {
 
         sqltxt = StringUtils.trim(sqltxt);

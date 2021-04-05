@@ -18,12 +18,12 @@ package com.github.ulwx.aka.dbutils.tool.support;
 public class Base64 {
 
     /**
-     * Specify encoding (value is <tt>true</tt>).
+     * Specify encoding (value is <code>true</code>).
      */
     public final static boolean ENCODE = true;
 
     /**
-     * Specify decoding (value is <tt>false</tt>).
+     * Specify decoding (value is <code>false</code>).
      */
     public final static boolean DECODE = false;
 
@@ -230,7 +230,7 @@ public class Base64 {
     /**
      * Serializes an object and returns the Base64-encoded version of that
      * serialized object. If the object cannot be serialized or there is another
-     * error, the method will return <tt>null</tt>.
+     * error, the method will return <code>null</code>.
      *
      * @param serializableObject The object to encode
      * @return The Base64-encoded object
@@ -243,7 +243,7 @@ public class Base64 {
     /**
      * Serializes an object and returns the Base64-encoded version of that
      * serialized object. If the object cannot be serialized or there is another
-     * error, the method will return <tt>null</tt>.
+     * error, the method will return <code>null</code>.
      *
      * @param serializableObject The object to encode
      * @param breakLines         Break lines at 80 characters or less.
@@ -512,7 +512,7 @@ public class Base64 {
 
     /**
      * Attempts to decode Base64 data and deserialize a Java Object within.
-     * Returns <tt>null if there was an error.
+     * Returns <code>null</code> if there was an error.
      *
      * @param encodedObject The Base64 data to decode
      * @return The decoded and deserialized object

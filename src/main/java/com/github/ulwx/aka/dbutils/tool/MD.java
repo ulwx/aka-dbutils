@@ -69,7 +69,8 @@ public class MD {
     }
 
     /**
-     * 根据一个JavaBean对象数组，返回一个Map<String,Object>对象数组，每个JavaBean对象会转换成一个Map<String,Object>对象
+     * 根据一个JavaBean对象数组，返回一个Map&lt;String,Object&gt;对象数组，
+     * 每个JavaBean对象会转换成一个Map&lt;String,Object&gt;对象
      *
      * @param javaBeans
      * @return
@@ -83,9 +84,10 @@ public class MD {
     }
 
     /**
-     * 根据一个JavaBean对象数组，返回一个List<Map<String,Object>>对象，每个JavaBean对象会转换成一个Map<String,Object>对象
+     * 根据一个JavaBean对象数组，返回一个List&lt;Map&lt;String,Object&gt;&gt;对象，
+     * 每个JavaBean对象会转换成一个Map&lt;String,Object&gt;对象
      *
-     * @param javaBeans
+     * @param javaBeans javaBean对象
      * @return
      */
     public static List<Map<String, Object>> mapList(Object... javaBeans) {
@@ -97,7 +99,7 @@ public class MD {
     }
 
     /**
-     * 根据一个JavaBean对象生成Map<String,Object>对象
+     * 根据一个JavaBean对象生成Map&lt;String,Object&gt;对象
      *
      * @param javaBean
      * @return
@@ -148,10 +150,10 @@ public class MD {
      *
      * @param pageNum                     当前页码，从1开始
      * @param perPage                     每页多少条记录
-     * @param mdFullMethodNameForCountSql 可以指定四种类型的参数，<br/>
-     *                                    null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br/>
-     *                                    数字：则表明以指定的数字为总数，用于计算分页信息；<br/>
-     *                                    md方法地址：表示计算总数的SQL的md方法地址<br/>
+     * @param mdFullMethodNameForCountSql 可以指定四种类型的参数，<br>
+     *                                    null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br>
+     *                                    数字：则表明以指定的数字为总数，用于计算分页信息；<br>
+     *                                    md方法地址：表示计算总数的SQL的md方法地址<br>
      *                                    -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句。
      * @param pageBean                    设置PageBean对象，用于返回分页信息，用于前端UI显示
      * @return

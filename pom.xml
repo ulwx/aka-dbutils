@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.github.ulwx</groupId>
 		<artifactId>aka-dbutils-parent</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>1.0.2</version>
 		<relativePath>../aka-dbutils-parent/pom.xml</relativePath>
 	</parent>
 	<dependencies>
@@ -52,13 +52,11 @@
 			<version>8.0.23</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.mybatis</groupId>
-			<artifactId>mybatis-parent</artifactId>
-			<version>32</version>
-			<type>pom</type>
-		</dependency>
-	</dependencies>
 
+	</dependencies>
+	<scm>
+		<connection>https://github.com/ulwx/aka-dbutils.git</connection>
+		<url>https://github.com/ulwx/aka-dbutils</url>
+	</scm>
 
 </project>

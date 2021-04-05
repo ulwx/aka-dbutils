@@ -396,7 +396,7 @@ public class DataBaseImpl implements DataBase {
      * 从dbpool.xml里设置的连接池获得连接
      *
      * @param dbPoolName 对应于dbpool.xml里的元素dbpool的name属性值
-     * @throws DbException
+     * @throws DbException 异常
      */
     @Override
     public void connectDb(String dbPoolName) throws DbException {
@@ -423,7 +423,7 @@ public class DataBaseImpl implements DataBase {
      * @param sqlQuery    sql语句
      * @param vParameters 参数
      * @return 返回查询到的结果集
-     * @throws DbException
+     * @throws DbException 异常
      */
 
     private DataBaseSet doCachedQuery(String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
@@ -434,15 +434,15 @@ public class DataBaseImpl implements DataBase {
     /**
      * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭 连接
      *
-     * @param sqlQuery
-     * @param vParameters
+     * @param sqlQuery  SQL语句
+     * @param vParameters 参数
      * @param page        当前页
      * @param perPage     每页多少行
      * @param pageBean    返回的分页信息
      * @param countSql    查询总数的sql语句，根据它查询总数；也可以指定一个整数字符串，用于指定总数；
      *                    如果指定null或""字符串，那么系统会根据sqlQuery自动生成查询总数sql语句
-     * @return
-     * @throws DbException
+     * @return 返回DataBaseSet对象
+     * @throws DbException 异常
      */
     @Override
     public DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
@@ -1795,32 +1795,7 @@ public class DataBaseImpl implements DataBase {
         }
     }
 
-    /**
-     * 调用存储过程，用法如下：
-     * <code><pre>
-     * //parms参数可以按如下形式添加
-     * parms.put("1","中");//默认为in类型
-     * parms.put("2:in","国");
-     * parms.put("3:in",new Integer(3));
-     * parms.put("4:out",int.class);
-     * parms.put("5:out",java.util.data.class);
-     * parms.put("6:inout",new Long(44));
-     *
-     * //outPramsValues存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应，
-     * //上面的例子产生的输出参数如下：
-     * {
-     *   4:45556,
-     *   5:"2015-09-23 12:34:56"
-     *   6:34456
-     * }</pre></code>
-     *
-     * @param sqltext            sql语句
-     * @param parms              用法举例如下：
-     * @param outPramsValues     存放输出参数的返回值，与parms(输入参数)里的out和inout类型对应
-     * @param returnDataBaseSets 需返回值的结果集
-     * @return
-     * @throws DbException
-     */
+
     @Override
     public void callStoredPro(String sqltext, Map<String, Object> parms,
                               Map<Integer, Object> outPramsValues,
@@ -2501,7 +2476,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * @param objects         待更新的对象
      * @param whereProperteis 生成where条件的对象属性
-     * @param properties      待更新的属性，可以为空，表明更新主键以外的属性
+     * @param updateProperties      待更新的属性，可以为空，表明更新主键以外的属性
      * @param ignoreNull      是否忽略空
      * @return
      * @throws DbException
@@ -2684,7 +2659,7 @@ public class DataBaseImpl implements DataBase {
      * 可以设置为事务操作，如果为事物操作，那么DataBase里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
      * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
      *
-     * @return
+     * @return 是否自动提交，非自动提交说明开启了事务
      * @throws DbException
      */
     @Override
@@ -2697,7 +2672,6 @@ public class DataBaseImpl implements DataBase {
      * setAutoCommit(false)方法可以设置为事务操作，如果为事务操作，那么DataBase里所有方法都不会自动关闭
      * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
      *
-     * @return
      * @throws DbException
      */
     @Override

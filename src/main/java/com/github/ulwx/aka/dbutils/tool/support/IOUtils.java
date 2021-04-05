@@ -73,7 +73,7 @@ public class IOUtils {
      * @param readLen
      * @param close
      * @return
-     * @throws Exception
+     * @throws IOException
      */
     public static byte[] readFully(InputStream in, int readLen, boolean close)
             throws IOException {
@@ -123,7 +123,7 @@ public class IOUtils {
      * @param readLen
      * @param close
      * @return
-     * @throws Exception
+     * @throws IOException
      */
     public static char[] readFully(Reader in, int readLen, boolean close)
             throws IOException {
