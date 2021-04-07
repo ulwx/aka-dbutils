@@ -134,7 +134,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      * @param countSql  可以指定四种类型的参数，<br>
      *                  null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br>
      *                  数字：则表明以指定的数字为总数，用于计算分页信息；<br>
-     *                  表示计算总数的SQL：表示计算总数的SQLbr>
+     *                  表示计算总数的SQL：表示计算总数的SQL<br>
      *                  -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
      * @param <T>
      * @return 返回一个List对象，包含通过rowMapper映射的对象。
@@ -168,7 +168,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      * @param countSql 可以指定四种类型的参数，<br>
      *                 null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br>
      *                 数字：则表明以指定的数字为总数，用于计算分页信息；<br>
-     *                 表示计算总数的SQL：表示计算总数的SQLbr>
+     *                 表示计算总数的SQL：表示计算总数的SQL<br>
      *                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
      * @return 返回一个含有map的List，每个map对应一行记录，key为表字段名称，value为字段的值
      * @throws DbException

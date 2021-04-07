@@ -1,28 +1,46 @@
-aka-dbutils是一个**轻量级的**、**强大的**数据库访问工具类。aka-dbutils的设计的初衷就是为了使事情更简单，你只需要30分钟就可以完全掌握aka-dbutils的所有用法。如果你不了解aka-dbutils，你可以把它想象成类似于mybatis，但aka-dbutils能覆盖所有mybatis的功能，但却比mybatis使用起来更简单和高效，你不需要在mapper xml里写烦人的xml，也不需要为保持命名空间的一致性而苦恼。甚至针对于单对象的增删改查操作，你不需要写任何sql语句，因为 aka-dbutils天然就支持对单对象增删改查操作方法。
+##  为什么选择aka-dbutils?
 
-aka-dbutils就跟它的名字一样，它是一个访问数据库的工具库，它专注于处理数据库的访问。掌握aka-dbutils你不需要了解任何其它技术，，你只需要了解SQL和基本的java语法，它特别适合喜欢轻量级集成方案的朋友。
+aka-dbutils是一个**轻量级的**、**强大的**数据库访问工具类。aka-dbutils的设计的初衷就是为了使事情更简单，你只需要30分钟就可以完全掌握aka-dbutils的所有用法。如果你不了解aka-dbutils，你可以把它想象成类似于mybatis，但aka-dbutils能覆盖所有mybatis的功能，但比mybatis更强大，并使用起来更简单和高效，你不需要在mapper xml里写烦人的xml，也不需要为保持命名空间的一致性而苦恼。aka-dbutils提供了大量的对象操作方法，针对这些方法，你不需要编写和传递任何sql语句，因为 aka-dbutils会帮你生成，这些对象操作方法有点类似于hibernate，但aka-dbutils使用起来更简单，它不会要求你在类上使用任何注解。
+
+aka-dbutils就跟它的名字一样，它是一个访问数据库的工具库，它专注于处理数据库的访问。掌握aka-dbutils你不需要了解任何其它技术，，你只需要了解SQL和基本的java语法，它特别适合那些喜欢用一个很简单的访问数据库工具类库来进行数据库操作的朋友。你要明白，aka-dbutils虽然是一个工具类库，易于使用，但它很强大！
 
 aka-dbutils功能点如下：
 
 - 单对象的增删改查不需要SQL，动态通过反射生成SQL语句。
+
 - 天然支持分页查询，多种分页策略可供选择，支持的数据库有
+
   MYSQL，MS_SQL_SERVER，ORACLE，DB2，H2，HSQL，POSTGRE，SYBASE，SQLITE，INFOMIX，DERBY
+
 - 针对复杂的SQL语句，可为相应的dao方法编写对应md文件，md文件里编写SQL语句的规则非常简洁。同时md文件会转换为java文件并实时编译成java  class文件，所以可以在md文件访问任何java类、对象和方法，非常的强大。
+
 - 提供对象查询的一对一、一对多关联映射。
+
 - 支持数据库事务和事务传播，事务传播类似于spring的事务传播机制。
+
 - 你可以把它集成到spring、spingboot，这通过aka-dbutils-spring，或aka-dbutils-spring-starter。
+
 - 支持多种数据库，如mysql、microsoft sql server、oracle、db2、h2、hsql、postgre、sybase、sqlite。
+
 - 支持主从数据库，事务内的语句和更新的语句在主库上执行，非事务性查询语句在从库执行。
+
 - 集成tomcat-jdbc连接池。
+
 - 支持savepoint操作方法，从而支持局部回滚
+
 - 内置强大的生成java bean的工具。可以从数据库的表生成对应的java bean。
+
 - 良好的日志输出，可以看到每条语句执行的时间，日志输出的SQL语句可以直接到数据库工具上执行，方便调试。
+
 - 支持执行SQL脚本的方法。
+
 - 支持设置拦截器，从而可以拦截数据库操作的执行，你可以取消当前的操作。
+
 - 支持设置监听器，从而可以实时监听执行的SQL语句
+
 - 后续将会支持分布式事务和分库分表分区功能
 
-## 入门例子 
+## 入门例子
 
 ### 添加maven依赖
 
@@ -30,7 +48,7 @@ aka-dbutils功能点如下：
 	<dependency>
 		<groupId>com.github.ulwx</groupId>
 		<artifactId>aka-dbutils</artifactId>
-		<version>1.0.1</version>
+		<version>最新版本</version>
 	</dependency>
 ```
 
