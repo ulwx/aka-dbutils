@@ -372,7 +372,7 @@ select * from course where 1=1
 **④ MDbUtils.queryOneBy(DbPoolName, course)** ：根据对象里的非空属性作为查询条件查询一条记录并填充到一个对象并返回。
 
 > MDbUtils#queryOneBy()方法由于以By结尾，它不需要使用md文件来编写SQL，而是它会根据传入的对象通过反射生成SQL查询语句。方法的第一个参数为数据源名称，第二个参数为传入的对象。
->
+> 
 > ```java
 > Course course=new Course();
 > course.setName("course33");
