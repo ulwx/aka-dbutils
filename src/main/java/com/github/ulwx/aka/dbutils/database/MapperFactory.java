@@ -86,9 +86,6 @@ public class MapperFactory {
                 return mthodProxy.invokeSuper(proxy, args);
             }
 
-            String methodName = method.getName();
-            String mdMethodName = MD.md(method.getDeclaringClass(), methodName);
-            DataBase dataBase = this.mDataBase.getDataBase();
             Map<String, Object> argMap = new HashMap<>();
             PageOptions pageOptions = null;
             MapNestOptions mapNestOptions = null;
@@ -166,8 +163,8 @@ public class MapperFactory {
                     }
                 }
             }
-            return this.executeMdMethod(mdMethodName, argMap, method.getGenericReturnType(), pageOptions,
-                    mapNestOptions, insertOptions, dataBase, method);
+            return this.executeMdMethod(argMap, method.getGenericReturnType(), pageOptions,
+                    mapNestOptions, insertOptions, this.mDataBase, method);
 
         }
 
@@ -191,26 +188,23 @@ public class MapperFactory {
         }
 
 
-        private Object returnListTypeHandler(Type litComponetType,
+        private Object returnListTypeHandler(Type listComponetType,
                                              MapNestOptions mapNestOptions,
                                              PageOptions pageOptions,
-                                             DataBase dataBase,
-                                             NSQL nsql,
-                                             String countSql,
+                                             MDataBase mdataBase,
+                                             String mdMethodName,
+                                             Map<String, Object> args,
                                              String errMsg,
                                              Method method) {
-            SQLType sqlType = nsql.getSqlType();
-            String sqlTxt = nsql.getExeSql();
-            Map<Integer, Object> nargs = nsql.getArgs();
-            if (litComponetType instanceof Class) {
-                Class typesClassType = (Class) litComponetType;
+            if (listComponetType instanceof Class) {
+                Class typesClassType = (Class) listComponetType;
                 if (Map.class.isAssignableFrom(typesClassType)) {
                     if (pageOptions == null && mapNestOptions == null) {
-                        return dataBase.queryMap(sqlTxt, nargs);
+                        return mdataBase.queryMap(mdMethodName, args);
                     } else if (pageOptions != null && mapNestOptions == null) {
-                        return dataBase.queryMap(sqlTxt,
-                                nargs, pageOptions.getPage(),
-                                pageOptions.getPerPage(), pageOptions.getPageBean(), countSql);
+                        return mdataBase.queryMap(mdMethodName,
+                                args, pageOptions.getPage(),
+                                pageOptions.getPerPage(), pageOptions.getPageBean(), pageOptions.getMdFullMethodNameForCountSql());
                     } else {
                         throw new DbException(methodInfo(method) + "方法如果返回List<Map<String,Object>>类型，则方法不能定义MapNestOptions类型形参！");
                     }
@@ -220,19 +214,19 @@ public class MapperFactory {
                             "如：List<Map<String,Object>> ,List<User>,List<String>,List<Integer>。");
                 } else if (!isJavaClass(typesClassType)) {//自定义类型
                     if (pageOptions == null && mapNestOptions == null) {
-                        return dataBase.queryList((Class) litComponetType, sqlTxt, nargs);
+                        return mdataBase.queryList((Class) listComponetType, mdMethodName, args);
                     } else if (pageOptions != null && mapNestOptions == null) {
-                        return dataBase.queryList((Class) litComponetType, sqlTxt, nargs, pageOptions.getPage(),
+                        return mdataBase.queryList((Class) listComponetType, mdMethodName, args, pageOptions.getPage(),
                                 pageOptions.getPerPage(), pageOptions.getPageBean(),
-                                countSql);
+                                pageOptions.getMdFullMethodNameForCountSql());
                     } else if (pageOptions == null && mapNestOptions != null) {
                         if (mapNestOptions instanceof One2OneMapNestOptions) {
                             One2OneMapNestOptions one2OneOpts = (One2OneMapNestOptions) mapNestOptions;
-                            return dataBase.queryListOne2One((Class) litComponetType,
-                                    sqlTxt, nargs, one2OneOpts);
+                            return mdataBase.queryListOne2One((Class) listComponetType,
+                                    mdMethodName, args, one2OneOpts);
                         } else if (mapNestOptions instanceof One2ManyMapNestOptions) {
                             One2ManyMapNestOptions one2ManyOpts = (One2ManyMapNestOptions) mapNestOptions;
-                            return dataBase.queryListOne2Many((Class) litComponetType, sqlTxt, nargs,
+                            return mdataBase.queryListOne2Many((Class) listComponetType, mdMethodName, args,
                                     one2ManyOpts);
                         } else {
                             ////
@@ -240,9 +234,9 @@ public class MapperFactory {
                     } else if (pageOptions != null && mapNestOptions != null) {
                         if (mapNestOptions instanceof One2OneMapNestOptions) {
                             One2OneMapNestOptions one2OneOpts = (One2OneMapNestOptions) mapNestOptions;
-                            return dataBase.queryListOne2One((Class) litComponetType,
-                                    sqlTxt, nargs, one2OneOpts, pageOptions.getPage(),
-                                    pageOptions.getPerPage(), pageOptions.getPageBean(), countSql);
+                            return mdataBase.queryListOne2One((Class) listComponetType,
+                                    mdMethodName, args, one2OneOpts, pageOptions.getPage(),
+                                    pageOptions.getPerPage(), pageOptions.getPageBean(), pageOptions.getMdFullMethodNameForCountSql());
                         } else if (mapNestOptions instanceof One2ManyMapNestOptions) {
                             throw new DbException(methodInfo(method) + "方法为一对多关联查询，方法不支持分页功能，即不能定义PageOptions类型形参，相关解决方法请参考帮助文档！");
                         } else {
@@ -255,28 +249,19 @@ public class MapperFactory {
             throw new DbException(errMsg);
         }
 
-        private String getCountSql(PageOptions pageOptions, Map<String, Object> args) {
-            String countSql = "";
-            if (pageOptions == null) return "";
-            if (StringUtils.hasText(pageOptions.getMdFullMethodNameForCountSql())) {
-                countSql = MDataBaseImpl.getCountSql(pageOptions.getMdFullMethodNameForCountSql(), args);
-            }
-            return countSql;
-        }
 
-        public Object executeMdMethod(String mdFullMethodName,
-                                      Map<String, Object> args,
-                                      Type returnType,
-                                      PageOptions pageOptions,
-                                      MapNestOptions mapNestOptions,
-                                      InsertOptions insertOptions,
-                                      DataBase dataBase,
-                                      Method method) {
-            NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
-            SQLType sqlType = nsql.getSqlType();
-            String sqlTxt = nsql.getExeSql();
-            Map<Integer, Object> nargs = nsql.getArgs();
-
+        public Object executeMdMethod(
+                Map<String, Object> args,
+                Type returnType,
+                PageOptions pageOptions,
+                MapNestOptions mapNestOptions,
+                InsertOptions insertOptions,
+                MDataBase mdataBase,
+                Method method) {
+            String methodName = method.getName();
+            String mdMethodName = MD.md(method.getDeclaringClass(), methodName);
+            NSQL nsql = NSQL.getNSQL(mdMethodName, args);
+             SQLType sqlType = nsql.getSqlType();
             if (sqlType == SQLType.SELECT) {
                 String errMsg = methodInfo(method) + "为查询方法，其定义的返回类型不支持！" +
                         "返回类型只能定义为DataBaseSet或List<X>,其中X为Map<String,Object>类型，自定义类型，" +
@@ -285,11 +270,12 @@ public class MapperFactory {
                     Class returnClass = (Class) returnType;
                     if (returnClass == DataBaseSet.class) {
                         if (pageOptions == null) {
-                            return dataBase.queryForResultSet(sqlTxt, nargs);
+                            return mdataBase.queryForResultSet(mdMethodName, args);
                         } else if (pageOptions != null) {
-                            String countSql = this.getCountSql(pageOptions, args);
-                            return dataBase.queryForResultSet(sqlTxt, nargs, pageOptions.getPage(),
-                                    pageOptions.getPerPage(), pageOptions.getPageBean(), countSql);
+                            return mdataBase.queryForResultSet(
+                                    mdMethodName, args,
+                                    pageOptions.getPage(), pageOptions.getPerPage(),
+                                    pageOptions.getPageBean(), pageOptions.getMdFullMethodNameForCountSql());
                         }
                         throw new DbException(errMsg);
                     } else if (Iterable.class.isAssignableFrom(returnClass) || returnClass.isArray()) {
@@ -297,7 +283,7 @@ public class MapperFactory {
                     } else {
                         if (!isJavaClass(returnClass)) {//自定义类型
                             if (pageOptions == null && mapNestOptions == null && !isJavaClass(returnClass)) {
-                                return dataBase.queryOne(returnClass, sqlTxt, nargs);
+                                return mdataBase.queryOne(returnClass, mdMethodName, args);
                             }
                         }
 
@@ -312,7 +298,6 @@ public class MapperFactory {
                     Class rawTypeClass = (Class) parameterizedType.getRawType();
                     if (List.class.isAssignableFrom(rawTypeClass)) {
                         Type inType = null;
-                        String countSql = this.getCountSql(pageOptions, args);
                         if (types[0] == Integer.class) {
                             inType = TInteger.class;
                         } else if (types[0] == String.class) {
@@ -327,7 +312,7 @@ public class MapperFactory {
                             inType = types[0];
                         }
                         Object ret = this.returnListTypeHandler(inType, mapNestOptions, pageOptions,
-                                dataBase, nsql, countSql, errMsg, method);
+                                mdataBase, mdMethodName, args, errMsg, method);
                         if (ret != null && List.class.isAssignableFrom(ret.getClass())) {
                             List list = (List) ret;
                             if (list.size() > 0) {
@@ -371,16 +356,16 @@ public class MapperFactory {
                             || t == void.class) {
                         if (sqlType == SQLType.INSERT) {
                             if (insertOptions != null && insertOptions.getReturnFlag() == ReturnFlag.AutoKey) {
-                                ret = dataBase.insertReturnKey(sqlTxt, nargs);
+                                ret = mdataBase.insertReturnKey(mdMethodName, args);
                                 ;
                             } else {
-                                ret = dataBase.insert(sqlTxt, nargs);
+                                ret = mdataBase.insert(mdMethodName, args);
                             }
 
                         } else if (sqlType == SQLType.UPDATE) {
-                            ret = dataBase.update(sqlTxt, nargs);
+                            ret = mdataBase.update(mdMethodName, args);
                         } else if (sqlType == SQLType.DELETE) {
-                            ret = dataBase.del(sqlTxt, nargs);
+                            ret = mdataBase.del(mdMethodName, args);
 
                         } else {
                             ////
@@ -401,7 +386,6 @@ public class MapperFactory {
 
         }
 
+
     }
-
-
 }
