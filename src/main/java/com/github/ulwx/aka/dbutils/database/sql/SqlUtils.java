@@ -7,8 +7,7 @@ import com.github.ulwx.aka.dbutils.database.dialect.DBType;
 import com.github.ulwx.aka.dbutils.database.utils.DbConst;
 import com.github.ulwx.aka.dbutils.database.utils.Table2JavaNameUtils;
 import com.github.ulwx.aka.dbutils.tool.support.*;
-import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
-import com.github.ulwx.aka.dbutils.tool.support.type.TString;
+import com.github.ulwx.aka.dbutils.tool.support.type.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -542,8 +541,15 @@ public class SqlUtils {
         return false;
     }
 
+    public static boolean isTSimpleTypeWrapper(Class t) {
+        if(TType.class.isAssignableFrom(t)){
+            return true;
+        }
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
-    public static Object getValueFromResult(String dbpoolName, Class t, String prefix,
+    public static Object getValueFromResult(String dbpoolName, Class outerClass, Class t, String prefix,
                                             String name, ResultSet rs, Map<String, String> map) {
 
         Object value = null;
@@ -559,76 +565,85 @@ public class SqlUtils {
             String columName = getColumName(dbpoolName, name);
             String labelName = prefix + columName;
             String prefixName = prefix + name;//根据属性名称
-            if (!isExistColumn(rs, labelName)) { //优先使用labelName
-                if (labelName.equals(prefixName)) {
-                    return null;
-                } else {
-                    if (!isExistColumn(rs, prefixName)) {
+            if (!isTSimpleTypeWrapper(outerClass)) {
+                if (!isExistColumn(rs, labelName)) { //优先使用labelName
+                    if (labelName.equals(prefixName)) {
                         return null;
                     } else {
-                        labelName = prefixName;
+                        if (!isExistColumn(rs, prefixName)) {
+                            return null;
+                        } else {
+                            labelName = prefixName;
+                        }
                     }
+                }
+
+                if (rs.getObject(labelName) == null) return null;
+            }
+            if(isTSimpleTypeWrapper(outerClass)) {
+                Class innerType=
+                        ((TType)outerClass.getConstructor().newInstance()).getWrappedClass();
+                value = rs.getObject(1, innerType);
+            }else{
+                if (t == String.class) {
+                    value = rs.getString(labelName);
+                } else if (t == Integer.class || t == int.class) {
+                    value = rs.getObject(labelName,Integer.class);
+                } else if (t == boolean.class || t == Boolean.class) {
+                    value = rs.getObject(labelName,Boolean.class);
+                } else if (t == Long.class || t == long.class) {
+                    value = rs.getObject(labelName,Long.class);
+                } else if (t == Short.class || t == short.class) {
+                    value = rs.getObject(labelName,Short.class);
+                } else if (t == Float.class || t == float.class) {
+                    value = rs.getObject(labelName,Float.class);
+                } else if (t == Double.class || t == double.class) {
+                    value = rs.getObject(labelName,Double.class);
+                } else if (t == Date.class) {
+                    value = rs.getTimestamp(labelName);
+                    if(value!=null)
+                        value = SqlUtils
+                            .sqlTimestampTojavaDate((Timestamp) value);
+                } else if (t == java.sql.Date.class) {
+                    value = rs.getDate(labelName);
+                } else if (t == Timestamp.class) {
+                    value = rs.getTimestamp(labelName);
+                } else if (t == Time.class) {
+                    value = rs.getTime(labelName);
+                } else if (t == LocalDate.class) {
+                    value = rs.getDate(labelName);
+                    if(value!=null)
+                        value = ((java.sql.Date) value).toLocalDate();
+                } else if (t == LocalDateTime.class) {
+                    value = rs.getTimestamp(labelName);
+                    if(value!=null)
+                        value = ((Timestamp) value).toLocalDateTime();
+                } else if (t == LocalTime.class) {
+                    value = rs.getTime(labelName);
+                    if(value!=null)
+                        value = ((Time) value).toLocalTime();
+                } else if (t == Byte.class || t == byte.class) {
+                    value = rs.getObject(labelName,Byte.class);
+                } else if (t == char.class || t == Character.class) {
+                    value = rs.getString(labelName);
+                    if(value!=null && value.toString().length()>0){
+                        value=value.toString().charAt(0);
+                    }else{
+                        char c='\0';
+                        value=c;
+                    }
+                } else if (t == java.math.BigDecimal.class) {
+                    value = rs.getBigDecimal(labelName);
+                } else if (t == java.math.BigInteger.class) {
+                    value = rs.getObject(labelName,Long.class);
+                    if(value!=null)
+                        value = new java.math.BigInteger(Long.toString((Long)value));
+                } else {
+                    value = rs.getObject(labelName, t);
                 }
             }
 
-            if (rs.getObject(labelName) == null) return null;
 
-            if (t == String.class) {
-
-                value = rs.getString(labelName);
-
-
-            } else if (t == Integer.class || t == int.class) {
-
-                value = rs.getInt(labelName);
-
-            } else if (t == boolean.class || t == Boolean.class) {
-
-                value = rs.getBoolean(labelName);
-
-            } else if (t == Long.class || t == long.class) {
-                value = rs.getLong(labelName);
-
-            } else if (t == Short.class || t == short.class) {
-                value = rs.getShort(labelName);
-
-            } else if (t == Float.class || t == float.class) {
-                value = rs.getFloat(labelName);
-
-            } else if (t == Double.class || t == double.class) {
-                value = rs.getDouble(labelName);
-
-            } else if (t == Date.class) {
-                value = rs.getTimestamp(labelName);
-                value = SqlUtils
-                        .sqlTimestampTojavaDate((Timestamp) value);
-            } else if (t == java.sql.Date.class) {
-                value = rs.getDate(labelName);
-            } else if (t == Timestamp.class) {
-                value = rs.getTimestamp(labelName);
-            } else if (t == Time.class) {
-                value = rs.getTime(labelName);
-            } else if (t == LocalDate.class) {
-                value = rs.getDate(labelName);
-                value = ((java.sql.Date) value).toLocalDate();
-            } else if (t == LocalDateTime.class) {
-                value = rs.getTimestamp(labelName);
-                value = ((Timestamp) value).toLocalDateTime();
-            } else if (t == LocalTime.class) {
-                value = rs.getTime(labelName);
-                value = ((Time) value).toLocalTime();
-            } else if (t == Byte.class || t == byte.class) {
-                value = rs.getByte(labelName);
-            } else if (t == char.class || t == Character.class) {
-                value = rs.getString(labelName);
-            } else if (t == java.math.BigDecimal.class) {
-                value = rs.getBigDecimal(labelName);
-            } else if (t == java.math.BigInteger.class) {
-                value = rs.getLong(labelName);
-                value = new java.math.BigInteger(value.toString());
-            } else {
-                value = rs.getObject(labelName, t);
-            }
         } catch (Exception ex) {
             log.error("", ex);
         }
@@ -650,32 +665,23 @@ public class SqlUtils {
                 }
                 Class t = (Class) val;
                 if (t == String.class) {
-
                     value = rs.getString(key);
-
                 } else if (t == Integer.class || t == int.class) {
-
-                    value = rs.getInt(key);
-
+                    value = rs.getObject(key,Integer.class);
                 } else if (t == boolean.class || t == Boolean.class) {
-
-                    value = rs.getBoolean(key);
-
+                    value = rs.getObject(key,Boolean.class);
                 } else if (t == Long.class || t == long.class) {
-                    value = rs.getLong(key);
-
+                    value = rs.getObject(key,Long.class);
                 } else if (t == Short.class || t == short.class) {
-                    value = rs.getShort(key);
-
+                    value = rs.getObject(key,Short.class);
                 } else if (t == Float.class || t == float.class) {
-                    value = rs.getFloat(key);
-
+                    value = rs.getObject(key,Float.class);
                 } else if (t == Double.class || t == double.class) {
-                    value = rs.getDouble(key);
-
+                    value = rs.getObject(key,Double.class);
                 } else if (t == Date.class) {
                     value = rs.getTimestamp(key);
-                    value = SqlUtils
+                    if(value!=null)
+                        value = SqlUtils
                             .sqlTimestampTojavaDate((Timestamp) value);
                 } else if (t == java.sql.Date.class) {
                     value = rs.getDate(key);
@@ -685,61 +691,55 @@ public class SqlUtils {
                     value = rs.getTime(key);
                 } else if (t == LocalDate.class) {
                     value = rs.getDate(key);
-                    value = ((java.sql.Date) value).toLocalDate();
+                    if(value!=null)
+                        value = ((java.sql.Date) value).toLocalDate();
                 } else if (t == LocalDateTime.class) {
                     value = rs.getTimestamp(key);
-                    value = ((Timestamp) value).toLocalDateTime();
+                    if(value!=null)
+                        value = ((Timestamp) value).toLocalDateTime();
                 } else if (t == LocalTime.class) {
                     value = rs.getTime(key);
-                    value = ((Time) value).toLocalTime();
+                    if(value!=null) {
+                        value = ((Time) value).toLocalTime();
+                    }
                 } else if (t == Byte.class || t == byte.class) {
-                    value = rs.getByte(key);
+                    value = rs.getObject(key,Byte.class);
                 } else if (t == char.class || t == Character.class) {
                     value = rs.getString(key);
+                    if(value!=null){
+                        if(value.toString().length()>0) {
+                            value = value.toString().charAt(0);
+                        }else{
+                            value='\0';
+                        }
+                    }
                 } else if (t == java.math.BigDecimal.class) {
                     value = rs.getBigDecimal(key);
                 } else if (t == java.math.BigInteger.class) {
-                    value = rs.getLong(key);
-                    value = new java.math.BigInteger(value.toString());
-                } else if (t == DataBaseSet.class) {
-                    value = rs.getObject(key);
+                    value = rs.getObject(key,Long.class);
+                    if(value!=null) {
+                        value = new java.math.BigInteger(Long.toString((Long) value));
+                    }
+                } else if (t == DataBaseSet.class || t==ResultSet.class) {
+                    value = rs.getObject(key,ResultSet.class);
                     ResultSet rss = null;
                     CachedRowSet crs = null;
                     try {
                         rss = (ResultSet) value;
                         crs = new CachedRowSetImpl();
-                        rss.beforeFirst();
                         crs.populate(rss);
                     } finally {
                         if (rss != null) {
                             rss.close();
                         }
                     }
-                    Object temp = new DataBaseSet(crs);
-                } else {
-
-                    value = rs.getObject(key);
-                    if (value != null && value instanceof ResultSet) {
-                        //value = rs.getObject(key);
-                        ResultSet rss = null;
-                        CachedRowSet crs = null;
-                        try {
-                            rss = (ResultSet) value;
-                            crs = new CachedRowSetImpl();
-                            rss.beforeFirst();
-                            crs.populate(rss);
-                        } finally {
-                            if (rss != null) {
-                                rss.close();
-                            }
-                        }
+                    if(t==ResultSet.class) value= crs;
+                    else if(t==DataBaseSet.class) {
                         Object temp = new DataBaseSet(crs);
                         value = temp;
-                    } else {
-
-                        throw new Exception("position[" + key + "] class["
-                                + t.getName() + "] can't be decided!");
                     }
+                } else {
+                    value = rs.getObject(key,t);
 
                 }
                 if (returnKeyValues != null)
@@ -1049,8 +1049,9 @@ public class SqlUtils {
     }
 
     /**
-     *  根据对象生成更新的SQL语句
-     * @param dbpoolName 数据库连接池
+     * 根据对象生成更新的SQL语句
+     *
+     * @param dbpoolName        数据库连接池
      * @param properties        需更新的属性，如果为空，表明更新所有主键属性以外的属性
      * @param updateObject      需更新的对象
      * @param reflectClass      如果不为null，则使用它生成表名，用于javaBean存在继承时指定哪个父类用于生成表名
@@ -1058,7 +1059,7 @@ public class SqlUtils {
      * @param returnvParameters 生成的参数，每个参数对应于生成语句的一个"?"字符
      * @param options           更新选项
      * @param ignoreNull        是否忽略为空的属性，即如果属性为空，则不生成对应属性的sql
-     * @param dataBaseType  DBMS对象
+     * @param dataBaseType      DBMS对象
      * @return 生成的SQL语句
      * @throws Exception 异常
      */
@@ -1152,16 +1153,17 @@ public class SqlUtils {
 
     /**
      * 根据对象生成插入sql语句
-     * @param dbpoolName 数据库连接池名称
-     * @param properties  哪些属性需要更新
-     * @param insertObject 需插入的对象
-     * @param reflectClass 真实插入对象的class，用于在javaBean存在继承时，使用哪个继承层次的类名作为表名
+     *
+     * @param dbpoolName        数据库连接池名称
+     * @param properties        哪些属性需要更新
+     * @param insertObject      需插入的对象
+     * @param reflectClass      真实插入对象的class，用于在javaBean存在继承时，使用哪个继承层次的类名作为表名
      * @param returnvParameters 生成的参数，每个参数对应于生成语句的相应位置的"?"字符
-     * @param options    更新选项
-     * @param ignoreNull  是否忽略properties属性里空值的属性更新到数据库
-     * @param dataBaseType DBMS对象
-     * @return  回根据对象生成的插入SQL语句
-     * @throws Exception  异常
+     * @param options           更新选项
+     * @param ignoreNull        是否忽略properties属性里空值的属性更新到数据库
+     * @param dataBaseType      DBMS对象
+     * @return 回根据对象生成的插入SQL语句
+     * @throws Exception 异常
      */
     public static String generateInsertSql(String dbpoolName, String[] properties,
                                            Object insertObject, Class reflectClass, Map<Integer, Object> returnvParameters,
@@ -1269,9 +1271,10 @@ public class SqlUtils {
 
     /**
      * 用于设置执行存储过程PreparedStatement的参数
+     *
      * @param vParameters 参数
-     * @param preStmt  PreparedStatement对象
-     * @return  返回调试的字符串
+     * @param preStmt     PreparedStatement对象
+     * @return 返回调试的字符串
      * @throws SQLException 异常
      */
     public static String setToPreStatment(Map<Integer, Object> vParameters,
@@ -1357,9 +1360,10 @@ public class SqlUtils {
 
     /**
      * 生产预处理的sql的debug语句，也就是把?字符替换成实际的参数，主要用于调试
-     * @param sql  带?的sql语句
-     * @param vParameters  参数
-     * @param dbms  数据方言
+     *
+     * @param sql         带?的sql语句
+     * @param vParameters 参数
+     * @param dbms        数据方言
      * @return 返回debug sql。带?的sql里所有?都会填入参数
      */
     public static String generateDebugSql(String sql,
@@ -1484,18 +1488,19 @@ public class SqlUtils {
 
 
     /**
-     *把rs的一行转换成一个javabean
+     * 把rs的一行转换成一个javabean
+     *
      * @param dbpoolName 数据库连接池
-     * @param clazz ResultSet的每行数据映射到类型为clazz的对象
-     * @param rs  需要抽取数据的ResultSet
-     * @param <T> 泛型
-     * @return  返回行数据映射的对象
+     * @param clazz      ResultSet的每行数据映射到类型为clazz的对象
+     * @param rs         需要抽取数据的ResultSet
+     * @param <T>        泛型
+     * @return 返回行数据映射的对象
      */
     public static <T> T getBeanFromResultSet(String dbpoolName, Class<T> clazz, ResultSet rs) {
 
         try {
 
-            T bean = clazz.newInstance();
+            T bean = clazz.getDeclaredConstructor().newInstance();
 
             Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
             Set<?> set = map.keySet();
@@ -1510,7 +1515,7 @@ public class SqlUtils {
                 if (SqlUtils.checkedSimpleType(t)) {// 简单类型
 
                     try {
-                        value = SqlUtils.getValueFromResult(dbpoolName, t, "", name, rs,
+                        value = SqlUtils.getValueFromResult(dbpoolName, clazz, t, "", name, rs,
                                 DataBaseKeyMap.getMap());
                         PropertyUtil.setProperty(bean, name, value);
                     } catch (Exception e) {

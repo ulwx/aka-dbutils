@@ -17,7 +17,9 @@ public abstract class CourseMpper extends AkaMapper {
 
     public abstract  DataBaseSet getRSet(Map<String,Object> ars);
     public abstract DataBaseSet getRSetPage(Map<String,Object> ars, PageOptions pageOptions);
-
+    public abstract String getOneString(String name);
+    public abstract Integer getOneInteger(String name);
+    public abstract Integer getOneIntegerReturnNull(String name);
     /**
      * 方法声明的所有相同名称的参数（包含Map<String,Objec>和javaBean涵盖的参数），后面的会覆盖前面的
      * @param id  类型为Integer，为简单类型，简单类型可以直接用于md文件里的参数

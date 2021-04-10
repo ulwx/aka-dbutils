@@ -8,6 +8,7 @@ import com.github.ulwx.aka.dbutils.database.nsql.NSQL;
 import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
 import com.github.ulwx.aka.dbutils.tool.MD;
 import com.github.ulwx.aka.dbutils.tool.support.NumberUtils;
+import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.type.*;
 import net.sf.cglib.proxy.Enhancer;
@@ -130,7 +131,7 @@ public class MapperFactory {
                             argName = parameter.getName();
                         }
 
-                        if (SqlUtils.checkedSimpleType(parmType)) {
+                        if (checkedSimpleType(parmType)) {
                             argMap.put(argName, arg);
                         } else if (parmType.isArray() || List.class.isAssignableFrom(parmType)) {
                             //如果类型为数组和List，元素类型必须为基本类型
@@ -146,7 +147,7 @@ public class MapperFactory {
                                 }
                             }
                             if (componetType != null) {
-                                if (!SqlUtils.checkedSimpleType(componetType)) {
+                                if (!checkedSimpleType(componetType)) {
                                     throw new DbException(methodInfo(method) + "方法声明的形参类型如果为List类型或数组类型，则其中元素类型必须为java简单类型！");
                                 } else {
                                     argMap.put(argName, arg);
@@ -168,6 +169,9 @@ public class MapperFactory {
 
         }
 
+        public static boolean checkedSimpleType(Class clazz){
+            return ObjectUtils.isPrimitiveWapper(clazz) || clazz.isPrimitive() ||clazz==String.class;
+        }
         public static boolean isJavaClass(Class<?> clz) {
             return clz != null && clz.getClassLoader() == null;
         }
@@ -250,6 +254,81 @@ public class MapperFactory {
         }
 
 
+        private  static Class simpleType2TSimpleType(Class returnClass){
+            Class newReturnClass=returnClass;
+            if (returnClass == Integer.class  || returnClass==int.class) {
+                newReturnClass = TInteger.class;
+            } else if (returnClass == String.class ) {
+                newReturnClass = TString.class;
+            } else if (returnClass == Double.class || returnClass==double.class) {
+                newReturnClass = TDouble.class;
+            } else if (returnClass == Long.class || returnClass==long.class) {
+                newReturnClass = TLong.class;
+            } else if (returnClass== Float.class || returnClass==float.class) {
+                newReturnClass = TFloat.class;
+            } else if(returnClass==Character.class || returnClass==char.class){
+                newReturnClass=TChar.class;
+            } else if(returnClass ==Byte.class || returnClass==byte.class){
+                newReturnClass=TByte.class;
+            } else if(returnClass ==TBoolean.class || returnClass==boolean.class){
+                newReturnClass=TBoolean.class;
+            }else if(returnClass==TShort.class || returnClass==short.class){
+                newReturnClass=TShort.class;
+            }else{
+
+            }
+            return newReturnClass;
+        }
+
+        private  static Object returnValueFromTSimpleType(Class returnClass,Object ret){
+            if(ret instanceof  TType) {
+                if (((TType)ret).getWrappedClass() == returnClass) {
+                    return ((TType)ret).getValue();
+                }
+            }
+            return  ret;
+        }
+        private static Object convertList(List list, Class list0Type,Type types0){
+            Object ret=list;
+            if (list0Type == TInteger.class && types0== Integer.class) {
+                ret = list.stream().map(i -> {
+                    return ((TInteger) i).getValue();
+                }).collect(Collectors.toList());
+            } else if (list0Type == TLong.class && types0 == Long.class) {
+                ret = list.stream().map(i -> {
+                    return ((TLong) i).getValue();
+                }).collect(Collectors.toList());
+            } else if (list0Type == TFloat.class && types0 == Float.class) {
+                ret = list.stream().map(i -> {
+                    return ((TFloat) i).getValue();
+                }).collect(Collectors.toList());
+            } else if (list0Type == TDouble.class && types0 == Double.class) {
+                ret = list.stream().map(i -> {
+                    return ((TDouble) i).getValue();
+                }).collect(Collectors.toList());
+            } else if (list0Type == TString.class && types0 == String.class) {
+                ret = list.stream().map(i -> {
+                    return ((TString) i).getValue();
+                }).collect(Collectors.toList());
+            }else if (list0Type == TShort.class && types0 == Short.class) {
+                ret = list.stream().map(i -> {
+                    return ((TShort) i).getValue();
+                }).collect(Collectors.toList());
+            }else if (list0Type == TChar.class && types0 == Character.class) {
+                ret = list.stream().map(i -> {
+                    return ((TChar) i).getValue();
+                }).collect(Collectors.toList());
+            }else if (list0Type == TBoolean.class && types0 == Boolean.class) {
+                ret = list.stream().map(i -> {
+                    return ((TBoolean) i).getValue();
+                }).collect(Collectors.toList());
+            }else if (list0Type == TByte.class && types0== Byte.class) {
+                ret = list.stream().map(i -> {
+                    return ((TByte) i).getValue();
+                }).collect(Collectors.toList());
+            }
+            return ret;
+        }
         public Object executeMdMethod(
                 Map<String, Object> args,
                 Type returnType,
@@ -285,6 +364,14 @@ public class MapperFactory {
                             if (pageOptions == null && mapNestOptions == null && !isJavaClass(returnClass)) {
                                 return mdataBase.queryOne(returnClass, mdMethodName, args);
                             }
+                        }else if(checkedSimpleType(returnClass)){
+                            Class newReturnClass=simpleType2TSimpleType(returnClass);
+                            Object ret= mdataBase.queryOne(newReturnClass, mdMethodName, args);
+                            if(ret!=null){
+                                return returnValueFromTSimpleType(returnClass,ret);
+                            }else {
+                                return null;
+                            }
                         }
 
                     }
@@ -297,19 +384,9 @@ public class MapperFactory {
                     Type[] types = parameterizedType.getActualTypeArguments();
                     Class rawTypeClass = (Class) parameterizedType.getRawType();
                     if (List.class.isAssignableFrom(rawTypeClass)) {
-                        Type inType = null;
-                        if (types[0] == Integer.class) {
-                            inType = TInteger.class;
-                        } else if (types[0] == String.class) {
-                            inType = TString.class;
-                        } else if (types[0] == Double.class) {
-                            inType = TDouble.class;
-                        } else if (types[0] == Long.class) {
-                            inType = TLong.class;
-                        } else if (types[0] == Float.class) {
-                            inType = TFloat.class;
-                        } else {
-                            inType = types[0];
+                        Type inType = types[0];
+                        if(types[0] instanceof Class) {
+                            inType=simpleType2TSimpleType((Class) types[0]);
                         }
                         Object ret = this.returnListTypeHandler(inType, mapNestOptions, pageOptions,
                                 mdataBase, mdMethodName, args, errMsg, method);
@@ -317,27 +394,7 @@ public class MapperFactory {
                             List list = (List) ret;
                             if (list.size() > 0) {
                                 Class list0Type = list.get(0).getClass();
-                                if (list0Type == TInteger.class && types[0] == Integer.class) {
-                                    ret = list.stream().map(i -> {
-                                        return ((TInteger) i).getValue();
-                                    }).collect(Collectors.toList());
-                                } else if (list0Type == TLong.class && types[0] == Long.class) {
-                                    ret = list.stream().map(i -> {
-                                        return ((TLong) i).getValue();
-                                    }).collect(Collectors.toList());
-                                } else if (list0Type == TFloat.class && types[0] == Float.class) {
-                                    ret = list.stream().map(i -> {
-                                        return ((TFloat) i).getValue();
-                                    }).collect(Collectors.toList());
-                                } else if (list0Type == TDouble.class && types[0] == Double.class) {
-                                    ret = list.stream().map(i -> {
-                                        return ((TDouble) i).getValue();
-                                    }).collect(Collectors.toList());
-                                } else if (list0Type == TString.class && types[0] == String.class) {
-                                    ret = list.stream().map(i -> {
-                                        return ((TString) i).getValue();
-                                    }).collect(Collectors.toList());
-                                }
+                                ret=convertList(list,list0Type,types[0] );
                             }
                         }
                         return ret;
@@ -382,7 +439,6 @@ public class MapperFactory {
             } else {
                 throw new DbException(methodInfo(method) + "方法对应的语句类型" + sqlType + "不支持!");
             }
-
 
         }
 

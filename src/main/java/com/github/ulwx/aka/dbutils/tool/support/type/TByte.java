@@ -1,6 +1,6 @@
 package com.github.ulwx.aka.dbutils.tool.support.type;
 
-public class TByte {
+public class TByte implements TType{
 
     private Byte value;
 
@@ -23,5 +23,10 @@ public class TByte {
 
     public String toString() {
         return value + "";
+    }
+
+    @Override
+    public Class getWrappedClass() {
+        return Byte.class;
     }
 }

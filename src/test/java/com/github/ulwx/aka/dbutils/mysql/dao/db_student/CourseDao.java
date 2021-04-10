@@ -75,8 +75,19 @@ public class CourseDao {
         Course course = new Course();
         course.setTeacherId(1);
         course.selectOptions().orderBy("id asc");
+        StringBuffer sql=new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt->{
+            if(sql.length()>0){
+                sql.append(";");
+            }
+            sql.append(sqltxt);
+        });
         List<Course> list =
                 MDbUtils.queryListBy(DbPoolName, course, 2, 4, pageBean); // ①
+        DbContext.removeDebugSQLListener();
+        Assert.equal(sql.toString(),
+                "select count(1) from (select *  from `course`  where `teacher_id`=1) t;" +
+                "select *  from `course`  where `teacher_id`=1   order by `id` asc limit 4, 4");
         Course compareTo=null;
         List compareToList=new ArrayList();
         compareTo=new Course();
@@ -803,7 +814,6 @@ public class CourseDao {
         Map<String, Object> args = new HashMap<>();
         args.put("name:in", "course1");
         args.put("count:out", int.class);//存入的是类型
-        // args.put("count:out",0); //和上面一行等效
         Map<String, Object> out = new HashMap<>();
         List<DataBaseSet> list = new ArrayList<>();
         StringBuffer sql=new StringBuffer();

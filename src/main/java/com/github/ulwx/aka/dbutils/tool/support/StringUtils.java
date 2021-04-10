@@ -1,4 +1,3 @@
-
 package com.github.ulwx.aka.dbutils.tool.support;
 
 import com.github.ulwx.aka.dbutils.tool.support.type.TInteger;

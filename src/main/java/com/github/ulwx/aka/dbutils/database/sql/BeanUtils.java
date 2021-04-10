@@ -20,7 +20,7 @@ public class BeanUtils {
                 String toPro = toPros[j];
 
                 Class type = PropertyUtil.getPropertyType(nestedObj, toPro);
-                Object value = SqlUtils.getValueFromResult(db, type,
+                Object value = SqlUtils.getValueFromResult(db, nestedObj.getClass(), type,
                         prefix, toPro, rs.getResultSet(), DataBaseKeyMap.getMap());
 
                 PropertyUtil.setProperty(nestedObj, toPro, value);
@@ -34,7 +34,7 @@ public class BeanUtils {
                 //
                 Class type = PropertyUtil.getPropertyType(nestedObj, name);
 
-                Object value = SqlUtils.getValueFromResult(db, type, prefix, name,
+                Object value = SqlUtils.getValueFromResult(db, nestedObj.getClass(), type, prefix, name,
                         rs.getResultSet(), DataBaseKeyMap.getMap());
 
                 PropertyUtil.setProperty(nestedObj, name, value);
@@ -71,7 +71,7 @@ public class BeanUtils {
             String nkey = keys[n].trim();
             Class keyClass = PropertyUtil.getPropertyType(bean, nkey);
 
-            Object keyValue = SqlUtils.getValueFromResult(db, keyClass, sqlPrefix
+            Object keyValue = SqlUtils.getValueFromResult(db, bean.getClass(), keyClass, sqlPrefix
                     , nkey, rs.getResultSet(), DataBaseKeyMap.getMap());
             if (keyValue == null) {
                 return null;
@@ -87,9 +87,11 @@ public class BeanUtils {
 
     }
 
-    /**指定javaBean的属性
-     * @param bean  javaBean对象
-     * @param keyNames  属性名称
+    /**
+     * 指定javaBean的属性
+     *
+     * @param bean            javaBean对象
+     * @param keyNames        属性名称
      * @param compareToValues 以英文分号隔开
      * @return 是否相等
      */
@@ -120,7 +122,6 @@ public class BeanUtils {
         return false;
 
     }
-
 
 
 }

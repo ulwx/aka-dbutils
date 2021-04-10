@@ -454,7 +454,6 @@ public class CTime {
     }
 
     /**
-     *
      * @param s1 被减日期字符串格式 yyyy-MM-dd
      * @param s2 减日期字符串格式 yyyy-MM-dd
      * @return 两个日期相差的天数
@@ -518,7 +517,6 @@ public class CTime {
     }
 
     /**
-     *
      * @param date
      * @param format 年yyyy 月MM 日dd 时HH 分mm 秒ss
      * @return
@@ -531,7 +529,6 @@ public class CTime {
     }
 
     /**
-     *
      * @param s1 被减日期字符串格式 yyyy-MM-dd
      * @return 当前日期-S1 相差的天数
      */
@@ -556,7 +553,7 @@ public class CTime {
      * d1-d2的天数
      *
      * @param start 被减日期
-     * @param end 减日期
+     * @param end   减日期
      * @return 两个日期相差的天数
      */
     public static long datediff(Date start, Date end) {

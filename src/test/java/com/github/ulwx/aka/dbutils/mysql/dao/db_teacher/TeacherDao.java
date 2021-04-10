@@ -98,6 +98,11 @@ public class TeacherDao {
                 Assert.state(dataBase.connectedToMaster());
 
             }
+
+            @Override
+            public boolean beforeDbOperationExeute(DataBase dataBase, boolean inBatch, String debugSql) {
+                return true;
+            }
         });
         MDbUtils.updateBy(DbPoolName, teacher,MD.of(teacher::getId));//更新方法会在主库上执行
         DbContext.removeDebugSQLListener();

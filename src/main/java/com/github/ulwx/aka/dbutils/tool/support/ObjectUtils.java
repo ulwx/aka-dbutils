@@ -28,7 +28,7 @@ public class ObjectUtils {
     private static final Logger log = LoggerFactory.getLogger(ObjectUtils.class);
 
     public static String toString(Object obj) {
-        if(obj==null){
+        if (obj == null) {
             return null;
         }
         return toJsonString(obj);
@@ -232,7 +232,7 @@ public class ObjectUtils {
     }
 
     public static String toPrettyJsonString(Object obj) {
-        if(obj==null) return null;
+        if (obj == null) return null;
         return toJsonString(obj, false, false, true);
     }
 

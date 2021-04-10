@@ -1,10 +1,13 @@
 package com.github.ulwx.aka.dbutils.tool.support.type;
 
-public class TDouble {
+public class TDouble implements TType{
 
-    private Double value = 0d;
+    private Double value ;
 
-
+    @Override
+    public Class getWrappedClass() {
+        return Double.class;
+    }
     public TDouble() {
 
     }
@@ -12,7 +15,7 @@ public class TDouble {
     public TDouble(Double val) {
         this.value = val;
     }
-
+    @Override
     public Double getValue() {
         return value;
     }

@@ -110,4 +110,14 @@ dropCourse
 ====
 drop table `course`
 
+getOneString
+===
+select #{name}
 
+getOneInteger
+===
+select count(#{name})
+
+getOneIntegerReturnNull
+===
+select null

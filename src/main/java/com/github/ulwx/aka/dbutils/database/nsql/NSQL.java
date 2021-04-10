@@ -64,6 +64,7 @@ public final class NSQL {
 
     /**
      * 获取用于数据库执行的SQL语句，如SELECT `id`, `name` FROM `teacher` where name like ?
+     *
      * @return 返回执行的SQL语句
      */
     public String getExeSql() {
@@ -73,7 +74,7 @@ public final class NSQL {
     /**
      * 获取用户定义的命名SQL语句，如SELECT `id`, `name` FROM `teacher` where name like #{lname%}
      *
-     * @return  返回命名SQL语句，如 select * from t where
+     * @return 返回命名SQL语句，如 select * from t where
      */
     public String getNamingSql() {
         return sql_naming;
@@ -82,7 +83,7 @@ public final class NSQL {
 
     /**
      * 根据md文件里的方法名和参数，获取NSQL对象
-
+     *
      * @param mdPathMethodName 定位到md文件里的方法字符串，格式为：
      *                         com.github.ulwx.database.test.SysRightDao.md:getDataCount,
      *                         表示在com/ulwx/database/test/SysRightDao.md文件里查找getDataCount的方法
@@ -107,8 +108,8 @@ public final class NSQL {
      * @param mdPath     ：md文件的包路径全名称，例如，格式为： com.github.ulwx.database.test.SysRightDao.md
      * @param methodName ：md里对应的方法名，例如 getDataCount
      * @param args       ：存放参数的map或JavaBean
-     * @return  返回NSQL对象
-     * @throws Exception  异常
+     * @return 返回NSQL对象
+     * @throws Exception 异常
      */
     public static NSQL getNSQL(String mdPath, String methodName, Object args) throws Exception {
 
@@ -157,7 +158,7 @@ public final class NSQL {
      *
      * @param sqltxt sql语句
      * @param args   sql语句里用到的参数
-     *  @param nsql  NSQL对象
+     * @param nsql   NSQL对象
      * @return 返回NSQL对象
      */
 

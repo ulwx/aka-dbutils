@@ -2,17 +2,12 @@ package com.github.ulwx.aka.dbutils.tool.support.type;
 
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 
-public class TObjectN {
+public class TResultN  {
 
     private Object[] values;
 
-    public TObjectN() {
-
-    }
-
-    public TObjectN(Object... value) {
-        // TODO Auto-generated constructor stub
-        this.values = value;
+    public TResultN(Object... objects) {
+        this.values=objects;
     }
 
     public Object getValueByIndex(int index) {

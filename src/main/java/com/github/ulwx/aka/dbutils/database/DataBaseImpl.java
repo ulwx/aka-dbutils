@@ -1142,7 +1142,7 @@ public class DataBaseImpl implements DataBase {
             int index = 0;
             while (rs.next()) {
                 try {
-                    T bean = clazz.newInstance();
+                    T bean = clazz.getDeclaredConstructor().newInstance();
                     Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
                     Set<?> set = map.keySet();
                     Iterator<?> i = set.iterator();
@@ -1154,7 +1154,7 @@ public class DataBaseImpl implements DataBase {
                         Object value = null;
                         // name为javabean属性名
                         if (SqlUtils.checkedSimpleType(t)) {// 简单类型
-                            value = SqlUtils.getValueFromResult(this.dbPoolName, t, sqlPrefix, name, rs.getResultSet(),
+                            value = SqlUtils.getValueFromResult(this.dbPoolName,clazz, t, sqlPrefix, name, rs.getResultSet(),
                                     DataBaseKeyMap.getMap());
 
                             PropertyUtil.setProperty(bean, name, value);
@@ -1177,7 +1177,7 @@ public class DataBaseImpl implements DataBase {
                                     if (name.equals(toPropertyName)) {
                                         Class<?> nestedClass = PropertyUtil.getPropertyType(bean, toPropertyName);
 
-                                        Object nestedObj = nestedClass.newInstance();
+                                        Object nestedObj = nestedClass.getDeclaredConstructor().newInstance();
 
                                         nestedObj = BeanUtils.setOne2One(this.dbPoolName, nestedObj, toPros, prefix,
                                                 rs);
@@ -1254,7 +1254,7 @@ public class DataBaseImpl implements DataBase {
             while (rs.next()) {
                 try {
 
-                    T bean = clazz.newInstance();
+                    T bean = clazz.getDeclaredConstructor().newInstance();
                     Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
                     Set<?> set = map.keySet();
                     Iterator<?> i = set.iterator();
@@ -1270,7 +1270,7 @@ public class DataBaseImpl implements DataBase {
                         // name为javabean属性名
                         if (SqlUtils.checkedSimpleType(t)) {// 简单类型
 
-                            value = SqlUtils.getValueFromResult(this.dbPoolName, t, sqlPrefix, name, rs.getResultSet(),
+                            value = SqlUtils.getValueFromResult(this.dbPoolName,clazz, t, sqlPrefix, name, rs.getResultSet(),
                                     DataBaseKeyMap.getMap());
                             PropertyUtil.setProperty(bean, name, value);
                         } else {
@@ -1294,7 +1294,7 @@ public class DataBaseImpl implements DataBase {
                                         String[] nestedBeanPropertyKeys = queryMapNestMany.getNestedBeanPropertyKeys();
 
                                         Class<?> nestedClass = queryMapNestMany.getNestedClassType();
-                                        Object nestedObj = nestedClass.newInstance();
+                                        Object nestedObj = nestedClass.getDeclaredConstructor().newInstance();
 
                                         nestedObj = BeanUtils.setOne2One(this.dbPoolName, nestedObj, toPros, prefix,
                                                 rs);

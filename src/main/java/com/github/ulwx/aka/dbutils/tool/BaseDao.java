@@ -531,7 +531,7 @@ public class BaseDao {
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），除whereProperties里属性的其它属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      *
      * @param pollName        连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
-     * @param updateObjects         根据对象数组生成update语句
+     * @param updateObjects   根据对象数组生成update语句
      * @param whereProperties 指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param includeNull     根据includeNull决定set子句里是否包含null值的属性
      * @param <T>
@@ -550,7 +550,7 @@ public class BaseDao {
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），updateProperties里属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      *
      * @param pollName         连接池的名字，对应dbpool.xml里&lt;dbpool&gt;的name属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
-     * @param updateObjects          根据对象数组生成update语句
+     * @param updateObjects    根据对象数组生成update语句
      * @param whereProperties  指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param updateProperties 通过updateProperties指定对象里哪些属性生成update语句里的set语句部分。
      * @param includeNull      根据includeNull决定set子句里是否包含null值的属性

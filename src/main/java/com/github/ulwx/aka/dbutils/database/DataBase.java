@@ -175,10 +175,12 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      */
     List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
                                        PageBean pageBean, String countSql) throws DbException;
+
     /**
      * 分页查询，返回的一页结果为Map列表
+     *
      * @param sqlQuery sql语句
-     * @param args   参数
+     * @param args     参数
      * @return
      * @throws DbException
      */
@@ -208,6 +210,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      * @throws DbException
      */
     <T> T queryOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException;
+
     /**
      * 一对一关联分页查询。是针对一个对象"一对一关联"另一对象，通过在对象的类里定义一个关联属性，包含关联属性的类为主类，
      * 关联属性的类型为子关联类。主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
@@ -273,7 +276,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *         System.out.println("list="+ ObjectUtils.toPrettyJsonString(list));
      *
      *     }
-
+     *
      * }
      * </pre></blockquote>
      * ③处的"stu."指定了一个前缀，它限定了SQL语句里哪些列字段（③-1处）要映射到主类（包含关联属性的类）里对应的属性。
@@ -281,8 +284,8 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      * 在②处设置了"c."，这限定了SQL语句里哪些列字段（②-1处）要映射到子关联子里的对应的属性（即Course类里的属性）。
      *
      * @param clazz                 映射到的对象所属类型
-     * @param sqlQuery      sql语句
-     * @param vParameters                  参数
+     * @param sqlQuery              sql语句
+     * @param vParameters           参数
      * @param one2OneMapNestOptions 关联子对象的映射配置对象。
      * @param <T>
      * @return
@@ -290,6 +293,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      */
     <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
                                  One2OneMapNestOptions one2OneMapNestOptions) throws DbException;
+
     /**
      * 根据SQL语句查询记录，每行记录映射到指定类型的对象。本方法为分页查询，参数page为页码（从1开始），
      * 参数perPage为每页多少行记录，aka-dbutils会根据这些信息生成分页的select语句，例如，如果当前数据库类型为mysql，
@@ -306,41 +310,42 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *      select count(1) from (select * from course  where name='course_page') t
      *  </pre></blockquote>
      *
-     * @param clazz                    记录映射到对象的类型
-     * @param sqlQuery         sql语句
-     * @param vParameters                    参数
-     * @param page                     当前请求页码
-     * @param perPage                  每页多少行
-     * @param pageBean                 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
-     * @param countSql 可以指定四种类型的参数，<br>
-     *                 null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br>
-     *                 数字：则表明以指定的数字为总数，用于计算分页信息；<br>
-     *                 表示计算总数的SQL：表示计算总数的SQL<br>
-     *                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
+     * @param clazz       记录映射到对象的类型
+     * @param sqlQuery    sql语句
+     * @param vParameters 参数
+     * @param page        当前请求页码
+     * @param perPage     每页多少行
+     * @param pageBean    存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
+     * @param countSql    可以指定四种类型的参数，<br>
+     *                    null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br>
+     *                    数字：则表明以指定的数字为总数，用于计算分页信息；<br>
+     *                    表示计算总数的SQL：表示计算总数的SQL<br>
+     *                    -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
      * @param <T>
      * @return 返回一个List对象，包含行记录映射的对象。
      * @throws DbException
      */
     <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
                           PageBean pageBean, String countSql) throws DbException;
+
     /**
      * 一对一关联分页查询。是针对一个对象"一对一关联"另一对象，通过在对象的类里定义一个关联属性，包含关联属性的类为主类，
      * 关联属性的类型为子关联类。主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
      * 那么student表一行学生信息记录就一对一关联course表的一门课程记录，从类的角度来说就是主类Student和子关联类Course具有一对一关联，
      * 并且在Student类里定义了一个名为"course"的关联属性，其类型为Course，它是子关联类型。
      *
-     * @param clazz                    映射到的对象所属类型
-     * @param sqlQuery          sql语句
-     * @param vParameters                     参数
-     * @param one2OneMapNestOptions    关联子对象的映射配置对象。
-     * @param page                     当前请求页码
-     * @param perPage                  每页多少行
-     * @param pageBean                 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
-     * @param countSql 可以指定四种类型的参数，<br>
-     *                 null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br>
-     *                 数字：则表明以指定的数字为总数，用于计算分页信息；<br>
-     *                 表示计算总数的SQL：表示计算总数的SQL<br>
-     *                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
+     * @param clazz                 映射到的对象所属类型
+     * @param sqlQuery              sql语句
+     * @param vParameters           参数
+     * @param one2OneMapNestOptions 关联子对象的映射配置对象。
+     * @param page                  当前请求页码
+     * @param perPage               每页多少行
+     * @param pageBean              存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
+     * @param countSql              可以指定四种类型的参数，<br>
+     *                              null或""：则ak-dbutils会自动帮您生成计算count的select语句；<br>
+     *                              数字：则表明以指定的数字为总数，用于计算分页信息；<br>
+     *                              表示计算总数的SQL：表示计算总数的SQL<br>
+     *                              -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
      * @param <T>
      * @return
      * @throws DbException
@@ -349,6 +354,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
                                  One2OneMapNestOptions one2OneMapNestOptions,
                                  int page, int perPage, PageBean pageBean, String countSql)
             throws DbException;
+
     /**
      * 一对多关联查询。是针对一个对象"一对多关联"另一对象，通过在对象的类（主类）里定义一个关联属性，关联属性的类型为子关联类。
      * 主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习多门课程（对应course表里多条记录），
@@ -431,8 +437,8 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      * 掉重复生成的关联子对象，从而构成最终的关联子对象列表。
      *
      * @param clazz                  映射到的对象所属类型
-     * @param sqlQuery       sql语句
-     * @param vParameters                  参数
+     * @param sqlQuery               sql语句
+     * @param vParameters            参数
      * @param one2ManyMapNestOptions 指定一对多关联子对象的映射信息，为数组类型，可以指定多个一对多关联映射
      * @param <T>
      * @return
@@ -440,27 +446,31 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      */
     <T> List<T> queryListOne2Many(Class<T> clazz, String sqlQuery,
                                   Map<Integer, Object> vParameters, One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException;
+
     /**
      * 根据指定的SQL语句来查询记录，并通过rowMapper映射到指定类型的对象。
      *
-     * @param sqlQuery sql语句
-     * @param args             参数
-     * @param rowMapper        自定义映射接口，可通过此接口，开发者可以自定义结果集到对象的映射
+     * @param sqlQuery  sql语句
+     * @param args      参数
+     * @param rowMapper 自定义映射接口，可通过此接口，开发者可以自定义结果集到对象的映射
      * @param <T>
      * @return 返回一个List对象，包含通过rowMapper映射的对象。
      * @throws DbException
      */
     <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException;
+
     /**
      * 执行指定的SQL执行删除操作
-     * @param sqltext  sql语句
-     * @param vParameters    参数
+     *
+     * @param sqltext     sql语句
+     * @param vParameters 参数
      * @return 返回删除操作删除的条数
      * @throws DbException
      */
     int del(String sqltext, Map<Integer, Object> vParameters) throws DbException;
 
     int update(String sqltext, Map<Integer, Object> vParameters) throws DbException;
+
     /**
      * 调用存储过程，用法如下：
      * <pre>
@@ -488,11 +498,12 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      */
     void callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues,
                        List<DataBaseSet> returnDataBaseSets) throws DbException;
+
     /**
      * 根据指定的insert语句执行插入操作
      *
-     * @param sqltext  insert语句
-     * @param vParameters    sqltext所用到的参数
+     * @param sqltext     insert语句
+     * @param vParameters sqltext所用到的参数
      * @return 返回执行插入操作后插入记录的条数
      * @throws DbException
      */
@@ -501,8 +512,8 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     /**
      * 根据定的SQL执行插入操作，args为动态生成SQL语句的参数，返回插入单条记录的自增主键id
      *
-     * @param sqltext insert语句
-     * @param vParameters  sqltext所用到的参数
+     * @param sqltext     insert语句
+     * @param vParameters sqltext所用到的参数
      * @return 返回插入单条记录的自增主键id
      * @throws DbException
      */
@@ -511,9 +522,9 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     /**
      * 更新操作，根据指定的SQL语句数组执行批量更新操作,每个数组里的SQL语句对应参数数组（vParametersArray）相应参数Map。
      *
-     * @param sqltxts sql语句数组
-     * @param vParametersArray  参数数组
-     * @return  sqltxts数组里每条SQL语句返回的条数构成数组
+     * @param sqltxts          sql语句数组
+     * @param vParametersArray 参数数组
+     * @return sqltxts数组里每条SQL语句返回的条数构成数组
      * @throws DbException
      */
     int[] update(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException;
@@ -521,8 +532,8 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     /**
      * 批量插入操作，根据指定的SQL语句数组执行批量更新操作,每个数组里的SQL语句对应参数数组（vParametersArray）相应参数Map。
      *
-     * @param sqltxts sql语句数组
-     * @param vParametersArray   参数数组
+     * @param sqltxts          sql语句数组
+     * @param vParametersArray 参数数组
      * @return sqltxts数组里每条SQL语句返回的插入条数构成数组
      * @throws DbException
      */
@@ -531,29 +542,32 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     /**
      * 根据指定的单个SQL执行批量更新操作，指定的sql语句会以列表里的每个Map参数依次执行，最终返回对应的每条语句执行更新的条数。
      *
-     * @param sqltxt sql语句
-     * @param vParametersList    Map参数列表
+     * @param sqltxt          sql语句
+     * @param vParametersList Map参数列表
      * @return 返回执行更新操作后插入记录的条数
      * @throws DbException
      */
     int[] update(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException;
+
     /**
      * 根据指定的单个SQL执行批量插入操作，指定的sql语句会以列表里的每个Map参数依次执行，最终返回对应的每条语句执行插入的条数。
      *
-     * @param sqltxt sql语句
-     * @param vParametersList    Map参数列表
+     * @param sqltxt          sql语句
+     * @param vParametersList Map参数列表
      * @return 返回执行插入操作后插入记录的条数
      * @throws DbException
      */
     int[] insert(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException;
+
     /**
      * 更新操作，根据指定的SQL语句列表执行批量更新操作。
      *
      * @param sqltxts update语句列表
-     * @return  sqltxts列表里每条SQL语句返回的条数构成数组
+     * @return sqltxts列表里每条SQL语句返回的条数构成数组
      * @throws DbException
      */
     int[] update(ArrayList<String> sqltxts) throws DbException;
+
     /**
      * 插入操作，根据指定的SQL语句列表执行批量插入操作。
      *

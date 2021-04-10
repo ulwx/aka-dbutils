@@ -19,7 +19,7 @@ public class CompilerUtils {
      *
      * @param classFullName 包全路径名,例如 com.github.ulwx.database.test.SysRightDaoMd
      * @param source        java源代码字符串
-     * @param  classpath    编译的类路径
+     * @param classpath     编译的类路径
      * @return 返回生成的Class对象
      * @throws Exception
      */

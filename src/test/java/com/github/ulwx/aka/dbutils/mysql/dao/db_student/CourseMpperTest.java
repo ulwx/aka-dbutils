@@ -5,13 +5,11 @@ import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
 import com.github.ulwx.aka.dbutils.database.MDbTransactionManager;
 import com.github.ulwx.aka.dbutils.mysql.Utils;
-import com.github.ulwx.aka.dbutils.mysql.dao.db_student.CourseMpper;
 import com.github.ulwx.aka.dbutils.mysql.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.tool.MD;
 import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 import com.github.ulwx.aka.dbutils.tool.support.Assert;
 import com.github.ulwx.aka.dbutils.tool.support.CTime;
-import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -58,7 +56,7 @@ public class CourseMpperTest {
 
     }
     @Test
-    public  void testGetOneCourseByIds(){
+    public  void testGetCourseListByIds(){
         Map<String,Object> arg = new HashMap<>();
         arg.put("teacherId","1");
         Course cs=new Course();
@@ -104,6 +102,19 @@ public class CourseMpperTest {
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(), "select * from course where 1=1 and name like 'course%'");
         Assert.isTrue(courseList.size()==21);
+    }
+    @Test
+    public void testGetOneSimpleType(){
+        String ret=MDbUtils.getMapper(DbPoolName,
+                CourseMpper.class).getOneString("abc");
+        Assert.equal(ret,"abc");
+        Integer ret2=MDbUtils.getMapper(DbPoolName,
+                CourseMpper.class).getOneInteger("abc");
+        Assert.equal(ret2,1);
+
+        Integer ret3=MDbUtils.getMapper(DbPoolName,
+                CourseMpper.class).getOneIntegerReturnNull("abc");
+        Assert.isNull(ret3);
     }
     @Test
     public  void testCouseListPage(){

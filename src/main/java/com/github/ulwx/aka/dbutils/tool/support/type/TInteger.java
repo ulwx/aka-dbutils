@@ -1,10 +1,13 @@
 package com.github.ulwx.aka.dbutils.tool.support.type;
 
-public class TInteger {
+public class TInteger implements TType {
 
-    private Integer value = 0;
+    private Integer value ;
 
-
+    @Override
+    public Class getWrappedClass() {
+        return Integer.class;
+    }
     public TInteger() {
 
     }
@@ -12,7 +15,7 @@ public class TInteger {
     public TInteger(Integer val) {
         this.value = val;
     }
-
+    @Override
     public Integer getValue() {
         return value;
     }
@@ -24,4 +27,5 @@ public class TInteger {
     public String toString() {
         return value + "";
     }
+
 }
