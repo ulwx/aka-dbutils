@@ -121,3 +121,30 @@ select count(#{name})
 getOneIntegerReturnNull
 ===
 select null
+
+getOneBigInteger
+===
+select 123
+
+getOneBigIntegerList
+===
+select 1
+union
+select 2
+union
+select 3
+
+getOneLocalDateTime
+===
+SELECT STR_TO_DATE('2014-04-22 15:47:06','%Y-%m-%d %H:%i:%s')
+
+getOneTimestamp
+===
+SELECT STR_TO_DATE('2014-04-22 15:47:06','%Y-%m-%d %H:%i:%s')
+
+getOneTimestampList
+===
+SELECT STR_TO_DATE('2014-04-22 15:47:06','%Y-%m-%d %H:%i:%s')
+union all
+SELECT STR_TO_DATE('2015-04-22 15:47:06','%Y-%m-%d %H:%i:%s')
+

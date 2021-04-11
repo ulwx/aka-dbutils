@@ -555,17 +555,21 @@ public class SqlUtils {
         Object value = null;
         try {
 
-            long start = System.currentTimeMillis();
-            if (map != null) {
-                String mapName = map.get(name);
-                if (mapName != null) {
-                    name = mapName;
+            if(isTSimpleTypeWrapper(outerClass)) {
+                Class innerType=
+                        ((TType)outerClass.getConstructor().newInstance()).getWrappedClass();
+                value = rs.getObject(1, innerType);
+            }else{
+                long start = System.currentTimeMillis();
+                if (map != null) {
+                    String mapName = map.get(name);
+                    if (mapName != null) {
+                        name = mapName;
+                    }
                 }
-            }
-            String columName = getColumName(dbpoolName, name);
-            String labelName = prefix + columName;
-            String prefixName = prefix + name;//根据属性名称
-            if (!isTSimpleTypeWrapper(outerClass)) {
+                String columName = getColumName(dbpoolName, name);
+                String labelName = prefix + columName;
+                String prefixName = prefix + name;//根据属性名称
                 if (!isExistColumn(rs, labelName)) { //优先使用labelName
                     if (labelName.equals(prefixName)) {
                         return null;
@@ -577,14 +581,6 @@ public class SqlUtils {
                         }
                     }
                 }
-
-                if (rs.getObject(labelName) == null) return null;
-            }
-            if(isTSimpleTypeWrapper(outerClass)) {
-                Class innerType=
-                        ((TType)outerClass.getConstructor().newInstance()).getWrappedClass();
-                value = rs.getObject(1, innerType);
-            }else{
                 if (t == String.class) {
                     value = rs.getString(labelName);
                 } else if (t == Integer.class || t == int.class) {
@@ -606,9 +602,9 @@ public class SqlUtils {
                             .sqlTimestampTojavaDate((Timestamp) value);
                 } else if (t == java.sql.Date.class) {
                     value = rs.getDate(labelName);
-                } else if (t == Timestamp.class) {
+                } else if (t == java.sql.Timestamp.class) {
                     value = rs.getTimestamp(labelName);
-                } else if (t == Time.class) {
+                } else if (t == java.sql.Time.class) {
                     value = rs.getTime(labelName);
                 } else if (t == LocalDate.class) {
                     value = rs.getDate(labelName);
@@ -642,7 +638,6 @@ public class SqlUtils {
                     value = rs.getObject(labelName, t);
                 }
             }
-
 
         } catch (Exception ex) {
             log.error("", ex);

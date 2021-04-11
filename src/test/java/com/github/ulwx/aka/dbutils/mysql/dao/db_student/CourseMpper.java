@@ -9,6 +9,8 @@ import com.github.ulwx.aka.dbutils.database.MDataBase;
 import com.github.ulwx.aka.dbutils.mysql.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.tool.support.Assert;
 
+import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -19,15 +21,12 @@ public abstract class CourseMpper extends AkaMapper {
     public abstract DataBaseSet getRSetPage(Map<String,Object> ars, PageOptions pageOptions);
     public abstract String getOneString(String name);
     public abstract Integer getOneInteger(String name);
+    public abstract BigInteger getOneBigInteger(String name);
+    public abstract List<BigInteger> getOneBigIntegerList(String name);
+    public abstract LocalDateTime getOneLocalDateTime();
+    public abstract Timestamp getOneTimestamp();
+    public abstract List<Timestamp> getOneTimestampList();
     public abstract Integer getOneIntegerReturnNull(String name);
-    /**
-     * 方法声明的所有相同名称的参数（包含Map<String,Objec>和javaBean涵盖的参数），后面的会覆盖前面的
-     * @param id  类型为Integer，为简单类型，简单类型可以直接用于md文件里的参数
-     * @param name  类型为Integer，为简单类型，简单类型可以直接用于md文件里的参数
-     * @param ars 类型为Map<String,Objec>类型，则可以作为md文件里参数容器，可以设置多个参数
-     * @param cs  类型为自定义javaBean类型，则可以作为md文件里参数的容器，javaBean所有属性（含null值的属性）都会作为参数
-     * @return
-     */
     public abstract Course getOneCourse(Integer id, String name, Map<String,Object> ars, Course cs);
     public abstract  List<Course> getCoursesByIds(Integer[] ids, String name, Map<String,Object> ars,Course cs);
     public abstract List<Course> getCouseList(String name);

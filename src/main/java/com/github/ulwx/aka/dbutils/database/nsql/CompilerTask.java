@@ -25,6 +25,9 @@ public class CompilerTask {
     public static volatile boolean UseThirdpartCompilerTool = true;
     public static ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
+    public static String getSource(String classFullName){
+        return LoadedSoruces.get(classFullName);
+    }
     static {
 
         threadPool.execute(new Runnable() {

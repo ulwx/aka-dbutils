@@ -32,6 +32,14 @@ and class_hours in(#{classHours})
 @}
 order by id
 
+testQueryListMdPage
+====
+select * from course where 1=1
+@if( $$:name ){
+and name like #{name%}
+@}
+order by id
+
 testQueryListWithRowMapper
 ====
 select * from course where 1=1

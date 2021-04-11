@@ -4,6 +4,7 @@ import com.github.ulwx.aka.dbutils.database.DataBaseSet;
 import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
 import com.github.ulwx.aka.dbutils.database.MDbTransactionManager;
+import com.github.ulwx.aka.dbutils.database.nsql.CompilerTask;
 import com.github.ulwx.aka.dbutils.mysql.Utils;
 import com.github.ulwx.aka.dbutils.mysql.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.tool.MD;
@@ -16,11 +17,10 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 测试Mapper映射器的用法
@@ -53,6 +53,9 @@ public class CourseMpperTest {
                  cs);
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(), "SELECT NAME, class_hours FROM course WHERE 1 = 1");
+
+        String source=CompilerTask.getSource(CourseMpper.class.getName()+"Md");
+        System.out.println(source);
 
     }
     @Test
@@ -115,6 +118,29 @@ public class CourseMpperTest {
         Integer ret3=MDbUtils.getMapper(DbPoolName,
                 CourseMpper.class).getOneIntegerReturnNull("abc");
         Assert.isNull(ret3);
+
+        BigInteger ret4=MDbUtils.getMapper(DbPoolName,
+                CourseMpper.class).getOneBigInteger("abc");
+        Assert.equal(ret4,123);;
+
+        List<BigInteger> ret5=MDbUtils.getMapper(DbPoolName,
+                CourseMpper.class).getOneBigIntegerList("abc");
+        List<BigInteger> comparedList= Arrays.asList(new BigInteger("1"),new BigInteger("2"),
+                new BigInteger("3"));
+        Assert.equal(ret5,comparedList);
+
+        LocalDateTime ret6=MDbUtils.getMapper(DbPoolName,
+                CourseMpper.class).getOneLocalDateTime();
+        Assert.equal(ret6,LocalDateTime.parse("2014-04-22 15:47:06", CTime.DTF_YMD_HH_MM_SS));
+
+        Timestamp ret7=MDbUtils.getMapper(DbPoolName,
+                CourseMpper.class).getOneTimestamp();
+        Assert.equal(ret7.toLocalDateTime(),LocalDateTime.parse("2014-04-22 15:47:06", CTime.DTF_YMD_HH_MM_SS));
+
+        List<Timestamp> ret8=MDbUtils.getMapper(DbPoolName,
+                CourseMpper.class).getOneTimestampList();
+        Assert.equal(ret8.get(0).toLocalDateTime(),LocalDateTime.parse("2014-04-22 15:47:06", CTime.DTF_YMD_HH_MM_SS));
+        Assert.equal(ret8.get(1).toLocalDateTime(),LocalDateTime.parse("2015-04-22 15:47:06", CTime.DTF_YMD_HH_MM_SS));
     }
     @Test
     public  void testCouseListPage(){

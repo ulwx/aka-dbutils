@@ -336,6 +336,16 @@ public class CourseDao {
         Assert.equal(list, compareToList);
     }
     @Test
+    public void testQueryListMdPage() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("name", "course");
+        PageBean pageBean = new PageBean();
+        List<Course> list = MDbUtils.queryList(DbPoolName, Course.class, MD.md(), args,2,3,pageBean,null);
+
+        Assert.equal(list.size(), 3);
+
+    }
+    @Test
     public void testQueryListWithRowMapper() {
         Map<String, Object> args = new HashMap<>();
         args.put("name", "course");
