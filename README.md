@@ -483,4 +483,4 @@ select * from course where 1=1
 >
 > 可以看出aka-dbutils的md文件的本质是把程序员以往在java代码里动态拼装SQL语句的逻辑搬移到md文件里，但却变得更精简高效并可以配置，由于最终是java代码执行SQL语句的拼装，不像mybatis通过xml去解析，所以会更高效。
 
-至此你已经学会了aka-dbutils的常用的用法，下一步你将通过《aka-dbutils详解》会了解更多关于aka-dbutils的稍微高级一点的用法，如：分页查询，批量更新，一对一以及一对多关联映射，脚本执行，事务管理及传播，主从用法，md文件的详细语法，以及与Spring框架集成。
+至此你已经学会了aka-dbutils的常用的用法，下一步你将通过下一步你将通过《[aka-dbutils详解](https://ulwx.github.io/aka-dbutils/index.html)》会了解更多关于aka-dbutils的稍微高级一点的用法，如：分页查询，批量更新，一对一以及一对多关联映射，脚本执行，事务管理及传播，主从用法，md文件的详细语法，以及与Spring框架集成。
