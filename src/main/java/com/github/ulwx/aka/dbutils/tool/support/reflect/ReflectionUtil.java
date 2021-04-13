@@ -1,7 +1,6 @@
 package com.github.ulwx.aka.dbutils.tool.support.reflect;
 
 import com.github.ulwx.aka.dbutils.database.MDataBase;
-import com.github.ulwx.aka.dbutils.tool.MD;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 
 import java.beans.Introspector;
@@ -177,13 +176,6 @@ public class ReflectionUtil {
     }
 
     public static void main(String[] args) throws Exception {
-        Domain domain = new Domain();
-        String s = ReflectionUtil.getFieldName(domain::getName);
-        String s2 = ReflectionUtil.getFieldName(domain::getName);
-        String s3 = ReflectionUtil.getFieldName(Domain::getName);
-        MD.of(Domain::getName);
-
-        System.out.println("s=" + s + ",s2=" + s2 + ",s3=" + s3);
 
         getClassMethods(MDataBase.class);
 

@@ -284,7 +284,7 @@ select * from course where 1=1
 
 **①  MDbUtils.del(DbPoolName, MD.md(), null)**：删除操作，需要使用md文件，对应的SQL语句存放在md文件里。
 
-> MDbUtils#del()的第一个参数需传入一个数据源名称，表明从哪个数据源执行删除操作。这里传入变量DbPoolName的值为"dbutils-demo"，它对应**dbpool.xml**（前面提到的）文件里的①处里的name属性值（<dbpool name="dbutils-demo">）。后面你会看到MDbUtils里的所有方法都得指定数据源。
+> MDbUtils#del()的第一个参数需传入一个数据源名称，表明从哪个数据源执行删除操作。这里传入变量DbPoolName的值为"dbutils-demo"，它对应**dbpool.xml**（前面提到的）文件里的①处里的name属性值（`<dbpool name="dbutils-demo">`）。后面你会看到MDbUtils里的所有方法都得指定数据源。
 >
 > 本例的MDbUtils#del()方法需要用到md文件，并在里面编写SQL语句，你需要在调用MDbUtils#del()方法的CourseDao的同级包下，定义一个CourseDao.md文件，在里面编写如下内容：
 >
@@ -323,14 +323,14 @@ select * from course where 1=1
 >
 > 转化的java类的类名为CourseDaoMd，即CourseDao加Md后缀，在其内部的delAll()方法对应到上述的md方法dellAll，可以看出CourseDaoMd类里的每个方法签名里含有一个Map<String, Object>类型的args参数，它其实是MDbUtils#del()方法最后一个参数的引用，用于生成SQL的逻辑。
 >
-> MDbUtils#del()的第二个参数使用了Md.md()工具方法，它会生成"com.github.ulwx.aka.dbutils.demo.dao.CourseDao.md:delAll"，称为**md方法地址**，aka-dbutils会把它转换成CourseDaoMd#delAll()的方法调用，最终得到方法执行返回的SQL语句。
+> MDbUtils#del()的第二个参数使用了Md.md()工具方法，它会生成`com.github.ulwx.aka.dbutils.demo.dao.CourseDao.md:delAll`，称为**md方法地址**，aka-dbutils会把它转换成CourseDaoMd#delAll()的方法调用，最终得到方法执行返回的SQL语句。
 >
 > MDbUtils#del()的第三个参数为Map<String, Object> 类型的参数，用于传递md方法体所需的参数，这里传null，表明CourseDao.md:delAll方法体不需要参数。
 >
 
 **②  MDbUtils.insertReturnKeyBy(DbPoolName, course)** ：插入对象到数据表并返回自增id
 
-> MDbUtils#insertReturnKeyBy()方法的第一个参数为数据源名称，对应【示例—dbpool.xml】里的①处（<dbpool name="dbutils-demo">），指定在哪个数据源上执行操作。
+> MDbUtils#insertReturnKeyBy()方法的第一个参数为数据源名称，对应【示例—dbpool.xml】里的①处（`<dbpool name="dbutils-demo">`），指定在哪个数据源上执行操作。
 >
 > MDbUtils#insertReturnKeyBy()方法的第二个参数传入了一个对象course，aka-dbutils会根据对象生成insert语句，这里只会考虑对象不为空的属性，为null的属性会忽略掉从而不会作为生成SQL语句的部分。例如：
 >
@@ -343,18 +343,18 @@ select * from course where 1=1
 > ```
 >
 > 上面的程序片段传入了course1对象，course1对象只在name、classHours、creatime这三个属性上被赋了非空的值，而id属性值默认为空，所以生成SQL的时候不会考虑，最终生成的SQL如下：
->`insert into course (name,creatime,class_hours) values('course1','2021-01-30 23:25:41',11)`
-> 
-> 可以看出生成的SQL语句里并没有包含id属性对应的表id字段。insert语句的表名course是根据对象course1的类型Course转换而成，具体转换规则由dbpool.xml里的<dbpool>元素的table-name-rule属性值决定（【示例—dbpool.xml】里的②处）。如果<dbpool>没有指定table-name-rule属性，则由<setting>里的子元素 <table-name-rule>决定。本例中<dbpool>的table-name-rule属性值指定为**underline_to_camel**，表示数据库表名与javaBean类名映射为下划线转驼峰，如：hello_world —>HelloWorld。table-name-rule属性还可以指定其它几种转换规则：first_letter_upcase、normal，你可以在<setting>里找到它们的解释。insert语句的字段名是根据对象course1的属性转换二来，具体转换规则由dbpool.xml里的<dbpool>元素的 table-colum-rule属性值决定（dbpool.xml里的②处）。如果<dbpool>没有指定table-colum-rule属性，则由<setting>里的子元素 <table-colum-rule>决定。本例中<dbpool>的 table-colum-rule属性值指定为**underline_to_camel**，表示表字段与javaBean对象的属性映射为下划线转驼峰，如：class_hours—>classHours。还有其它规则，解释见dbpool.xml里的<setting>元素下的子元素<table-colum-rule>
-> 
->MDbUtils#insertReturnKeyBy()方法返回自增id，您也可以使用不返回自增id的MDbUtils#insertBy()方法，它返回成功插入记录的条数（为1），失败返回-1，方法具体签名如下：
-> 
->```
+> `insert into course (name,creatime,class_hours) values('course1','2021-01-30 23:25:41',11)`
+>
+> 可以看出生成的SQL语句里并没有包含id属性对应的表id字段。insert语句的表名course是根据对象course1的类型Course转换而成，具体转换规则由dbpool.xml里的`<dbpool>`元素的table-name-rule属性值决定（【示例—dbpool.xml】里的②处）。如果`<dbpool>`没有指定table-name-rule属性，则由`<setting>`里的子元素 `<table-name-rule>`决定。本例中`<dbpool>`的table-name-rule属性值指定为**underline_to_camel**，表示数据库表名与javaBean类名映射为下划线转驼峰，如：hello_world —>HelloWorld。table-name-rule属性还可以指定其它几种转换规则：first_letter_upcase、normal，你可以在`<setting>`里找到它们的解释。insert语句的字段名是根据对象course1的属性转换二来，具体转换规则由dbpool.xml里的`<dbpool>`元素的 table-colum-rule属性值决定（dbpool.xml里的②处）。如果`<dbpool>`没有指定table-colum-rule属性，则由`<setting>`里的子元素 `<table-colum-rule>`决定。本例中`<dbpool>`的 table-colum-rule属性值指定为**underline_to_camel**，表示表字段与javaBean对象的属性映射为下划线转驼峰，如：class_hours—>classHours。还有其它规则，解释见dbpool.xml里的`<setting>`元素下的子元素`<table-colum-rule>`
+>
+> MDbUtils#insertReturnKeyBy()方法返回自增id，您也可以使用不返回自增id的MDbUtils#insertBy()方法，它返回成功插入记录的条数（为1），失败返回-1，方法具体签名如下：
+>
+> ```
 > public static <T> int insertBy(String pollName, T insertObject) 
->```
-> 
->  MDbUtils#insertReturnKeyBy()和 MDbUtils#insertBy()这两个方法名都是以By为后缀，所有**MDbUtils.XXXBy()**模式的方法都称作**对象操作方法**，**对象操作方法**不需要在md文件里编写SQL语句，这些方法会根据传入的对象反射生成SQL语句，这非常的方便，一般一个项目很大一部分操作都是简单的对象增伤改查操作。MDbUtils里的XXXBy()方法给你提供了极大的便利。
-> 
+> ```
+>
+> MDbUtils#insertReturnKeyBy()和 MDbUtils#insertBy()这两个方法名都是以By为后缀，所有**MDbUtils.XXXBy()**模式的方法都称作**对象操作方法**，**对象操作方法**不需要在md文件里编写SQL语句，这些方法会根据传入的对象反射生成SQL语句，这非常的方便，一般一个项目很大一部分操作都是简单的对象增伤改查操作。MDbUtils里的XXXBy()方法给你提供了极大的便利。
+>
 
 ③  **MDbUtils.updateBy(DbPoolName, course, MD.of( course::getId))**：通过对象来更新表记录。
 
@@ -465,7 +465,7 @@ select * from course where 1=1
 > @}
 > ```
 >
-> 上面的md方法的方法体使用了动态拼装SQL的技术，所有@前缀的行都是java代码，里面使用了一个特殊的$$符号，代表传入的Map对象本身，它代表下方的【例3】里①处的args，\$\$.myClassHours等同于args.get("myClassHours") ，即获取Map对象里的**Map参数**myClassHours的值 ，而\$\$:myName 等同于NFunction.isNotEmpty(args.get("myName")) ，即·对Map参数myName进行了非空判断。在非@前缀的部分为SQL语句，在SQL语句里含有#{XXX}的语法，XXX为Map参数名称，#{XXX}本质上是占位符，类似于mybatis，aka-dbutils会对SQL语句含有#{XXX}的部分进行处理从而替换成?，从而通过jdbc的PreprareStatement进行预处理，防止注入式攻击。#{XXX}可以支持%，如name like #{myName%}，表示Map参数myName值的前缀匹配。#{XXX}中XXX参数可以为数组，如：roles in(#{roles})，aka-dbutils在对SQL语句处理时会判断参数是否为数组，从而替换成形如 roles in(3,4,5,6)的形式。
+> 上面的md方法的方法体使用了动态拼装SQL的技术，所有@前缀的行都是java代码，里面使用了一个特殊的$$符号，代表传入的Map对象本身，它代表下方的【例3】里①处的args，`$$.myClassHours`等同于`args.get("myClassHours")` ，即获取Map对象里的**Map参数**myClassHours的值 ，而`$$:myName` 等同于`NFunction.isNotEmpty(args.get("myName"))` ，即·对Map参数myName进行了非空判断。在非@前缀的部分为SQL语句，在SQL语句里含有`#{XXX}`的语法，XXX为Map参数名称，`#{XXX}`本质上是占位符，类似于mybatis，aka-dbutils会对SQL语句含有`#{XXX}`的部分进行处理从而替换成?，从而通过jdbc的PreprareStatement进行预处理，防止注入式攻击。`#{XXX}`可以支持`%`，如`name like #{myName%}`，表示Map参数myName值的前缀匹配。#{XXX}中XXX参数可以为数组，如：roles in(#{roles})，aka-dbutils在对SQL语句处理时会判断参数是否为数组，从而替换成形如 roles in(3,4,5,6)的形式。
 >
 > md方法queryListFromMdFile最终转换成的java类CourseDaoMd#queryListFromMdFile()方法，如【例3】所示：
 >
@@ -565,7 +565,7 @@ public static <T> T queryOneBy(String pollName, T selectObject,  Object[] whereP
 > 
 >程序示例①处传入的course对象的类型Course是通过SqlUtils#exportTables()工具生成的，这样Course类会继承类MdbOptions，通过MdbOptions#selectOptions()方法可以进一步控制生成的select语句的内容。上面程序示例的②处使用course.selectOptions()获取了SelOp对象，SelOp对象可以指定SQL语句里的select，order by，limit部分内容。③处最终生成SQL语句的部分。上面程序片段生成的SQL语句如下：
 > `select class_hours as classHours , id  fromcoursewherename='course1' andclass_hours=11 order by  class_hours  desc limit 2`
->需要注意的是select("class_hours as classHours , id")里为class_hours 表字段指定了as别名，其与javaBean对象的属性名称一致，这样才会使aka-dbutils能正确的处理映射，id表字段 与javaBean属性名一致，不需要指定as别名。limit(2)指定生成查询前2条的SQL语句，当然这里的limit(2)生成的语句会根据不同的数据库而不同。orderBy("classHours desc")里既可以指定javaBean的属性名也可以指定表字段名，本例指定的是classHours属性名，aka-dbutils会自动转换为表字段class_hours。
+>需要注意的是select("class_hours as classHours , id")里为class_hours 表字段指定了as别名，其与javaBean对象的属性名称一致，这样才会使aka-dbutils能正确的处理映射，id表字段 与javaBean属性名一致，不需要指定as别名。limit(2)指定生成查询前2条的SQL语句，当然这里的limit(2)生成的语句会根据不同的数据库而不同。`orderBy("classHours desc")`里既可以指定javaBean的属性名也可以指定表字段名，本例指定的是classHours属性名，aka-dbutils会自动转换为表字段class_hours。
 
 ```java
 二、public static <T> List<T> queryListBy(String pollName, T selectObject, int page, int perPage, PageBean pb) throws DbException 
@@ -641,7 +641,7 @@ public static <T> T queryOneBy(String pollName, T selectObject,  Object[] whereP
 >
 > **参数说明**
 > pollName – 连接池的名字，对应dbpool.xml里 的name属性
-> selectObject – 此对象反射生成select语句，whereProperties指定了哪些属性用于组成where的条件部分，其中属性值为空的属性不会忽略，会生成形如"xxx=null"的条件。
+> selectObject – 此对象反射生成select语句，whereProperties指定了哪些属性用于组成where的条件部分，其中属性值为空的属性不会忽略，会生成形如`xxx=null`的条件。
 > whereProperties – whereProperties指定了哪些属性用于组成where的条件部分，不会忽略值为null的属性。
 > Returns:   返回查询的记录填充的对象列表，对象的类型与selectObject的类型是一致的。  
 >
@@ -672,7 +672,7 @@ public static <T> T queryOneBy(String pollName, T selectObject,  Object[] whereP
 > 
 > ```
 >
-> 上面的程序示例①中，传入了一个course对象，在对象上对name和classHours属性赋了值，但我们需要只根据name属性查询，这里通过MD.of(course::getName,course::getCreatime)对第三个参数whereProperties传入一个包含name和creatime属性的数组。最终生成的SQL语句如下：
+> 上面的程序示例①中，传入了一个course对象，在对象上对name和classHours属性赋了值，但我们需要只根据name属性查询，这里通过`MD.of(course::getName,course::getCreatime)`对第三个参数whereProperties传入一个包含name和creatime属性的数组。最终生成的SQL语句如下：
 > `select * from course  where name='course_page' and creatime=null` 
 > 可以看出虽然creatime属性为空，但 最终生成的SQL里包含 creatime=null条件。
 
@@ -683,7 +683,7 @@ public static <T> T queryOneBy(String pollName, T selectObject,  Object[] whereP
 六、public static <T> T queryOneBy(String pollName, T selectObject,  Object[] whereProperties) throws DbException 
 ```
 
-> 上面三个方法第一个是分页查询，通过whereProperties来指定selectObject对象里哪些属性生成where的条件部分，指定的这些属性的值即使为null也不会忽略，而是生成形如 xxx= null 的SQL语句。后两个MDbUtils#queryOneBy()方法只会返回一个对象。特别需要说明的是MDbUtils#queryOneBy()的内部执行经过了优化处理，生成的SQL语句在数据库只取一条。例如，如果是mysql，则会生成形如下面的SQL：
+> 上面三个方法第一个是分页查询，通过whereProperties来指定selectObject对象里哪些属性生成where的条件部分，指定的这些属性的值即使为null也不会忽略，而是生成形如 `xxx= null` 的SQL语句。后两个`MDbUtils#queryOneBy()`方法只会返回一个对象。特别需要说明的是`MDbUtils#queryOneBy()`的内部执行经过了优化处理，生成的SQL语句在数据库只取一条。例如，如果是mysql，则会生成形如下面的SQL：
 > `select *  from course  where name='course33' and class_hours=13 limit 1`
 
 ### 普通查询（需要写SQL）
@@ -1040,10 +1040,10 @@ public static  <T> List<T> queryList(String dbpoolName, Class<T> clazz, String m
 > perPage – 每页多少行
 > pageBean – 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
 > countSqlMdFullMethodName – 可以指定四种类型的参数，
->     	null或""：则ak-dbutils会自动帮您生成计算count的select语句； 
->    	数字：则表明以指定的数字为总数，用于计算分页信息； 
-> 		md方法地址：表示计算总数的SQL的md方法地址 
-> 		-1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
+>        **null或""**：则ak-dbutils会自动帮您生成计算count的select语句； 
+>    	**数字**：则表明以指定的数字为总数，用于计算分页信息； 
+> 	**md方法地址**：表示计算总数的SQL的md方法地址 
+>      **-1** ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
 > Returns:   返回一个List对象，包含行记录映射的对象。
 >
 > ```java
@@ -1241,7 +1241,7 @@ public static  <T> T queryOne(String dbpoolName, Class<T> clazz, String mdFullMe
 > perPage – 每页多少行
 > pageBean – 存放分页信息，如总记录数，最大页码，这些信息用于前端UI控件展示
 > countSqlMdFullMethodName – 可以指定四种类型的参数：
->     **null或""**：则ak-dbutils会自动帮您生成计算count的select语句； 
+>        **null或""**：则ak-dbutils会自动帮您生成计算count的select语句； 
 > 	**数字**：则表明以指定的数字为总数，用于计算分页信息； 
 > 	**md方法地址**：表示计算总数的SQL的md方法地址
 > 	 **-1** ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
@@ -1407,23 +1407,23 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > 
 > javaBean为：
 > public class Student{
->  private Integer id;
->  private String studentName;
->  private Course course;      //①-1
->  ......
+> private Integer id;
+> private String studentName;
+> private Course course;      //①-1
+> ......
 > }
 > 
 > public class StudentCourse{
->  private Integer id,
->  private Integer studentId;
->  private Integer courseId;
->  ......
+> private Integer id,
+> private Integer studentId;
+> private Integer courseId;
+> ......
 > }
 > 
 > public class Course{
->  private Integer id,
->  private String courseName;
->  ......
+> private Integer id,
+> private String courseName;
+> ......
 > }
 > 
 > md文件里对应的SQL语句如下：
@@ -1438,28 +1438,28 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > 
 > //CourseDao .java
 > public class CourseDao {
->  ......
->  public  void testQueryListOne2One(){
->      Map  args = new HashMap<>();
->      args.put("name","course");
->      args.put("classHours", new Integer[]{10,11,12,13,14,15,16,17,18,19});
->      QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
->      queryMapNestOne2One.set(null,
->                           "course",    // ①
->                             "c.");          // ②
->      One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
->                 "stu."   // ③
->                 ,queryMapNestOne2One
->        );
->      List<One2OneStudent> list=MDbUtils.queryListOne2One(DbPoolName, One2OneStudent.class,
->                  MD.md(), args, one2OneMapNestOptions);
->       System.out.println("list="+ ObjectUtils.toPrettyJsonString(list));
+> ......
+> public  void testQueryListOne2One(){
+>   Map  args = new HashMap<>();
+>   args.put("name","course");
+>   args.put("classHours", new Integer[]{10,11,12,13,14,15,16,17,18,19});
+>   QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
+>   queryMapNestOne2One.set(null,
+>                        "course",    // ①
+>                          "c.");          // ②
+>   One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
+>              "stu."   // ③
+>              ,queryMapNestOne2One
+>     );
+>   List<One2OneStudent> list=MDbUtils.queryListOne2One(DbPoolName, One2OneStudent.class,
+>               MD.md(), args, one2OneMapNestOptions);
+>    System.out.println("list="+ ObjectUtils.toPrettyJsonString(list));
 > 
->     }
->    public static void main(String[] args) throws Exception{
->         CourseDao dao=new CourseDao();
->         dao.testQueryListOne2One();
->     }
+>  }
+> public static void main(String[] args) throws Exception{
+>      CourseDao dao=new CourseDao();
+>      dao.testQueryListOne2One();
+>  }
 > }
 > ```
 >
@@ -1482,13 +1482,13 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > import com.github.ulwx.aka.dbutils.demo.domian.Student;
 > 
 > public class One2OneStudent extends Student {
->  private Course course;   //②
->  public Course getCourse() {
->      return course;
->  }
->  public void setCourse(Course course) {
->      this.course = course;
->  }
+> private Course course;   //②
+> public Course getCourse() {
+>   return course;
+> }
+> public void setCourse(Course course) {
+>   this.course = course;
+> }
 > }
 > 
 > //CourseDao.java
@@ -1498,25 +1498,25 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > public static String DbPoolName="dbutils-demo";
 > ......
 > public  void testQueryListOne2One(){
->   Map<String,Object> args = new HashMap<>();
->   args.put("name",new String[]{"student1","student2","student3"});
->   QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
->   queryMapNestOne2One.set(
->                     null, //为null，说明没有特别指明映射到关联对象Course对象里的哪些属性，aka-dbutils会根据对象里的属性进行映射
->                      "course",   //对应上面②处，指定主对象里存放关联对象的属性名
->                       "c.");     // 对应下面的④处，用于指定哪些字段映射到关联对象的属性里
->    One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
->              "stu."   //对应下方的③处
->              ,queryMapNestOne2One
->      );
->      List<One2OneStudent> list=MDbUtils.queryListOne2One(DbPoolName, One2OneStudent.class,  //  ①
->                  MD.md(), args, one2OneMapNestOptions);
->   System.out.println("list="+ ObjectUtils.toPrettyJsonString(list));
+> Map<String,Object> args = new HashMap<>();
+> args.put("name",new String[]{"student1","student2","student3"});
+> QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
+> queryMapNestOne2One.set(
+>                  null, //为null，说明没有特别指明映射到关联对象Course对象里的哪些属性，aka-dbutils会根据对象里的属性进行映射
+>                   "course",   //对应上面②处，指定主对象里存放关联对象的属性名
+>                    "c.");     // 对应下面的④处，用于指定哪些字段映射到关联对象的属性里
+> One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
+>           "stu."   //对应下方的③处
+>           ,queryMapNestOne2One
+>   );
+>   List<One2OneStudent> list=MDbUtils.queryListOne2One(DbPoolName, One2OneStudent.class,  //  ①
+>               MD.md(), args, one2OneMapNestOptions);
+> System.out.println("list="+ ObjectUtils.toPrettyJsonString(list));
 > 
 > }
 > public static void main(String[] args) throws Exception{
->   CourseDao dao=new CourseDao();
->    dao.testQueryListOne2One();
+> CourseDao dao=new CourseDao();
+> dao.testQueryListOne2One();
 > }
 > }
 > 
@@ -1525,8 +1525,8 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > testQueryListOne2One
 > ====
 > select 
->  stu.*,    /* ③  */
->  c.*        /* ④  */
+> stu.*,    /* ③  */
+> c.*        /* ④  */
 > from student stu,student_course sc,course c 
 > where stu.id=sc.student_id and  c.id=sc.course_id 
 > @if( $$:name ){
@@ -1536,7 +1536,10 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > ```
 >
 > ①处生成的SQL语句为：
-> `select stu.*,c.* from student stu,student_course sc,course c where stu.id=sc.student_id and  c.id=sc.course_id and stu.name in ('student1','student2','student3') order by stu.id`
+>
+> ```sql
+> select stu.*,c.* from student stu,student_course sc,course c where stu.id=sc.student_id and  c.id=sc.course_id and stu.name in ('student1','student2','student3') order by stu.id
+> ```
 >
 > `程序输出结果为`：
 >
@@ -1547,10 +1550,10 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > "age" : 40,
 > "birthDay" : "1980-10-08",
 > "course" : {
->  "id" : 10,
->  "name" : "course_page",
->  "classHours" : 16,
->  "creatime" : "2021-02-09 09:50:33"
+> "id" : 10,
+> "name" : "course_page",
+> "classHours" : 16,
+> "creatime" : "2021-02-09 09:50:33"
 > }
 > }, {
 > "id" : 2,
@@ -1558,10 +1561,10 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > "age" : 39,
 > "birthDay" : "1981-11-01",
 > "course" : {
->  "id" : 13,
->  "name" : "course_page",
->  "classHours" : 19,
->  "creatime" : "2021-02-09 09:50:33"
+> "id" : 13,
+> "name" : "course_page",
+> "classHours" : 19,
+> "creatime" : "2021-02-09 09:50:33"
 > }
 > }, {
 > "id" : 3,
@@ -1569,10 +1572,10 @@ public static  <T> List<T> queryListOne2One(String dbpoolName, Class<T> clazz,
 > "age" : 38,
 > "birthDay" : "1982-10-08",
 > "course" : {
->  "id" : 14,
->  "name" : "course_page",
->  "classHours" : 20,
->  "creatime" : "2021-02-09 09:50:33"
+> "id" : 14,
+> "name" : "course_page",
+> "classHours" : 20,
+> "creatime" : "2021-02-09 09:50:33"
 > }
 > } ]
 > ```
@@ -2647,7 +2650,7 @@ WHERE `name` = #{name}	   /*  ⑦ */
 
 ```
 
-上面程序实例①中MDbUtils#update()方法传入一个<Map<String, Object>对象，MD.md()方法生成的CourseDao.md:testUpdateWithMd地址指向了com.github.ulwx.aka.dbutils.demo.dao.CourseDao.md文件里的④处定义的SQL，⑤、⑥、⑦形如#{XXX}的“参数引用”里的XXX为Map<String, Object>对象里的存入的参数名，Map<String, Object>对象为传入MDbUtils#update()方法的参数。最终生成的SQL如下：
+上面程序实例①中`MDbUtils#update()`方法传入一个`<Map<String, Object>`对象，MD.md()方法生成的`CourseDao.md:testUpdateWithMd`地址指向了`com.github.ulwx.aka.dbutils.demo.dao.CourseDao.md`文件里的④处定义的SQL，⑤、⑥、⑦形如`#{XXX}`的“参数引用”里的XXX为`Map<String, Object>`对象里的存入的参数名，Map<String, Object>对象为传入MDbUtils#update()方法的参数。最终生成的SQL如下：
 `UPDATE course SET class_hours = 123, creatime = '2021-02-15 18:42:40' WHERE name = 'course_md'`
 
 ②处通过MD.map(course1)使对象course1转换成一个Map<String, Object>对象作为实参传递给了MDbUtils#update()方法。生成的SQL语句如下：
@@ -2873,24 +2876,30 @@ public static  void callStoredPro(String dbpoolName, String mdFullMethodName, Ma
 ```
 
 > 执行存储过程，可传入参数，得到输出参数和返回的结果集， 传入参数（parms）的用法如下：
->     parms.put("country","U.S.A");//默认为in类型
->     parms.put("province:in","New York");
->     parms.put("count:in",new Integer(3));
->     parms.put("oSumCnt:out",int.class); //①
-> 	  //parms.put("oSumCnt:out",3); //和上面一行等效
-> 	parms.put("oData:out",java.util.date.class);  
->     parms.put("ioQuantity:inout",new Long(44)); 
+>
+> ```java
+>  `parms.put("country","U.S.A");//默认为in类型`
+>  `parms.put("province:in","New York");`
+>  `parms.put("count:in",new Integer(3));`
+>  `parms.put("oSumCnt:out",int.class); //①`
+> `//parms.put("oSumCnt:out",3); //和上面一行等效`
+>  `parms.put("oData:out",java.util.date.class);`
+>  `parms.put("ioQuantity:inout",new Long(44));`
+> ```
 >
 > * 如果参数是out类型（key里含有:out），表明参数只为输出参数，即可以给value里指定一个类型（①处），也可以指定一个具体的值，如果指定值，此值并不会传入参考过程/函数，aka-dbutils可以根据值获取其类型作为输出类型。out类型的参数表明是存储过程/函数的输出，在存储过程/函数执行后，可以通过outPramsValues根据参数名称可以获取输出值。
 > * 如果参数是inout类型（key里含有:inout)，表明参数既是输入也是输出参数，必须指定具体值传入到存储过程/函数，存储过程执行完成后，可以通过outPramsValues根据参数名称获取输出值。
 > * 如果参数是in类型（key里包含:in)，表明参数只是输入参数，指定的值会传入存储过程/函数。
 >
 > outPramsValues存放输出参数的返回值，与parms(输入参数)里的out和inout类型的参数对应，上面的例子产生的输出参数如下：
->    {
+>
+> ```json
+>   {
 >         oSumCnt:45556,
 >         oData:"2015-09-23 12:34:56"
 >         ioQuantity:34456
 >     }
+> ```
 >
 > 传入参数的名称格式为 ：**参数名称:[in|out|inout]**，其中in，out，inout对应存储过程或存储函数里的参数类型。
 >
@@ -3412,7 +3421,7 @@ public class StudentDao2Md {
 
 ```
 
-aka-dbutils在执行数据库操作需要获取SQL时，会调用md方法对应的java类的方法，本例中是StudentDao2Md#testUpdateStudent()方法，从而获取返回的SQL语句字符串，本例为update student set name=#{name}, age=#{age} where id=#{id}，这个SQL语句会进一步被aka-dbutils处理，即把#{xxx}形式的参数引用替换成"?"号，从而转换成update student set name=?, age=? where id=?字符串并传给jdbc的Connection#prepareStatement()方法，从而有效的防止了SQL注入式攻击。
+aka-dbutils在执行数据库操作需要获取SQL时，会调用md方法对应的java类的方法，本例中是StudentDao2Md#testUpdateStudent()方法，从而获取返回的SQL语句字符串，本例为`update student set name=#{name}, age=#{age} where id=#{id}`，这个SQL语句会进一步被aka-dbutils处理，即把#{xxx}形式的参数引用替换成"?"号，从而转换成`update student set name=?, age=? where id=?`字符串并传给jdbc的Connection#prepareStatement()方法，从而有效的防止了SQL注入式攻击。
 
 aka-dbutils不仅支持#{xxx}形式的参数引用，还支持${xxx}形式参数引用，如下所示：
 
@@ -3455,9 +3464,9 @@ public class StudentDao2Md {
 
 ```
 
-但\${xxx}形式的参数引用与#{xxx}形式的参数引用的区别在于，\${xxx}在java的方法内部实时进行了替代，如在上面示例中①处使用了NFunction.argValue("age",  args , ","  ,   options)方法实时从args里取出值赋于age，最终testUpdateStudentForVariableSubstitution()方法返回的SQL如下：
+但`${xxx}`形式的参数引用与`#{xxx}`形式的参数引用的区别在于，`${xxx}`在java的方法内部实时进行了替代，如在上面示例中①处使用了`NFunction.argValue("age",  args , ","  ,   options)`方法实时从args里取出值赋于age，最终testUpdateStudentForVariableSubstitution()方法返回的SQL如下：
 `update student set name='add''a', age=18 where id=123 or id in(1,2,3) or name like '%add''b'`
-可以看出这是个可以执行的SQL语句，所有\${xxx}形式的参数所引用的值直接进行了替换，后续不会再替换成?从而进行预处理。需要说明的是，aka-dbutils对\${xxx}形式的参数进行了一些额外的处理，它会对字符串里的英文单引号做转义处理，这可以有效防止注入式攻击，同时对数组和集合的参数引用替换的值会以英文逗号隔开（②处），还支持\$\{%xxx\}，\$\{%xxx%}，\$\{xxx%\} 的形式，这都和#{…}类似。
+可以看出这是个可以执行的SQL语句，所有`${xxx}`形式的参数所引用的值直接进行了替换，后续不会再替换成?从而进行预处理。需要说明的是，aka-dbutils对`${xxx}`形式的参数进行了一些额外的处理，它会对字符串里的英文单引号做转义处理，这可以有效防止注入式攻击，同时对数组和集合的参数引用替换的值会以英文逗号隔开（②处），还支持`${%xxx}，${%xxx%}，${xxx%}` 的形式，这都和`#{…}`类似。
 
 我们通过下面示例来专门讲解md文件里的各种语法。程序示例如下：
 
@@ -4497,7 +4506,7 @@ public class TestApplication {
 
 至此与Spring集成的例子介绍完毕，读者可以发现与MyBatis有很多相似之处。
 
-关于本节的例子你可以到https://github.com/ulwx/aka-dbutils-spring-test下载。
+关于本节的例子你可以到[https://github.com/ulwx/aka-dbutils-spring-boot-starter-test](https://github.com/ulwx/aka-dbutils-spring-boot-starter-test)下载。
 
 ### Mapper（映射器）
 
@@ -5054,7 +5063,7 @@ public class CourseMpperTest {
 }
 ```
 
-上面的例子摘自[aka-dbutils](https://github.com/ulwx/aka-dbutils)工程，程序代码在[aka-dbutils/src/test/java/com/github/ulwx/aka/dbutils/mysql/dao/db_student](https://github.com/ulwx/aka-dbutils/tree/master/src/test/java/com/github/ulwx/aka/dbutils/mysql/dao/db_student)下。
+上面的例子摘自[aka-dbutils](https://github.com/ulwx/aka-dbutils)工程，程序在[src/test/java/com/github/ulwx/aka/dbutils/mysql/dao/db_student](https://github.com/ulwx/aka-dbutils/tree/master/src/test/java/com/github/ulwx/aka/dbutils/mysql/dao/db_student)下。
 
 在Spring里也可以使用Mapper，你需要配置一个AkaMpperScannerConfigurer  Bean，它的作用为扫描所有继承自AkaMapper的Mapper（映射器），并在Spring容器启动的时候为每个Mapper生成动态代理Bean，并注册到Spring容器里。下面以SpringBoot为例讲解Mapper集成到Spring的用法。
 
@@ -5273,9 +5282,6 @@ aka-dbutis使用很简单，但它非常的强大，它自带分页的方法，�
 ## 技术蓝图
 
 后面我们会在数据库分库分表方面进行增强，但后续的扩展和增加必须要和前面API的兼容，这是我们做出的承诺，aka-dbutils会终身维护更新，并保证向前兼容！！！
-
-
-{% endraw %}
 
 
 
