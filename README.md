@@ -41,9 +41,9 @@ aka-dbutils会具有如下优势：
 ```xml
 ...
 <dependency>
-		<groupId>com.github.ulwx</groupId>
-		<artifactId>aka-dbutils</artifactId>
-		<version>最新版本</version>
+    <groupId>com.github.ulwx</groupId>
+    <artifactId>aka-dbutils</artifactId>
+    <version>最新版本</version>
 </dependency>
 ...
 ```
