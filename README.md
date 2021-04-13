@@ -258,3 +258,4 @@ select * from course where 1=1
 
 > aka-dbutils在执行数据库操作时会把md文件实时转换成java类，并在内存里实时编译成class并加载到jvm。
 
+如果你想进一步学习和了解aka-dbutils，请查看我们为你准备的《[aka-dbutils详解](https://ulwx.github.io/aka-dbutils/index.html)》，你甚至可以下载[PDF版本](https://github.com/ulwx/aka-dbutils/blob/master/docs/content.pdf)
