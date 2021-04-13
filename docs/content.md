@@ -57,7 +57,7 @@ aka-dbutils会具有如下优势：
 
 ## 入门例子
 
-入门例子工程名为[aka-dbutils-demo](https://github.com/ulwx/aka-dbutils-demo)，你可以在https://github.com/ulwx/aka-dbutils-demo下载。你需要准备一个mysql数据库，并且需要在src/db目录下找到dbutils_demo.sql文件，并通过mysql数据库客户端工具（如SQLyog)执行从而生成dbutils_demo数据库。
+入门例子工程名为[aka-dbutils-demo](https://github.com/ulwx/aka-dbutils-demo)，你可以在[https://github.com/ulwx/aka-dbutils-demo](https://github.com/ulwx/aka-dbutils-demo)下载。你需要准备一个mysql数据库，并且需要在src/db目录下找到dbutils_demo.sql文件，并通过mysql数据库客户端工具（如SQLyog)执行从而生成dbutils_demo数据库。
 
 ### pom.xml里添加maven依赖
 
