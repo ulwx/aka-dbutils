@@ -164,20 +164,29 @@ public final class MDTemplate {
         //处理注释
         String commentReg = "(?s)\\/\\*.*?\\*\\/";
         mdContent = mdContent.replaceAll(commentReg, " ");
+        mdContent=StringUtils.trim(mdContent);
+
         try (BufferedReader reader = new BufferedReader(new StringReader(mdContent))) {
             TInteger tabNum = new TInteger(0);
             StringBuilder sb = new StringBuilder();
             startClass(sb, className, packageName, tabNum);
-
             String tempString = "";
-
             String curMethodName = "";
             String preMethodName = "";
             String handLine = "";
             String preHandLine = "";
             // 一次读入一行，直到读入null为文件结束
+            int lineNum=0;
             while ((tempString = reader.readLine()) != null) {
                 String tempStr = StringUtils.trim(tempString);
+                lineNum++;
+                if(lineNum==2){
+                    if(tempStr.startsWith("===") && tempStr.endsWith("===")){
+                        //
+                    }else{
+                       return null;
+                    };
+                }
                 if (StringUtils.isEmpty(tempStr)) {
                     continue;
                 }
@@ -232,29 +241,21 @@ public final class MDTemplate {
                                     handerString(sb, str, tabNum, packageName, className);
                                 } else {
                                     continue;
-
                                 }
                             }
-
                         } else {
                             handerString(sb, handLine, tabNum, packageName, className);
                             break;
                         }
-
                     }
                 }
-
             } // while
-
             if (StringUtils.hasText(curMethodName)) {
-
                 endMethod(sb, tabNum);
-
             }
 
             // 根据txt生产java，并动态编译
             endClass(sb, tabNum);
-
             return sb.toString();
 
         }
@@ -281,7 +282,6 @@ public final class MDTemplate {
         BufferedReader bufReader = null;
         String mdContent = "";
         try {
-
             if (in == null) {
                 throw new DbException("无法根据" + filePahtMd + "获取到md文件");
             }

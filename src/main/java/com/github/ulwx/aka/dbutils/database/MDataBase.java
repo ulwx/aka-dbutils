@@ -41,7 +41,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
 
     /**
      * 根据mdFullMethodName指定的md方法地址所在的SQL从数据库查询记录，aka-dbutils会在内部封装SQL从而形成分页查询的SQL，
-     * 最终返回当前页的结果集。
+     * 最终返回当前页的离线结果集。
      *
      * @param mdFullMethodName         md方法地址，如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile
      * @param args                     md方法里用到的参数
@@ -53,18 +53,18 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *                                 数字：则表明以指定的数字为总数，用于计算分页信息；<br>
      *                                 md方法地址：表示计算总数的SQL的md方法地址<br>
      *                                 -1 ：表示总数未知，此时ak-dbutils不会自动生成计算count的select语句
-     * @return 返回结果集
+     * @return 返回离线结果集
      * @throws DbException
      */
     DataBaseSet queryForResultSet(String mdFullMethodName, Map<String, Object> args, int page, int perPage,
                                   PageBean pageBean, String countSqlMdFullMethodName) throws DbException;
 
     /**
-     * 根据mdFullMethodName指定的md方法地址所在的SQL从数据库查询记录，返回结果集
+     * 根据mdFullMethodName指定的md方法地址所在的SQL从数据库查询记录，返回离线结果集
      *
      * @param mdFullMethodName md方法地址，如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile
      * @param args             md方法里用到的参数
-     * @return 返回结果集
+     * @return 返回离线结果集
      * @throws DbException
      */
     DataBaseSet queryForResultSet(String mdFullMethodName, Map<String, Object> args) throws DbException;
@@ -437,7 +437,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
     int del(String mdFullMethodName, Map<String, Object> args) throws DbException;
 
     /**
-     * 执行存储过程，可传入参数，得到输出参数和返回的结果集，
+     * 执行存储过程，可传入参数，得到输出参数和返回的离线结果集，
      * 传入参数的用法如下：
      * <pre>
      * //parms参数可以按如下形式添加
@@ -462,13 +462,13 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      * }
      * 传入参数的名称格式为 ：**参数名称:[in|out|inout]**，其中in，out，inout对应存储过程或存储函数里的参数类型。
      *
-     * returnDataBaseSets只针对存储过程有效，当存储过程里执行了select查询语句时，可以通过returnDataBaseSets返回select查询语句的结果集。
+     * returnDataBaseSets只针对存储过程有效，当存储过程里执行了select查询语句时，可以通过returnDataBaseSets返回select查询语句的离线结果集。
      * </pre>
      *
      * @param mdFullMethodName   md方法地址
      * @param parms              传入的参数
      * @param outPramsValues     输出参数
-     * @param returnDataBaseSets 返回的结果集
+     * @param returnDataBaseSets 返回的离线离线结果集
      * @throws DbException
      */
     void callStoredPro(String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues,

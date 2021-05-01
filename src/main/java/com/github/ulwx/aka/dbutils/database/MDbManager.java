@@ -16,6 +16,13 @@ public class MDbManager {
         return new MDataBaseImpl(db);
     }
 
+    /**
+     *
+     * @param dbPoolName 对应于dbpool.xml里的元素dbpool的name属性值,格式为：[配置xml文件名称]#[连接池名称]，
+     *                   如果为：dbpool.xml#连接池名称，则dbpool.xml#可以省略
+     * @return
+     * @throws DbException
+     */
     @SuppressWarnings("resource")
     public static MDataBase getDataBase(String dbPoolName)
             throws DbException {

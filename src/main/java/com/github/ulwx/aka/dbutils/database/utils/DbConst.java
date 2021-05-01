@@ -2,7 +2,7 @@ package com.github.ulwx.aka.dbutils.database.utils;
 
 
 import com.github.ulwx.aka.dbutils.database.DbContext;
-import com.github.ulwx.aka.dbutils.database.dbpool.ReadConfig;
+import com.github.ulwx.aka.dbutils.database.dbpool.DBPoolFactory;
 import com.github.ulwx.aka.dbutils.database.spring.DBTransInfo;
 import com.github.ulwx.aka.dbutils.database.spring.MDataBaseFactory;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
@@ -29,10 +29,12 @@ public class DbConst {
 
     public static String getValue(String poolname, String propertyName) {
         if (StringUtils.hasText(poolname)) {
-            Map<String, Map<String, String>> maps = ReadConfig.getInstance().getProperties();
-            return StringUtils.trim(maps.get(poolname).get(propertyName));
+            String[] strs=DBPoolFactory.parseRefDbPoolName(poolname);
+            Map<String, Map<String, String>> maps = DBPoolFactory.getInstance(strs[0]).getReadConfig().getProperties();
+            return StringUtils.trim(maps.get(strs[1]).get(propertyName));
         } else {
-            Map<String, String> glSettings = ReadConfig.getInstance().getGlSettings();
+            String[] strs=DBPoolFactory.parseRefDbPoolName(poolname);
+            Map<String, String> glSettings =DBPoolFactory.getInstance(strs[0]).getReadConfig().getGlSettings();
             return StringUtils.trim(glSettings.get(propertyName));
         }
     }

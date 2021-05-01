@@ -282,32 +282,9 @@ public class ClassUtils {
 
     }
 
-    /**
-     * 获取参数化类型里的可实例化的类型
-     *
-     * @param type
-     * @return
-     */
-    public static Class getActualTypeForAvailInstance(Type type) {
-        if (type instanceof ParameterizedType) {
-            Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
-            // 类型变量 T
-            if (typeArguments[0] instanceof TypeVariable) {
-                return null;
-            }
-            // 通配符表达式 ?
-            else if (typeArguments[0] instanceof WildcardType) {
-                return null;
-            }
-            // 泛型的实际类型，即实际存在的类型
-            else if (typeArguments[0] instanceof Class) {
-                return (Class) typeArguments[0];
-            }
-        }
-        return null;
-    }
 
-    public static Class getActualType(Type type) {
+
+    public static Class getActualTypeOfParameterizedType(Type type) {
         if (type instanceof ParameterizedType) {
             Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
             // 类型变量 T

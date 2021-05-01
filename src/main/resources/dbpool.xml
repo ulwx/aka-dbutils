@@ -35,7 +35,6 @@
   encrypt : password属性是否加密，0：不加密 1：加密（采用的是aes加密，通过DBPoolFactory.aesEncrypt(dbpassword)加密)
   -->
 
-
   <dbpool name="testa" type="tomcatdbpool"  table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel">
     <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
     <property name="url">jdbc:mysql://localhost:3306/testa?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
@@ -99,6 +98,22 @@
 <!--     </slaves> -->
 <!--   </dbpool> -->
 
-
+  <!--
+  ref属性： 引用的其它数据库连接池名称，可以引用本文件里的其它连接池，如果引用其它配置文件的连接池，格式为
+    [pool-file-name]#[pollname]，如:dbpool.xml#db.datasource-sysdb。
+  table-name-rule属性： 如果省略，则继承ref指定的连接池的<dbpool>的配置。
+  table-colum-rule属性：如果省略，则继承ref指定的连接池的<dbpool>的配置。
+  -->
+  <dbpool name="abc" ref="db_student"
+          table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"/>
+  <!--
+  ref-class属性：实现IDBPoolAttrSource接口的类，通过实现IDBPoolAttrSource接口的类，获取数据源属性。
+  table-name-rule属性：指定本数据源对应数据库的表名到javaBean类名的转换规则，覆盖setting里的全局规则。
+  table-colum-rule属性：指定本数据源对应数据库里表字段与javaBean属性名的转换规则，覆盖setting里的全局规则。
+  check-time属性：如果是数字，则表示间隔的秒数执行一次ref-class指定的插件方法，获取最新的数据库连接池属性和现有的属性做
+  比较，如果不相同则替换并重新用新的属性构造连接池。
+  -->
+<!--  <dbpool name="xyz" ref-class="a.b.myaa"-->
+<!--          table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel" check-time="3000"/>-->
 
 </dbpool-config>

@@ -10,6 +10,9 @@ package com.github.ulwx.aka.dbutils.tool.support;
  * @version 1.0
  */
 
+import com.github.ulwx.aka.dbutils.tool.support.path.ClassPathRootResource;
+import com.github.ulwx.aka.dbutils.tool.support.path.PathResourceUtils;
+import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +21,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 
@@ -32,7 +36,25 @@ public class Path {
     public static String getClassPath() {
         return getRootClassPath();
     }
+    public static String getFilePathFromURI(URI uri){
+        try {
+            return new File(uri).getAbsolutePath();
 
+        } catch (Exception e) {
+            log.error(""+e,e);
+            return null;
+        }
+    }
+
+    public static String getFilePathFromURL(URL url){
+        try {
+            return new File(url.toURI()).getAbsolutePath();
+
+        } catch (Exception e) {
+            log.error(""+e,e);
+            return null;
+        }
+    }
     public static String getRootClassPath() {
 
         String str = Path.class.getResource("/").getPath();
@@ -130,7 +152,31 @@ public class Path {
     public static InputStream getResource(String relaPathFile) {
         return Path.class.getResourceAsStream(relaPathFile);
     }
+    public static List<InputStream> getResources(String relaPathFile)throws Exception {
+        List<InputStream> list = new ArrayList<>();
+        Enumeration<URL> urls= Path.class.getClassLoader().getResources(relaPathFile);
+        while(urls.hasMoreElements()){
+            URL url=urls.nextElement();
+            list.add(url.openStream());
+        }
+        return list;
 
+    }
+
+    /**
+     *类 似于Spring的PathMatchingResourcePatternResolver用法
+     * @param antPath    ant格式路径，例如file:/c:/spring/*.xml，classpath:spring/*.xml
+     *                   ，classpath*:spring/*.xml当前class路径，如果为classpath*:spring/*.xml会查找所有类路径（包含jar）
+     * @return
+     * @throws IOException
+     */
+    public static Resource[] getResourcesLikeAntPathMatch(String antPath)throws IOException {
+        return PathResourceUtils.find(antPath);
+    }
+
+    public static ClassPathRootResource[] convertToClassPathRootResource(Resource[] resources)throws IOException{
+        return PathResourceUtils.convertToClassPathRootResource(resources);
+    }
     public static InputStream getClassPathResource(String fileName)
             throws IOException {
 

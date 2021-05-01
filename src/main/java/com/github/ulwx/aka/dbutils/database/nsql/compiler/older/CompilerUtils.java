@@ -40,7 +40,6 @@ public class CompilerUtils {
         options.add("UTF-8");
         if (classpath != null && !classpath.isEmpty()) {
             options.add("-classpath");
-            log.debug("classpathStr=" + classpath);
             options.add(classpath);
         }
 

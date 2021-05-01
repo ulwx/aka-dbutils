@@ -4,6 +4,7 @@ import com.github.ulwx.aka.dbutils.database.*;
 import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
 import com.github.ulwx.aka.dbutils.mysql.Utils;
 import com.github.ulwx.aka.dbutils.mysql.domain.db.db_student.Course;
+import com.github.ulwx.aka.dbutils.mysql.domain.db.db_teacher.Teacher;
 import com.github.ulwx.aka.dbutils.tool.MD;
 import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
@@ -20,6 +21,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 /**
@@ -411,6 +415,20 @@ public class CourseDao {
         compareTo.setTeacherId(1);
         compareTo.setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         Assert.equal(course, compareTo);
+
+        ExecutorService executorService= Executors.newFixedThreadPool(1);
+        for(int i=0; i<100000; i++) {
+            executorService.execute(() -> {
+                Teacher teacher = MDbUtils.queryOneBy("xyz", new Teacher());
+                Assert.notNull(teacher);
+            });
+        }
+        try {
+            executorService.shutdown();
+            executorService.awaitTermination(3, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+
+        }
     }
     @Test
     public  void testQueryMap() {

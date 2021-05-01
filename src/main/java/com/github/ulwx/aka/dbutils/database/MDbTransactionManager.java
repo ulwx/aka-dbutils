@@ -116,12 +116,6 @@ public class MDbTransactionManager {
         }
     }
 
-
-    /**
-     * @param newTransaction: 是否开启一个新事务。如果为true，则开启一个新事务，若为false：
-     *                        如果有父事务，加入到父事务，否则新开启一个事务
-     * @throws Exception
-     */
     private static void start(PROPAGATION propagation) {
 
         Stack<Map<String, TransactionContextElem>> stack = DbContext.getTransactionContextStack();

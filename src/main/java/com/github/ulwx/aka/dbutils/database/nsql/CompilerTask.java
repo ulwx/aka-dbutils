@@ -4,15 +4,15 @@ import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.nsql.compiler.newer.JavaStringCompiler;
 import com.github.ulwx.aka.dbutils.database.nsql.compiler.older.CompilerUtils;
 import com.github.ulwx.aka.dbutils.tool.support.*;
+import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,7 +24,7 @@ public class CompilerTask {
     public static volatile Map<String, String> LoadedSoruces = new ConcurrentHashMap<String, String>();
     public static volatile boolean UseThirdpartCompilerTool = true;
     public static ExecutorService threadPool = Executors.newFixedThreadPool(10);
-
+    public static volatile SegmentLock segmentLock=new SegmentLock();
     public static String getSource(String classFullName){
         return LoadedSoruces.get(classFullName);
     }
@@ -44,16 +44,41 @@ public class CompilerTask {
 
     public static void preCompileAll() throws Exception {
         // 搜索所有md文件，进行编译
-        // Path.getClassPath()
-        String fromRootDir = Path.getRootClassPath();
-        List<String> list = new ArrayList<>();
-        ClassUtils.findAndAddInPackageByFile(fromRootDir, true, list, ".md");
+        Resource[] resources=Path.getResourcesLikeAntPathMatch("classpath*:**/*.md");
+        Resource[] rootResources=Path.getResourcesLikeAntPathMatch("classpath*:/");
+        TreeSet<String> classRootResources=new TreeSet<>();
+        for(int i = 0; i<rootResources.length; i++){
+            if(!rootResources[i].getURL().getProtocol().equals("jar")){
+                classRootResources.add(rootResources[i].getURL().getPath());
+            }
+        }
         List<String> mdPathList = new ArrayList<>();
-        if (list != null && list.size() > 0) {// 预编译
-            for (int i = 0; i < list.size(); i++) {
-                String mdPath = StringUtils.trimLeadingString(list.get(i), fromRootDir)
-                        .replace(File.separatorChar + "", ".").substring(1);
-                mdPathList.add(mdPath);
+        if (resources != null && resources.length> 0) {// 预编译
+            for (int i = 0; i < resources.length; i++) {
+                if(resources[i].getURL().getProtocol().equals("jar")){
+                    String path=resources[i].getURL().getPath();
+                    int index=path.indexOf(".jar!");
+                    String mdPath =path.substring(index+6);
+                    mdPath=mdPath.replace("/", ".");
+                    if(mdPath.startsWith("META-INF")){
+                        continue;
+                    }
+                    mdPathList.add(mdPath);
+                }else  if(resources[i].getURL().getProtocol().equals("file")){
+                    Iterator<String> iterator=classRootResources.descendingIterator();
+                    while(iterator.hasNext()){
+                        String str=iterator.next();
+                        if(resources[i].getURL().getPath().startsWith(str)){
+                            String mdPath=resources[i].getURL().getPath().substring(str.length());
+                            mdPath=mdPath.replace("/", ".");
+                            if(mdPath.startsWith("META-INF")){
+                                break;
+                            }
+                            mdPathList.add(mdPath);
+                            break;
+                        }
+                    }
+                }
 
             }
         }
@@ -90,7 +115,7 @@ public class CompilerTask {
         aClass = LoadedClasses.get(classFullName);
         if (aClass == null) {
             try {
-                SegmentLock.lock(classFullName);
+                segmentLock.lock(classFullName);
                 aClass = LoadedClasses.get(classFullName);
                 if (aClass == null) {
                     String source = MDTemplate.parseFromMdFileToJavaSource(packageName, className);
@@ -111,7 +136,7 @@ public class CompilerTask {
                     LoadedSoruces.put(classFullName, source);
                 }
             } finally {
-                SegmentLock.unlock(classFullName);
+                segmentLock.unlock(classFullName);
             }
 
         } else {
@@ -125,28 +150,47 @@ public class CompilerTask {
     /**
      * @MethodName : 创建classpath
      */
-    private static String buildClassPath() {
-        classpath = null;
+    public static String buildClassPath() {
         ClassLoader parentClassLoader = Thread.currentThread().getContextClassLoader();
-        ;
         if (parentClassLoader instanceof URLClassLoader) {
             URLClassLoader urlLoader = (URLClassLoader) parentClassLoader;
             //log.debug("parentClassLoader" + parentClassLoader);
             StringBuilder sb = new StringBuilder();
             for (URL url : urlLoader.getURLs()) {
-                String p = url.getFile().substring(1);
-                String os = System.getProperty("os.name");
-                if (os.toLowerCase().startsWith("win")) {
-                    p = StringUtils.trimLeadingString(url.getFile(), "/");
-                }
-
+                String p=Path.getFilePathFromURL(url);
                 sb.append(p).append(File.pathSeparator);
             }
             String classpathStr = EscapeUtil.unescapeUrl(sb.toString(), System.getProperty("file.encoding"));
             return classpathStr;
+        }else {
+            TreeSet<String> classPathResources = new TreeSet<>();
+            StringBuilder sb = new StringBuilder();
+            try {
+                Resource[] rootResources = Path.getResourcesLikeAntPathMatch("classpath*:/");
+
+                for (int i = 0; i < rootResources.length; i++) {
+                    if (rootResources[i].getURL().getProtocol().equals("file")) {
+                        String path = Path.getFilePathFromURL(rootResources[i].getURL());
+                        classPathResources.add(path);
+                        sb.append(path).append(File.pathSeparator);
+                    } else if (rootResources[i].getURL().getProtocol().equals("jar")) {
+                        String path = rootResources[i].getURL().getPath();
+                        int index = path.indexOf(".jar!");
+                        path = path.substring(0, index + 4);
+                        path = StringUtils.trimLeadingString(path, "file:");
+                        File file = new File(path);
+                        String fpath = file.getAbsolutePath();
+                        classPathResources.add(fpath);
+                        sb.append(fpath).append(File.pathSeparator);
+                    }
+                }
+            } catch (IOException e) {
+                log.error("" + e, e);
+            }
+            return sb.toString();
         }
 
-        return null;
+
     }
 
 

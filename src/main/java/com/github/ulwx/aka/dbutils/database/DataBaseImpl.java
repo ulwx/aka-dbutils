@@ -129,21 +129,35 @@ public class DataBaseImpl implements DataBase {
                         || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
 
                     continue;
+                }else if(stack[i].getClassName().startsWith("jdk.internal.")
+                        ||stack[i].getClassName().startsWith("java.lang.")
+                        ||stack[i].getClassName().contains("CGLIB$$")
+                        ||stack[i].getClassName().startsWith("org.springframework")
+                ){
+
+                    continue;
                 }
-                String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" +
-                        stack[i].getFileName() +
-                        ":"
-                        + stack[i].getLineNumber() + ")";
+
                 if (upLevelNum == 0) {
+                    String tempInfo = "at " + stack[i].getClassName() + "." + stack[i].getMethodName() + "(" +
+                            stack[i].getFileName() +
+                            ":"
+                            + stack[i].getLineNumber()+ "";
+                    upLevelNum++;
                     str = tempInfo;
                 } else {
+                    String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" +
+                            stack[i].getFileName() +
+                            ":"
+                            + stack[i].getLineNumber() + ")";
                     if (upLevelNum < 3) {
                         str = tempInfo + "=>" + str;
+                        upLevelNum++;
                     } else {
                         break;
                     }
                 }
-                upLevelNum++;
+
 
             }
         }
@@ -245,7 +259,8 @@ public class DataBaseImpl implements DataBase {
     public DataSource getDataSourceFromPool(String dbPoolName) throws DbException {
 
         Map<String, String> map = new HashMap<String, String>();
-        DataSource datasource = DBPoolFactory.getInstance().getDBPool(dbPoolName, map);
+        String[] strs=DBPoolFactory.parseRefDbPoolName(dbPoolName);
+        DataSource datasource = DBPoolFactory.getInstance(strs[0]).getDBPool(strs[1], map);
 
         return datasource;
     }
@@ -313,7 +328,9 @@ public class DataBaseImpl implements DataBase {
                             msg = "获取从库链接";
                             this.connectedToMaster=false;
                             TResult<Connection> tResult = new TResult<>();
-                            DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
+                            TResult<String> tslaveName=new TResult<>();
+                            String[] strs=DBPoolFactory.parseRefDbPoolName(dbPoolName);
+                            DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1],tslaveName, tResult);
                             this.conn = tResult.getValue();
                             this.dataSource = ds;
 
@@ -332,8 +349,11 @@ public class DataBaseImpl implements DataBase {
                                 } else {
                                     msg = "获取从库链接";
                                     this.connectedToMaster=false;
+
+                                    String[] strs=DBPoolFactory.parseRefDbPoolName(dbPoolName);
                                     TResult<Connection> tResult = new TResult<>();
-                                    DataSource ds = DBPoolFactory.getInstance().getSlaveDbPool(this.dbPoolName, tResult);
+                                    TResult<String> tslaveName=new TResult<>();
+                                    DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1],tslaveName, tResult);
                                     this.conn = tResult.getValue();
                                     this.dataSource = ds;
                                     ///
@@ -357,14 +377,14 @@ public class DataBaseImpl implements DataBase {
                     }
 
                 } else if (this.connectType == ConnectType.CONNECTION) {
-                    this.connectedToMaster=true;
+                    this.connectedToMaster=null;
                     if (this.isColsed()) {
                         msg = "数据库连接为空或已经关闭！";
                     } else {
                         msg = "获取数据库链接前面已获取";
                     }
                 } else if (this.connectType == ConnectType.DATASOURCE) {
-                    this.connectedToMaster=true;
+                    this.connectedToMaster=null;
                     msg = "获取数据库库链接";
                     conn = dataSource.getConnection();
                 } else {
@@ -393,9 +413,13 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 从dbpool.xml里设置的连接池获得连接
-     *
-     * @param dbPoolName 对应于dbpool.xml里的元素dbpool的name属性值
+     * 从dbpool.xml里设置的连接池获得连接,如果想指定非dbpool.xml文件里的连接池，可以按如下格式：
+     * <pre>
+     * 格式为：配置xml文件名称#连接池名称
+     * mydbpool.xml#sysdb
+     * </pre>
+     * @param dbPoolName 对应于dbpool.xml里的元素dbpool的name属性值,格式为：[配置xml文件名称]#[连接池名称]，
+     *                   如果为：dbpool.xml#连接池名称，则dbpool.xml#可以省略
      * @throws DbException 异常
      */
     @Override
@@ -407,7 +431,8 @@ public class DataBaseImpl implements DataBase {
             if (conn != null)
                 return;
             // 设置是否是主从模式
-            this.setMainSlaveMode(DBPoolFactory.getInstance().isMainSlaveMode(dbPoolName));
+            String[] strs=DBPoolFactory.parseRefDbPoolName(dbPoolName);
+            this.setMainSlaveMode(DBPoolFactory.getInstance(strs[0]).isMainSlaveMode(strs[1]));
             this.mainSlaveModeConnectMode = DbContext.getMainSlaveModeConnectMode();
 
         } catch (Exception e) {
@@ -1117,12 +1142,6 @@ public class DataBaseImpl implements DataBase {
             this.configInterceptorForPostExecute(ret);
         }
 
-    }
-
-    private void resultSetPosition(boolean isPageQuery, ResultSet rs, int rsStart) {
-        if (rsStart > 0) {
-            throw new DbException("不支持结果集里定位操作！");
-        }
     }
 
     private <T> List<T> doQueryClass(Class<T> clazz,
