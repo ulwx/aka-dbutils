@@ -417,7 +417,7 @@ public class CourseDao {
         Assert.equal(course, compareTo);
 
         ExecutorService executorService= Executors.newFixedThreadPool(1);
-        for(int i=0; i<100000; i++) {
+        for(int i=0; i<10; i++) {
             executorService.execute(() -> {
                 Teacher teacher = MDbUtils.queryOneBy("xyz", new Teacher());
                 Assert.notNull(teacher);
@@ -425,7 +425,7 @@ public class CourseDao {
         }
         try {
             executorService.shutdown();
-            executorService.awaitTermination(3, TimeUnit.MINUTES);
+            executorService.awaitTermination(30, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
 
         }
