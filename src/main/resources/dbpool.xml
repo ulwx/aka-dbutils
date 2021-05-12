@@ -15,6 +15,7 @@
      normal：   为数据库表名和javabean属性一致
     -->
     <table-colum-rule>underline_to_camel</table-colum-rule>
+
   </setting>
   <!--
   每个<dbpool>元素配置对应一个数据库连接池
