@@ -148,6 +148,7 @@ public class DbContext implements Serializable {
 
     /**
      * 获取主从连接模式
+     *
      * @return
      */
     public static MainSlaveModeConnectMode getMainSlaveModeConnectMode() {
@@ -164,17 +165,20 @@ public class DbContext implements Serializable {
 
     /**
      * 设置主从连接模式，即是连接主库，从库还是自动识别
+     *
      * @param mainSlaveModeConnectMode
      */
     public static void setMainSlaveModeConnectMode(MainSlaveModeConnectMode mainSlaveModeConnectMode) {
         localDbContext.get().contextMap.put(main_slave_mode_connectmode, mainSlaveModeConnectMode);
     }
+
     /**
      * 删除主从连接模式
      */
     public static void removeMainSlaveModeConnectMode() {
         localDbContext.get().contextMap.remove(main_slave_mode_connectmode);
     }
+
     public static DBTransInfo getDbTransInfo() {
         return (DBTransInfo) localDbContext.get().contextMap.get(key_db_trans_info);
     }
@@ -240,7 +244,7 @@ public class DbContext implements Serializable {
 
         for (int i = stack.size() - 1; i >= 0; i--) {
             Map<String, TransactionContextElem> tempContext = stack.get(i);
-            DataBaseDecorator db = (DataBaseDecorator)tempContext.get(dbPoolName);
+            DataBaseDecorator db = (DataBaseDecorator) tempContext.get(dbPoolName);
             TransactionContextInfo transactionStart = (TransactionContextInfo) tempContext.get(MDbTransactionManager._transaction_start);
             if (transactionStart.getLevel() > 0) {//
                 if (db != null) {

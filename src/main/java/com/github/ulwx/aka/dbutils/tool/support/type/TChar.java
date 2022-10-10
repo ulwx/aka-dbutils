@@ -1,6 +1,6 @@
 package com.github.ulwx.aka.dbutils.tool.support.type;
 
-public class TChar implements TType{
+public class TChar implements TType {
 
     private Character value;
 
@@ -8,6 +8,7 @@ public class TChar implements TType{
     public Class getWrappedClass() {
         return Character.class;
     }
+
     public TChar() {
 
     }
@@ -15,6 +16,7 @@ public class TChar implements TType{
     public TChar(Character val) {
         this.value = val;
     }
+
     @Override
     public Character getValue() {
         return value;

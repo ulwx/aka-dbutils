@@ -3,7 +3,6 @@ package com.github.ulwx.aka.dbutils.mysql.dao.db_teacher;
 import com.github.ulwx.aka.dbutils.database.*;
 import com.github.ulwx.aka.dbutils.database.DataBase.MainSlaveModeConnectMode;
 import com.github.ulwx.aka.dbutils.mysql.Utils;
-import com.github.ulwx.aka.dbutils.mysql.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.mysql.domain.db.db_teacher.Teacher;
 import com.github.ulwx.aka.dbutils.tool.MD;
 import com.github.ulwx.aka.dbutils.tool.MDbUtils;
@@ -24,11 +23,13 @@ import java.util.Map;
  * 测试aka-dbutils的数据库主从的支持
  */
 public class TeacherDao {
-    public static String DbPoolName= "db_teacher";
+    public static String DbPoolName = "mysql/dbpool.xml#db_teacher";
+
     @Before
-    public void setup(){
+    public void setup() {
         Utils.inportDbTeacher();
     }
+
     public void testUpdateInManager(String name) {
         Teacher teacher = new Teacher();
         teacher.setId(1);
@@ -36,13 +37,14 @@ public class TeacherDao {
         int ret = MDbUtils.updateBy(DbPoolName, teacher, MD.of("id"));
 
     }
+
     @Test
-    public void testInsert(){
-        Teacher teacher=new Teacher();
+    public void testInsert() {
+        Teacher teacher = new Teacher();
         teacher.setName("new teacher");
-        StringBuffer sql=new StringBuffer();
-        DbContext.setDebugSQLListener(sqltxt->{
-            if(sql.length()>0){
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            if (sql.length() > 0) {
                 sql.append(";");
             }
             sql.append(sqltxt);
@@ -55,7 +57,7 @@ public class TeacherDao {
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_SlaveServer);
         try {
             MDbUtils.insertBy(DbPoolName, teacher);//更新方法会在主库上执行
-        }catch (Exception e){
+        } catch (Exception e) {
             Assert.state(e instanceof DbException && e.getMessage().equals("从库只能执行select语句执行！"));
         }
         sql.setLength(0);
@@ -64,7 +66,7 @@ public class TeacherDao {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
                                               Object result, Exception exception, String debugSql) {
-                Assert.state(dataBase.getMainSlaveModeConnectMode()==MainSlaveModeConnectMode.Connect_Auto);
+                Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
 
             }
@@ -76,15 +78,16 @@ public class TeacherDao {
 
         Assert.equal(sql.toString(), "insert into `teacher` (`name`) values('new teacher')");
     }
+
     @Test
-    public void testUpdate(){
-        Teacher teacher=new Teacher();
+    public void testUpdate() {
+        Teacher teacher = new Teacher();
         teacher.setId(1);
         teacher.setName("xyz");
-        Map<String,Object> args=MD.map(teacher);
-        StringBuffer sql=new StringBuffer();
-        DbContext.setDebugSQLListener(sqltxt->{
-            if(sql.length()>0){
+        Map<String, Object> args = MD.map(teacher);
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            if (sql.length() > 0) {
                 sql.append(";");
             }
             sql.append(sqltxt);
@@ -94,7 +97,7 @@ public class TeacherDao {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
                                               Object result, Exception exception, String debugSql) {
-                Assert.state(dataBase.getMainSlaveModeConnectMode()==MainSlaveModeConnectMode.Connect_Auto);
+                Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
 
             }
@@ -104,7 +107,7 @@ public class TeacherDao {
                 return true;
             }
         });
-        MDbUtils.updateBy(DbPoolName, teacher,MD.of(teacher::getId));//更新方法会在主库上执行
+        MDbUtils.updateBy(DbPoolName, teacher, MD.of(teacher::getId));//更新方法会在主库上执行
         DbContext.removeDebugSQLListener();
         DbContext.removeDBInterceptor();
         DbContext.removeMainSlaveModeConnectMode();
@@ -112,30 +115,31 @@ public class TeacherDao {
 
 
     }
+
     @Test
-    public void testSelect(){
-        Map<String, Object> args=new HashMap<>();
-        args.put("lname","abc");
+    public void testSelect() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("lname", "abc");
         //如果当前线程没有设置主从连接模式，默认主从模式默认为Connect_MainServer，下面操作连的是主库
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
                                               Object result, Exception exception, String debugSql) {
-                Assert.state(dataBase.getMainSlaveModeConnectMode()==MainSlaveModeConnectMode.Connect_MainServer);
+                Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_MainServer);
                 Assert.state(dataBase.connectedToMaster());
 
             }
         });
-        StringBuffer sql=new StringBuffer();
-        DbContext.setDebugSQLListener(sqltxt->{
-            if(sql.length()>0){
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            if (sql.length() > 0) {
                 sql.append(";");
             }
             sql.append(sqltxt);
         });
 
-        List<Teacher> list = MDbUtils.queryList(DbPoolName,Teacher.class,
-                MD.md(),args);
+        List<Teacher> list = MDbUtils.queryList(DbPoolName, Teacher.class,
+                MD.md(), args);
         Assert.equal(sql.toString(), "SELECT `id`, `name` FROM `teacher` where name like 'abc%'");
         //通过DbContext设置Connect_Auto主从连接模式，即自动识别是否连接主库还是从库，自动识别规则是
         // 如果SQL语句为更新语句或者SQL语句在事务里，则会在主库上执行；否则在从库上执行。
@@ -144,26 +148,26 @@ public class TeacherDao {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
                                               Object result, Exception exception, String debugSql) {
-                Assert.state(dataBase.getMainSlaveModeConnectMode()==MainSlaveModeConnectMode.Connect_Auto);
+                Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(!dataBase.connectedToMaster());
 
             }
         });
-        list = MDbUtils.queryList(DbPoolName,Teacher.class,
-                MD.md(),args);
+        list = MDbUtils.queryList(DbPoolName, Teacher.class,
+                MD.md(), args);
         //总是连接主库操作
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_MainServer);
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
                                               Object result, Exception exception, String debugSql) {
-                Assert.state(dataBase.getMainSlaveModeConnectMode()==MainSlaveModeConnectMode.Connect_MainServer);
+                Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_MainServer);
                 Assert.state(dataBase.connectedToMaster());
 
             }
         });
-        list = MDbUtils.queryList(DbPoolName,Teacher.class,
-                MD.md(),args);
+        list = MDbUtils.queryList(DbPoolName, Teacher.class,
+                MD.md(), args);
 
 
         //总是连接从库操作
@@ -172,13 +176,13 @@ public class TeacherDao {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
                                               Object result, Exception exception, String debugSql) {
-                Assert.state(dataBase.getMainSlaveModeConnectMode()==MainSlaveModeConnectMode.Connect_SlaveServer);
+                Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_SlaveServer);
                 Assert.state(!dataBase.connectedToMaster());
 
             }
         });
-        list = MDbUtils.queryList(DbPoolName,Teacher.class,
-                MD.md(),args);
+        list = MDbUtils.queryList(DbPoolName, Teacher.class,
+                MD.md(), args);
 
         DbContext.removeDebugSQLListener();
         DbContext.removeDBInterceptor();
@@ -186,18 +190,19 @@ public class TeacherDao {
 
 
     }
+
     @Test
-    public void testTransaction(){
+    public void testTransaction() {
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_Auto);
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
                                               Object result, Exception exception, String debugSql) {
-                Assert.state(dataBase.getMainSlaveModeConnectMode()==MainSlaveModeConnectMode.Connect_Auto);
+                Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
             }
         });
-        MDbTransactionManager.execute(()->{
+        MDbTransactionManager.execute(() -> {
 
             testSelectIntrans(); //由于在事务里，查询操作会在主库执行
             testUpdateInTrans(); //由于在事务里，更新操作会在主库执行
@@ -206,23 +211,24 @@ public class TeacherDao {
 
     }
 
-    public void testUpdateInTrans(){
-        Teacher teacher=new Teacher();
+    public void testUpdateInTrans() {
+        Teacher teacher = new Teacher();
         teacher.setId(1);
         teacher.setName("xyz");
-        Map<String,Object> args=MD.map(teacher);
-        MDbUtils.updateBy(DbPoolName, teacher,MD.of(teacher::getId));//更新方法会在主库上执行
+        Map<String, Object> args = MD.map(teacher);
+        MDbUtils.updateBy(DbPoolName, teacher, MD.of(teacher::getId));//更新方法会在主库上执行
 
     }
 
-    public void testSelectIntrans(){
-        Map<String, Object> args=new HashMap<>();
-        args.put("lname","abc");
-        List<Teacher> list = MDbUtils.queryList(DbPoolName,Teacher.class,
-                MD.md(),args);
+    public void testSelectIntrans() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("lname", "abc");
+        List<Teacher> list = MDbUtils.queryList(DbPoolName, Teacher.class,
+                MD.md(), args);
     }
+
     @After
-    public void after(){
+    public void after() {
         DbContext.removeDebugSQLListener();
         DbContext.removeDBInterceptor();
         DbContext.removeMainSlaveModeConnectMode();

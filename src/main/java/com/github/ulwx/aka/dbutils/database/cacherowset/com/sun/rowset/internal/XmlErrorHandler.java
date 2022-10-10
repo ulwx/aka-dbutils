@@ -7,9 +7,6 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 
-
-
-
 public class XmlErrorHandler extends DefaultHandler {
     public int errorCounter = 0;
 

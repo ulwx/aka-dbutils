@@ -15,6 +15,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int insertBy(T insertObject) throws DbException;
+
     /**
      * 插入指定对象里所有属性到数据库，根据includeNull指定是否包含null值的属性
      *
@@ -25,6 +26,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int insertBy(T insertObject, boolean includeNull) throws DbException;
+
     /**
      * 插入指定对象的指定属性到数据库，在insertProperties里指定哪些属性需要插入数据库，其中为null值的属性也会作为null值插入数据库。
      *
@@ -35,6 +37,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int insertBy(T insertObject, Object[] insertProperties) throws DbException;
+
     /**
      * 插入对象指定属性到数据库，根据此对象里的属性、insertProperties、includeNull三者反射生成insert语句
      *
@@ -46,15 +49,17 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int insertBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException;
+
     /**
      * 批量插入多个相同类型对象到数据库，aka-dbutils根据此对象里的非null值的属性反射生成insert语句
      *
-     * @param objs     待插入数据库的对象数组
+     * @param objs 待插入数据库的对象数组
      * @param <T>
      * @return 返回每个对象是否插入成功数组，数组里的某索引位置int值反映objs里对应对象是否插入成功的标志，1：表示成功  0：不是没有插入任何值
      * @throws DbException
      */
     public <T> int[] insertBy(T[] objs) throws DbException;
+
     /**
      * 批量插入对象里的属性到数据库，includeNull决定是否插入null值的属性到数据库
      *
@@ -65,6 +70,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int[] insertBy(T[] objs, boolean includeNull) throws DbException;
+
     /**
      * 批量插入多个相同类型对象到数据库，aka-dbutils根据此对象里包含insertProperties里指定的属性反射生成insert语句，如果insertProperties
      * 里包含值为null的属性，也会插入数据库。
@@ -76,6 +82,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int[] insertBy(T[] objs, Object[] insertProperties) throws DbException;
+
     /**
      * 批量插入对象里insertProperties指定属性到数据库，includeNull决定insertProperties里为null值的属性是否插入到数据库
      *
@@ -87,6 +94,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int[] insertBy(T[] objs, Object[] insertProperties, boolean includeNull) throws DbException;
+
     /**
      * 插入指定对象所有值不会null属性到数据库并返回生成的主键id
      *
@@ -96,9 +104,11 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> long insertReturnKeyBy(T insertObject) throws DbException;
+
     /**
      * 批量插入多个相同类型对象到数据库，aka-dbutils根据此对象里的属性反射生成insert语句的values()语句部分，根据includeNull属性决定是否插入为
      * null值的属性。
+     *
      * @param insertObject 指定的插入对象，根据此对象里的属性反射生成insert语句
      * @param includeNull  决定是否插入insertObject对象里为null值的属性。
      * @param <T>
@@ -106,6 +116,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> long insertReturnKeyBy(T insertObject, boolean includeNull) throws DbException;
+
     /**
      * 插入指定对象里insertProperties指定的属性到数据库并返回生成的主键id，insertProperties里为null值的属性也会插入数据库
      *
@@ -116,6 +127,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties) throws DbException;
+
     /**
      * 根据对象里的insertProperties指定的属性反射生成insert语句，includeNull决定是否插入insertProperties里为null值的属性。
      *
@@ -127,6 +139,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException;
+
     /**
      * 根据指定对象改新对应的表记录，aka-dbutils会根据对象生成update语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不要忽略whereProperties里值为null的属性），去除whereProperties里的属性，对象里的其它属性会生成update语句里的set语句部分，
@@ -139,6 +152,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int updateBy(T updateObject, Object[] whereProperties) throws DbException;
+
     /**
      * 根据指定对象更改新对应的表记录，aka-dbutils会根据对象生成更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），对象里除whereProperties里的其它属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
@@ -151,6 +165,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int updateBy(T updateObject, Object[] whereProperties, boolean includeNull) throws DbException;
+
     /**
      * 根据指定对象改新对应的表记录，aka-dbutils会根据对象生成update语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），通过updateProperties指定对象里哪些属性生成update语句里的set语句部分，
@@ -164,6 +179,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int updateBy(T updateObject, Object[] whereProperties, Object[] updateProperties) throws DbException;
+
     /**
      * 根据指定对象更改新对应的表记录，aka-dbutils会根据对象生成更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不要忽略whereProperties里值为null的属性），通过updateProperties里的属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
@@ -177,11 +193,12 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int updateBy(T updateObject, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException;
+
     /**
      * 根据指定对象数组更新对应的表记录，aka-dbutils会根据对象数组生成批量更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），通过updateProperties指定对象里哪些属性生成update语句里的set语句部分，但会忽略存在值为null的属性。
      *
-     * @param updateObjects          根据对象数组生成批量update语句
+     * @param updateObjects    根据对象数组生成批量update语句
      * @param whereProperties  指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param updateProperties 通过updateProperties指定对象里哪些属性生成update语句里的set语句部分。
      * @param <T>
@@ -189,11 +206,12 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, Object[] updateProperties) throws DbException;
+
     /**
      * 根据指定对象数组更新对应的表记录，aka-dbutils会根据对象数组生成批量的更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），updateProperties里属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      *
-     * @param updateObjects          根据对象数组生成update语句
+     * @param updateObjects    根据对象数组生成update语句
      * @param whereProperties  指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param updateProperties 通过updateProperties指定对象里哪些属性生成update语句里的set语句部分。
      * @param includeNull      根据includeNull决定set子句里是否包含null值的属性
@@ -202,23 +220,25 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException;
+
     /**
      * 根据指定对象数组批量更新对应的表记录，aka-dbutils会根据对象数组生成批量更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分，对象里除了whereProperties里属性之外的其它属性会生成update语句里的set语句部分，
      * 但会忽略存在值为null的属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
      *
-     * @param updateObjects         根据对象数组生成批量update语句
+     * @param updateObjects   根据对象数组生成批量update语句
      * @param whereProperties 指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param <T>
      * @return 返回更新记录的条数
      * @throws DbException
      */
     public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties) throws DbException;
+
     /**
      * 根据指定对象数组更新对应的表记录，aka-dbutils会根据对象数组生成批量的更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），除whereProperties里属性的其它属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      *
-     * @param updateObjects         根据对象数组生成update语句
+     * @param updateObjects   根据对象数组生成update语句
      * @param whereProperties 指定对象里哪些属性来生成where子句的条件部分（不会忽略whereProperties里值为null的属性）
      * @param includeNull     根据includeNull决定set子句里是否包含null值的属性
      * @param <T>
@@ -226,6 +246,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, boolean includeNull) throws DbException;
+
     /**
      * 根据selectObject的非空属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，例如：如果为mysql数据库，
      * 则生成的SQL形如：
@@ -240,6 +261,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> T queryOneBy(T selectObject) throws DbException;
+
     /**
      * 据selectObject存在于whereProperties里的属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，例如：如果为mysql数据库，
      * 则生成的SQL形如：
@@ -255,6 +277,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> T queryOneBy(T selectObject, Object[] whereProperties) throws DbException;
+
     /**
      * 根据selectObject存在于whereProperties里的属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，whereProperties指定
      * 的属性即使在selectObject里值为空，也不会忽略，即生成形如"xxx=null"的条件。
@@ -266,6 +289,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> List<T> queryListBy(T selectObject, Object[] whereProperties) throws DbException;
+
     /**
      * 根据selectObject的非空属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，如：
      * <blockquote><pre>
@@ -278,6 +302,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> List<T> queryListBy(T selectObject) throws DbException;
+
     /**
      * 据selectObject存在于whereProperties里的属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，whereProperties指定
      * 的属性即使在selectObject里值为空，也不会忽略，即生成形如"xxx=null"的条件。本方法为分页查询，参数page为页码（从1开始），
@@ -302,6 +327,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> List<T> queryListBy(T selectObject, Object[] whereProperties, int page, int perPage, PageBean pb) throws DbException;
+
     /**
      * 根据selectObject的非空属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，本方法为分页查询，参数page为页码（从1开始），
      * 参数perPage为每页多少行记录，aka-dbutils会根据这些信息生成分页的select语句，例如，如果当前数据库类型为mysql，请求第2页（page=2），
@@ -314,6 +340,7 @@ public interface DBObjectOperation {
      * <blockquote><pre>
      *      select count(1) from (select * from course  where name='course_page') t
      *  </pre></blockquote>
+     *
      * @param selectObject 根据此对象反射生成select语句，非空属性组成了where的条件部分
      * @param page         页码，从1开始
      * @param perPage      每页多少行记录
@@ -323,6 +350,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> List<T> queryListBy(T selectObject, int page, int perPage, PageBean pageBean) throws DbException;
+
     /**
      * 根据deleteObject对象生成delete语句，删除相应的记录，其中whereProperties里指定的
      * 属性生成了delete的where条件部分，其中whereProperties里为null的属性也会包含。
@@ -334,6 +362,7 @@ public interface DBObjectOperation {
      * @throws DbException
      */
     public <T> int delBy(T deleteObject, Object[] whereProperties) throws DbException;
+
     /**
      * 根据deleteObjects对象数组生批量成delete语句，删除相应的记录，其中whereProperties里指定的
      * 属性生成了delete的where条件部分，其中whereProperties里为null的属性也会包含。整个批量删除操作

@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Vector;
 
 
-
 public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
 
 
@@ -36,7 +35,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
 
 
     private ResultSetMetaData resMD;
-
 
 
     private Vector<Integer> iMatchColumns;
@@ -225,7 +223,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
             strMatchColumns.add(j, null);
         }
     }
-
 
 
     public JdbcRowSetImpl(ResultSet res) throws SQLException {
@@ -1196,7 +1193,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void updateTime(int columnIndex, Time x) throws SQLException {
         checkState();
 
@@ -1448,7 +1444,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public Blob getBlob(int i) throws SQLException {
         checkState();
 
@@ -1532,7 +1527,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void updateRef(int columnIndex, Ref ref)
             throws SQLException {
         checkState();
@@ -1550,7 +1544,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
         checkState();
         rs.updateClob(columnIndex, c);
     }
-
 
 
     public void updateClob(String columnName, Clob c) throws SQLException {
@@ -1688,7 +1681,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setMatchColumn(int columnIdx) throws SQLException {
         // validate, if col is ok to be set
         if (columnIdx < 0) {
@@ -1803,7 +1795,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void rollback(Savepoint s) throws SQLException {
         conn.rollback(s);
     }
@@ -1832,7 +1823,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     //  Added as per Rave requirements
 
 
-
     protected Connection getConnection() {
         return conn;
     }
@@ -1841,14 +1831,12 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     // Added as per rave requirements
 
 
-
     protected void setConnection(Connection connection) {
         conn = connection;
     }
 
     // Returns a PreparedStatement Handle
     // Added as per Rave requirements
-
 
 
     protected PreparedStatement getPreparedStatement() {
@@ -1865,7 +1853,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
 
     // Returns a ResultSet handle
     // Added as per Rave requirements
-
 
 
     protected ResultSet getResultSet() throws SQLException {
@@ -1913,8 +1900,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
-
     public void setUrl(String url) throws SQLException {
 
         if (getUrl() != null) {
@@ -1958,7 +1943,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
             super.setPassword(password);
         }
     }
-
 
 
     public void setType(int type) throws SQLException {
@@ -2045,7 +2029,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
@@ -2059,7 +2042,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     public NClob getNClob(int i) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public NClob getNClob(String colName) throws SQLException {
@@ -2095,11 +2077,9 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setNString(int parameterIndex, String value) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
@@ -2112,11 +2092,9 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public Reader getNCharacterStream(int columnIndex) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public Reader getNCharacterStream(String columnName) throws SQLException {
@@ -2232,7 +2210,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void updateAsciiStream(int columnIndex,
                                   InputStream x,
                                   long length) throws SQLException {
@@ -2273,7 +2250,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void updateBinaryStream(String columnLabel,
                                    InputStream x,
                                    long length) throws SQLException {
@@ -2287,12 +2263,10 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void updateBinaryStream(String columnLabel,
                                    InputStream x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void updateCharacterStream(String columnLabel,
@@ -2314,11 +2288,9 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setURL(int parameterIndex, java.net.URL x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setNClob(int parameterIndex, Reader reader)
@@ -2333,12 +2305,10 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setNClob(String parameterName, Reader reader)
             throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setNClob(int parameterIndex, Reader reader, long length)
@@ -2347,11 +2317,9 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setNClob(int parameterIndex, NClob value) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setNString(String parameterName, String value)
@@ -2363,7 +2331,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setNCharacterStream(String parameterName, Reader value, long length)
@@ -2389,7 +2356,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setClob(String parameterName, Clob x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
@@ -2399,7 +2365,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
             throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setDate(String parameterName, Date x)
@@ -2412,7 +2377,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
             throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setTime(String parameterName, Time x)
@@ -2433,12 +2397,10 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setClob(int parameterIndex, Reader reader, long length)
             throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setBlob(int parameterIndex, InputStream inputStream, long length)
@@ -2457,7 +2419,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
             throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setBlob(String parameterName, Blob x) throws SQLException {
@@ -2494,7 +2455,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setBinaryStream(String parameterName, InputStream x,
                                 int length) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
@@ -2512,7 +2472,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
             throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setBinaryStream(String parameterName, InputStream x)
@@ -2535,7 +2494,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     public void setString(String parameterName, String x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setBytes(String parameterName, byte x[]) throws SQLException {
@@ -2565,17 +2523,14 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     }
 
 
-
     public void setByte(String parameterName, byte x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
 
 
-
     public void setShort(String parameterName, short x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setInt(String parameterName, int x) throws SQLException {
@@ -2586,7 +2541,6 @@ public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
     public void setLong(String parameterName, long x) throws SQLException {
         throw new SQLFeatureNotSupportedException(resBundle.handleGetObject("jdbcrowsetimpl.featnotsupp").toString());
     }
-
 
 
     public void setFloat(String parameterName, float x) throws SQLException {

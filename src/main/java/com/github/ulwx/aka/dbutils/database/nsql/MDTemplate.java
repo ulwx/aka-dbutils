@@ -164,7 +164,7 @@ public final class MDTemplate {
         //处理注释
         String commentReg = "(?s)\\/\\*.*?\\*\\/";
         mdContent = mdContent.replaceAll(commentReg, " ");
-        mdContent=StringUtils.trim(mdContent);
+        mdContent = StringUtils.trim(mdContent);
 
         try (BufferedReader reader = new BufferedReader(new StringReader(mdContent))) {
             TInteger tabNum = new TInteger(0);
@@ -176,16 +176,17 @@ public final class MDTemplate {
             String handLine = "";
             String preHandLine = "";
             // 一次读入一行，直到读入null为文件结束
-            int lineNum=0;
+            int lineNum = 0;
             while ((tempString = reader.readLine()) != null) {
                 String tempStr = StringUtils.trim(tempString);
                 lineNum++;
-                if(lineNum==2){
-                    if(tempStr.startsWith("===") && tempStr.endsWith("===")){
+                if (lineNum == 2) {
+                    if (tempStr.startsWith("===") && tempStr.endsWith("===")) {
                         //
-                    }else{
-                       return null;
-                    };
+                    } else {
+                        return null;
+                    }
+                    ;
                 }
                 if (StringUtils.isEmpty(tempStr)) {
                     continue;
@@ -313,10 +314,11 @@ public final class MDTemplate {
 
     /**
      * 执行md方法返回方法执行后生成的字符串
+     *
      * @param mdPath     md文件的包路径全名称，例如，格式为： com.github.ulwx.database.test.SysRightDao.md
      * @param methodName 模板里的方法名，例如 getDataCount
      * @param args       Map对象用于存放参数
-     * @return  返回md方法生成的字符串
+     * @return 返回md方法生成的字符串
      * @throws Exception 异常
      */
     public static String getResultString(String mdPath, String methodName, Map<String, Object> args) throws Exception {

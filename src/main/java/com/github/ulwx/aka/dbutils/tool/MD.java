@@ -1,5 +1,6 @@
 package com.github.ulwx.aka.dbutils.tool;
 
+import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.database.MDMethods.InsertOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.InsertOptions.ReturnFlag;
 import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
@@ -7,8 +8,10 @@ import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
 import com.github.ulwx.aka.dbutils.database.QueryMapNestOne2Many;
 import com.github.ulwx.aka.dbutils.database.QueryMapNestOne2One;
+import com.github.ulwx.aka.dbutils.database.dbpool.ReadConfig;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
+import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.CGetFun;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.GetFun;
 
@@ -16,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MD {
     public static String md(Class daoClass, String mdMethodName) {
@@ -184,4 +188,73 @@ public class MD {
         return insertOptions;
     }
 
+    public static String[] parsePoolName(String dbPoolXmlFileNameAndDbPoolName) {
+        String dbPoolKey = null;
+        String dbPoolXmlName = null;
+        String[] strs = dbPoolXmlFileNameAndDbPoolName.split("\\#");
+        if (strs.length == 1) {
+            dbPoolXmlName = ReadConfig.DEFAULT;
+            dbPoolKey = dbPoolXmlFileNameAndDbPoolName;
+
+        } else if (strs.length == 2) {
+            dbPoolXmlName = strs[0];
+            dbPoolKey = strs[1];
+        } else {
+
+        }
+        return new String[]{dbPoolXmlName, dbPoolKey};
+    }
+
+    public final static String AKA_PROFILE_NAME = "AKA_DBUTILS_PROFILE";
+    private static Map<String, String> poolFileNameProfileMap = new ConcurrentHashMap<>();
+
+    public static String ofPool(String dbPoolXmlFileNameAndDbPoolName) {
+        String[] strs = parsePoolName(dbPoolXmlFileNameAndDbPoolName);
+        String dbpoolFileName = strs[0];
+        String dbpoolName = strs[1];
+        String realFileName = poolFileNameProfileMap.get(dbpoolFileName);
+        if (realFileName != null) {
+            return realFileName + "#" + dbpoolName;
+        }
+        realFileName = dbpoolFileName;
+        String profileValue = StringUtils.trim(System.getProperty(AKA_PROFILE_NAME));
+        if (profileValue.isEmpty()) {
+            profileValue = StringUtils.trim(System.getenv(AKA_PROFILE_NAME));
+        }
+        if (!profileValue.isEmpty()) {
+            realFileName = StringUtils.trimTailString(realFileName, ".xml");
+            realFileName = realFileName + "-" + profileValue + ".xml";
+        }
+        try {
+            Resource[] resources = null;
+            if (dbpoolFileName.equals(realFileName)) {
+                resources = ReadConfig.getResource(realFileName);
+            } else {
+                resources = ReadConfig.getResource(realFileName);
+                if (resources == null || resources.length == 0) {
+                    //尝试用原始路径获取资源
+                    resources = ReadConfig.getResource(dbpoolFileName);
+                    realFileName = dbpoolFileName;
+                }
+            }
+            ReadConfig.checkResource(resources, realFileName);
+            synchronized (MD.class) {
+                String ret = poolFileNameProfileMap.get(dbpoolFileName);
+                if (ret == null) {
+                    poolFileNameProfileMap.put(dbpoolFileName, realFileName);
+                } else {
+                    realFileName = ret;
+                }
+            }
+            return realFileName + "#" + dbpoolName;
+
+        } catch (Exception e) {
+            throw new DbException(e);
+        }
+
+    }
+
+    public static void main(String[] args) {
+        ofPool("dbpool.xml");
+    }
 }

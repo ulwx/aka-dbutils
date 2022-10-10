@@ -2,6 +2,7 @@ package com.github.ulwx.aka.dbutils.database.utils;
 
 
 import com.github.ulwx.aka.dbutils.database.DbContext;
+import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.database.dbpool.DBPoolFactory;
 import com.github.ulwx.aka.dbutils.database.spring.DBTransInfo;
 import com.github.ulwx.aka.dbutils.database.spring.MDataBaseFactory;
@@ -29,13 +30,16 @@ public class DbConst {
 
     public static String getValue(String poolname, String propertyName) {
         if (StringUtils.hasText(poolname)) {
-            String[] strs=DBPoolFactory.parseRefDbPoolName(poolname);
-            Map<String, Map<String, String>> maps = DBPoolFactory.getInstance(strs[0]).getReadConfig().getProperties();
-            return StringUtils.trim(maps.get(strs[1]).get(propertyName));
+            String[] strs = DBPoolFactory.parseRefDbPoolName(poolname);
+            try {
+                Map<String, Map<String, String>> maps = DBPoolFactory.getInstance(strs[0]).getReadConfig().getProperties();
+                return StringUtils.trim(maps.get(strs[1]).get(propertyName));
+            } catch (Exception e) {
+                if (e instanceof DbException) throw (DbException) e;
+                throw new DbException(e);
+            }
         } else {
-            String[] strs=DBPoolFactory.parseRefDbPoolName(poolname);
-            Map<String, String> glSettings =DBPoolFactory.getInstance(strs[0]).getReadConfig().getGlSettings();
-            return StringUtils.trim(glSettings.get(propertyName));
+            return null;
         }
     }
 

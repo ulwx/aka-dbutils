@@ -38,10 +38,10 @@
 
     <dbpool name="db_student" type="tomcatdbpool" table-name-rule="underline_to_camel"
             table-colum-rule="underline_to_camel">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://localhost:3306/db_student?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
-        <property name="username">root</property>
-        <property name="password">abcd</property>
+        <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_student</property>
+        <property name="username">sa</property>
+        <property name="password">scj_123123</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
         <property name="checkoutTimeout">60000</property>
         <property name="idleConnectionTestPeriod">30</property>
@@ -51,10 +51,10 @@
         <property name="maxStatements">20</property>
     </dbpool>
     <dbpool name="db_teacher" type="tomcatdbpool">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://localhost:3306/db_teacher?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
-        <property name="username">root</property>
-        <property name="password">abcd</property>
+        <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher</property>
+        <property name="username">sa</property>
+        <property name="password">scj_123123</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
         <property name="checkoutTimeout">60000</property>
         <property name="idleConnectionTestPeriod">30</property>
@@ -64,10 +64,10 @@
         <property name="maxStatements">20</property>
         <slaves>
             <server name="db_teacher_slave1">
-                <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-                <property name="url">jdbc:mysql://localhost:3306/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
-                <property name="username">root</property>
-                <property name="password">abcd</property>
+                <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+                <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave1</property>
+                <property name="username">sa</property>
+                <property name="password">scj_123123</property>
                 <property name="checkoutTimeout">60000</property>
                 <property name="idleConnectionTestPeriod">60</property>
                 <property name="maxIdleTime">60</property>
@@ -76,10 +76,10 @@
                 <property name="maxStatements">20</property>
             </server>
             <server name="db_teacher_slave2">
-                <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-                <property name="url">jdbc:mysql://localhost:3306/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
-                <property name="username">root</property>
-                <property name="password">abcd</property>
+                <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+                <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave2</property>
+                <property name="username">sa</property>
+                <property name="password">scj_123123</property>
                 <property name="checkoutTimeout">60000</property>
                 <property name="idleConnectionTestPeriod">60</property>
                 <property name="maxIdleTime">60</property>
@@ -90,8 +90,7 @@
         </slaves>
     </dbpool>
     <!--
-    ref属性： 引用的其它数据库连接池名称，可以引用本文件里的其它连接池，如果引用其它配置文件的连接池，格式为
-      [pool-file-name]#[pollname]，如:dbpool.xml#db.datasource-sysdb。
+    ref属性： 引用本文将其它数据库连接池名称，可以引用本文件里的其它连接池，
     table-name-rule属性： 如果省略，则继承ref指定的连接池的<dbpool>的配置。
     table-colum-rule属性：如果省略，则继承ref指定的连接池的<dbpool>的配置。
     -->
@@ -102,9 +101,9 @@
     table-name-rule属性：指定本数据源对应数据库的表名到javaBean类名的转换规则，覆盖setting里的全局规则。
     table-colum-rule属性：指定本数据源对应数据库里表字段与javaBean属性名的转换规则，覆盖setting里的全局规则。
     check-time属性：如果是数字(单位秒），则表示间隔的秒数执行一次ref-class指定的插件方法，获取最新的数据库连接池属性和现有的属性做
-    比较，如果不相同则替换并重新用新的属性构造连接池。
+    比较，如果不相同则替换并重新用新的属性构造连接池。。
     -->
     <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.mysql.MyIDBPoolAttrSourceTest"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
-            check-time="3000"/>
+            check-time="10"/>
 </dbpool-config>

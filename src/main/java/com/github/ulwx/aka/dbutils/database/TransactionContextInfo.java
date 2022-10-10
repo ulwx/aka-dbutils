@@ -72,8 +72,5 @@ public class TransactionContextInfo implements TransactionContextElem {
         this.stackTraceElement = stackTraceElement;
     }
 
-    @Override
-    public ElemType getElemType() {
-        return ElemType.TransactionContextInfoElem;
-    }
+
 }

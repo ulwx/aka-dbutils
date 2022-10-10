@@ -283,7 +283,6 @@ public class ClassUtils {
     }
 
 
-
     public static Class getActualTypeOfParameterizedType(Type type) {
         if (type instanceof ParameterizedType) {
             Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();

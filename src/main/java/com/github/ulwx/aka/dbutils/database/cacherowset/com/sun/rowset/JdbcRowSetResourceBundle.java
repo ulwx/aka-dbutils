@@ -10,7 +10,6 @@ import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 
-
 public class JdbcRowSetResourceBundle implements Serializable {
 
 
@@ -74,7 +73,6 @@ public class JdbcRowSetResourceBundle implements Serializable {
     public Enumeration getKeys() {
         return propResBundle.getKeys();
     }
-
 
 
     public Object handleGetObject(String key) {

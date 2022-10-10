@@ -6,11 +6,12 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 
-public class ClassPathRootResource implements Resource{
+public class ClassPathRootResource implements Resource {
     private Resource resource;
     private String packagePath;
     private String relativePath;
     private String classPath;
+
     public String getClassPath() {
         return classPath;
     }

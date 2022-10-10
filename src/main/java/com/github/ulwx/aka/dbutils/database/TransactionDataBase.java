@@ -131,7 +131,7 @@ public class TransactionDataBase extends DataBaseDecorator implements Transactio
     private DataBaseDecorator findInCurTransactionContext(String dbPoolName) {
         Map<String, TransactionContextElem> context = getCurTransactionContext();
         if (context != null) {
-            DataBaseDecorator contextDb = (DataBaseDecorator)context.get(dbPoolName);
+            DataBaseDecorator contextDb = (DataBaseDecorator) context.get(dbPoolName);
             if (contextDb != null) {// 找到
                 return contextDb;
             } else {

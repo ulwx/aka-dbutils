@@ -2,15 +2,17 @@ package com.github.ulwx.aka.dbutils.tool.support.type;
 
 import java.sql.Timestamp;
 
-public class TSqlDateTime  implements TType{
+public class TSqlDateTime implements TType {
     private Timestamp value;
 
     public TSqlDateTime() {
 
     }
+
     public TSqlDateTime(Timestamp value) {
         this.value = value;
     }
+
     @Override
     public Timestamp getValue() {
         return value;

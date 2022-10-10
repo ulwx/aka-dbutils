@@ -326,7 +326,7 @@ public class MapperFactory {
                 if (((TType) ret).getWrappedClass() == returnClass) {
                     return ((TType) ret).getValue();
                 }
-            }else if(ret instanceof TResult){
+            } else if (ret instanceof TResult) {
                 return ((TResult) ret).getValue();
             }
             return ret;
@@ -370,39 +370,39 @@ public class MapperFactory {
                 ret = list.stream().map(i -> {
                     return ((TByte) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TLocalDate.class && types0 == LocalDate.class) {
+            } else if (list0Type == TLocalDate.class && types0 == LocalDate.class) {
                 ret = list.stream().map(i -> {
                     return ((TLocalDate) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TLocalDateTime.class &&types0 == LocalDateTime.class) {
+            } else if (list0Type == TLocalDateTime.class && types0 == LocalDateTime.class) {
                 ret = list.stream().map(i -> {
                     return ((TLocalDateTime) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TLocalTime.class &&types0 == LocalTime.class) {
+            } else if (list0Type == TLocalTime.class && types0 == LocalTime.class) {
                 ret = list.stream().map(i -> {
                     return ((TLocalTime) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TDate.class &&types0 == Date.class) {
+            } else if (list0Type == TDate.class && types0 == Date.class) {
                 ret = list.stream().map(i -> {
                     return ((TDate) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TSqlDate.class &&types0 == java.sql.Date.class) {
+            } else if (list0Type == TSqlDate.class && types0 == java.sql.Date.class) {
                 ret = list.stream().map(i -> {
                     return ((TSqlDate) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TSqlTime.class &&types0 == java.sql.Time.class) {
+            } else if (list0Type == TSqlTime.class && types0 == java.sql.Time.class) {
                 ret = list.stream().map(i -> {
                     return ((TSqlTime) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TSqlDateTime.class &&types0 == java.sql.Timestamp.class) {
+            } else if (list0Type == TSqlDateTime.class && types0 == java.sql.Timestamp.class) {
                 ret = list.stream().map(i -> {
                     return ((TSqlDateTime) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TBigInteger.class &&types0 == BigInteger.class) {
+            } else if (list0Type == TBigInteger.class && types0 == BigInteger.class) {
                 ret = list.stream().map(i -> {
                     return ((TBigInteger) i).getValue();
                 }).collect(Collectors.toList());
-            } else if (list0Type==TBigDecimal.class &&types0 == BigDecimal.class) {
+            } else if (list0Type == TBigDecimal.class && types0 == BigDecimal.class) {
                 ret = list.stream().map(i -> {
                     return ((TBigDecimal) i).getValue();
                 }).collect(Collectors.toList());
@@ -441,15 +441,15 @@ public class MapperFactory {
                     } else if (Iterable.class.isAssignableFrom(returnClass) || returnClass.isArray()) {
                         throw new DbException(errMsg);
                     } else {
-                       if (checkSupportParmaterType(returnClass)) {
+                        if (checkSupportParmaterType(returnClass)) {
                             Class newReturnClass = simpleType2TSimpleType(returnClass);
                             Object ret = mdataBase.queryOne(newReturnClass, mdMethodName, args);
                             return returnValueFromTSimpleType(returnClass, ret);
-                        }else  if (!isJavaClass(returnClass)) {//自定义类型
-                           if (pageOptions == null && mapNestOptions == null && !isJavaClass(returnClass)) {
-                               return mdataBase.queryOne(returnClass, mdMethodName, args);
-                           }
-                       }
+                        } else if (!isJavaClass(returnClass)) {//自定义类型
+                            if (pageOptions == null && mapNestOptions == null && !isJavaClass(returnClass)) {
+                                return mdataBase.queryOne(returnClass, mdMethodName, args);
+                            }
+                        }
 
                     }
                     throw new DbException(errMsg);

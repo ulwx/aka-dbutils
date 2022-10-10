@@ -15,8 +15,6 @@ import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 import com.github.ulwx.aka.dbutils.tool.support.Assert;
 import com.github.ulwx.aka.dbutils.tool.support.CTime;
-import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
-import com.github.ulwx.aka.dbutils.tool.support.type.TInteger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -29,42 +27,43 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class StudentMapperTest {
-    public static String DbPoolName = "db_student";
+    public static String DbPoolName = "mysql/dbpool.xml#db_student";
+
     @Before
-    public void setup(){
+    public void setup() {
         Utils.importDbStudent();
     }
+
     @Test
-    public  void testQueryListOne2One(){
+    public void testQueryListOne2One() {
 
         QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
         queryMapNestOne2One.set(null, "course", "c.");
-        One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
+        One2OneMapNestOptions one2OneMapNestOptions = MD.ofOne2One(
                 "stu."
-                ,queryMapNestOne2One
+                , queryMapNestOne2One
         );
-        StringBuffer sql=new StringBuffer();
-        DbContext.setDebugSQLListener(sqltxt->{
-            if(sql.length()>0){
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            if (sql.length() > 0) {
                 sql.append(";");
             }
             sql.append(sqltxt);
         });
-        List<One2OneStudent> studentList= MDbUtils.getMapper(DbPoolName, StudentMapper.class).
-                getListOne2One(MD.of("student1","student2","student3"),
+        List<One2OneStudent> studentList = MDbUtils.getMapper(DbPoolName, StudentMapper.class).
+                getListOne2One(MD.of("student1", "student2", "student3"),
                         one2OneMapNestOptions);
 
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
-                "select stu.*,c.* from student stu,student_course sc,course c " +
-                        "where stu.id=sc.student_id and  c.id=sc.course_id and " +
-                        "stu.name in ('student1','student2','student3') order by stu.id");
+                "select stu.*,c.* from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3') order by stu.id");
 
-        One2OneStudent compared=null;
-        List<One2OneStudent> comparedList=new ArrayList<>();
-        compared=new One2OneStudent();
+        One2OneStudent compared = null;
+        List<One2OneStudent> comparedList = new ArrayList<>();
+        compared = new One2OneStudent();
         compared.setId(1);
         compared.setName("student1");
         compared.setAge(40);
@@ -77,7 +76,7 @@ public class StudentMapperTest {
         compared.getCourse().setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         comparedList.add(compared);
 
-        compared=new One2OneStudent();
+        compared = new One2OneStudent();
         compared.setId(2);
         compared.setName("student2");
         compared.setAge(39);
@@ -90,7 +89,7 @@ public class StudentMapperTest {
         compared.getCourse().setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         comparedList.add(compared);
 
-        compared=new One2OneStudent();
+        compared = new One2OneStudent();
         compared.setId(3);
         compared.setName("student3");
         compared.setAge(38);
@@ -103,50 +102,43 @@ public class StudentMapperTest {
         compared.getCourse().setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         comparedList.add(compared);
 
-        Assert.equal(studentList,comparedList);
+        Assert.equal(studentList, comparedList);
 
 
     }
 
     @Test
-    public  void testQueryListOne2OnePage(){
+    public void testQueryListOne2OnePage() {
 
-        PageBean pageBean=new PageBean();
-        Map<String,Object> args = new HashMap<>();
-        args.put("names",new String[]{"student1","student2","student3"
-                ,"student4","student5","student6","student7","student8","student9"});
+        PageBean pageBean = new PageBean();
+        Map<String, Object> args = new HashMap<>();
+        args.put("names", new String[]{"student1", "student2", "student3"
+                , "student4", "student5", "student6", "student7", "student8", "student9"});
         QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
         queryMapNestOne2One.set(null, "course", "c.");
-        One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One("stu.", queryMapNestOne2One);
-        PageOptions pageOptions=MD.ofPage(2, 3,
+        One2OneMapNestOptions one2OneMapNestOptions = MD.ofOne2One("stu.", queryMapNestOne2One);
+        PageOptions pageOptions = MD.ofPage(2, 3,
                 MD.md(StudentMapper.class, "getListOne2OnePageCount"),
                 null);
-        StringBuffer sql=new StringBuffer();
-        DbContext.setDebugSQLListener(sqltxt->{
-            if(sql.length()>0){
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            if (sql.length() > 0) {
                 sql.append(";");
             }
             sql.append(sqltxt);
         });
-        List<One2OneStudent> list=MDbUtils.getMapper(DbPoolName, StudentMapper.class).
+        List<One2OneStudent> list = MDbUtils.getMapper(DbPoolName, StudentMapper.class).
                 getListOne2OnePage(args,
                         one2OneMapNestOptions,
                         pageOptions);
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
-                "select count(1) from student stu,student_course sc,course c " +
-                        "where stu.id=sc.student_id and  c.id=sc.course_id " +
-                        "and stu.name in ('student1','student2','student3','student4','student5'," +
-                        "'student6','student7','student8','student9') ;" +
-                        "select stu.*,c.* from student stu,student_course sc,course c " +
-                        "where stu.id=sc.student_id and  c.id=sc.course_id " +
-                        "and stu.name in ('student1','student2','student3','student4'," +
-                        "'student5','student6','student7','student8','student9') " +
-                        "order by stu.id limit 3, 3");
+                "select count(1) from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3','student4','student5','student6','student7','student8','student9') ;" +
+                        "select stu.*,c.* from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3','student4','student5','student6','student7','student8','student9') order by stu.id limit 3, 3");
 
-        One2OneStudent compared=null;
-        List<One2OneStudent> comparedList=new ArrayList<>();
-        compared=new One2OneStudent();
+        One2OneStudent compared = null;
+        List<One2OneStudent> comparedList = new ArrayList<>();
+        compared = new One2OneStudent();
         compared.setId(4);
         compared.setName("student4");
         compared.setAge(38);
@@ -159,7 +151,7 @@ public class StudentMapperTest {
         compared.getCourse().setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         comparedList.add(compared);
 
-        compared=new One2OneStudent();
+        compared = new One2OneStudent();
         compared.setId(5);
         compared.setName("student5");
         compared.setAge(38);
@@ -172,7 +164,7 @@ public class StudentMapperTest {
         compared.getCourse().setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         comparedList.add(compared);
 
-        compared=new One2OneStudent();
+        compared = new One2OneStudent();
         compared.setId(6);
         compared.setName("student6");
         compared.setAge(38);
@@ -185,11 +177,12 @@ public class StudentMapperTest {
         compared.getCourse().setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         comparedList.add(compared);
 
-        Assert.equal(list,comparedList);
+        Assert.equal(list, comparedList);
 
     }
+
     @Test
-    public  void testQueryListOne2Many(){
+    public void testQueryListOne2Many() {
 
         QueryMapNestOne2Many queryMapNestOne2Many = new QueryMapNestOne2Many();
         queryMapNestOne2Many.set(Course.class,
@@ -197,43 +190,41 @@ public class StudentMapperTest {
                 new String[]{"id"},
                 "c.",
                 null);
-        One2ManyMapNestOptions one2ManyMapNestOptions=MD.ofOne2Many("stu."
+        One2ManyMapNestOptions one2ManyMapNestOptions = MD.ofOne2Many("stu."
                 , new String[]{"id"}, queryMapNestOne2Many);
-        StringBuffer sql=new StringBuffer();
-        DbContext.setDebugSQLListener(sqltxt->{
-            if(sql.length()>0){
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            if (sql.length() > 0) {
                 sql.append(";");
             }
             sql.append(sqltxt);
         });
 
-        List<One2ManyStudent> list=MDbUtils.getMapper(DbPoolName, StudentMapper.class).
-                getListOne2Many(MD.of("student1","student4"),
+        List<One2ManyStudent> list = MDbUtils.getMapper(DbPoolName, StudentMapper.class).
+                getListOne2Many(MD.of("student1", "student4"),
                         one2ManyMapNestOptions);
 
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
-                "select stu.*, c.* from student stu,student_many_courses sc," +
-                        "course c where stu.id=sc.student_id and  c.id=sc.course_id " +
-                        "and stu.name in ('student1','student4') order by stu.id,c.id");
+                "select stu.*, c.* from student stu,student_many_courses sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student4') order by stu.id,c.id");
 
-        One2ManyStudent compared=null;
-        Course course=null;
-        List<One2ManyStudent> comparedList=new ArrayList<>();
-        compared=new One2ManyStudent();
+        One2ManyStudent compared = null;
+        Course course = null;
+        List<One2ManyStudent> comparedList = new ArrayList<>();
+        compared = new One2ManyStudent();
         compared.setId(1);
         compared.setName("student1");
         compared.setAge(40);
         compared.setBirthDay(LocalDate.parse("1980-10-08", CTime.DTF_YMD));
         compared.setCourseList(new ArrayList<>());
-        course=new Course();
+        course = new Course();
         course.setId(10);
         course.setName("course10");
         course.setClassHours(16);
         course.setTeacherId(4);
         course.setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         compared.getCourseList().add(course);
-        course=new Course();
+        course = new Course();
         course.setId(13);
         course.setName("course13");
         course.setClassHours(19);
@@ -243,13 +234,13 @@ public class StudentMapperTest {
 
         comparedList.add(compared);
 
-        compared=new One2ManyStudent();
+        compared = new One2ManyStudent();
         compared.setId(4);
         compared.setName("student4");
         compared.setAge(38);
         compared.setBirthDay(LocalDate.parse("1982-05-08", CTime.DTF_YMD));
         compared.setCourseList(new ArrayList<>());
-        course=new Course();
+        course = new Course();
         course.setId(12);
         course.setName("course12");
         course.setClassHours(18);
@@ -257,7 +248,7 @@ public class StudentMapperTest {
         course.setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         compared.getCourseList().add(course);
 
-        course=new Course();
+        course = new Course();
         course.setId(15);
         course.setName("course15");
         course.setClassHours(21);
@@ -266,35 +257,35 @@ public class StudentMapperTest {
         compared.getCourseList().add(course);
 
         comparedList.add(compared);
-        Assert.equal(list,comparedList);
+        Assert.equal(list, comparedList);
 
     }
 
     @Test
-    public  void testQueryListOne2ManyPage(){
-        Map<String,Object> args = new HashMap<>();
-        args.put("names",new String[]{"student1","student4","student6",
-                "student7","student9","student10"});
+    public void testQueryListOne2ManyPage() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("names", new String[]{"student1", "student4", "student6",
+                "student7", "student9", "student10"});
 
-        StringBuffer sql=new StringBuffer();
-        DbContext.setDebugSQLListener(sqltxt->{
-            if(sql.length()>0){
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            if (sql.length() > 0) {
                 sql.append(";");
             }
             sql.append(sqltxt);
         });
-        PageOptions pageOptions=MD.ofPage(2, 3, null,
+        PageOptions pageOptions = MD.ofPage(2, 3, null,
                 null);
         //获取某页的所有id
-        List<Integer>  ids= MDbUtils.getMapper(DbPoolName, StudentMapper.class).
+        List<Integer> ids = MDbUtils.getMapper(DbPoolName, StudentMapper.class).
                 getPageIdList(args,
                         pageOptions);
 
         Assert.equal(sql.toString(),
-                "select count(1) from (select stu.id as `value` from student stu,student_many_courses sc,course c where stu.id=sc.student_id and  c.id=sc.course_id and stu.name in ('student1','student4','student6','student7','student9','student10') group by stu.id) t;" +
-                        "select stu.id as `value` from student stu,student_many_courses sc,course c where stu.id=sc.student_id and  c.id=sc.course_id and stu.name in ('student1','student4','student6','student7','student9','student10') group by stu.id order by stu.id limit 3, 3");
+                "select count(1) from (select stu.id as `value` from student stu,student_many_courses sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student4','student6','student7','student9','student10') group by stu.id) t;" +
+                        "select stu.id as `value` from student stu,student_many_courses sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student4','student6','student7','student9','student10') group by stu.id order by stu.id limit 3, 3");
         sql.setLength(0);
-        args.put("ids",ids);
+        args.put("ids", ids);
 
         QueryMapNestOne2Many queryMapNestOne2Many = new QueryMapNestOne2Many();
         queryMapNestOne2Many.set(Course.class,
@@ -302,32 +293,32 @@ public class StudentMapperTest {
                 new String[]{"id"},
                 "c.",
                 null);
-        One2ManyMapNestOptions one2ManyMapNestOptions=MD.ofOne2Many("stu.", new String[]{"id"}, queryMapNestOne2Many);
+        One2ManyMapNestOptions one2ManyMapNestOptions = MD.ofOne2Many("stu.", new String[]{"id"}, queryMapNestOne2Many);
 
-        List<One2ManyStudent> list=MDbUtils.getMapper(DbPoolName, StudentMapper.class).
+        List<One2ManyStudent> list = MDbUtils.getMapper(DbPoolName, StudentMapper.class).
                 getListOne2ManyPage(args,
                         one2ManyMapNestOptions);
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
                 "select stu.*, c.* from student stu,student_many_courses sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student4','student6','student7','student9','student10') and stu.id in (7,9,10) order by stu.id,c.id");
 
-        One2ManyStudent compared=null;
-        Course course=null;
-        List<One2ManyStudent> comparedList=new ArrayList<>();
-        compared=new One2ManyStudent();
+        One2ManyStudent compared = null;
+        Course course = null;
+        List<One2ManyStudent> comparedList = new ArrayList<>();
+        compared = new One2ManyStudent();
         compared.setId(7);
         compared.setName("student7");
         compared.setAge(38);
         compared.setBirthDay(LocalDate.parse("1982-03-08", CTime.DTF_YMD));
         compared.setCourseList(new ArrayList<>());
-        course=new Course();
+        course = new Course();
         course.setId(12);
         course.setName("course12");
         course.setClassHours(18);
         course.setTeacherId(0);
         course.setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         compared.getCourseList().add(course);
-        course=new Course();
+        course = new Course();
         course.setId(15);
         course.setName("course15");
         course.setClassHours(21);
@@ -337,13 +328,13 @@ public class StudentMapperTest {
 
         comparedList.add(compared);
 
-        compared=new One2ManyStudent();
+        compared = new One2ManyStudent();
         compared.setId(9);
         compared.setName("student9");
         compared.setAge(38);
         compared.setBirthDay(LocalDate.parse("1982-06-08", CTime.DTF_YMD));
         compared.setCourseList(new ArrayList<>());
-        course=new Course();
+        course = new Course();
         course.setId(14);
         course.setName("course14");
         course.setClassHours(20);
@@ -351,7 +342,7 @@ public class StudentMapperTest {
         course.setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         compared.getCourseList().add(course);
 
-        course=new Course();
+        course = new Course();
         course.setId(16);
         course.setName("course16");
         course.setClassHours(22);
@@ -359,7 +350,7 @@ public class StudentMapperTest {
         course.setCreatime(LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS));
         compared.getCourseList().add(course);
 
-        course=new Course();
+        course = new Course();
         course.setId(20);
         course.setName("course20");
         course.setClassHours(26);
@@ -368,13 +359,13 @@ public class StudentMapperTest {
         compared.getCourseList().add(course);
         comparedList.add(compared);
 
-        compared=new One2ManyStudent();
+        compared = new One2ManyStudent();
         compared.setId(10);
         compared.setName("student10");
         compared.setAge(38);
         compared.setBirthDay(LocalDate.parse("1982-04-08", CTime.DTF_YMD));
         compared.setCourseList(new ArrayList<>());
-        course=new Course();
+        course = new Course();
         course.setId(11);
         course.setName("course11");
         course.setClassHours(17);
@@ -383,11 +374,11 @@ public class StudentMapperTest {
         compared.getCourseList().add(course);
         comparedList.add(compared);
 
-        Assert.equal(list,comparedList);
+        Assert.equal(list, comparedList);
     }
 
     @After
-    public void after(){
+    public void after() {
         DbContext.removeDebugSQLListener();
     }
 }

@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.Vector;
 
 
-
 public class XmlReaderContentHandler extends DefaultHandler {
 
     private HashMap<String, Integer> propMap;
@@ -156,7 +155,6 @@ public class XmlReaderContentHandler extends DefaultHandler {
             "schema-name", "column-precision", "column-scale",
             "table-name", "catalog-name", "column-type",
             "column-type-name", "null"};
-
 
 
     private final static int ColumnCountTag = 0;
@@ -306,7 +304,6 @@ public class XmlReaderContentHandler extends DefaultHandler {
 
     public void endDocument() throws SAXException {
     }
-
 
 
     public void startElement(String uri, String lName, String qName, Attributes attributes) throws SAXException {
@@ -1008,7 +1005,6 @@ public class XmlReaderContentHandler extends DefaultHandler {
                 break;
             case UpdTag:
                 upd = new Object[2];
-
 
 
                 tempUpdate = tempUpdate.concat(new String(ch, start, len));

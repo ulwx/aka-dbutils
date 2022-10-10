@@ -542,7 +542,7 @@ public class SqlUtils {
     }
 
     public static boolean isTSimpleTypeWrapper(Class t) {
-        if(TType.class.isAssignableFrom(t)){
+        if (TType.class.isAssignableFrom(t)) {
             return true;
         }
         return false;
@@ -555,11 +555,11 @@ public class SqlUtils {
         Object value = null;
         try {
 
-            if(isTSimpleTypeWrapper(outerClass)) {
-                Class innerType=
-                        ((TType)outerClass.getConstructor().newInstance()).getWrappedClass();
+            if (isTSimpleTypeWrapper(outerClass)) {
+                Class innerType =
+                        ((TType) outerClass.getConstructor().newInstance()).getWrappedClass();
                 value = rs.getObject(1, innerType);
-            }else{
+            } else {
                 long start = System.currentTimeMillis();
                 if (map != null) {
                     String mapName = map.get(name);
@@ -584,22 +584,22 @@ public class SqlUtils {
                 if (t == String.class) {
                     value = rs.getString(labelName);
                 } else if (t == Integer.class || t == int.class) {
-                    value = rs.getObject(labelName,Integer.class);
+                    value = rs.getObject(labelName, Integer.class);
                 } else if (t == boolean.class || t == Boolean.class) {
-                    value = rs.getObject(labelName,Boolean.class);
+                    value = rs.getObject(labelName, Boolean.class);
                 } else if (t == Long.class || t == long.class) {
-                    value = rs.getObject(labelName,Long.class);
+                    value = rs.getObject(labelName, Long.class);
                 } else if (t == Short.class || t == short.class) {
-                    value = rs.getObject(labelName,Short.class);
+                    value = rs.getObject(labelName, Short.class);
                 } else if (t == Float.class || t == float.class) {
-                    value = rs.getObject(labelName,Float.class);
+                    value = rs.getObject(labelName, Float.class);
                 } else if (t == Double.class || t == double.class) {
-                    value = rs.getObject(labelName,Double.class);
+                    value = rs.getObject(labelName, Double.class);
                 } else if (t == Date.class) {
                     value = rs.getTimestamp(labelName);
-                    if(value!=null)
+                    if (value != null)
                         value = SqlUtils
-                            .sqlTimestampTojavaDate((Timestamp) value);
+                                .sqlTimestampTojavaDate((Timestamp) value);
                 } else if (t == java.sql.Date.class) {
                     value = rs.getDate(labelName);
                 } else if (t == java.sql.Timestamp.class) {
@@ -608,32 +608,32 @@ public class SqlUtils {
                     value = rs.getTime(labelName);
                 } else if (t == LocalDate.class) {
                     value = rs.getDate(labelName);
-                    if(value!=null)
+                    if (value != null)
                         value = ((java.sql.Date) value).toLocalDate();
                 } else if (t == LocalDateTime.class) {
                     value = rs.getTimestamp(labelName);
-                    if(value!=null)
+                    if (value != null)
                         value = ((Timestamp) value).toLocalDateTime();
                 } else if (t == LocalTime.class) {
                     value = rs.getTime(labelName);
-                    if(value!=null)
+                    if (value != null)
                         value = ((Time) value).toLocalTime();
                 } else if (t == Byte.class || t == byte.class) {
-                    value = rs.getObject(labelName,Byte.class);
+                    value = rs.getObject(labelName, Byte.class);
                 } else if (t == char.class || t == Character.class) {
                     value = rs.getString(labelName);
-                    if(value!=null && value.toString().length()>0){
-                        value=value.toString().charAt(0);
-                    }else{
-                        char c='\0';
-                        value=c;
+                    if (value != null && value.toString().length() > 0) {
+                        value = value.toString().charAt(0);
+                    } else {
+                        char c = '\0';
+                        value = c;
                     }
                 } else if (t == java.math.BigDecimal.class) {
                     value = rs.getBigDecimal(labelName);
                 } else if (t == java.math.BigInteger.class) {
-                    value = rs.getObject(labelName,Long.class);
-                    if(value!=null)
-                        value = new java.math.BigInteger(Long.toString((Long)value));
+                    value = rs.getObject(labelName, Long.class);
+                    if (value != null)
+                        value = new java.math.BigInteger(Long.toString((Long) value));
                 } else {
                     value = rs.getObject(labelName, t);
                 }
@@ -662,22 +662,22 @@ public class SqlUtils {
                 if (t == String.class) {
                     value = rs.getString(key);
                 } else if (t == Integer.class || t == int.class) {
-                    value = rs.getObject(key,Integer.class);
+                    value = rs.getObject(key, Integer.class);
                 } else if (t == boolean.class || t == Boolean.class) {
-                    value = rs.getObject(key,Boolean.class);
+                    value = rs.getObject(key, Boolean.class);
                 } else if (t == Long.class || t == long.class) {
-                    value = rs.getObject(key,Long.class);
+                    value = rs.getObject(key, Long.class);
                 } else if (t == Short.class || t == short.class) {
-                    value = rs.getObject(key,Short.class);
+                    value = rs.getObject(key, Short.class);
                 } else if (t == Float.class || t == float.class) {
-                    value = rs.getObject(key,Float.class);
+                    value = rs.getObject(key, Float.class);
                 } else if (t == Double.class || t == double.class) {
-                    value = rs.getObject(key,Double.class);
+                    value = rs.getObject(key, Double.class);
                 } else if (t == Date.class) {
                     value = rs.getTimestamp(key);
-                    if(value!=null)
+                    if (value != null)
                         value = SqlUtils
-                            .sqlTimestampTojavaDate((Timestamp) value);
+                                .sqlTimestampTojavaDate((Timestamp) value);
                 } else if (t == java.sql.Date.class) {
                     value = rs.getDate(key);
                 } else if (t == Timestamp.class) {
@@ -686,37 +686,37 @@ public class SqlUtils {
                     value = rs.getTime(key);
                 } else if (t == LocalDate.class) {
                     value = rs.getDate(key);
-                    if(value!=null)
+                    if (value != null)
                         value = ((java.sql.Date) value).toLocalDate();
                 } else if (t == LocalDateTime.class) {
                     value = rs.getTimestamp(key);
-                    if(value!=null)
+                    if (value != null)
                         value = ((Timestamp) value).toLocalDateTime();
                 } else if (t == LocalTime.class) {
                     value = rs.getTime(key);
-                    if(value!=null) {
+                    if (value != null) {
                         value = ((Time) value).toLocalTime();
                     }
                 } else if (t == Byte.class || t == byte.class) {
-                    value = rs.getObject(key,Byte.class);
+                    value = rs.getObject(key, Byte.class);
                 } else if (t == char.class || t == Character.class) {
                     value = rs.getString(key);
-                    if(value!=null){
-                        if(value.toString().length()>0) {
+                    if (value != null) {
+                        if (value.toString().length() > 0) {
                             value = value.toString().charAt(0);
-                        }else{
-                            value='\0';
+                        } else {
+                            value = '\0';
                         }
                     }
                 } else if (t == java.math.BigDecimal.class) {
                     value = rs.getBigDecimal(key);
                 } else if (t == java.math.BigInteger.class) {
-                    value = rs.getObject(key,Long.class);
-                    if(value!=null) {
+                    value = rs.getObject(key, Long.class);
+                    if (value != null) {
                         value = new java.math.BigInteger(Long.toString((Long) value));
                     }
-                } else if (t == DataBaseSet.class || t==ResultSet.class) {
-                    value = rs.getObject(key,ResultSet.class);
+                } else if (t == DataBaseSet.class || t == ResultSet.class) {
+                    value = rs.getObject(key, ResultSet.class);
                     ResultSet rss = null;
                     CachedRowSet crs = null;
                     try {
@@ -728,13 +728,13 @@ public class SqlUtils {
                             rss.close();
                         }
                     }
-                    if(t==ResultSet.class) value= crs;
-                    else if(t==DataBaseSet.class) {
+                    if (t == ResultSet.class) value = crs;
+                    else if (t == DataBaseSet.class) {
                         Object temp = new DataBaseSet(crs);
                         value = temp;
                     }
                 } else {
-                    value = rs.getObject(key,t);
+                    value = rs.getObject(key, t);
 
                 }
                 if (returnKeyValues != null)

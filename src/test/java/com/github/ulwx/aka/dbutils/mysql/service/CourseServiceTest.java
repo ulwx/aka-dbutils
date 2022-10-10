@@ -25,8 +25,8 @@ import java.util.Map;
 public class CourseServiceTest {
     private CourseDao courseDao=new CourseDao();
     private TeacherDao teacherDao=new TeacherDao();
-    public static String DbPoolName_Student = "db_student";
-    public static String DbPoolName_Teacher= "db_teacher";
+    public static String DbPoolName_Student = "mysql/dbpool.xml#db_student";
+    public static String DbPoolName_Teacher= "mysql/dbpool.xml#db_teacher";
     @Before
     public void setup(){
         Utils.importDbStudent();

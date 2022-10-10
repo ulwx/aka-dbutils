@@ -41,7 +41,6 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
     private WebRowSet wrs;
 
 
-
     public JoinRowSetImpl() throws SQLException {
 
         vecRowSetsInJOIN = new Vector<CachedRowSetImpl>();
@@ -193,7 +192,6 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
     }
 
 
-
     public void addRowSet(RowSet[] rowset,
                           String[] columnName) throws SQLException {
         //validate if length of rowset array is same as length of int array.
@@ -278,7 +276,6 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
     }
 
 
-
     private boolean checkforMatchColumn(Joinable rs) throws SQLException {
         int[] i = rs.getMatchColumnIndexes();
         if (i.length <= 0) {
@@ -295,7 +292,6 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
             // Create a new CachedRowSet object local to this function.
             CachedRowSetImpl crsTemp = new CachedRowSetImpl();
             RowSetMetaDataImpl rsmd = new RowSetMetaDataImpl();
-
 
 
             if (vecRowSetsInJOIN.isEmpty()) {
@@ -482,7 +478,6 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
                                             rsmd.setTableName(colc, cRowset.getTableName());
 
 
-
                                             //if((p+q-1) > ((crsInternal.getMetaData().getColumnCount()) +
                                             //            (cRowset.getMetaData().getColumnCount())     - 1)) {
                                             // --p;
@@ -625,17 +620,14 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
     }
 
 
-
     public boolean next() throws SQLException {
         return crsInternal.next();
     }
 
 
-
     public void close() throws SQLException {
         crsInternal.close();
     }
-
 
 
     public boolean wasNull() throws SQLException {
@@ -911,7 +903,6 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
     public boolean first() throws SQLException {
         return crsInternal.first();
     }
-
 
 
     public boolean last() throws SQLException {

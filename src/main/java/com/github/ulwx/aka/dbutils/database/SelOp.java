@@ -26,7 +26,8 @@ public class SelOp {
      * 设置order by的属性名[或表列名称]，以英文逗号分隔。例如指定"abCd asc,mnXy desc"，
      * 这里的abCd,mnXy都为javaBean的属性名称，也可以指定 "ab_cd asc, mn_xy desc"，其中ab_cd和
      * mn_xy为列名
-     * @param orderByStr  排序列字符串， 例如指定"abCd asc,mnXy desc"
+     *
+     * @param orderByStr 排序列字符串， 例如指定"abCd asc,mnXy desc"
      * @return
      */
     public SelOp orderBy(String orderByStr) {

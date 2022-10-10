@@ -45,7 +45,6 @@ public class CachedRowSetReader implements RowSetReader, Serializable {
             // Get rid of the current contents of the rowset.
 
 
-
             if (crs.getPageSize() == 0 && crs.size() > 0) {
                 // When page size is not set,
                 // crs.size() will show the total no of rows.

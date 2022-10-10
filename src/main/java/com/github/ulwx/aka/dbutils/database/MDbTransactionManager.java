@@ -22,8 +22,8 @@ public class MDbTransactionManager {
      * 执行当前新建事务完成以后，上下文事务恢复再执行。如果运行新建事务时抛出异常，新建的事务会回滚，并且会再次
      * 抛出异常，此异常如果在外部不被捕获并处理的话，会引发外部的事务回滚。
      *
-     * @param serviceLogic  带有返回值的业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
-     * @param <R> 泛型R
+     * @param serviceLogic 带有返回值的业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
+     * @param <R>          泛型R
      * @return
      * @throws DbException
      */
@@ -71,8 +71,9 @@ public class MDbTransactionManager {
      * 总是新开启一个事务执行ServiceLogic#call()的逻辑。如果当前上下文里存在事务则挂起，
      * 执行当前新建事务完成以后，上下文事务恢复再执行。如果运行新建事务时抛出异常，新建的事务会回滚，并且会再次抛出异常，
      * 此异常如果在外部不被捕获并处理的话，会引发外部的事务回滚。
-     * @param propagation 事务传播级别
-     * @param serviceLogic  务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
+     *
+     * @param propagation  事务传播级别
+     * @param serviceLogic 务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
      * @throws DbException
      */
     public static void execute(PROPAGATION propagation, ServiceLogic serviceLogic)
@@ -93,6 +94,7 @@ public class MDbTransactionManager {
     /**
      * 如果当前上下文没有事务，则新开启一个事务执行ServiceLogicHasReturnValue#call()逻辑，
      * 否则把ServiceLogicHasReturnValue#call()加入到当前上下文事务里执行。
+     *
      * @param propagation  事务传播级别
      * @param serviceLogic 带有返回值的业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
      * @param <R>
@@ -127,7 +129,7 @@ public class MDbTransactionManager {
         StackTraceElement callMethodInfo = StackTraceElements[2];
         int level = 0;
         int nestLevel = -1;
-        TransactionContextInfo parentStart=null;
+        TransactionContextInfo parentStart = null;
         if (propagation == PROPAGATION.REQUIRES_NEW) {
             level = 0;
             nestLevel = -1;
@@ -163,21 +165,22 @@ public class MDbTransactionManager {
             transactionStart.setNestedLevel(nestLevel);
         }
         curContext.put(_transaction_start, transactionStart);
-        String startStr=getStartStr((TransactionContextInfo)curContext.get(_transaction_start));
+        String startStr = getStartStr((TransactionContextInfo) curContext.get(_transaction_start));
         log.debug("trans-start:context："
-                + ObjectUtils.toJsonString(curContext.keySet()) +":start["+startStr+"]:level=" + level);
+                + ObjectUtils.toJsonString(curContext.keySet()) + ":start[" + startStr + "]:level=" + level);
 
     }
 
-    private static String getStartStr(TransactionContextInfo dataBaseTrace){
-        Map map=new HashMap();
-        map.put("needRollBack",dataBaseTrace.isNeedRollBack());
-        map.put("nestedStart",dataBaseTrace.isNestedStart());
-        map.put("nestedLevel",dataBaseTrace.getNestedLevel());
-        map.put("nestedStartSavepointName",dataBaseTrace.getNestedStartSavepointName());
+    private static String getStartStr(TransactionContextInfo dataBaseTrace) {
+        Map map = new HashMap();
+        map.put("needRollBack", dataBaseTrace.isNeedRollBack());
+        map.put("nestedStart", dataBaseTrace.isNestedStart());
+        map.put("nestedLevel", dataBaseTrace.getNestedLevel());
+        map.put("nestedStartSavepointName", dataBaseTrace.getNestedStartSavepointName());
         return ObjectUtils.toString(map);
     }
-    private static void commit() throws Exception{
+
+    private static void commit() throws Exception {
 
         Stack<Map<String, TransactionContextElem>> stack = DbContext.getTransactionContextStack();
 
@@ -229,9 +232,9 @@ public class MDbTransactionManager {
 
             if (transactonStartDbTrace.isNestedStart()) {//嵌套事务
                 //回滚到保存点
-                String savePointName=transactonStartDbTrace.
+                String savePointName = transactonStartDbTrace.
                         getNestedStartSavepointName();
-                log.error("rollback to "+savePointName+" for exception:"+forExcpetion,forExcpetion);
+                log.error("rollback to " + savePointName + " for exception:" + forExcpetion, forExcpetion);
                 hand(curContext, (DataBase db) -> {
                     db.rollbackToSavepoint(savePointName);
                 });
@@ -251,7 +254,7 @@ public class MDbTransactionManager {
             return;
         }
         //如果为顶级上下文
-        log.error("rollback to for exception:"+forExcpetion,forExcpetion);
+        log.error("rollback to for exception:" + forExcpetion, forExcpetion);
         log.debug("context:" + ObjectUtils.toJsonString(curContext.keySet())
                 + ":level=" + transactonStartDbTrace.getLevel() + " ready to rollback ...");
         hand(curContext, (DataBase db) -> {
@@ -268,7 +271,7 @@ public class MDbTransactionManager {
             if (key.equals(_transaction_start)) {
                 continue;
             }
-            DataBaseDecorator db = (DataBaseDecorator)curContext.get(key);
+            DataBaseDecorator db = (DataBaseDecorator) curContext.get(key);
             listDB.add(db);
         }
         for (int i = listDB.size() - 1; i >= 0; i--) {
@@ -300,24 +303,24 @@ public class MDbTransactionManager {
             if (trasactionStart != null) {
                 curlLevel = trasactionStart.getLevel();
                 boolean needRollBack = transactonStartDbTrace.isNeedRollBack();
-                Exception forException=transactonStartDbTrace.getNeedRollBackForException();
+                Exception forException = transactonStartDbTrace.getNeedRollBackForException();
                 TransactionContextInfo parentTrasactionStart =
                         (TransactionContextInfo) parentContext.get(_transaction_start);
-                if(needRollBack) {
+                if (needRollBack) {
                     parentTrasactionStart.setNeedRollBackForException(forException);
                     parentTrasactionStart.setNeedRollBack(needRollBack);
                 }
             }
             parentContext.putAll(curContext);
-            String startStr=getStartStr(trasactionStart);
-            log.debug(Thread.currentThread().getId() + ":trans-end:context:" + popKeys+":start["+startStr+"]"
+            String startStr = getStartStr(trasactionStart);
+            log.debug(Thread.currentThread().getId() + ":trans-end:context:" + popKeys + ":start[" + startStr + "]"
                     + ":level=" + curlLevel + ",pop up!");
             curContext.clear();
             return;
 
         } else {// 说明是顶级事务上下文
             int curlLevel = 0;
-            String startStr=getStartStr((TransactionContextInfo)curContext.get(_transaction_start));
+            String startStr = getStartStr((TransactionContextInfo) curContext.get(_transaction_start));
             log.debug("context:" + ObjectUtils.toJsonString(curContext.keySet()) + ":level=" + curlLevel + " ready to close ...");
 
             hand(curContext, (DataBase db) -> {
@@ -327,7 +330,7 @@ public class MDbTransactionManager {
             curContext = stack.pop();// 弹出
             String popKeys = ObjectUtils.toJsonString(curContext.keySet());
 
-            log.debug("trans-end-closed:context:" + popKeys +":start["+startStr+"]"+ ":level=" + curlLevel);
+            log.debug("trans-end-closed:context:" + popKeys + ":start[" + startStr + "]" + ":level=" + curlLevel);
             curContext.clear();
         }
     }

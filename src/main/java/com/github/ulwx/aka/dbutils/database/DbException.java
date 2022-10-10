@@ -3,10 +3,12 @@ package com.github.ulwx.aka.dbutils.database;
 import java.sql.SQLException;
 
 public class DbException extends RuntimeException {
-    public static class CODE{
-        public static final int Intercepted=10000;
+    public static class CODE {
+        public static final int Intercepted = 10000;
     }
-    private int code=0;
+
+    private int code = 0;
+
     public DbException() {
 
         super();
@@ -21,17 +23,20 @@ public class DbException extends RuntimeException {
         super(msg, cause);
         //causes.add(cause);
     }
-    public DbException(String msg,int code) {
+
+    public DbException(String msg, int code) {
         super(msg);
-        this.code=code;
+        this.code = code;
     }
+
     public DbException(String msg) {
         super(msg);
     }
 
-    public String toString(){
-        return super.toString()+":code["+code+"]";
+    public String toString() {
+        return super.toString() + ":code[" + code + "]";
     }
+
     public SQLException getSQLException() {
         StackTraceElement[] ste = this.getStackTrace();
         Throwable t = this;

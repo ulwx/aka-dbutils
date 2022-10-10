@@ -13,12 +13,13 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
     public void configProperties(Map<String, String> masterProperties,
                                  Map<String, Map<String, String>> slaveServerProperties) {
 
-        MDbUtils.queryOneBy("db_teacher",new Teacher());
+
+        MDbUtils.queryOneBy("mysql/dbpool.xml#db_teacher",new Teacher());
 
         masterProperties.put("driverClassName","com.mysql.cj.jdbc.Driver");
         masterProperties.put("url","jdbc:mysql://localhost:3306/db_teacher?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
         masterProperties.put("username","root");
-        masterProperties.put("password","abcd");
+        masterProperties.put("password","123456");
         masterProperties.put("encrypt","0");
         masterProperties.put("checkoutTimeout","6000");
         masterProperties.put("idleConnectionTestPeriod",""+new Random().nextInt(10));
@@ -30,7 +31,7 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
         slave1.put("driverClassName","com.mysql.cj.jdbc.Driver");
         slave1.put("url","jdbc:mysql://localhost:3306/db_teacher_slave1?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
         slave1.put("username","root");
-        slave1.put("password","abcd");
+        slave1.put("password","123456");
         slave1.put("encrypt","0");
         slave1.put("checkoutTimeout","6000");
         slave1.put("idleConnectionTestPeriod","30");
@@ -42,7 +43,7 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
         slave2.put("driverClassName","com.mysql.cj.jdbc.Driver");
         slave2.put("url","jdbc:mysql://localhost:3306/db_teacher_slave2?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
         slave2.put("username","root");
-        slave2.put("password","abcd");
+        slave2.put("password","123456");
         slave2.put("encrypt","0");
         slave2.put("checkoutTimeout","6000");
         slave2.put("idleConnectionTestPeriod","30");

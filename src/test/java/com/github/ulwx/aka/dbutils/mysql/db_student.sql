@@ -170,6 +170,7 @@ CREATE TABLE `t2` (
 DELIMITER $$
 
 /*!50003 CREATE DEFINER=`root`@`localhost` FUNCTION `query_course_cnt_func`( v_name varchar(40)) RETURNS int(11)
+DETERMINISTIC
 BEGIN
 	declare v_ret int;
 	SELECT count(1) INTO v_ret FROM `course` WHERE `name` = v_name;

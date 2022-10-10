@@ -46,7 +46,6 @@ public final class RIXMLProvider extends SyncProvider {
     // original datasource. Allow XML state to be written out and in
 
 
-
     public void setXmlReader(XmlReader reader) throws SQLException {
         xmlReader = reader;
     }

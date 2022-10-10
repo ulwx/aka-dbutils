@@ -1,12 +1,13 @@
 package com.github.ulwx.aka.dbutils.tool.support.type;
 
-public class TFloat implements TType{
-    private Float value ;
+public class TFloat implements TType {
+    private Float value;
 
     @Override
     public Class getWrappedClass() {
         return Float.class;
     }
+
     public TFloat() {
 
     }
@@ -14,6 +15,7 @@ public class TFloat implements TType{
     public TFloat(Float val) {
         this.value = val;
     }
+
     @Override
     public Float getValue() {
         return value;

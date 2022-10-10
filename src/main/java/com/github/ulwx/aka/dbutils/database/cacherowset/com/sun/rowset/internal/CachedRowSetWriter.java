@@ -106,7 +106,6 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
         }
 
 
-
         initSQLStatements(crs);
         int iColCount;
 
@@ -241,9 +240,6 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
             updateWhere = buildWhereClause(updateWhere, origVals);
 
 
-
-
-
             String tempselectCmd = selectCmd.toLowerCase();
 
             int idxWhere = tempselectCmd.indexOf("where");
@@ -351,7 +347,6 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
                     boolNull = true;
 
 
-
                     if (rsval == null && orig != null) {
                         // value in db has changed
                         // don't proceed with synchronization
@@ -362,11 +357,7 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
                         // in order to set the actual value;
                         boolNull = false;
                         objVal = rsval;
-                    }
-
-
-
-                    else if (rsval != null && (!rsval.equals(orig))) {
+                    } else if (rsval != null && (!rsval.equals(orig))) {
                         // value in db has changed
                         // don't proceed with synchronization
                         // get the value in db and pass it to the resolver.
@@ -379,7 +370,6 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
                     } else if ((orig == null || curr == null)) {
 
 
-
                         if (first == false || flag == false) {
                             updateExec += ", ";
                         }
@@ -389,11 +379,9 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
                         first = false;
 
 
-
                     } else if (orig.equals(curr)) {
                         colsNotChanged++;
                         //nothing to update in this case since values are equal
-
 
 
                     } else if (orig.equals(curr) == false) {
@@ -485,7 +473,6 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
                 }
 
                 i = pstmt.executeUpdate();
-
 
 
                 return false;
@@ -734,7 +721,6 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
         DatabaseMetaData dbmd = con.getMetaData();
 
 
-
         // Project List
         selectCmd = "SELECT ";
         for (i = 1; i <= callerColumnCount; i++) {
@@ -750,8 +736,6 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
 
 
         updateCmd = "UPDATE " + buildTableName(dbmd, catalog, schema, table);
-
-
 
 
         String tempupdCmd = updateCmd.toLowerCase();
@@ -950,7 +934,6 @@ public class CachedRowSetWriter implements TransactionalWriter, Serializable {
 
         int id = pStmt.executeUpdate();
     }
-
 
 
     public void commit() throws SQLException {

@@ -4,84 +4,84 @@ delete from course
 
 testQueryForResultSet
 ====
-select * from course where 1=1
-@if( $$:name ){
-and name like #{name%}
-@}
+select * from course where 1=1 
+@if( $$:name ){ 
+and name like #{name%} 
+@} 
 order by id
 
 testQueryForResultSetPage
 ====
-select * from course where 1=1
-@if( $$:name ){
-and name like #{name%}
-@}
-@if( $$:classHours ){
+select * from course where 1=1 
+@if( $$:name ){ 
+and name like #{name%} 
+@} 
+@if( $$:classHours ){ 
 and class_hours in(#{classHours})
-@}
+@} 
 order by id
 
 testQueryList
 ====
-select * from course where 1=1
-@if( $$:name ){
-and name like #{name%}
-@}
-@if( $$:classHours ){
+select * from course where 1=1 
+@if( $$:name ){ 
+and name like #{name%} 
+@} 
+@if( $$:classHours ){ 
 and class_hours in(#{classHours})
-@}
+@} 
 order by id
 
 testQueryListMdPage
 ====
-select * from course where 1=1
-@if( $$:name ){
-and name like #{name%}
-@}
+select * from course where 1=1 
+@if( $$:name ){ 
+and name like #{name%} 
+@} 
 order by id
 
 testQueryListWithRowMapper
 ====
-select * from course where 1=1
-@if( $$:name ){
-and name like #{name%}
-@}
-@if( $$:ids ){
+select * from course where 1=1 
+@if( $$:name ){ 
+and name like #{name%} 
+@} 
+@if( $$:ids ){ 
 and id in(#{ids})
-@}
+@} 
 order by id
 
 testQueryOne
 ====
-select * from course where 1=1
-@if( $$:name ){
-and name like #{name%}
-@}
-@if( $$:classHours ){
+select * from course where 1=1 
+@if( $$:name ){ 
+and name like #{name%} 
+@} 
+@if( $$:classHours ){ 
 and class_hours in(#{classHours})
-@}
+@} 
 order by id
 
 testQueryMap
 ====
-select * from course where 1=1
-@if( $$:name ){
-and name like #{name%}
-@}
-@if( $$:classHours ){
+select * from course where 1=1 
+@if( $$:name ){ 
+and name like #{name%} 
+@} 
+@if( $$:classHours ){ 
 and class_hours in(#{classHours})
-@}
+@} 
 order by id
 
 testQueryMapPage
 ====
-select * from course where 1=1
-@if( $$:name ){
-and name like #{name%}
-@}
-@if( $$:ids ){
+select * from course where 1=1 
+@if( $$:name ){ 
+and name like #{name%} 
+@} 
+@if( $$:ids ){ 
 and id in(#{ids})
-@}
+@} 
 order by id
 
 testInsertWithMd
@@ -105,13 +105,11 @@ UPDATE
 `course`
 SET
 `class_hours` = #{classHours},
-`creatime` = #{creatime}
-WHERE `name` = #{name}
+`creatime` = #{creatime} WHERE `name` = #{name}
 
 testDeleteWithMd
 ====
-DELETE
-FROM
+DELETE FROM
 `course`
 WHERE `name` = #{name}
 
@@ -128,26 +126,17 @@ VALUES
 #{name},
 #{classHours},
 #{creatime}
-);
+); 
 select * from course;
-
-select * 
-from 
-course 
-where name=#{name};
-
+select * from course where name=#{name};
 UPDATE
 `course`
 SET
 `class_hours` = #{classHours},
-`creatime` = #{creatime}
-WHERE `name` = #{name};
-
-DELETE
-FROM
+`creatime` = #{creatime} WHERE `name` = #{name};
+DELETE FROM
 `course`
 WHERE `name` = #{name};
-
 
 testStoredProc
 ====

@@ -13,10 +13,14 @@ import java.util.Map;
 
 public abstract class StudentMapper extends AkaMapper {
     public abstract List<One2OneStudent> getListOne2One(String[] names, One2OneMapNestOptions nestOptions);
-    public abstract List<One2OneStudent> getListOne2OnePage(Map<String,Object> args, One2OneMapNestOptions nestOptions,
-                                                                 PageOptions pageOptions);
+
+    public abstract List<One2OneStudent> getListOne2OnePage(Map<String, Object> args, One2OneMapNestOptions nestOptions,
+                                                            PageOptions pageOptions);
+
     public abstract List<One2ManyStudent> getListOne2Many(String[] names, One2ManyMapNestOptions nestOptions);
-    public abstract List<One2ManyStudent> getListOne2ManyPage(Map<String,Object> args,
+
+    public abstract List<One2ManyStudent> getListOne2ManyPage(Map<String, Object> args,
                                                               One2ManyMapNestOptions nestOptions);
-    public abstract List<Integer> getPageIdList(Map<String,Object> args, PageOptions pageOptions);
+
+    public abstract List<Integer> getPageIdList(Map<String, Object> args, PageOptions pageOptions);
 }

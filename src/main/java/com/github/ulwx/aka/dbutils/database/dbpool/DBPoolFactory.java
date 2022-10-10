@@ -5,12 +5,11 @@ import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.database.IDBPoolAttrSource;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.database.dialect.DialectClient;
-import com.github.ulwx.aka.dbutils.tool.support.EncryptUtil;
-import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
-import com.github.ulwx.aka.dbutils.tool.support.RandomUtils;
-import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
+import com.github.ulwx.aka.dbutils.tool.MD;
+import com.github.ulwx.aka.dbutils.tool.support.*;
+import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
+import com.github.ulwx.aka.dbutils.tool.support.reflect.ReflectionUtil;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult;
-import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,25 +25,39 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class DBPoolFactory {
-    private volatile static Logger log = LoggerFactory.getLogger(DBPoolFactory.class);
-    private String dbPoolXmlFileName = null;
-    private ReadConfig readConfig;
-    private static String KEY = "S$T$#@QR@GHODFP$R";
+    private final static Logger log = LoggerFactory.getLogger(DBPoolFactory.class);
+    private volatile String dbPoolXmlFileName = null;
+    private volatile ReadConfig readConfig;
+    private final static String KEY = "S$T$#@QR@GHODFP$R";
     // 0 表示没有初始化， 1：表示正在初始化 2：初始化完成  3：代表部分初始化开始  4：部分初始化完成  134：获取信息
-    private volatile int status = STATUS.uninit;
+    private volatile int status = INIT_STATUS.uninit;
 
-    static class STATUS {
+    static class INIT_STATUS {
         public static int uninit = 0;
-        public static int init_doing = 1;
-        public static int init_finished = 2;
-        public static int part_init_doing = 3;
-        public static int part_init_finished = 4;
+        public static int doing = 1;
+        public static int finished = 2;
+
     }
 
+    private volatile int partUpdateStatus = PART_UPDATE_STATUS.uninit;
+
+    static class PART_UPDATE_STATUS {
+        public static int uninit = 0;
+        public static int doing = 1;
+        public static int finished = 2;
+
+    }
+
+    private static volatile ThreadLocal<Boolean> DO_INI_SAME_THREAD = new ThreadLocal<Boolean>() {
+        @Override
+        protected Boolean initialValue() {
+            return false;
+        }
+    };
     private volatile ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     static class PoolType {
-        public static String TOMCAT_DB_POOL = "tomcatdbpool";
+        public final static String TOMCAT_DB_POOL = "tomcatdbpool";
     }
 
     public ReadConfig getReadConfig() {
@@ -52,18 +65,14 @@ public class DBPoolFactory {
     }
 
     private volatile Map<String, DataSource> poollist = new ConcurrentHashMap<String, DataSource>();
-
-    /**
-     * 主库和从库的关系
-     */
     private volatile Map<String, ConcurrentHashMap<String, DataSource>> poolSlaveList = new ConcurrentHashMap<String, ConcurrentHashMap<String, DataSource>>();
 
     private static volatile Map<String, DBPoolFactory> dbpoolFactoryMap = new ConcurrentHashMap<>();
 
     private DBPoolFactory(String dbPoolXmlFileName) {
         this.dbPoolXmlFileName = dbPoolXmlFileName;
-
     }
+
 
     public String getDbPoolXmlFileName() {
         return dbPoolXmlFileName;
@@ -80,41 +89,35 @@ public class DBPoolFactory {
      * @return
      */
     public static String[] parseRefDbPoolName(String dbPoolXmlFileNameAndDbPoolName) {
-        String dbPoolKey = null;
-        String dbPoolXmlName = null;
-        String[] strs = dbPoolXmlFileNameAndDbPoolName.split("\\#");
-        if (strs.length == 1) {
-            dbPoolXmlName = ReadConfig.DEFAULT;
-            dbPoolKey = dbPoolXmlFileNameAndDbPoolName;
-
-        } else if (strs.length == 2) {
-            dbPoolXmlName = strs[0];
-            dbPoolKey = strs[1];
-        } else {
-
-        }
-        return new String[]{dbPoolXmlName, dbPoolKey};
+        return MD.parsePoolName(dbPoolXmlFileNameAndDbPoolName);
     }
 
-    public static DBPoolFactory getInstance(String dbPoolXmlFileName) {
+    public static DBPoolFactory getInstance(String dbPoolXmlFileName) throws Exception {
         DBPoolFactory dbPoolFactory = dbpoolFactoryMap.get(dbPoolXmlFileName);
         if (dbPoolFactory == null) {
             synchronized (DBPoolFactory.class) {
                 dbPoolFactory = dbpoolFactoryMap.get(dbPoolXmlFileName);
                 if (dbPoolFactory == null) {
+                    Resource[] resources = ReadConfig.getResource(dbPoolXmlFileName);
+                    ReadConfig.checkResource(resources, dbPoolXmlFileName);
                     dbPoolFactory = new DBPoolFactory(dbPoolXmlFileName);
                     dbpoolFactoryMap.put(dbPoolXmlFileName, dbPoolFactory);
+                    DO_INI_SAME_THREAD.set(true);
                     dbPoolFactory.initDbPoolFactory();
+                    DO_INI_SAME_THREAD.set(false);
 
                 }
             }
         }
+        //检测dbPoolFactory对象是否构造完成
+        dbPoolFactory.checkInitIsFinished();
         return dbPoolFactory;
 
     }
 
 
     public boolean isMainSlaveMode(String poolName) {
+        //checkInitIsFinished();
         try {
             rwLock.readLock().lock();
             if (poolSlaveList != null && poolSlaveList.get(poolName) != null && poolSlaveList.get(poolName).size() > 0)
@@ -122,51 +125,41 @@ public class DBPoolFactory {
             return false;
         } finally {
             rwLock.readLock().unlock();
-            ;
+
         }
     }
 
-    public static DBPoolFactory findDBPoolFactory(String poolName) throws DbException {
-        Set<String> dbPoolXmlFileNameSet = ReadConfig.findDBPoolXmlNames(poolName);
-        //dbPoolXmlFileNameSet存放的原始最多一个
-        if (dbPoolXmlFileNameSet != null && dbPoolXmlFileNameSet.size() == 1) {
-            for (String dbPoolXmlFileName : dbPoolXmlFileNameSet) {
-                return DBPoolFactory.getInstance(dbPoolXmlFileName);
-            }
-        }
-        return null;
-    }
 
-    ;
-
-    private void initOnePool(String dbPoolXmlFileName, String poolName, TResult<DataSource> masterDataSoruce,
-                             TResult<ConcurrentHashMap<String, DataSource>> slaverDataSourceMap) {
+    private static void initOnePool(String dbPoolXmlFileName, String poolName, TResult<DataSource> masterDataSoruce,
+                                    TResult<ConcurrentHashMap<String, DataSource>> slaverDataSourceMap) {
         try {
 
             ReadConfig readConfig = ReadConfig.getInstance(dbPoolXmlFileName);
             ConcurrentHashMap<String, Map<String, String>> maps = readConfig.getProperties();
             ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveProperites = readConfig.getSlaveProperites();
+
             Map<String, String> masterMap = maps.get(poolName);
             Map<String, Map<String, String>> slaveServersMap = slaveProperites.get(poolName);
+
             initOnePool(masterMap, slaveServersMap, masterDataSoruce, slaverDataSourceMap);
         } catch (Exception ex) {
-            if (ex instanceof DbException) throw ex;
+            if (ex instanceof DbException) throw (DbException) ex;
             throw new DbException(ex);
         }
     }
 
-    private void initOnePool(Map<String, String> masterMap,
-                             Map<String, Map<String, String>> slaveServersMap,
-                             TResult<DataSource> masterDataSoruce,
-                             TResult<ConcurrentHashMap<String, DataSource>> slaverDataSourceMap) {
+    private static void initOnePool(Map<String, String> masterMap,
+                                    Map<String, Map<String, String>> slaveServersMap,
+                                    TResult<DataSource> masterDataSoruce,
+                                    TResult<ConcurrentHashMap<String, DataSource>> slaverDataSourceMap) {
         try {
 
             Map<String, String> map = masterMap;
             Map<String, Map<String, String>> slaveServer = slaveServersMap;
             String driverClassName = map.get("driverClassName");
-            String url = map.get("url");
-            String user = map.get("username");
-            String password = map.get("password");
+            String url = StringUtils.trim(map.get("url"));
+            String user = StringUtils.trim(map.get("username"));
+            String password = StringUtils.trim(map.get("password"));
             String encrypt = StringUtils.trim(map.get("encrypt"));
 
             if (encrypt.equals("1")) {
@@ -180,20 +173,17 @@ public class DBPoolFactory {
             String maxPoolSize = StringUtils.trim(map.get("maxPoolSize"), "30");// 默认30个
             String minPoolSize = StringUtils.trim(map.get("minPoolSize"), "10");// 默认20个
 
-            DataSource ds = masterDataSoruce.getValue();
+
             ConcurrentHashMap<String, DataSource> slaveDataSources = new ConcurrentHashMap<String, DataSource>();
+            DataSource ds = null;
             if (type.equals(PoolType.TOMCAT_DB_POOL)) {
-                if (ds == null) {
-                    ds = getNewDataSourceFromTomcatDb(url, user, password, checkoutTimeout, maxPoolSize, minPoolSize,
-                            maxStatements, maxIdleTime, idleConnectionTestPeriod, driverClassName);
-                } else {
-                    ds = restartDataSourceFromTomcatDb(ds, url, user, password, checkoutTimeout, maxPoolSize, minPoolSize,
-                            maxStatements, maxIdleTime, idleConnectionTestPeriod, driverClassName);
-                }
+                log.debug("driverClassName=" + driverClassName);
+                ds = getNewDataSourceFromTomcatDb(url, user, password, checkoutTimeout, maxPoolSize, minPoolSize,
+                        maxStatements, maxIdleTime, idleConnectionTestPeriod, driverClassName);
                 //判断ds是否可以获得连接
                 boolean res = DBPoolFactory.startDataSource(ds);
                 if (!res) {
-                    close(ds);
+                    close(ds, PoolType.TOMCAT_DB_POOL);
                     return;
                 }
                 slaveDataSources = getSlaveServerConfig(slaveServer, PoolType.TOMCAT_DB_POOL, driverClassName);
@@ -207,7 +197,7 @@ public class DBPoolFactory {
         }
     }
 
-    static ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+    final static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * @throws DbException
@@ -215,7 +205,7 @@ public class DBPoolFactory {
     private void initAllPool() throws DbException {
         try {
             //关闭所有连接池
-            status = STATUS.init_doing;
+            status = INIT_STATUS.doing;
             close(dbPoolXmlFileName);
             ReadConfig readConfig = ReadConfig.getInstance(dbPoolXmlFileName);
             this.readConfig = readConfig;
@@ -225,53 +215,39 @@ public class DBPoolFactory {
             Map<String, String> refMap = new TreeMap<>();
             Map<String, Class> refClassMap = new TreeMap<>();
             while (iter.hasNext()) {
-                try {
-                    String poolName = iter.next();
+                String poolName = iter.next();
 
-                    Map<String, String> map = poolNameMasterMap.get(poolName);
-                    String ref = StringUtils.trim(map.get("ref"));
-                    String refClass = StringUtils.trim(map.get("ref-class"));
-                    if (ref.isEmpty() && refClass.isEmpty()) {
-                        TResult<DataSource> tmasterDataSoruce = new TResult<>();
-                        TResult<ConcurrentHashMap<String, DataSource>> tslaverDataSourceMap = new TResult<>();
-                        initOnePool(dbPoolXmlFileName, poolName, tmasterDataSoruce, tslaverDataSourceMap);
-                        poollist.put(poolName, tmasterDataSoruce.getValue());
-                        poolSlaveList.put(poolName, tslaverDataSourceMap.getValue());
-                    } else {
-                        if (!ref.isEmpty()) {
-                            refMap.put(poolName, ref);
-                        } else if (!refClass.isEmpty()) {
-                            refClassMap.put(poolName, Class.forName(refClass));
-                        }
-
+                Map<String, String> map = poolNameMasterMap.get(poolName);
+                String ref = StringUtils.trim(map.get("ref"));
+                String refClass = StringUtils.trim(map.get("ref-class"));
+                if (ref.isEmpty() && refClass.isEmpty()) {
+                    TResult<DataSource> tmasterDataSoruce = new TResult<>();
+                    TResult<ConcurrentHashMap<String, DataSource>> tslaverDataSourceMap = new TResult<>();
+                    initOnePool(dbPoolXmlFileName, poolName, tmasterDataSoruce, tslaverDataSourceMap);
+                    poollist.put(poolName, tmasterDataSoruce.getValue());
+                    poolSlaveList.put(poolName, tslaverDataSourceMap.getValue());
+                } else {
+                    if (!ref.isEmpty()) {
+                        refMap.put(poolName, ref);
                     }
-                } catch (Exception ex) {
-                    throw ex;
+                    if (!refClass.isEmpty()) {
+                        if (!ref.isEmpty()) {
+                            throw new DbException(dbPoolXmlFileName + "文件里" + poolName
+                                    + "定义的属性不能同时存在ref和ref-class属性！");
+                        }
+                        refClassMap.put(poolName, Class.forName(refClass));
+                    }
+
                 }
+
             } // while
             //处理RefClass引用
             for (String poolName : refClassMap.keySet()) {
                 Class refClass = refClassMap.get(poolName);
                 if (IDBPoolAttrSource.class.isAssignableFrom(refClass)) {
                     IDBPoolAttrSource idbPoolAttrSource = (IDBPoolAttrSource) refClass.getConstructor().newInstance();
-                    Map<String, String> masterProperties = new HashMap<>();
-                    Map<String, Map<String, String>> slaveProperties = new HashMap<>();
-                    boolean debug = DbContext.permitDebugLog();
-                    DbContext.permitDebugLog(true);
-                    idbPoolAttrSource.configProperties(masterProperties, slaveProperties);
-                    DbContext.permitDebugLog(debug);
                     Map<String, String> masterMap = poolNameMasterMap.get(poolName);
-                    HashMap<String, String> newMasterMap = new HashMap<>();
-                    newMasterMap.putAll(masterMap);
-                    newMasterMap.putAll(masterProperties);
-                    poolNameMasterMap.put(poolName, newMasterMap);
-                    slaveNameMap.put(poolName, slaveProperties);
-                    TResult<DataSource> tmasterDataSoruce = new TResult<>();
-                    TResult<ConcurrentHashMap<String, DataSource>> tslaverDataSourceMap = new TResult<>();
-
-                    initOnePool(dbPoolXmlFileName, poolName, tmasterDataSoruce, tslaverDataSourceMap);
-                    poollist.put(poolName, tmasterDataSoruce.getValue());
-                    poolSlaveList.put(poolName, tslaverDataSourceMap.getValue());
+                    this.refClassPropertyRefresh(poolName, idbPoolAttrSource);
                     long checkTime = 0;
                     try {
                         String str = StringUtils.trim(masterMap.get("check-time"));
@@ -281,47 +257,10 @@ public class DBPoolFactory {
                     } catch (Exception e) {
 
                     }
-                    if (checkTime > 1000) {
-                        executorService.scheduleAtFixedRate(() -> {
-                            if (status == STATUS.init_doing) {
-                                return;
-                            }
-                            Map<String, String> lmasterProperties = new HashMap<>();
-                            Map<String, Map<String, String>> lslaveProperties = new HashMap<>();
-                            DbContext.permitDebugLog(true);
-                            idbPoolAttrSource.configProperties(lmasterProperties, lslaveProperties);
-                            DbContext.permitDebugLog(debug);
-                            if (ObjectUtils.deepEquals(lmasterProperties, masterProperties) &&
-                                    ObjectUtils.deepEquals(lslaveProperties, slaveProperties)) {
-                                //不执行
-                            } else { //重新构造连接池
-                                //先关闭连接池
-                                try {
-                                    status = STATUS.part_init_doing;
-                                    rwLock.writeLock().lock();
-                                    log.debug("get write lock!");
-                                    close(dbPoolXmlFileName, poolName);
-                                    HashMap<String, String> lnewMasterMap = new HashMap<>();
-                                    Map<String, String> lmasterMap = poolNameMasterMap.get(poolName);
-                                    lnewMasterMap.putAll(lmasterMap);
-                                    lnewMasterMap.putAll(lmasterProperties);
-                                    poolNameMasterMap.put(poolName, lnewMasterMap);
-                                    slaveNameMap.put(poolName, lslaveProperties);
-                                    TResult<DataSource> ltmasterDataSoruce = new TResult<>();
-                                    //如果使用现有连接池设置
-                                    ltmasterDataSoruce.setValue(this.getDBPool(poolName));
-                                    TResult<ConcurrentHashMap<String, DataSource>> ltslaverDataSourceMap = new TResult<>();
-                                    initOnePool(dbPoolXmlFileName, poolName, ltmasterDataSoruce, ltslaverDataSourceMap);
-                                    poollist.put(poolName, ltmasterDataSoruce.getValue());
-                                    poolSlaveList.put(poolName, ltslaverDataSourceMap.getValue());
-                                } finally {
-                                    status = STATUS.part_init_finished;
-                                    rwLock.writeLock().unlock();
-                                }
-                            }
+                    if (checkTime > 2) {
+                        executorService.scheduleWithFixedDelay(() -> {
+                            this.refClassPropertyRefresh(poolName, idbPoolAttrSource);
                         }, checkTime, checkTime, TimeUnit.SECONDS);
-
-
                     }
                 } else {
                     throw new DbException(refClass.getName() + "没有继承" + IDBPoolAttrSource.class.getName() + "！");
@@ -333,24 +272,6 @@ public class DBPoolFactory {
                 String ref = refMap.get(poolName);
                 String refDbPoolName = ref;
                 String refFileName = dbPoolXmlFileName;
-                if (ref.contains("#")) {//判断是否存在外部引用
-                    String[] strs = ref.split("\\#");
-                    refFileName = strs[0].trim();
-                    refDbPoolName = strs[1].trim();
-                    if (!refFileName.equals(dbPoolXmlFileName)) {//外部引用
-                        DBPoolFactory outerDbPoolFactory = DBPoolFactory.getInstance(refFileName);
-                        DataSource masterDataSource = outerDbPoolFactory.getDBPool(refDbPoolName);
-                        if (masterDataSource == null) {
-                            throw new DbException(refFileName + "里无法找到" + refDbPoolName + "的定义！");
-                        }
-                        ConcurrentHashMap<String, DataSource> slaveDataSources = outerDbPoolFactory.
-                                getSlaveDataSources(refDbPoolName);
-                        poollist.put(poolName, masterDataSource);
-                        poolSlaveList.put(poolName, slaveDataSources);
-                        synSomeProperties(poolName, outerDbPoolFactory, refDbPoolName);
-                        continue;
-                    }
-                }
                 //本地引用
                 DataSource masterDataSource = poollist.get(refDbPoolName);
                 if (masterDataSource == null) {
@@ -359,33 +280,67 @@ public class DBPoolFactory {
                 ConcurrentHashMap<String, DataSource> slaveDataSources = poolSlaveList.get(refDbPoolName);
                 poollist.put(poolName, masterDataSource);
                 poolSlaveList.put(poolName, slaveDataSources);
-                synSomeProperties(poolName, this, refDbPoolName);
 
             }
 
         } catch (Exception e) {
-            // log.error("", e);
 
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException("add database pool error!", e);
         } finally {
-            status = STATUS.init_finished;
+            status = INIT_STATUS.finished;
         }
     }
 
-    private void synSomeProperties(String poolName, DBPoolFactory outerDbPoolFactory, String refDbPoolName) {
-        Map<String, String> newMasterProperties = new HashMap<>();
-        Map<String, String> masterProperties =
-                this.getReadConfig().getProperties().get(poolName);
-        Map<String, String> refMasterProperties = outerDbPoolFactory.getReadConfig().getProperties().get(refDbPoolName);
-        newMasterProperties.put("table-name-rule", refMasterProperties.get("table-name-rule"));
-        newMasterProperties.put("table-colum-rule", refMasterProperties.get("table-colum-rule"));
-        newMasterProperties.putAll(masterProperties);
-        this.getReadConfig().getProperties().put(poolName, newMasterProperties);
+    private void refClassPropertyRefresh(String poolName, IDBPoolAttrSource attrSource) {
+
+        Map<String, String> lmasterProperties = new HashMap<>();
+        Map<String, Map<String, String>> newlaveProperties = new HashMap<>();
+        boolean debug = DbContext.permitDebugLog();
+        DbContext.permitDebugLog(true);
+        attrSource.configProperties(lmasterProperties, newlaveProperties);
+        DbContext.permitDebugLog(debug);
+        ConcurrentHashMap<String, Map<String, String>> poolNameMasterMap = readConfig.getProperties();
+        Map<String, String> masterMap = poolNameMasterMap.get(poolName);
+        ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveNameMap = readConfig.getSlaveProperites();
+        Map<String, Map<String, String>> slaveProperties = slaveNameMap.get(poolName);
+        HashMap<String, String> newMasterMap = new HashMap<>();
+        newMasterMap.put("name", masterMap.get("name"));
+        newMasterMap.put("ref-class", masterMap.get("ref-class"));
+        newMasterMap.put("table-name-rule", masterMap.get("table-name-rule"));
+        newMasterMap.put("table-colum-rule", masterMap.get("table-colum-rule"));
+        newMasterMap.put("check-time", masterMap.get("check-time"));
+        newMasterMap.putAll(lmasterProperties);
+
+        if (ObjectUtils.deepEquals(newMasterMap, masterMap) &&
+                ObjectUtils.deepEquals(newlaveProperties, slaveProperties)) {
+            //说明配置没有更新，不用更新连接池
+            return;
+        } else { //重新构造连接池
+            //checkInitIsFinished();
+            try {
+                partUpdateStatus = PART_UPDATE_STATUS.doing;
+                rwLock.writeLock().lock();
+                log.debug("get write lock!");
+                String type = StringUtils.trim(masterMap.get("type"), PoolType.TOMCAT_DB_POOL);
+                close(dbPoolXmlFileName, poolName, type);
+                poolNameMasterMap.put(poolName, newMasterMap);
+                slaveNameMap.put(poolName, newlaveProperties);
+                TResult<DataSource> ltmasterDataSoruce = new TResult<>();
+                TResult<ConcurrentHashMap<String, DataSource>> ltslaverDataSourceMap = new TResult<>();
+                initOnePool(dbPoolXmlFileName, poolName, ltmasterDataSoruce, ltslaverDataSourceMap);
+                poollist.put(poolName, ltmasterDataSoruce.getValue());
+                poolSlaveList.put(poolName, ltslaverDataSourceMap.getValue());
+            } finally {
+                rwLock.writeLock().unlock();
+                partUpdateStatus = PART_UPDATE_STATUS.finished;
+            }
+        }
+
     }
 
-    private ConcurrentHashMap<String, DataSource> getSlaveServerConfig(Map<String, Map<String, String>> slaveServer, String poolType,
-                                                                       String driverClassName) throws Exception {
+    private static ConcurrentHashMap<String, DataSource> getSlaveServerConfig(Map<String, Map<String, String>> slaveServer, String poolType,
+                                                                              String driverClassName) throws Exception {
 
         ConcurrentHashMap<String, DataSource> slaveDataSources = new ConcurrentHashMap<String, DataSource>();
         if (slaveServer != null) {
@@ -420,8 +375,11 @@ public class DBPoolFactory {
                 boolean res = DBPoolFactory.startDataSource(s_ds);
                 if (!res) {// 不能获得连接
                     log.error("无法从库连接池" + slaveServerName + "获取连接！忽略....");
-                    close(s_ds);
-                    continue;
+                    if (poolType.equals(PoolType.TOMCAT_DB_POOL)) {
+                        close(s_ds, PoolType.TOMCAT_DB_POOL);
+                    } else {
+                        continue;
+                    }
                 } else {
                     slaveDataSources.put(slaveServerName, s_ds);
                 }
@@ -431,7 +389,7 @@ public class DBPoolFactory {
         return slaveDataSources;
     }
 
-    public static DataSource getNewDataSourceFromTomcatDb(
+    private static DataSource getNewDataSourceFromTomcatDb(
             String url,
             String user,
             String password,
@@ -443,11 +401,15 @@ public class DBPoolFactory {
             String idleConnectionTestPeriod,
             String driverClassName) throws Exception {
 
-        PoolProperties poolProperties = configTomcatJdbcPoolProperties(url, user, password, checkoutTimeout,
+        Object poolProperties = configTomcatJdbcPoolProperties(url, user, password, checkoutTimeout,
                 maxPoolSize, minPoolSize, maxStatements,
                 maxIdleTime, idleConnectionTestPeriod, driverClassName);
-        org.apache.tomcat.jdbc.pool.DataSource datasource = new org.apache.tomcat.jdbc.pool.DataSource();
-        datasource.setPoolProperties(poolProperties);
+        DataSource datasource = (DataSource) Class.forName("org.apache.tomcat.jdbc.pool.DataSource")
+                .getDeclaredConstructor().newInstance();
+
+        ReflectionUtil.invoke(datasource, "setPoolProperties",
+                "org.apache.tomcat.jdbc.pool.PoolConfiguration"
+                , poolProperties);
         DataSource ds = datasource;
         return ds;
 
@@ -455,70 +417,51 @@ public class DBPoolFactory {
 
     }
 
-    public static DataSource restartDataSourceFromTomcatDb(DataSource ds,
-                                                           String url,
-                                                           String user,
-                                                           String password,
-                                                           String checkoutTimeout,
-                                                           String maxPoolSize,
-                                                           String minPoolSize,
-                                                           String maxStatements,
-                                                           String maxIdleTime,
-                                                           String idleConnectionTestPeriod,
-                                                           String driverClassName) throws Exception {
 
-        PoolProperties poolProperties = configTomcatJdbcPoolProperties(url, user, password, checkoutTimeout,
-                maxPoolSize, minPoolSize, maxStatements,
-                maxIdleTime, idleConnectionTestPeriod, driverClassName);
-        org.apache.tomcat.jdbc.pool.DataSource datasource = (org.apache.tomcat.jdbc.pool.DataSource) ds;
-        datasource.setPoolProperties(poolProperties);
-        return datasource;
+    private static Object configTomcatJdbcPoolProperties(String url,
+                                                         String user,
+                                                         String password,
+                                                         String checkoutTimeout,
+                                                         String maxPoolSize,
+                                                         String minPoolSize,
+                                                         String maxStatements,
+                                                         String maxIdleTime,
+                                                         String idleConnectionTestPeriod,
+                                                         String driverClassName) throws Exception {
 
-        // 从库的设置
-
-    }
-
-    public static PoolProperties configTomcatJdbcPoolProperties(String url,
-                                                                String user,
-                                                                String password,
-                                                                String checkoutTimeout,
-                                                                String maxPoolSize,
-                                                                String minPoolSize,
-                                                                String maxStatements,
-                                                                String maxIdleTime,
-                                                                String idleConnectionTestPeriod,
-                                                                String driverClassName) {
-        PoolProperties p = new PoolProperties();
-        p.setUrl(url);
-        p.setDriverClassName(driverClassName);
-        p.setUsername(user);
-        p.setPassword(password);
-        p.setJmxEnabled(true);
-        p.setTestWhileIdle(true);
-        p.setTestOnBorrow(false);
-        p.setTestOnReturn(false);
+        //PoolProperties p1=new PoolProperties();
+        Object p = Class.forName("org.apache.tomcat.jdbc.pool.PoolProperties").getDeclaredConstructor().newInstance();
+        ReflectionUtil.invoke(p, "setUrl", String.class, url);
+        ReflectionUtil.invoke(p, "setDriverClassName", String.class, driverClassName);
+        ReflectionUtil.invoke(p, "setUsername", String.class, user);
+        ReflectionUtil.invoke(p, "setPassword", String.class, password);
+        ReflectionUtil.invoke(p, "setJmxEnabled", boolean.class, true);
+        ReflectionUtil.invoke(p, "setTestWhileIdle", boolean.class, true);
+        ReflectionUtil.invoke(p, "setTestOnBorrow", boolean.class, false);
+        ReflectionUtil.invoke(p, "setTestOnReturn", boolean.class, false);
         if (StringUtils.containsIgnoreCase(driverClassName, "oracle")) {
-            p.setValidationQuery("select 1 from dual");
+            ReflectionUtil.invoke(p, "setValidationQuery", String.class, "select 1 from dual");
         } else {
-            p.setValidationQuery("SELECT 1");//
+            ReflectionUtil.invoke(p, "setValidationQuery", String.class, "SELECT 1");
         }
 
         int test = Integer.valueOf(idleConnectionTestPeriod);// 秒
 
-        p.setValidationInterval(test * 1000);
-        p.setTimeBetweenEvictionRunsMillis(30000);
-        p.setMaxActive(Integer.valueOf(maxPoolSize));
-        p.setInitialSize(Integer.valueOf(minPoolSize));
-        p.setMaxWait(Integer.valueOf(checkoutTimeout));
+        ReflectionUtil.invoke(p, "setValidationInterval", long.class, test * 1000);
+        ReflectionUtil.invoke(p, "setTimeBetweenEvictionRunsMillis", int.class, 30000);
 
-        p.setMinEvictableIdleTimeMillis(Integer.valueOf(maxIdleTime) * 1000);
-        p.setMinIdle(Integer.valueOf(minPoolSize));
-        p.setMaxIdle(Integer.valueOf(maxPoolSize));
-        p.setLogAbandoned(true);
-        p.setRemoveAbandonedTimeout(300 * 10);//
-        p.setRemoveAbandoned(true);//
-        p.setJdbcInterceptors("org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"
-                + "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
+        ReflectionUtil.invoke(p, "setMaxActive", int.class, Integer.valueOf(maxPoolSize));
+        ReflectionUtil.invoke(p, "setInitialSize", int.class, Integer.valueOf(minPoolSize));
+        ReflectionUtil.invoke(p, "setMaxWait", int.class, Integer.valueOf(checkoutTimeout));
+
+        ReflectionUtil.invoke(p, "setMinEvictableIdleTimeMillis", int.class,
+                Integer.valueOf(maxIdleTime) * 1000);
+        ReflectionUtil.invoke(p, "setMinIdle", int.class, Integer.valueOf(minPoolSize));
+        ReflectionUtil.invoke(p, "setMaxIdle", int.class, Integer.valueOf(maxPoolSize));
+        ReflectionUtil.invoke(p, "setLogAbandoned", boolean.class, true);
+        ReflectionUtil.invoke(p, "setRemoveAbandonedTimeout", int.class, 300 * 10);
+        ReflectionUtil.invoke(p, "setRemoveAbandoned", boolean.class, true);
+        ReflectionUtil.invoke(p, "setJdbcInterceptors", String.class, "org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
         return p;
 
     }
@@ -545,18 +488,15 @@ public class DBPoolFactory {
 
 
     private void initDbPoolFactory() {
-
-        try {
+        synchronized (this) {
             this.initAllPool();
-            checkSlaveDataSourceAlive();
-        } catch (Exception e) {
-            log.error("", e);
-            new Exception("add database pool error!", e);
+            this.notifyAll();
         }
+        checkSlaveDataSourceAlive();
     }
 
     public DataSource getDBPool(String dbpoolName) throws DbException {
-        return getDBPool(dbpoolName, new HashMap<>());
+        return getDBPool(dbpoolName, null);
     }
 
 
@@ -568,13 +508,14 @@ public class DBPoolFactory {
      */
     public DataSource getDBPool(String dbpoolName, Map<String, String> pros) throws DbException {
 
+        //checkInitIsFinished();
         try {
             rwLock.readLock().lock();
             if (dbpoolName == null)
                 throw new DbException("DBPool 'key' CANNOT be null");
 
-            ConcurrentHashMap<String, Map<String, String>> maps = this.readConfig.getProperties();
             if (pros != null) {
+                ConcurrentHashMap<String, Map<String, String>> maps = this.readConfig.getProperties();
                 pros.putAll(maps.get(dbpoolName));
             }
 
@@ -588,6 +529,27 @@ public class DBPoolFactory {
         }
     }
 
+    private void checkInitIsFinished() {
+        try {
+            if (this.status != INIT_STATUS.finished) {
+                while (true) {
+                    if (this.status != INIT_STATUS.finished
+                            && !DO_INI_SAME_THREAD.get().booleanValue()) {
+                        synchronized (this) {
+                            this.wait();
+                        }
+
+                    } else {
+                        return;
+                    }
+                }
+
+            }
+        } catch (Exception e) {
+            throw new DbException(e);
+        }
+
+    }
 
     public static class DataSourceStat {
         private long lastCheckTime;
@@ -633,7 +595,7 @@ public class DBPoolFactory {
         return true;
     }
 
-    public void checkSlaveDataSourceAlive() {
+    private void checkSlaveDataSourceAlive() {
         for (String poolName : poolSlaveList.keySet()) {
             Map<String, DataSource> slaveDss = poolSlaveList.get(poolName);
             if (slaveDss.size() > 0) {
@@ -688,7 +650,6 @@ public class DBPoolFactory {
     }
 
     public ConcurrentHashMap<String, DataSource> getSlaveDataSources(String poolName) {
-
         try {
             rwLock.readLock().lock();
             return this.poolSlaveList.get(poolName);
@@ -706,6 +667,7 @@ public class DBPoolFactory {
      * @return 返回DataSource对象
      */
     public DataSource selectSlaveDbPool(String poolName, TResult<String> slaveName, TResult<Connection> result) {
+        //checkInitIsFinished();
         try {
             rwLock.readLock().lock();
             Map<String, DataSource> slaveDss = poolSlaveList.get(poolName);
@@ -771,7 +733,10 @@ public class DBPoolFactory {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        executorService.scheduleWithFixedDelay(() -> {
+            System.out.println(123);
+        }, 2, 2, TimeUnit.SECONDS);
     }
 
     public static void close() {
@@ -789,16 +754,18 @@ public class DBPoolFactory {
         }
     }
 
-    private static void close(DataSource dataSource) {
-        if (dataSource instanceof org.apache.tomcat.jdbc.pool.DataSource) {
-            org.apache.tomcat.jdbc.pool.DataSource dss =
-                    (org.apache.tomcat.jdbc.pool.DataSource) dataSource;
-            dss.close();
+    private static void close(DataSource dataSource, String poolType) throws Exception {
+
+        Assert.notNull(dataSource);
+        if (poolType.equals(PoolType.TOMCAT_DB_POOL)) {
+            ReflectionUtil.invoke(dataSource, "close");
         } else {
+
         }
+
     }
 
-    public static void close(String xmlFileName, String poolName) {
+    public static void close(String xmlFileName, String poolName, String poolType) {
         synchronized (DBPoolFactory.class) {
             try {
                 // 关闭主库连接池
@@ -806,7 +773,8 @@ public class DBPoolFactory {
                 if (dbPoolFactory == null) return;
                 try {
                     DataSource ds = dbPoolFactory.poollist.get(poolName);
-                    close(ds);
+                    if (ds == null) return;
+                    close(ds, poolType);
                 } catch (Exception e) {
                     log.error("", e);
                 }
@@ -816,11 +784,7 @@ public class DBPoolFactory {
                 for (String slaveServerName : slaveMap.keySet()) {
                     try {
                         DataSource dss = slaveMap.get(slaveServerName);
-                        if (dss instanceof org.apache.tomcat.jdbc.pool.DataSource) {
-                            org.apache.tomcat.jdbc.pool.DataSource odss = (org.apache.tomcat.jdbc.pool.DataSource) dss;
-                            odss.close();
-                        } else {
-                        }
+                        close(dss, poolType);
                     } catch (Exception e) {
                         log.error("", e);
                     }
@@ -843,7 +807,9 @@ public class DBPoolFactory {
                 while (iter.hasNext()) {
                     try {
                         String poolName = iter.next();
-                        close(xmlFileName, poolName);
+                        ConcurrentHashMap<String, Map<String, String>> maps = dbPoolFactory.readConfig.getProperties();
+                        Map<String, String> masterMap = maps.get(poolName);
+                        close(xmlFileName, poolName, masterMap.get("type"));
                     } catch (Exception e) {
                         log.error("", e);
                     }

@@ -255,7 +255,6 @@ public class MDataBaseImpl implements MDataBase {
     }
 
 
-
     @Override
     public void callStoredPro(String mdFullMethodName, Map<String, Object> parms, Map<String, Object> outPramsValues,
                               List<DataBaseSet> returnDataBaseSets) throws DbException {

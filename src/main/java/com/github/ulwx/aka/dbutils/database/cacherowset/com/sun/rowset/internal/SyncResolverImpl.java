@@ -66,7 +66,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     }
 
 
-
     public int getStatus() {
         return ((Integer) stats.get(rowStatus - 1)).intValue();
     }
@@ -242,7 +241,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     }
 
 
-
     public void setResolvedValue(String columnName, Object obj) throws SQLException {
         // modify method to throw SQLException in spec
         // %%% Missing implementation!
@@ -304,7 +302,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
         crsSync.setShowDeleted(false);
         return bool;
     } // end next() method
-
 
 
     public boolean previousConflict() throws SQLException {
@@ -416,11 +413,9 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     }
 
 
-
     public void execute() throws SQLException {
         throw new UnsupportedOperationException();
     }
-
 
 
     public boolean next() throws SQLException {
@@ -450,7 +445,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     protected void removeCurrentRow() {
         throw new UnsupportedOperationException();
     }
-
 
 
     public String getString(int columnIndex) throws SQLException {
@@ -637,7 +631,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     public ResultSetMetaData getMetaData() throws SQLException {
         throw new UnsupportedOperationException();
     }
-
 
 
     public Object getObject(int columnIndex) throws SQLException {
@@ -880,7 +873,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     }
 
 
-
     public void updateNull(String columnName) throws SQLException {
         throw new UnsupportedOperationException();
     }
@@ -1104,8 +1096,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     }
 
 
-
-
     public Connection getConnection() throws SQLException {
         throw new UnsupportedOperationException();
     }
@@ -1152,7 +1142,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     }
 
 
-
     public void setKeyColumns(int[] keys) throws SQLException {
         throw new UnsupportedOperationException();
     }
@@ -1196,7 +1185,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     public void updateArray(String columnName, Array a) throws SQLException {
         throw new UnsupportedOperationException();
     }
-
 
 
     public java.net.URL getURL(int columnIndex) throws SQLException {
@@ -1260,7 +1248,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     }
 
 
-
     public void setMatchColumn(int columnIdx) throws SQLException {
         throw new UnsupportedOperationException();
     }
@@ -1305,7 +1292,6 @@ public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {
     public int getPageSize() {
         throw new UnsupportedOperationException();
     }
-
 
 
     public boolean previousPage() throws SQLException {

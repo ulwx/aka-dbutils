@@ -1,12 +1,13 @@
 package com.github.ulwx.aka.dbutils.tool.support.type;
 
-public class TLong implements TType{
-    private Long value ;
+public class TLong implements TType {
+    private Long value;
 
     @Override
     public Class getWrappedClass() {
         return Long.class;
     }
+
     public TLong() {
 
     }
@@ -14,6 +15,7 @@ public class TLong implements TType{
     public TLong(Long val) {
         this.value = val;
     }
+
     @Override
     public Long getValue() {
         return value;

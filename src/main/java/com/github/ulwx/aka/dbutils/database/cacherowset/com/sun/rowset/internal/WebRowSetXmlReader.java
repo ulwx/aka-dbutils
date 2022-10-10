@@ -87,7 +87,6 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
     }
 
 
-
     public void readXML(WebRowSet caller, InputStream iStream) throws SQLException {
         try {
             InputSource is = new InputSource(iStream);
@@ -134,7 +133,6 @@ public class WebRowSetXmlReader implements XmlReader, Serializable {
             throw new SQLException(MessageFormat.format(resBundle.handleGetObject("wrsxmlreader.readxml").toString(), e.getMessage()));
         }
     }
-
 
 
     public void readData(RowSetInternal caller) {

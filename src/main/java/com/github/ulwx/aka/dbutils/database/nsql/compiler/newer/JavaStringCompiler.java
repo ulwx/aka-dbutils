@@ -52,7 +52,7 @@ public class JavaStringCompiler {
             CompilationTask task = compiler.getTask(null, manager, null, options, null, Arrays.asList(javaFileObject));
             Boolean result = task.call();
             if (result == null || !result.booleanValue()) {
-                throw new RuntimeException("Compilation failed.");
+                throw new RuntimeException("Compilation failed.["+fileName+"]");
             }
             return manager.getClassBytes();
         }

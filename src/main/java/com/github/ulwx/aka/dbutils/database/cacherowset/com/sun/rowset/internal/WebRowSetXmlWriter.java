@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Stack;
 
 
-
 public class WebRowSetXmlWriter implements XmlWriter, Serializable {
 
 
@@ -523,8 +522,6 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
     }
 
 
-
-
     private String processSpecialCharacters(String s) {
 
         if (s == null) {
@@ -552,7 +549,6 @@ public class WebRowSetXmlWriter implements XmlWriter, Serializable {
         s = specialStr;
         return s;
     }
-
 
 
     private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {

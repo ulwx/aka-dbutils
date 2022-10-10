@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 
 
 public class DataBaseImpl implements DataBase {
-    private static Logger log = LoggerFactory.getLogger(DataBase.class);
+    private final static Logger log = LoggerFactory.getLogger(DataBase.class);
     private Connection conn = null;
     private PreparedStatement ps = null;
     private ResultSet rs = null;
@@ -55,7 +55,8 @@ public class DataBaseImpl implements DataBase {
     private boolean externalControlConClose = false;
     private ConnectType connectType = null;
     private Map<String, Savepoint> savePointMap = new LinkedHashMap<>();
-    private Boolean connectedToMaster=true;
+    private Boolean connectedToMaster = true;
+
     public DataBaseImpl() {
     }
 
@@ -129,11 +130,11 @@ public class DataBaseImpl implements DataBase {
                         || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
 
                     continue;
-                }else if(stack[i].getClassName().startsWith("jdk.internal.")
-                        ||stack[i].getClassName().startsWith("java.lang.")
-                        ||stack[i].getClassName().contains("CGLIB$$")
-                        ||stack[i].getClassName().startsWith("org.springframework")
-                ){
+                } else if (stack[i].getClassName().startsWith("jdk.internal.")
+                        || stack[i].getClassName().startsWith("java.lang.")
+                        || stack[i].getClassName().contains("CGLIB$$")
+                        || stack[i].getClassName().startsWith("org.springframework")
+                ) {
 
                     continue;
                 }
@@ -142,7 +143,7 @@ public class DataBaseImpl implements DataBase {
                     String tempInfo = "at " + stack[i].getClassName() + "." + stack[i].getMethodName() + "(" +
                             stack[i].getFileName() +
                             ":"
-                            + stack[i].getLineNumber()+ "";
+                            + stack[i].getLineNumber() + "";
                     upLevelNum++;
                     str = tempInfo;
                 } else {
@@ -259,10 +260,15 @@ public class DataBaseImpl implements DataBase {
     public DataSource getDataSourceFromPool(String dbPoolName) throws DbException {
 
         Map<String, String> map = new HashMap<String, String>();
-        String[] strs=DBPoolFactory.parseRefDbPoolName(dbPoolName);
-        DataSource datasource = DBPoolFactory.getInstance(strs[0]).getDBPool(strs[1], map);
+        String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
+        try {
+            DataSource datasource = DBPoolFactory.getInstance(strs[0]).getDBPool(strs[1], map);
 
-        return datasource;
+            return datasource;
+        } catch (Exception e) {
+            if (e instanceof DbException) throw (DbException) e;
+            throw new DbException(e);
+        }
     }
 
     @Override
@@ -312,7 +318,7 @@ public class DataBaseImpl implements DataBase {
     private void fetchConnection() throws DbException {
         long start0 = System.currentTimeMillis();
         String msg = "";
-        this.connectedToMaster=true;
+        this.connectedToMaster = true;
         try {
             if (this.isColsed()) {
                 conn = null;
@@ -326,41 +332,41 @@ public class DataBaseImpl implements DataBase {
                                 throw new DbException("从库只能执行select语句执行！");
                             }
                             msg = "获取从库链接";
-                            this.connectedToMaster=false;
+                            this.connectedToMaster = false;
                             TResult<Connection> tResult = new TResult<>();
-                            TResult<String> tslaveName=new TResult<>();
-                            String[] strs=DBPoolFactory.parseRefDbPoolName(dbPoolName);
-                            DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1],tslaveName, tResult);
+                            TResult<String> tslaveName = new TResult<>();
+                            String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
+                            DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName, tResult);
                             this.conn = tResult.getValue();
                             this.dataSource = ds;
 
                         } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
                             msg = "获取主库链接";
-                            this.connectedToMaster=true;
+                            this.connectedToMaster = true;
                             DataSource datasource = this.getDataSourceFromPool(dbPoolName);
                             this.dataSource = datasource;
                         } else { //Connect_Auto
                             if (this.sqlType == SQLType.SELECT) {
                                 if (!this.getAutoCommit()) {//事务性操作
                                     msg = "获取主库链接";
-                                    this.connectedToMaster=true;
+                                    this.connectedToMaster = true;
                                     DataSource ds = this.getDataSourceFromPool(dbPoolName);
                                     this.dataSource = ds;
                                 } else {
                                     msg = "获取从库链接";
-                                    this.connectedToMaster=false;
+                                    this.connectedToMaster = false;
 
-                                    String[] strs=DBPoolFactory.parseRefDbPoolName(dbPoolName);
+                                    String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
                                     TResult<Connection> tResult = new TResult<>();
-                                    TResult<String> tslaveName=new TResult<>();
-                                    DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1],tslaveName, tResult);
+                                    TResult<String> tslaveName = new TResult<>();
+                                    DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName, tResult);
                                     this.conn = tResult.getValue();
                                     this.dataSource = ds;
                                     ///
                                 }
                             } else { //update、delete、存储过程,脚本在主库上执行
                                 msg = "获取主库链接";
-                                this.connectedToMaster=true;
+                                this.connectedToMaster = true;
                                 DataSource ds = this.getDataSourceFromPool(dbPoolName);
                                 this.dataSource = ds;
                             }
@@ -368,7 +374,7 @@ public class DataBaseImpl implements DataBase {
                         }
                     } else { //非主从库方式
                         msg = "获取主库链接";
-                        this.connectedToMaster=true;
+                        this.connectedToMaster = true;
                         DataSource datasource = this.getDataSourceFromPool(dbPoolName);
                         this.dataSource = datasource;
                     }
@@ -377,14 +383,14 @@ public class DataBaseImpl implements DataBase {
                     }
 
                 } else if (this.connectType == ConnectType.CONNECTION) {
-                    this.connectedToMaster=null;
+                    this.connectedToMaster = null;
                     if (this.isColsed()) {
                         msg = "数据库连接为空或已经关闭！";
                     } else {
                         msg = "获取数据库链接前面已获取";
                     }
                 } else if (this.connectType == ConnectType.DATASOURCE) {
-                    this.connectedToMaster=null;
+                    this.connectedToMaster = null;
                     msg = "获取数据库库链接";
                     conn = dataSource.getConnection();
                 } else {
@@ -418,6 +424,7 @@ public class DataBaseImpl implements DataBase {
      * 格式为：配置xml文件名称#连接池名称
      * mydbpool.xml#sysdb
      * </pre>
+     *
      * @param dbPoolName 对应于dbpool.xml里的元素dbpool的name属性值,格式为：[配置xml文件名称]#[连接池名称]，
      *                   如果为：dbpool.xml#连接池名称，则dbpool.xml#可以省略
      * @throws DbException 异常
@@ -431,10 +438,10 @@ public class DataBaseImpl implements DataBase {
             if (conn != null)
                 return;
             // 设置是否是主从模式
-            String[] strs=DBPoolFactory.parseRefDbPoolName(dbPoolName);
-            this.setMainSlaveMode(DBPoolFactory.getInstance(strs[0]).isMainSlaveMode(strs[1]));
+            String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
+            DBPoolFactory dbPoolFactory = DBPoolFactory.getInstance(strs[0]);
+            this.setMainSlaveMode(dbPoolFactory.isMainSlaveMode(strs[1]));
             this.mainSlaveModeConnectMode = DbContext.getMainSlaveModeConnectMode();
-
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException("get pool connection error!", e);
@@ -459,7 +466,7 @@ public class DataBaseImpl implements DataBase {
     /**
      * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭 连接
      *
-     * @param sqlQuery  SQL语句
+     * @param sqlQuery    SQL语句
      * @param vParameters 参数
      * @param page        当前页
      * @param perPage     每页多少行
@@ -1173,7 +1180,7 @@ public class DataBaseImpl implements DataBase {
                         Object value = null;
                         // name为javabean属性名
                         if (SqlUtils.checkedSimpleType(t)) {// 简单类型
-                            value = SqlUtils.getValueFromResult(this.dbPoolName,clazz, t, sqlPrefix, name, rs.getResultSet(),
+                            value = SqlUtils.getValueFromResult(this.dbPoolName, clazz, t, sqlPrefix, name, rs.getResultSet(),
                                     DataBaseKeyMap.getMap());
 
                             PropertyUtil.setProperty(bean, name, value);
@@ -1289,7 +1296,7 @@ public class DataBaseImpl implements DataBase {
                         // name为javabean属性名
                         if (SqlUtils.checkedSimpleType(t)) {// 简单类型
 
-                            value = SqlUtils.getValueFromResult(this.dbPoolName,clazz, t, sqlPrefix, name, rs.getResultSet(),
+                            value = SqlUtils.getValueFromResult(this.dbPoolName, clazz, t, sqlPrefix, name, rs.getResultSet(),
                                     DataBaseKeyMap.getMap());
                             PropertyUtil.setProperty(bean, name, value);
                         } else {
@@ -1532,10 +1539,10 @@ public class DataBaseImpl implements DataBase {
             DbContext.getDebugSQLListener().accept(debugSql);
         }
 
-        if(DbContext.getDBInterceptor()!=null){
+        if (DbContext.getDBInterceptor() != null) {
             DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
-            boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,false,debugSql);
-            if(!ret){
+            boolean ret = DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this, false, debugSql);
+            if (!ret) {
                 throw new DbException("被拦截", CODE.Intercepted);
             }
         }
@@ -1747,10 +1754,10 @@ public class DataBaseImpl implements DataBase {
                 DbContext.getDebugSQLListener().accept(debugSql);
             }
 
-            if(DbContext.getDBInterceptor()!=null){
+            if (DbContext.getDBInterceptor() != null) {
                 DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
-                boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,false,debugSql);
-                if(!ret){
+                boolean ret = DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this, false, debugSql);
+                if (!ret) {
                     throw new DbException("被拦截", CODE.Intercepted);
                 }
             }
@@ -1861,12 +1868,12 @@ public class DataBaseImpl implements DataBase {
             if (DbContext.getDebugSQLListener() != null) {
                 DbContext.getDebugSQLListener().accept(debugSql);
             }
-            if(DbContext.getDBInterceptor()!=null){
+            if (DbContext.getDBInterceptor() != null) {
                 DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
-                boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,false,debugSql);
-                if(!ret){
-                    Method mehod=DbContext.getDBInterceptorInfo().getInterceptedMethod();
-                    throw new DbException(mehod+"操作被拦截不能继续执行！", CODE.Intercepted);
+                boolean ret = DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this, false, debugSql);
+                if (!ret) {
+                    Method mehod = DbContext.getDBInterceptorInfo().getInterceptedMethod();
+                    throw new DbException(mehod + "操作被拦截不能继续执行！", CODE.Intercepted);
                 }
             }
             if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
@@ -2493,10 +2500,10 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * @param objects         待更新的对象
-     * @param whereProperteis 生成where条件的对象属性
-     * @param updateProperties      待更新的属性，可以为空，表明更新主键以外的属性
-     * @param ignoreNull      是否忽略空
+     * @param objects          待更新的对象
+     * @param whereProperteis  生成where条件的对象属性
+     * @param updateProperties 待更新的属性，可以为空，表明更新主键以外的属性
+     * @param ignoreNull       是否忽略空
      * @return
      * @throws DbException
      */
@@ -2875,10 +2882,10 @@ public class DataBaseImpl implements DataBase {
                 if (DbContext.getDebugSQLListener() != null) {
                     DbContext.getDebugSQLListener().accept(debugSql);
                 }
-                if(DbContext.getDBInterceptor()!=null){
+                if (DbContext.getDBInterceptor() != null) {
                     DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
-                    boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,true,debugSql);
-                    if(!ret){
+                    boolean ret = DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this, true, debugSql);
+                    if (!ret) {
                         throw new DbException("被拦截", CODE.Intercepted);
                     }
                 }
@@ -3132,7 +3139,7 @@ public class DataBaseImpl implements DataBase {
     public void configInterceptorForMehtod(String mname, Class<?>... parameterTypes) {
 
         try {
-            if(DbContext.getDBInterceptor()!=null) {
+            if (DbContext.getDBInterceptor() != null) {
                 Method method = this.getClass().getMethod(mname, parameterTypes);
                 DBInterceptorInfo dbInterceptorInfo = new DBInterceptorInfo();
                 dbInterceptorInfo.setDataBase(this);
@@ -3146,7 +3153,7 @@ public class DataBaseImpl implements DataBase {
 
     private void configInterceptorForException(Exception e) {
 
-        if(DbContext.getDBInterceptor()!=null) {
+        if (DbContext.getDBInterceptor() != null) {
             DBInterceptorInfo dbInterceptorInfo = DbContext.getDBInterceptorInfo();
             dbInterceptorInfo.setException(e);
         }
@@ -3154,7 +3161,7 @@ public class DataBaseImpl implements DataBase {
 
     private void configInterceptorForPostExecute(Object result) {
 
-        if (DbContext.getDBInterceptor()!= null ) {
+        if (DbContext.getDBInterceptor() != null) {
             DBInterceptorInfo dbInterceptorInfo = DbContext.getDBInterceptorInfo();
             dbInterceptorInfo.setResult(result);
             DBInterceptor dbInterceptor = DbContext.getDBInterceptor();
@@ -3996,9 +4003,10 @@ public class DataBaseImpl implements DataBase {
                 BufferedReader lineReader = new BufferedReader(reader);
                 String line;
                 while ((line = lineReader.readLine()) != null) {
-                    if(!handleLine(command, line)){
+                    if (!handleLine(command, line)) {
                         return null;
-                    };
+                    }
+                    ;
                 }
                 checkForMissingLineTerminator(command);
                 return this.resultWriter.toString();
@@ -4098,10 +4106,10 @@ public class DataBaseImpl implements DataBase {
                     DbContext.getDebugSQLListener().accept(debugSql);
                 }
 
-                if(DbContext.getDBInterceptor()!=null){
+                if (DbContext.getDBInterceptor() != null) {
                     DbContext.getDBInterceptorInfo().setDebugSql(debugSql);
-                    boolean ret=DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this,true,debugSql);
-                    if(!ret){
+                    boolean ret = DbContext.getDBInterceptor().beforeDbOperationExeute(DataBaseImpl.this, true, debugSql);
+                    if (!ret) {
                         throw new DbException("被拦截", CODE.Intercepted);
                     }
                 }

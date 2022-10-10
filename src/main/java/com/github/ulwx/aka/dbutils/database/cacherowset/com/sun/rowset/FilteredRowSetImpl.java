@@ -13,13 +13,11 @@ import java.sql.Timestamp;
 import java.util.Hashtable;
 
 
-
 public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, Cloneable, FilteredRowSet {
 
     private Predicate p;
 
     private boolean onInsertRow = false;
-
 
 
     public FilteredRowSetImpl() throws SQLException {
@@ -85,7 +83,6 @@ public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, C
     }
 
 
-
     protected boolean internalPrevious() throws SQLException {
         boolean bool = false;
         // with previous move backwards,
@@ -109,7 +106,6 @@ public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, C
     }
 
 
-
     protected boolean internalFirst() throws SQLException {
 
         // from first till present cursor position(go forward),
@@ -130,7 +126,6 @@ public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, C
         }
         return bool;
     }
-
 
 
     protected boolean internalLast() throws SQLException {
@@ -244,9 +239,6 @@ public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, C
     }
 
 
-
-
-
     public void updateInt(int columnIndex, int x) throws SQLException {
 
         boolean bool;
@@ -295,7 +287,6 @@ public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, C
     }
 
 
-
     public void updateByte(int columnIndex, byte x) throws SQLException {
         boolean bool;
 
@@ -313,12 +304,10 @@ public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, C
     }
 
 
-
     public void updateByte(String columnName, byte x) throws SQLException {
 
         this.updateByte(findColumn(columnName), x);
     }
-
 
 
     public void updateShort(int columnIndex, short x) throws SQLException {
@@ -343,7 +332,6 @@ public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, C
 
         this.updateShort(findColumn(columnName), x);
     }
-
 
 
     public void updateLong(int columnIndex, long x) throws SQLException {

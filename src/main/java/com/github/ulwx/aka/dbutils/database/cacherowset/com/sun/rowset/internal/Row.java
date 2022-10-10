@@ -76,7 +76,6 @@ public class Row extends BaseRow implements Serializable, Cloneable {
     }
 
 
-
     public boolean getDeleted() {
         return (deleted);
     }
@@ -90,7 +89,6 @@ public class Row extends BaseRow implements Serializable, Cloneable {
     public void setInserted() {
         inserted = true;
     }
-
 
 
     public boolean getInserted() {

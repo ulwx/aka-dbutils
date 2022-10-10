@@ -7,8 +7,9 @@ public class DialectPageSqlTemplate {
 
     /**
      * Return pagination template of this Dialect
-     * @param dbms  DBMS对象
-     * @return  返回分页模板
+     *
+     * @param dbms DBMS对象
+     * @return 返回分页模板
      */
     public static String initializePaginSQLTemplate(DBMS dbms) {
         switch (dbms) {
@@ -115,8 +116,9 @@ public class DialectPageSqlTemplate {
 
     /**
      * Return top limit sql template of this Dialect
-     * @param dbms  DBMS对象
-     * @return  返回top limit模板
+     *
+     * @param dbms DBMS对象
+     * @return 返回top limit模板
      */
     public static String initializeTopLimitSqlTemplate(DBMS dbms) {
         switch (dbms) {

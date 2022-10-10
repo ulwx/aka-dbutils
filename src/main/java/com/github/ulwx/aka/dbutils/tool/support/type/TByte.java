@@ -1,6 +1,6 @@
 package com.github.ulwx.aka.dbutils.tool.support.type;
 
-public class TByte implements TType{
+public class TByte implements TType {
 
     private Byte value;
 

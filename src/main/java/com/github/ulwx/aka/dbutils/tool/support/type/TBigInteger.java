@@ -2,15 +2,17 @@ package com.github.ulwx.aka.dbutils.tool.support.type;
 
 import java.math.BigInteger;
 
-public class TBigInteger implements TType{
+public class TBigInteger implements TType {
     private BigInteger value;
 
     public TBigInteger() {
 
     }
+
     public TBigInteger(BigInteger value) {
         this.value = value;
     }
+
     @Override
     public BigInteger getValue() {
         return value;
