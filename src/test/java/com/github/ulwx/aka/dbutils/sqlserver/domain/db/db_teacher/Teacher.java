@@ -28,6 +28,6 @@ public class Teacher extends MdbOptions implements java.io.Serializable {
 		return  ObjectUtils.toString(this);
 	}
 
-	private static final long serialVersionUID =517918446L;
+	private static final long serialVersionUID =-1184714960L;
 
 }

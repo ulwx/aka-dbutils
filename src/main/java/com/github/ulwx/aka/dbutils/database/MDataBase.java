@@ -22,22 +22,25 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      * @param packageFullName 指定SQL脚本所在的包（全路径）
      * @param sqlFileName     为脚本文件的名称，脚本文件里存放的是SQL脚本
      * @param throwWarning    脚本执行时如果出现warning时是否抛出异常并回滚
+     * @param delimiters    脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
      * @return 返回执行脚本的结果
      * @throws DbException
      */
     String exeScript(String packageFullName, String sqlFileName,
-                     boolean throwWarning) throws DbException;
+                     boolean throwWarning,String delimiters) throws DbException;
 
     /**
      * 执行md方法地址指定的脚本，并且可以传入参数,脚本里执行时按每个SQL语句执行，执行的时候利用的是jdbc的PrepareStatement，能有效防止注入式攻击
      *
      * @param mdFullMethodName md方法地址
+     * @param throwWarning    脚本执行时如果出现warning时是否抛出异常并回滚
+     * @param delimiters     脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
      * @param args             传入md方法的参数
      * @param delimiters       指定每个SQL语句的分界，例如";"
      * @return 返回脚本执行的结果
      * @throws DbException
      */
-    String exeScript(String mdFullMethodName, String delimiters, Map<String, Object> args) throws DbException;
+    String exeScript(String mdFullMethodName,boolean throwWarning, String delimiters, Map<String, Object> args) throws DbException;
 
     /**
      * 根据mdFullMethodName指定的md方法地址所在的SQL从数据库查询记录，aka-dbutils会在内部封装SQL从而形成分页查询的SQL，

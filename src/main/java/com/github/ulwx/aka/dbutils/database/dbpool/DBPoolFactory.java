@@ -259,6 +259,9 @@ public class DBPoolFactory {
                     }
                     if (checkTime > 2) {
                         executorService.scheduleWithFixedDelay(() -> {
+                            if (this.status != INIT_STATUS.finished) {
+                                return;
+                            }
                             this.refClassPropertyRefresh(poolName, idbPoolAttrSource);
                         }, checkTime, checkTime, TimeUnit.SECONDS);
                     }
@@ -298,7 +301,14 @@ public class DBPoolFactory {
         Map<String, Map<String, String>> newlaveProperties = new HashMap<>();
         boolean debug = DbContext.permitDebugLog();
         DbContext.permitDebugLog(true);
-        attrSource.configProperties(lmasterProperties, newlaveProperties);
+        try {
+            attrSource.configProperties(lmasterProperties, newlaveProperties);
+            if(lmasterProperties.isEmpty() && newlaveProperties.isEmpty()){
+                return ;
+            }
+        } catch (Exception e) {
+            throw new DbException("获取数据源信息异常！",e);
+        }
         DbContext.permitDebugLog(debug);
         ConcurrentHashMap<String, Map<String, String>> poolNameMasterMap = readConfig.getProperties();
         Map<String, String> masterMap = poolNameMasterMap.get(poolName);
@@ -333,6 +343,7 @@ public class DBPoolFactory {
                 poolSlaveList.put(poolName, ltslaverDataSourceMap.getValue());
             } finally {
                 rwLock.writeLock().unlock();
+                log.debug("release write lock!");
                 partUpdateStatus = PART_UPDATE_STATUS.finished;
             }
         }

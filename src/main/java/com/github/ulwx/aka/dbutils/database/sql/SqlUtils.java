@@ -218,6 +218,8 @@ public class SqlUtils {
         sql2javaType.put(Types.TIME, LocalTime.class);
         sql2javaType.put(Types.TIMESTAMP, LocalDateTime.class);
         sql2javaType.put(Types.VARCHAR, String.class);
+        sql2javaType.put(Types.NVARCHAR, String.class);
+        sql2javaType.put(Types.LONGNVARCHAR, String.class);
         sql2javaType.put(Types.NUMERIC, Double.class);
 
         sql2javaType.put(Types.STRUCT, Struct.class);
@@ -225,7 +227,6 @@ public class SqlUtils {
         sql2javaType.put(Types.LONGVARCHAR, String.class);
         sql2javaType.put(Types.FLOAT, Float.class);
         sql2javaType.put(Types.DOUBLE, Double.class);
-
         sql2javaType.put(Types.BINARY, byte[].class);
         sql2javaType.put(Types.BIT, Integer.class);
         sql2javaType.put(Types.REF, Object.class);
@@ -429,34 +430,48 @@ public class SqlUtils {
             if (StringUtils.isEmpty(schema)) {
                 schema = conn.getCatalog();
             }
-            ResultSet rs = dd.getTables(conn.getCatalog(), schema, "%",
+            ResultSet rs = null;
+            rs=dd.getTables(conn.getCatalog(), schema, "%",
                     new String[]{"TABLE"});
 
-            ArrayList tablelist = new ArrayList();
-            ArrayList tableCommentList = new ArrayList();
+            ArrayList<String> tablelist = new ArrayList();
+            ArrayList<String>  tableCommentList = new ArrayList();
+            ArrayList<Map<String,String>> tableColumCommentList = new ArrayList<>();
             while (rs.next()) {
-                // System.out.println(rs.getString("TABLE_NAME"));
                 String tableName = rs.getString("TABLE_NAME");
                 tablelist.add(tableName);
 
-                String tableComment = rs.getString("REMARKS");
+                String tableComment = StringUtils.trim(rs.getString("REMARKS"));
+                Map<String,String> colCommentMap=null;
                 if (StringUtils.isEmpty(tableComment)) {
-                    if (db.getDataBaseType().isMySqlFamily()) {
-                        String sql = "SELECT TABLE_COMMENT FROM INFORMATION_SCHEMA.TABLES "
-                                + "WHERE TABLE_NAME=? AND TABLE_SCHEMA='" + schema + "'";
-                        try {
-                            Map<Integer, Object> args = new HashMap<Integer, Object>();
-                            args.put(1, tableName);
-                            DataBaseSet dbrs = db.queryForResultSet(sql, args);
-                            if (dbrs.next()) {
-                                tableComment = dbrs.getString("TABLE_COMMENT");
+                    String sql =db.getDataBaseType().tableCommentSql(schema);
+                    String sqlColum=db.getDataBaseType().colCommentSql();
+                    try {
+                        Map<Integer, Object> args = new HashMap<Integer, Object>();
+                        args.put(1, tableName);
+                        DataBaseSet dbrs = db.queryForResultSet(sql, args);
+                        if (dbrs.next()) {
+                            tableComment = dbrs.getString("TABLE_COMMENT");
+                        }
+                        if(!sqlColum.isEmpty()){
+                            colCommentMap = new HashMap<String, String>();
+                            dbrs = db.queryForResultSet(sqlColum, args);
+                            if(dbrs!=null) {
+                                while (dbrs.next()) {
+                                    String colName = dbrs.getString("COLUMN_NAME");
+                                    String colComment = dbrs.getString("COLUMN_DESCRIPTION");
+                                    colCommentMap.put(colName, colComment);
+                                }
                             }
-                        } finally {
                         }
 
+                    } finally {
                     }
                 }
                 tableCommentList.add(tableComment);
+                if(colCommentMap!=null) {
+                    tableColumCommentList.add(colCommentMap);
+                }
             }
 
             rs.close();
@@ -469,17 +484,24 @@ public class SqlUtils {
                 Map columMap = new LinkedHashMap();
 
                 while (rs.next()) {
+
                     Column co = new Column();
                     co.setColumn_name(rs.getString("COLUMN_NAME"));
                     co.setColumn_size(rs.getInt("COLUMN_SIZE"));
                     co.setData_type(rs.getInt("DATA_TYPE"));
-                    co.setRemarks(new String(rs.getBytes("REMARKS"),
-                            remarkEncoding));
+                    co.setIs_nullable(rs.getString("IS_NULLABLE"));
+                    if(tableColumCommentList.size()>0){
+                        co.setRemarks(tableColumCommentList.get(i).get(co.getColumn_name()));
+                    }else {
+                        String remark = rs.getString("REMARKS");
+                        co.setRemarks(remark);
+                    }
+
                     co.setTable_cat(rs.getString("TABLE_CAT"));
                     co.setTable_name(rs.getString("TABLE_NAME"));
                     co.setTable_schem(rs.getString("TABLE_SCHEM"));
                     co.setType_name(rs.getString("TYPE_NAME"));
-
+                    co.setIs_autoincrement(rs.getString("IS_AUTOINCREMENT"));
                     columMap.put(rs.getString("COLUMN_NAME"), co);
 
 

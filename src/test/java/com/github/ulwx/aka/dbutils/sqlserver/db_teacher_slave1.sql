@@ -12,7 +12,7 @@
  Target Server Version : 13004001 (13.00.4001)
  File Encoding         : 65001
 
- Date: 10/10/2022 15:08:30
+ Date: 11/10/2022 10:51:43
 */
 
 
@@ -24,7 +24,7 @@ IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[te
 GO
 
 CREATE TABLE [dbo].[teacher] (
-  [id] int  NOT NULL,
+  [id] int  IDENTITY(1,1) NOT NULL,
   [name] nvarchar(30) COLLATE Chinese_PRC_CI_AS  NULL
 )
 GO
@@ -36,6 +36,9 @@ GO
 -- ----------------------------
 -- Records of teacher
 -- ----------------------------
+SET IDENTITY_INSERT [dbo].[teacher] ON
+GO
+
 INSERT INTO [dbo].[teacher] ([id], [name]) VALUES (N'1', N'liyi')
 GO
 
@@ -46,6 +49,16 @@ INSERT INTO [dbo].[teacher] ([id], [name]) VALUES (N'3', N'sunquan')
 GO
 
 INSERT INTO [dbo].[teacher] ([id], [name]) VALUES (N'4', N'futao')
+GO
+
+SET IDENTITY_INSERT [dbo].[teacher] OFF
+GO
+
+
+-- ----------------------------
+-- Auto increment value for teacher
+-- ----------------------------
+DBCC CHECKIDENT ('[dbo].[teacher]', RESEED, 4)
 GO
 
 

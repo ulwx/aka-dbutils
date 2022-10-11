@@ -226,17 +226,7 @@ public class MD {
             realFileName = realFileName + "-" + profileValue + ".xml";
         }
         try {
-            Resource[] resources = null;
-            if (dbpoolFileName.equals(realFileName)) {
-                resources = ReadConfig.getResource(realFileName);
-            } else {
-                resources = ReadConfig.getResource(realFileName);
-                if (resources == null || resources.length == 0) {
-                    //尝试用原始路径获取资源
-                    resources = ReadConfig.getResource(dbpoolFileName);
-                    realFileName = dbpoolFileName;
-                }
-            }
+            Resource[] resources =  resources = ReadConfig.getResource(realFileName);;
             ReadConfig.checkResource(resources, realFileName);
             synchronized (MD.class) {
                 String ret = poolFileNameProfileMap.get(dbpoolFileName);

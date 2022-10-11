@@ -37,7 +37,7 @@
     <dbpool name="db_student_product" type="tomcatdbpool" table-name-rule="underline_to_camel"
             table-colum-rule="underline_to_camel">
         <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
-        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_student</property>
+        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_student;trustServerCertificate=true</property>
         <property name="username">sa</property>
         <property name="password">scj_123123</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->

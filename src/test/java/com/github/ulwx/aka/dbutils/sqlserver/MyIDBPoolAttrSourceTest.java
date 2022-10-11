@@ -17,7 +17,7 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
         MDbUtils.queryOneBy("sqlserver/dbpool.xml#db_teacher",new Teacher());
 
         masterProperties.put("driverClassName","com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        masterProperties.put("url","jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher");
+        masterProperties.put("url","jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher;trustServerCertificate=true");
         masterProperties.put("username","sa");
         masterProperties.put("password","scj_123123");
         masterProperties.put("encrypt","0");
@@ -29,7 +29,7 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
 
         Map<String, String> slave1=new HashMap<>();
         slave1.put("driverClassName","com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        slave1.put("url","jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave1");
+        slave1.put("url","jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave1;trustServerCertificate=true");
         slave1.put("username","sa");
         slave1.put("password","scj_123123");
         slave1.put("encrypt","0");
@@ -41,7 +41,7 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
         slaveServerProperties.put("external_slave_1",slave1);
         Map<String, String> slave2=new HashMap<>();
         slave2.put("driverClassName","com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        slave2.put("url","jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave2");
+        slave2.put("url","jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave2;trustServerCertificate=true");
         slave2.put("username","sa");
         slave2.put("password","scj_123123");
         slave2.put("encrypt","0");

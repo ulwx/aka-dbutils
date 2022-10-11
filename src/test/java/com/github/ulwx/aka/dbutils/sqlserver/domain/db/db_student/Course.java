@@ -14,7 +14,7 @@ public class Course extends MdbOptions implements java.io.Serializable {
 	private String name;/*课程名称;len:20*/
 	private Integer classHours;/*学时;len:10*/
 	private Integer teacherId;/*对应于db_teacher数据库里的teacher表;len:10*/
-	private LocalDateTime creatime;/*建立时间;len:19*/
+	private LocalDateTime creatime;/*建立时间;len:27*/
 
 	public void setId(Integer id){
 		this.id = id;
@@ -51,6 +51,6 @@ public class Course extends MdbOptions implements java.io.Serializable {
 		return  ObjectUtils.toString(this);
 	}
 
-	private static final long serialVersionUID =257103662L;
+	private static final long serialVersionUID =-377876350L;
 
 }

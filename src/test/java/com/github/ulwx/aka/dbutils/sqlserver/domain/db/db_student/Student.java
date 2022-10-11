@@ -44,6 +44,6 @@ public class Student extends MdbOptions implements java.io.Serializable {
 		return  ObjectUtils.toString(this);
 	}
 
-	private static final long serialVersionUID =-1187210994L;
+	private static final long serialVersionUID =2093009570L;
 
 }

@@ -12,7 +12,7 @@
  Target Server Version : 13004001 (13.00.4001)
  File Encoding         : 65001
 
- Date: 10/10/2022 15:07:00
+ Date: 11/10/2022 10:50:33
 */
 
 
@@ -24,9 +24,9 @@ IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[co
 GO
 
 CREATE TABLE [dbo].[course] (
-  [id] int  NOT NULL,
+  [id] int  IDENTITY(1,1) NOT NULL,
   [name] nvarchar(20) COLLATE Chinese_PRC_CI_AS  NULL,
-  [class_hours] int  NULL,
+  [class_hours] int  NOT NULL,
   [teacher_id] int  NULL,
   [creatime] datetime2(7)  NULL
 )
@@ -80,6 +80,9 @@ GO
 -- ----------------------------
 -- Records of course
 -- ----------------------------
+SET IDENTITY_INSERT [dbo].[course] ON
+GO
+
 INSERT INTO [dbo].[course] ([id], [name], [class_hours], [teacher_id], [creatime]) VALUES (N'1', N'abcd1', N'11', N'1', N'2021-03-15 22:31:48.0000000')
 GO
 
@@ -143,6 +146,9 @@ GO
 INSERT INTO [dbo].[course] ([id], [name], [class_hours], [teacher_id], [creatime]) VALUES (N'21', N'course21', N'27', N'0', N'2021-03-15 22:31:48.0000000')
 GO
 
+SET IDENTITY_INSERT [dbo].[course] OFF
+GO
+
 
 -- ----------------------------
 -- Table structure for student
@@ -152,7 +158,7 @@ IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[st
 GO
 
 CREATE TABLE [dbo].[student] (
-  [id] int  NOT NULL,
+  [id] int  IDENTITY(1,1) NOT NULL,
   [name] nvarchar(20) COLLATE Chinese_PRC_CI_AS  NULL,
   [age] int  NULL,
   [birth_day] date  NULL
@@ -200,6 +206,9 @@ GO
 -- ----------------------------
 -- Records of student
 -- ----------------------------
+SET IDENTITY_INSERT [dbo].[student] ON
+GO
+
 INSERT INTO [dbo].[student] ([id], [name], [age], [birth_day]) VALUES (N'1', N'student1', N'40', N'1980-10-08')
 GO
 
@@ -239,6 +248,9 @@ GO
 INSERT INTO [dbo].[student] ([id], [name], [age], [birth_day]) VALUES (N'13', N'student13', N'38', N'1982-01-08')
 GO
 
+SET IDENTITY_INSERT [dbo].[student] OFF
+GO
+
 
 -- ----------------------------
 -- Table structure for student_course
@@ -248,7 +260,7 @@ IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[st
 GO
 
 CREATE TABLE [dbo].[student_course] (
-  [id] int  NOT NULL,
+  [id] int  IDENTITY(1,1) NOT NULL,
   [student_id] int  NULL,
   [course_id] int  NULL
 )
@@ -275,6 +287,9 @@ GO
 -- ----------------------------
 -- Records of student_course
 -- ----------------------------
+SET IDENTITY_INSERT [dbo].[student_course] ON
+GO
+
 INSERT INTO [dbo].[student_course] ([id], [student_id], [course_id]) VALUES (N'1', N'1', N'10')
 GO
 
@@ -308,6 +323,9 @@ GO
 INSERT INTO [dbo].[student_course] ([id], [student_id], [course_id]) VALUES (N'11', N'11', N'20')
 GO
 
+SET IDENTITY_INSERT [dbo].[student_course] OFF
+GO
+
 
 -- ----------------------------
 -- Table structure for student_many_courses
@@ -317,7 +335,7 @@ IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[st
 GO
 
 CREATE TABLE [dbo].[student_many_courses] (
-  [id] int  NOT NULL,
+  [id] int  IDENTITY(1,1) NOT NULL,
   [student_id] int  NULL,
   [course_id] int  NULL
 )
@@ -344,6 +362,9 @@ GO
 -- ----------------------------
 -- Records of student_many_courses
 -- ----------------------------
+SET IDENTITY_INSERT [dbo].[student_many_courses] ON
+GO
+
 INSERT INTO [dbo].[student_many_courses] ([id], [student_id], [course_id]) VALUES (N'1', N'1', N'10')
 GO
 
@@ -380,6 +401,9 @@ GO
 INSERT INTO [dbo].[student_many_courses] ([id], [student_id], [course_id]) VALUES (N'12', N'10', N'11')
 GO
 
+SET IDENTITY_INSERT [dbo].[student_many_courses] OFF
+GO
+
 
 -- ----------------------------
 -- Table structure for t1
@@ -403,6 +427,12 @@ GO
 -- ----------------------------
 -- Records of t1
 -- ----------------------------
+INSERT INTO [dbo].[t1] ([id], [a], [key_b], [key_c]) VALUES (N'1', N'3', N'2019-11-01 17:29:36.0000000', N'bbb')
+GO
+
+INSERT INTO [dbo].[t1] ([id], [a], [key_b], [key_c]) VALUES (N'2', N'2', N'2019-11-21 17:29:38.0000000', N'xxxx')
+GO
+
 
 -- ----------------------------
 -- Table structure for t2
@@ -426,39 +456,28 @@ GO
 -- ----------------------------
 -- Records of t2
 -- ----------------------------
-
--- ----------------------------
--- Table structure for Table_1
--- ----------------------------
-IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[Table_1]') AND type IN ('U'))
-	DROP TABLE [dbo].[Table_1]
+INSERT INTO [dbo].[t2] ([id], [a], [key_a], [key_b]) VALUES (N'1', N'1', N'1', N'0')
 GO
 
-CREATE TABLE [dbo].[Table_1] (
-  [id] int  IDENTITY(1,1) NOT NULL,
-  [name] varchar(50) COLLATE Chinese_PRC_CI_AS  NULL,
-  [date1] datetime  NULL
-)
+INSERT INTO [dbo].[t2] ([id], [a], [key_a], [key_b]) VALUES (N'2', N'1', N'1', N'6')
 GO
 
-ALTER TABLE [dbo].[Table_1] SET (LOCK_ESCALATION = TABLE)
+INSERT INTO [dbo].[t2] ([id], [a], [key_a], [key_b]) VALUES (N'3', N'1', N'2', N'0')
 GO
 
-EXEC sp_addextendedproperty
-'MS_Description', N'abcggggg',
-'SCHEMA', N'dbo',
-'TABLE', N'Table_1',
-'COLUMN', N'id'
+INSERT INTO [dbo].[t2] ([id], [a], [key_a], [key_b]) VALUES (N'4', N'1', N'3', N'1')
 GO
 
-
--- ----------------------------
--- Records of Table_1
--- ----------------------------
-SET IDENTITY_INSERT [dbo].[Table_1] ON
+INSERT INTO [dbo].[t2] ([id], [a], [key_a], [key_b]) VALUES (N'5', N'1', N'4', N'1')
 GO
 
-SET IDENTITY_INSERT [dbo].[Table_1] OFF
+INSERT INTO [dbo].[t2] ([id], [a], [key_a], [key_b]) VALUES (N'6', N'2', N'1', N'2')
+GO
+
+INSERT INTO [dbo].[t2] ([id], [a], [key_a], [key_b]) VALUES (N'7', N'2', N'2', N'4')
+GO
+
+INSERT INTO [dbo].[t2] ([id], [a], [key_a], [key_b]) VALUES (N'8', N'3', N'12', N'44')
 GO
 
 
@@ -506,10 +525,17 @@ GO
 CREATE PROCEDURE [dbo].[testproc]
 AS
 BEGIN
-     declare @i INT;
-	   set @i=1;
-	   select  @i=sum(1) from t1 ;
-	END
+    declare @i INT;
+set @i=1;
+select  @i=sum(1) from t1 ;
+END
+GO
+
+
+-- ----------------------------
+-- Auto increment value for course
+-- ----------------------------
+DBCC CHECKIDENT ('[dbo].[course]', RESEED, 21)
 GO
 
 
@@ -523,6 +549,13 @@ GO
 
 
 -- ----------------------------
+-- Auto increment value for student
+-- ----------------------------
+DBCC CHECKIDENT ('[dbo].[student]', RESEED, 13)
+GO
+
+
+-- ----------------------------
 -- Primary Key structure for table student
 -- ----------------------------
 ALTER TABLE [dbo].[student] ADD CONSTRAINT [PK__student__3213E83FB4169C94] PRIMARY KEY CLUSTERED ([id])
@@ -532,11 +565,25 @@ GO
 
 
 -- ----------------------------
+-- Auto increment value for student_course
+-- ----------------------------
+DBCC CHECKIDENT ('[dbo].[student_course]', RESEED, 11)
+GO
+
+
+-- ----------------------------
 -- Primary Key structure for table student_course
 -- ----------------------------
 ALTER TABLE [dbo].[student_course] ADD CONSTRAINT [PK__student___3213E83F14D97571] PRIMARY KEY CLUSTERED ([id])
 WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)  
 ON [PRIMARY]
+GO
+
+
+-- ----------------------------
+-- Auto increment value for student_many_courses
+-- ----------------------------
+DBCC CHECKIDENT ('[dbo].[student_many_courses]', RESEED, 12)
 GO
 
 
@@ -564,12 +611,5 @@ GO
 ALTER TABLE [dbo].[t2] ADD CONSTRAINT [PK__t2__3213E83F9DAC7319] PRIMARY KEY CLUSTERED ([id])
 WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)  
 ON [PRIMARY]
-GO
-
-
--- ----------------------------
--- Auto increment value for Table_1
--- ----------------------------
-DBCC CHECKIDENT ('[dbo].[Table_1]', RESEED, 1)
 GO
 

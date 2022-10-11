@@ -39,7 +39,7 @@
     <dbpool name="db_student" type="tomcatdbpool" table-name-rule="underline_to_camel"
             table-colum-rule="underline_to_camel">
         <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
-        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_student</property>
+        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_student;trustServerCertificate=true</property>
         <property name="username">sa</property>
         <property name="password">scj_123123</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
@@ -52,7 +52,7 @@
     </dbpool>
     <dbpool name="db_teacher" type="tomcatdbpool">
         <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
-        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher</property>
+        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher;trustServerCertificate=true</property>
         <property name="username">sa</property>
         <property name="password">scj_123123</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
@@ -65,7 +65,7 @@
         <slaves>
             <server name="db_teacher_slave1">
                 <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
-                <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave1</property>
+                <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave1;trustServerCertificate=true</property>
                 <property name="username">sa</property>
                 <property name="password">scj_123123</property>
                 <property name="checkoutTimeout">60000</property>
@@ -77,7 +77,7 @@
             </server>
             <server name="db_teacher_slave2">
                 <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
-                <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave2</property>
+                <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave2;trustServerCertificate=true</property>
                 <property name="username">sa</property>
                 <property name="password">scj_123123</property>
                 <property name="checkoutTimeout">60000</property>
@@ -103,7 +103,7 @@
     check-time属性：如果是数字(单位秒），则表示间隔的秒数执行一次ref-class指定的插件方法，获取最新的数据库连接池属性和现有的属性做
     比较，如果不相同则替换并重新用新的属性构造连接池。。
     -->
-    <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.mysql.MyIDBPoolAttrSourceTest"
+    <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.sqlserver.MyIDBPoolAttrSourceTest"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
             check-time="10"/>
 </dbpool-config>

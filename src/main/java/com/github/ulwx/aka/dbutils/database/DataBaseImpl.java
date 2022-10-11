@@ -3861,7 +3861,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public String exeScript(Reader reader, boolean throwWarning, Map<String, Object> args) throws DbException {
+    public String exeScript(Reader reader, boolean throwWarning,String delimiters, Map<String, Object> args) throws DbException {
 
         this.configInterceptorForMehtod("exeScript", Reader.class, boolean.class, Map.class);
         String ret = null;
@@ -3874,6 +3874,16 @@ public class DataBaseImpl implements DataBase {
                     scriptRunner.setThrowWarning(throwWarning);
                     scriptRunner.setRemoveCRs(true);
                     scriptRunner.setArgs(args);
+                    if(delimiters==null || delimiters.isEmpty()){
+                        if(this.getDataBaseType().isMySqlFamily()){
+                            scriptRunner.setDelimiter(";");
+                        }else if(this.getDataBaseType().isSQLServerFamily()){
+                            scriptRunner.setDelimiter("GO");
+                        }
+                    }else{
+                        scriptRunner.setDelimiter(delimiters);
+                    }
+
                     return scriptRunner.runScriptByLine(reader);
                 } catch (Exception e) {
                     if (e instanceof DbException) throw (DbException) e;
@@ -4006,7 +4016,7 @@ public class DataBaseImpl implements DataBase {
                     if (!handleLine(command, line)) {
                         return null;
                     }
-                    ;
+
                 }
                 checkForMissingLineTerminator(command);
                 return this.resultWriter.toString();
@@ -4060,7 +4070,7 @@ public class DataBaseImpl implements DataBase {
         }
 
         private boolean commandReadyToExecute(String trimmedLine) {
-            if (trimmedLine.endsWith(delimiter)) return true;
+            if (trimmedLine.endsWith(delimiter.toLowerCase())||trimmedLine.endsWith(delimiter.toUpperCase())) return true;
             return false;
         }
 

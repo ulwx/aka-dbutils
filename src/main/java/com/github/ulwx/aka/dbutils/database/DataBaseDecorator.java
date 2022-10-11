@@ -367,8 +367,8 @@ public abstract class DataBaseDecorator implements DBObjectOperation, AutoClosea
     }
 
     @Override
-    public String exeScript(Reader reader, boolean throwWarning, Map<String, Object> args) {
-        return db.exeScript(reader, throwWarning, args);
+    public String exeScript(Reader reader, boolean throwWarning,String delimiters, Map<String, Object> args) {
+        return db.exeScript(reader, throwWarning,delimiters, args);
     }
 
 

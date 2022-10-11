@@ -6,35 +6,37 @@ import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 
 public class Utils {
     public static void main(String[] args) {
-        SqlUtils.exportTables("sqlserver/dbpool.xml#db_student", "db_student",
+        SqlUtils.exportTables("sqlserver/dbpool.xml#db_student", "dbo",
                 "c:/dbutils_demo/db_student",
-                "com.github.ulwx.aka.dbutils.mysql.domain.db.db_student",
+                "com.github.ulwx.aka.dbutils.sqlserver.domain.db.db_student",
                 "utf-8",true);
-        SqlUtils.exportTables("sqlserver/dbpool.xml#db_teacher", "db_teacher",
+        SqlUtils.exportTables("sqlserver/dbpool.xml#db_teacher", "dbo",
                 "c:/dbutils_demo/db_teacher",
-                "com.github.ulwx.aka.dbutils.mysql.domain.db.db_teacher",
+                "com.github.ulwx.aka.dbutils.sqlserver.domain.db.db_teacher",
                 "utf-8",true);
+        System.out.println("ok!");
 
+       // importDbStudent();
     }
     public static void importDbStudent(){
         DbContext.permitDebugLog(false);
         MDbUtils.exeScript("sqlserver/dbpool.xml#db_student",
-                "com.github.ulwx.aka.dbutils.mysql",
-                "db_student.sql", false);
+                "com.github.ulwx.aka.dbutils.sqlserver",
+                "db_student.sql", false,null);
         DbContext.permitDebugLog(true);
     }
 
     public static void inportDbTeacher(){
         DbContext.permitDebugLog(false);
         MDbUtils.exeScript("sqlserver/dbpool.xml#db_teacher",
-                "com.github.ulwx.aka.dbutils.mysql",
-                "db_teacher.sql", false);
+                "com.github.ulwx.aka.dbutils.sqlserver",
+                "db_teacher.sql", false,null);
         MDbUtils.exeScript("sqlserver/dbpool.xml#db_teacher",
-                "com.github.ulwx.aka.dbutils.mysql",
-                "db_teacher_slave1.sql", false);
+                "com.github.ulwx.aka.dbutils.sqlserver",
+                "db_teacher_slave1.sql", false,null);
         MDbUtils.exeScript("sqlserver/dbpool.xml#db_teacher",
-                "com.github.ulwx.aka.dbutils.mysql",
-                "db_teacher_slave2.sql", false);
+                "com.github.ulwx.aka.dbutils.sqlserver",
+                "db_teacher_slave2.sql", false,null);
         DbContext.permitDebugLog(true);
     }
 

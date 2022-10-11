@@ -1,58 +1,71 @@
 /*
-SQLyog Ultimate v13.1.1 (64 bit)
-MySQL - 5.7.31-log : Database - testa
-*********************************************************************
+ Navicat Premium Data Transfer
+
+ Source Server         : sqlserver
+ Source Server Type    : SQL Server
+ Source Server Version : 13004001 (13.00.4001)
+ Source Host           : 192.168.137.200:1433
+ Source Catalog        : db_student
+ Source Schema         : dbo
+
+ Target Server Type    : SQL Server
+ Target Server Version : 13004001 (13.00.4001)
+ File Encoding         : 65001
+
+ Date: 10/10/2022 17:38:54
 */
 
-/*!40101 SET NAMES utf8 */;
-
-/*!40101 SET SQL_MODE = ''*/;
-
-/*!40014 SET @OLD_UNIQUE_CHECKS = @@UNIQUE_CHECKS, UNIQUE_CHECKS = 0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS = @@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS = 0 */;
-/*!40101 SET @OLD_SQL_MODE = @@SQL_MODE, SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES = @@SQL_NOTES, SQL_NOTES = 0 */;
 
 
-/*Table structure for table `t1` */
+-- ----------------------------
+-- Table structure for t1
+-- ----------------------------
+    IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[t1]') AND type IN ('U'))
+DROP TABLE [dbo].[t1]
+    GO
 
-DROP TABLE IF EXISTS `t1`;
+CREATE TABLE [dbo].[t1] (
+    [id] int  NOT NULL,
+    [a] int  NULL,
+    [key_b] datetime2(7)  NULL,
+    [key_c] nvarchar(30) COLLATE Chinese_PRC_CI_AS  NULL
+    )
+    GO
 
-CREATE TABLE `t1`
-(
-    `id`    int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `a`     int(11)     DEFAULT NULL,
-    `key_b` datetime    DEFAULT NULL,
-    `key_c` varchar(30) DEFAULT '',
-    PRIMARY KEY (`id`)
-) ENGINE = InnoDB
-  AUTO_INCREMENT = 3
-  DEFAULT CHARSET = utf8;
+ALTER TABLE [dbo].[t1] SET (LOCK_ESCALATION = TABLE)
+    GO
 
-/*Data for the table `t1` */
 
-insert into `t1`(`id`, `a`, `key_b`, `key_c`)
-values (1, 3, '2019-11-01 17:29:36', 'bbb'),
-       (2, 2, '2019-11-21 17:29:38', 'xxxx');
 
-/*Table structure for table `t2` */
+ -- ----------------------------
+-- Records of t1
+-- ----------------------------
+insert into t1(id, a, key_b, key_c)
+    values (1, 3, '2019-11-01 17:29:36', 'bbb'),
+           (2, 2, '2019-11-21 17:29:38', 'xxxx')
+        GO
+-- ----------------------------
+-- Table structure for t2
+-- ----------------------------
+    IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[t2]') AND type IN ('U'))
+DROP TABLE [dbo].[t2]
+    GO
 
-DROP TABLE IF EXISTS `t2`;
+CREATE TABLE [dbo].[t2] (
+    [id] int  NOT NULL,
+    [a] int  NULL,
+    [key_a] int  NULL,
+[key_b] int  NULL
+)
+    GO
 
-CREATE TABLE `t2`
-(
-    `id`    int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `a`     int(11) DEFAULT NULL,
-    `key_a` int(11) DEFAULT '0',
-    `key_b` int(11) DEFAULT '0',
-    PRIMARY KEY (`id`)
-) ENGINE = InnoDB
-  AUTO_INCREMENT = 9
-  DEFAULT CHARSET = utf8;
+ALTER TABLE [dbo].[t2] SET (LOCK_ESCALATION = TABLE)
+    GO
 
-/*Data for the table `t2` */
-
-insert into `t2`(`id`, `a`, `key_a`, `key_b`)
+    -- ----------------------------
+-- Records of t2
+-- ----------------------------
+insert into t2(id, a, key_a, key_b)
 values (1, 1, 1, 0),
        (2, 1, 1, 6),
        (3, 1, 2, 0),
@@ -60,26 +73,49 @@ values (1, 1, 1, 0),
        (5, 1, 4, 1),
        (6, 2, 1, 2),
        (7, 2, 2, 4),
-       (8, 3, 12, 44);
+       (8, 3, 12, 44)
+    GO
+select * from t2 t
+    GO
 
-select *
-from t2 t;
-/* Procedure structure for procedure `aaa` */
 
-/*!50003 DROP PROCEDURE IF EXISTS `testproc` */;
 
-DELIMITER $$
+-- ----------------------------
+-- procedure structure for query_course_proc
+-- ----------------------------
 
-/*!50003 CREATE
-    DEFINER = `root`@`localhost` PROCEDURE `testproc`()
+-- ----------------------------
+-- procedure structure for testproc
+-- ----------------------------
+IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[testproc]') AND type IN ('P', 'PC', 'RF', 'X'))
+DROP PROCEDURE[dbo].[testproc]
+    GO
+
+CREATE PROCEDURE [dbo].[testproc]
+AS
 BEGIN
-    set @i = 1;
-    select 1 into @i from t1;
-END */$$
-DELIMITER ;
+    declare @i INT;
+set @i=1;
+select  @i=sum(1) from t1 ;
+END
+GO
 
-/*!40101 SET SQL_MODE = @OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS = @OLD_UNIQUE_CHECKS */;
-/*!40111 SET SQL_NOTES = @OLD_SQL_NOTES */;
+
+
+-- ----------------------------
+-- Primary Key structure for table t1
+-- ----------------------------
+ALTER TABLE [dbo].[t1] ADD CONSTRAINT [PK__t1__3213E83F2B067CCC] PRIMARY KEY CLUSTERED ([id])
+    WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+    ON [PRIMARY]
+    GO
+
+
+-- ----------------------------
+-- Primary Key structure for table t2
+-- ----------------------------
+ALTER TABLE [dbo].[t2] ADD CONSTRAINT [PK__t2__3213E83F9DAC7319] PRIMARY KEY CLUSTERED ([id])
+    WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+    ON [PRIMARY]
+    GO
 

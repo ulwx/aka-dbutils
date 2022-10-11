@@ -14,13 +14,14 @@ public class Utils {
                 "c:/dbutils_demo/db_teacher",
                 "com.github.ulwx.aka.dbutils.mysql.domain.db.db_teacher",
                 "utf-8",true);
+        System.out.println("ok!");
 
     }
     public static void importDbStudent(){
         DbContext.permitDebugLog(false);
         MDbUtils.exeScript("mysql/dbpool.xml#db_student",
                 "com.github.ulwx.aka.dbutils.mysql",
-                "db_student.sql", false);
+                "db_student.sql", false,null);
         DbContext.permitDebugLog(true);
     }
 
@@ -28,13 +29,13 @@ public class Utils {
         DbContext.permitDebugLog(false);
         MDbUtils.exeScript("mysql/dbpool.xml#db_teacher",
                 "com.github.ulwx.aka.dbutils.mysql",
-                "db_teacher.sql", false);
+                "db_teacher.sql", false,null);
         MDbUtils.exeScript("mysql/dbpool.xml#db_teacher",
                 "com.github.ulwx.aka.dbutils.mysql",
-                "db_teacher_slave1.sql", false);
+                "db_teacher_slave1.sql", false,null);
         MDbUtils.exeScript("mysql/dbpool.xml#db_teacher",
                 "com.github.ulwx.aka.dbutils.mysql",
-                "db_teacher_slave2.sql", false);
+                "db_teacher_slave2.sql", false,null);
         DbContext.permitDebugLog(true);
     }
 

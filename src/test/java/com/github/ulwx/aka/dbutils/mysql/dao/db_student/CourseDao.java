@@ -867,14 +867,14 @@ public class CourseDao {
         args.put("name", "course_md");
         args.put("classHours", 123);
         args.put("creatime", localDateTime);
-        String str = MDbUtils.exeScript(DbPoolName, MD.md(), ";", args);
+        String str = MDbUtils.exeScript(DbPoolName, MD.md(),false, ";", args);
         Assert.equal(sql.toString(),
                 "INSERT INTO `course` ( `name`, `class_hours`, `creatime` ) VALUES ( 'course_md', 123, '2021-03-15 22:31:40' );select * from course;select * from course where name='course_md';UPDATE `course` SET `class_hours` = 123, `creatime` = '2021-03-15 22:31:40' WHERE `name` = 'course_md';DELETE FROM `course` WHERE `name` = 'course_md'");
 
         Assert.hasText(str);
         sql.setLength(0);
         str = MDbUtils.exeScript(DbPoolName, CourseDao.class.getPackage().getName(),
-                "testscript.sql", false);
+                "testscript.sql", false,null);
         Assert.hasText(str);
         DbContext.removeDebugSQLListener();
 

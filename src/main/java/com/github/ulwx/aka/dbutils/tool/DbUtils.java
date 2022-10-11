@@ -161,9 +161,9 @@ public class DbUtils extends BaseDao {
     }
 
 
-    public static String exeScript(String dbpoolName, Reader reader, Boolean throwWarning) throws DbException {
+    public static String exeScript(String dbpoolName, Reader reader, Boolean throwWarning,String delimiters, Map<String, Object> args) throws DbException {
         return execute(db -> {
-            return db.exeScript(reader, throwWarning, null);
+            return db.exeScript(reader, throwWarning, delimiters,args);
         }, dbpoolName);
     }
 

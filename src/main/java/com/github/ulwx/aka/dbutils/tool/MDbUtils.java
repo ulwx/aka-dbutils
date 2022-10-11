@@ -34,13 +34,14 @@ public class MDbUtils extends BaseDao {
      * @param packageFullName 指定SQL脚本所在的包（全路径）
      * @param sqlFileName     为脚本文件的名称，脚本文件里存放的是SQL脚本
      * @param throwWarning    脚本执行时如果出现warning时是否抛出异常并回滚
+     * @param delimiters    脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
      * @return 返回执行脚本的结果
      * @throws DbException
      */
     public static String exeScript(String dbpoolName, String packageFullName, String sqlFileName,
-                                   Boolean throwWarning) throws DbException {
+                                   boolean throwWarning,String delimiters) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.exeScript(packageFullName, sqlFileName, throwWarning);
+            return mdb.exeScript(packageFullName, sqlFileName, throwWarning,delimiters);
         }, dbpoolName);
     }
 
@@ -51,13 +52,14 @@ public class MDbUtils extends BaseDao {
      *                         如果为：dbpool.xml#连接池名称，则dbpool.xml#可以省略。
      * @param mdFullMethodName md方法地址
      * @param args             传入md方法的参数
-     * @param delimiters       指定每个SQL语句的分界，例如";"
+     * @param throwWarning    脚本执行时如果出现warning时是否抛出异常并回滚
+     * @param delimiters    脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
      * @return 返回脚本执行的结果
      * @throws DbException
      */
-    public static String exeScript(String dbpoolName, String mdFullMethodName, String delimiters, Map<String, Object> args) throws DbException {
+    public static String exeScript(String dbpoolName, String mdFullMethodName,boolean throwWarning, String delimiters, Map<String, Object> args) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.exeScript(mdFullMethodName, delimiters, args);
+            return mdb.exeScript(mdFullMethodName,throwWarning, delimiters, args);
         }, dbpoolName);
     }
 

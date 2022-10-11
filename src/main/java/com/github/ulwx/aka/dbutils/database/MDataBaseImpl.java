@@ -50,11 +50,12 @@ public class MDataBaseImpl implements MDataBase {
      * @param packageFullName :sql脚本所在都包，例如com.xx.yy
      * @param sqlFileName     ：sql脚本的文件名，例如 db.sql
      * @param throwWarning    脚本执行时如果出现warning，是否退出并回滚
+     * @param delimiters     脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
      * @return 执行成功的结果 ，否则抛出异常
      * @throws DbException
      */
     @Override
-    public String exeScript(String packageFullName, String sqlFileName, boolean throwWarning) throws DbException {
+    public String exeScript(String packageFullName, String sqlFileName, boolean throwWarning,String delimiters) throws DbException {
 
         packageFullName = packageFullName.replace(".", "/");
         String source = "/" + packageFullName + "/" + sqlFileName;
@@ -67,7 +68,7 @@ public class MDataBaseImpl implements MDataBase {
             scriptOption.setSource(source);
             scriptOption.setFromMDMethod(false);
             args.put(ScriptOption.class.getName(), scriptOption);
-            return this.dataBase.exeScript(bufReader, throwWarning, args);
+            return this.dataBase.exeScript(bufReader, throwWarning, delimiters,args);
         } catch (Exception e) {
             if (e instanceof DbException) {
                 throw (DbException) e;
@@ -79,13 +80,12 @@ public class MDataBaseImpl implements MDataBase {
 
 
     @Override
-    public String exeScript(String mdFullMethodName, String delimiters, Map<String, Object> args) throws DbException {
+    public String exeScript(String mdFullMethodName,boolean throwWarning, String delimiters, Map<String, Object> args) throws DbException {
         String[] strs = mdFullMethodName.split(":");
         String sql = null;
         try {
             sql = MDTemplate.getResultString(strs[0], strs[1], args);
-            sql = sql.replace(delimiters, ";\n");
-
+            sql = sql.replace(delimiters, delimiters+"\n");
         } catch (Exception e) {
             if (e instanceof DbException) {
                 throw (DbException) e;
@@ -98,7 +98,7 @@ public class MDataBaseImpl implements MDataBase {
         scriptOption.setSource(mdFullMethodName);
         scriptOption.setFromMDMethod(true);
         args.put(ScriptOption.class.getName(), scriptOption);
-        return this.dataBase.exeScript(sr, false, args);
+        return this.dataBase.exeScript(sr, throwWarning,delimiters, args);
 
     }
 

@@ -583,11 +583,13 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param reader       sql脚本输入reader
      * @param throwWarning 脚本执行时如果出现warning，是否退出并回滚
-     * @param args         参数
+     * @param delimiters 脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
+     * @param args         参数，以命名参数表示，例如假如脚本里有语句
+     *                     select * from course where name=#{name1} and age=#{age1}，则args里的key为name1和age1
      * @return 返回执行成功的结果，出错返回异常
      * @throws DbException
      */
-    String exeScript(Reader reader, boolean throwWarning, Map<String, Object> args) throws DbException;
+    String exeScript(Reader reader, boolean throwWarning,String delimiters, Map<String, Object> args) throws DbException;
 
 
     /**

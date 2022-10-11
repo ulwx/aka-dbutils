@@ -431,6 +431,43 @@ public enum DBMS {
         return result;
     }
 
+    public String tableCommentSql(String dbName){
+        String sql="";
+        if (this.isMySqlFamily()) {
+            sql = "SELECT TABLE_COMMENT FROM INFORMATION_SCHEMA.TABLES "
+                    + "WHERE TABLE_NAME=? AND TABLE_SCHEMA='"+dbName+"'";
+
+        }else if (this.isSQLServerFamily()) {
+            sql="select c.name,cast(isnull(f.[value], '') as nvarchar(100)) as TABLE_COMMENT " +
+                    "from sys.objects c left join sys.extended_properties f on f.major_id=c.object_id " +
+                    "and f.minor_id=0 and f.class=1 where c.type='u' and c.name=?";
+
+        }else{
+
+        }
+        return sql;
+    }
+
+    public String colCommentSql(){
+        String sql="";
+        if (this.isMySqlFamily()) {
+
+        }else if (this.isSQLServerFamily()) {
+            sql="SELECT " +
+                    "A.name AS TABLE_NAME," +
+                    "B.name AS COLUMN_NAME," +
+                    "CONVERT(nvarchar,  C.value) AS COLUMN_DESCRIPTION" +
+                    "　FROM sys.tables A" +
+                    "　INNER JOIN sys.columns B ON B.object_id = A.object_id" +
+                    "　LEFT JOIN sys.extended_properties C ON C.major_id = B.object_id AND C.minor_id = B.column_id" +
+                    "　WHERE A.name = ?";
+
+        }else{
+
+        }
+        return sql;
+    }
+
     public static void main(String[] args) {
 
     }

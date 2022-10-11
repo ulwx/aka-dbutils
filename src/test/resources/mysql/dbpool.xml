@@ -105,5 +105,5 @@
     -->
     <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.mysql.MyIDBPoolAttrSourceTest"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
-            check-time="10"/>
+            check-time="0"/>
 </dbpool-config>

@@ -1,5 +1,7 @@
 package com.github.ulwx.aka.dbutils.sqlserver.domain.db.db_student;
-
+import java.util.*;
+import java.sql.*;
+import java.time.*;
 import com.github.ulwx.aka.dbutils.database.MdbOptions;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 
@@ -35,6 +37,6 @@ public class StudentManyCourses extends MdbOptions implements java.io.Serializab
 		return  ObjectUtils.toString(this);
 	}
 
-	private static final long serialVersionUID =-1030007539L;
+	private static final long serialVersionUID =-1623617917L;
 
 }
