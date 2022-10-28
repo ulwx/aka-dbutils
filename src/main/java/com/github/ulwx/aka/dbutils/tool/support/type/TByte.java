@@ -26,7 +26,7 @@ public class TByte implements TType {
     }
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Byte.class;
     }
 }

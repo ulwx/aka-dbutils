@@ -30,9 +30,12 @@ public interface DBInterceptor {
      * @param lastDebugSql      本次数据库操作中（对应dataBase中的一个方法，如queryList()）执行的debug sql的最后一条SQL，
      *                          比如分页的queryList()方法默认会先生成计算总数的SQL语句，然后生成分页查询的SQL语句，debugSql传入的是
      *                          最后的分页查询的SQL语句
+     * @param  exeTimeMil  执行时长（毫秒数）
      */
-    public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
+    public void postDbOperationExeute(DataBase dataBase,
+                                      Method interceptedMethod,
                                       Object result,
                                       Exception exception,
-                                      String lastDebugSql);
+                                      String lastDebugSql,
+                                      long exeTimeMil);
 }

@@ -24,6 +24,12 @@ public class PathResourceUtils {
         return resources;
     }
 
+    /**
+     * 得到相对于类路径根目录的相对路径，包路径和class路径
+     * @param resources
+     * @return
+     * @throws IOException
+     */
     public static ClassPathRootResource[] convertToClassPathRootResource(Resource[] resources) throws IOException {
         Resource[] rootResources = Path.getResourcesLikeAntPathMatch("classpath*:/");
         TreeSet<String> classRootResources = new TreeSet<>();

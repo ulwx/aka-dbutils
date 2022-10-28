@@ -98,6 +98,19 @@ VALUES
 #{creatime}
 )
 
+testInsertWithMdReturnKey
+====
+INSERT INTO course (
+name,
+class_hours,
+creatime
+)
+VALUES
+(
+#{name},
+#{classHours},
+#{creatime}
+)
 
 testUpdateWithMd
 ====

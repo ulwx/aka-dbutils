@@ -1,6 +1,5 @@
 package com.github.ulwx.aka.dbutils.database.sql;
 
-import com.github.ulwx.aka.dbutils.database.DataBaseKeyMap;
 import com.github.ulwx.aka.dbutils.database.DataBaseSet;
 import com.github.ulwx.aka.dbutils.tool.support.PropertyUtil;
 
@@ -21,7 +20,7 @@ public class BeanUtils {
 
                 Class type = PropertyUtil.getPropertyType(nestedObj, toPro);
                 Object value = SqlUtils.getValueFromResult(db, nestedObj.getClass(), type,
-                        prefix, toPro, rs.getResultSet(), DataBaseKeyMap.getMap());
+                        prefix, toPro, rs.getResultSet());
 
                 PropertyUtil.setProperty(nestedObj, toPro, value);
             }
@@ -35,7 +34,7 @@ public class BeanUtils {
                 Class type = PropertyUtil.getPropertyType(nestedObj, name);
 
                 Object value = SqlUtils.getValueFromResult(db, nestedObj.getClass(), type, prefix, name,
-                        rs.getResultSet(), DataBaseKeyMap.getMap());
+                        rs.getResultSet());
 
                 PropertyUtil.setProperty(nestedObj, name, value);
 
@@ -72,7 +71,7 @@ public class BeanUtils {
             Class keyClass = PropertyUtil.getPropertyType(bean, nkey);
 
             Object keyValue = SqlUtils.getValueFromResult(db, bean.getClass(), keyClass, sqlPrefix
-                    , nkey, rs.getResultSet(), DataBaseKeyMap.getMap());
+                    , nkey, rs.getResultSet());
             if (keyValue == null) {
                 return null;
             }

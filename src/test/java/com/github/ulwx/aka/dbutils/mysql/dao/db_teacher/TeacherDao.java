@@ -65,7 +65,8 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception,
+                                              String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
 
@@ -96,7 +97,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
 
@@ -111,7 +112,7 @@ public class TeacherDao {
         DbContext.removeDebugSQLListener();
         DbContext.removeDBInterceptor();
         DbContext.removeMainSlaveModeConnectMode();
-        Assert.equal(sql.toString(), "update `teacher`  set `name`='xyz' where id=1");
+        Assert.equal(sql.toString(), "update `teacher`  set `name`='xyz' where `id`=1");
 
 
     }
@@ -124,7 +125,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_MainServer);
                 Assert.state(dataBase.connectedToMaster());
 
@@ -147,7 +148,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(!dataBase.connectedToMaster());
 
@@ -160,7 +161,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_MainServer);
                 Assert.state(dataBase.connectedToMaster());
 
@@ -175,7 +176,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_SlaveServer);
                 Assert.state(!dataBase.connectedToMaster());
 
@@ -197,7 +198,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
             }

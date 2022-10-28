@@ -6,9 +6,11 @@ import com.github.ulwx.aka.dbutils.database.MDMethods.InsertOptions.ReturnFlag;
 import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
+import com.github.ulwx.aka.dbutils.database.QueryHint;
 import com.github.ulwx.aka.dbutils.database.QueryMapNestOne2Many;
 import com.github.ulwx.aka.dbutils.database.QueryMapNestOne2One;
 import com.github.ulwx.aka.dbutils.database.dbpool.ReadConfig;
+import com.github.ulwx.aka.dbutils.database.parameter.IDGeneratorParmeter;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
@@ -30,6 +32,7 @@ public class MD {
     public static String md() {
         return md(2, null);
     }
+
 
     public static String md(String mdMethodName) {
         return md(2, mdMethodName);
@@ -82,7 +85,7 @@ public class MD {
     public static Map<String, Object>[] maps(Object... javaBeans) {
         List<Map<String, Object>> list = new ArrayList<>();
         for (int i = 0; i < javaBeans.length; i++) {
-            list.add(ObjectUtils.fromJavaBeanToMap(javaBeans[i]));
+            list.add(ObjectUtils.fromJavaBeanToMap2(javaBeans[i]));
         }
         return list.toArray(new HashMap[0]);
     }
@@ -97,7 +100,7 @@ public class MD {
     public static List<Map<String, Object>> mapList(Object... javaBeans) {
         List<Map<String, Object>> list = new ArrayList<>();
         for (int i = 0; i < javaBeans.length; i++) {
-            list.add(ObjectUtils.fromJavaBeanToMap(javaBeans[i]));
+            list.add(ObjectUtils.fromJavaBeanToMap2(javaBeans[i]));
         }
         return list;
     }
@@ -109,9 +112,13 @@ public class MD {
      * @return
      */
     public static Map<String, Object> map(Object javaBean) {
-        return ObjectUtils.fromJavaBeanToMap(javaBean);
+
+        return ObjectUtils.fromJavaBeanToMap2(javaBean);
     }
 
+    public static String ofSQL(String sql){
+        return "sql:"+sql;
+    }
     public static One2OneMapNestOptions ofOne2One(String sqlPrefix,
                                                   QueryMapNestOne2One... queryMapNests) {
         One2OneMapNestOptions o2os = new One2OneMapNestOptions();
@@ -183,7 +190,7 @@ public class MD {
     public static InsertOptions ofInsert(boolean needReturnKey) {
         InsertOptions insertOptions = new InsertOptions();
         if (needReturnKey) {
-            insertOptions.setReturnFlag(ReturnFlag.AutoKey);
+            insertOptions.setReturnFlag(ReturnFlag.AutoID);
         }
         return insertOptions;
     }
@@ -226,7 +233,7 @@ public class MD {
             realFileName = realFileName + "-" + profileValue + ".xml";
         }
         try {
-            Resource[] resources =  resources = ReadConfig.getResource(realFileName);;
+            Resource[] resources =  ReadConfig.getResource(realFileName);;
             ReadConfig.checkResource(resources, realFileName);
             synchronized (MD.class) {
                 String ret = poolFileNameProfileMap.get(dbpoolFileName);
@@ -244,6 +251,18 @@ public class MD {
 
     }
 
+    public  static QueryHint ofQueryHint(){
+        return new QueryHint();
+    }
+
+    public static IDGeneratorParmeter ofIDGenParmeter(String parmName,String sequenceName){
+        IDGeneratorParmeter idGeneratorParmeter=new IDGeneratorParmeter();
+        idGeneratorParmeter.setName(parmName);
+        idGeneratorParmeter.setClazz(Long.class);
+        idGeneratorParmeter.setSequenceName(sequenceName);
+        return idGeneratorParmeter;
+
+    }
     public static void main(String[] args) {
         ofPool("dbpool.xml");
     }

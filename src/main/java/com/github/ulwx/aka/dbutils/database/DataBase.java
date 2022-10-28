@@ -54,6 +54,11 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      */
     Boolean connectedToMaster();
 
+
+    /**
+     * 设置主从模式，true为主从模式（dbpool.xml里有主从库配置），false非主从模式（dbpool.xml里没有从库配置）
+     * @param mainSlaveMode : true：表明dbpool.xml里连接池配置的是主从；false：配置的是非主从
+     */
     void setMainSlaveMode(boolean mainSlaveMode);
 
     boolean getInternalConnectionAutoCommit() throws DbException;
@@ -73,9 +78,18 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     }
 
     /**
-     * 从dbpool.xml里设置的连接池获得连接
-     *
-     * @param dbPoolName 对应于dbpool.xml里的元素&lt;dbpool&gt;name属性值
+     *根据配置文件（如dbpool.xml）里设置的连接池名称来获得连接.
+     * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
+     * <blockquote><code>
+     * dbPoolName参数的格式如下：
+     * 格式为：[配置xml文件的路径文件名称]#[连接池名称]
+     * <ul>
+     * <li>如：mydbpool.xml#sysdb，则在所有root类路径（包含jar）下查找mydbpool.xml文件并指向sysdb连接池。等效于classpath*:/mydbpool.xml#sysdb。</li>
+     * <li>mysql/mydbpool.xml#sysdb，则在/mysql类路径下查找mydbpool.xml文件并指向sysdb连接池。等效于classpath*:/mysql/mydbpool.xml#sysdb。。</li>
+     * <li>如：file:/D:/config/mydbpool.xml#sysdb，则查找file:/D:/config/mydbpool.xml文件并指向sysdb连接池。</li>
+     * <li>如：classpath*:/mydbpool.xml#sysdb 或 classpath:/mydbpool.xml#sysdb，若为"classpath*:"前缀则表明在所有root类路径（含jar）下查找。</li>
+     *</ul>
+     *  </code></blockquote>
      * @throws DbException 异常
      */
     void connectDb(String dbPoolName) throws DbException;
@@ -212,10 +226,10 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     <T> T queryOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException;
 
     /**
-     * 一对一关联分页查询。是针对一个对象"一对一关联"另一对象，通过在对象的类里定义一个关联属性，包含关联属性的类为主类，
-     * 关联属性的类型为子关联类。主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
-     * 那么student表一行学生信息记录就一对一关联course表的一门课程记录，从类的角度来说就是主类Student和子关联类Course具有一对一关联，
-     * 并且在Student类里定义了一个名为"course"（名称随意）的关联属性，其类型为Course，它是子关联类型。数据库表可以设计成如下：<blockquote><pre>
+     * 一对一关联查询。是针对一个对象"一对一关联"另一对象，通过在对象的类里定义一个关联属性，包含关联属性的类为主类，
+     * 关联属性的类型为子类型。主类和子类型分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
+     * 那么student表一行学生信息记录就一对一关联course表的一门课程记录，从类的角度来说就是主类Student和子类型Course具有一对一关联，
+     * 并且在Student类里定义了一个名为"course"（名称随意）的关联属性，其类型为Course，它是子类型。数据库表可以设计成如下：<blockquote><pre>
      * student表：
      * id,student_name
      *
@@ -248,8 +262,15 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *
      * SQL语句如下：
      *  select
-     *   stu.*,    ③-1
-     *   c.*       ②-1
+     *   stu.id as `stu.id`, ③-1
+     *   stu.name as `stu.name`,
+     *   stu.age as `stu.age`,
+     *   stu.birth_day as `stu.birth_day`,
+     *   c.id as `c.id`,  ②-1
+     *   c.name as `c.name`,
+     *   c.class_hours as `c.class_hours`,
+     *   c.teacher_id as `c.teacher_id`,
+     *   c.creatime as `c.creatime`
      *  from student stu,student_course sc,course c
      *  where stu.id=sc.student_id and  c.id=sc.course_id
      *  and c.student_name like ? order by c.id
@@ -263,9 +284,9 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *         Map&lt;Integer,Object&gt;args = new HashMap&lt;&gt;();
      *         args.put(1,"student%");
      *         QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
-     *         queryMapNestOne2One.set(null,  //子关联类哪些属性被映射，null表明全部映射
+     *         queryMapNestOne2One.set(null,  //子类型哪些属性被映射，null表明全部映射
      *                              "course",  ①  //指定主类里的关联属性
-     *                                "c.");   ② //限定哪些列映射到子关联类里
+     *                                "c.");   ② //限定哪些列映射到子类型里
      *
      *         One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
      *                 "stu."  ③
@@ -330,9 +351,84 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
     /**
      * 一对一关联分页查询。是针对一个对象"一对一关联"另一对象，通过在对象的类里定义一个关联属性，包含关联属性的类为主类，
-     * 关联属性的类型为子关联类。主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
-     * 那么student表一行学生信息记录就一对一关联course表的一门课程记录，从类的角度来说就是主类Student和子关联类Course具有一对一关联，
-     * 并且在Student类里定义了一个名为"course"的关联属性，其类型为Course，它是子关联类型。
+     * 关联属性的类型为子类型。主类和子类型分别都对应到数据库表，例如student表，其每个学生只学习一门课程（对应course表一条记录），
+     * 那么student表一行学生信息记录就一对一关联course表的一门课程记录，从类的角度来说就是主类Student和子类型Course具有一对一关联，
+     * 并且在Student类里定义了一个名为"course"的关联属性，其类型为Course，它是子类型。
+     * 数据库表可以设计成如下：<blockquote><pre><code>
+     * student表：
+     * id,student_name
+     *
+     * course表：
+     * id,course_name
+     *
+     * student_course表（里面的记录是一条student记录id对应一条course记录id，即一对一关联）：
+     * id, student_id,course_id
+     *
+     * javaBean为：
+     * public class Student{
+     *     private Integer id;
+     *     private String studentName;
+     *     private Course course;   ①-1
+     *     ......
+     * }
+     *
+     * public class StudentCourse{
+     *     private Integer id,
+     *     private Integer studentId;
+     *     private Integer courseId;
+     *     ......
+     * }
+     *
+     * public class Course{
+     *     private Integer id,
+     *     private String courseName;
+     *     ......
+     * }
+     *
+     * SQL语句如下：
+     *  select
+     *   stu.id as `stu.id`, ③-1
+     *   stu.name as `stu.name`,
+     *   stu.age as `stu.age`,
+     *   stu.birth_day as `stu.birth_day`,
+     *   c.id as `c.id`,  ②-1
+     *   c.name as `c.name`,
+     *   c.class_hours as `c.class_hours`,
+     *   c.teacher_id as `c.teacher_id`,
+     *   c.creatime as `c.creatime`
+     *  from student stu,student_course sc,course c
+     *  where stu.id=sc.student_id and  c.id=sc.course_id
+     *  and c.student_name like ? order by c.id
+     *
+     * //CourseDao .java
+     *  public class CourseDao {
+     *     ......
+     *     public  void testQueryListOne2One(){
+     *         DataBase db=DataBaseFactory.getDataBase("courseDb");
+     *         String sql="select stu.*,c.* from student stu,student_course sc,course c where stu.id=sc.student_id and  c.id=sc.course_id and c.student_name like ? order by c.id";
+     *         Map&lt;Integer,Object&gt;args = new HashMap&lt;&gt;();
+     *         args.put(1,"student%");
+     *         QueryMapNestOne2One queryMapNestOne2One = new QueryMapNestOne2One();
+     *         queryMapNestOne2One.set(null,  //子类型哪些属性被映射，null表明全部映射
+     *                              "course",  ①  //指定主类里的关联属性
+     *                                "c.");   ② //限定哪些列映射到子类型里
+     *
+     *         One2OneMapNestOptions one2OneMapNestOptions=MD.ofOne2One(
+     *                 "stu."  ③
+     *                 ,queryMapNestOne2One
+     *         );
+     *         PageBean pageBean=new PageBean();
+     *         List&lt;One2OneStudent&gt; list=db.queryListOne2One(One2OneStudent.class,
+     *                  sql, args, one2OneMapNestOptions,2,2,pageBean,null);
+     *         System.out.println("list="+ ObjectUtils.toPrettyJsonString(list));
+     *
+     *     }
+     *
+     * }
+     * </pre></blockquote>
+     * ③处的"stu."指定了一个前缀，它限定了SQL语句里哪些列字段（③-1处）要映射到主类（包含关联属性的类）里对应的属性。
+     * queryMapNestOne2One对象被设置了"course"（①处），它指定了主类One2OneStudent类里的关联属性（即对应于①-1处的course属性），
+     * 在②处设置了"c."，这限定了SQL语句里哪些列字段（②-1处）要映射到子关联子里的对应的属性（即Course类里的属性）。
      *
      * @param clazz                 映射到的对象所属类型
      * @param sqlQuery              sql语句
@@ -356,10 +452,10 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
             throws DbException;
 
     /**
-     * 一对多关联查询。是针对一个对象"一对多关联"另一对象，通过在对象的类（主类）里定义一个关联属性，关联属性的类型为子关联类。
-     * 主类和子关联类分别都对应到数据库表，例如student表，其每个学生只学习多门课程（对应course表里多条记录），
-     * 那么student表一行学生信息记录就一对多关联course表的多门课程记录，从类的角度来说就是主类Student和子关联类Course具有一对多关联，
-     * 并且在Student类里定义了一个名为"courseList"的关联属性，其类型为List&lt;Course&gt;，Course为子关联类型。
+     * 一对多关联查询。是针对一个对象"一对多关联"另一对象，通过在对象的类（主类）里定义一个关联属性，关联属性的类型为子类型。
+     * 主类和子类型分别都对应到数据库表，例如student表，其每个学生只学习多门课程（对应course表里多条记录），
+     * 那么student表一行学生信息记录就一对多关联course表的多门课程记录，从类的角度来说就是主类Student和子类型Course具有一对多关联，
+     * 并且在Student类里定义了一个名为"courseList"的关联属性，其类型为List&lt;Course&gt;，Course为子类型。
      * 数据库表可以设计成如下：<blockquote><pre>
      * student表：
      * id,student_name
@@ -393,8 +489,15 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *
      * 对应的SQL语句如下：
      *  select
-     *   stu.*,    ④-1
-     *   c.*       ③-1
+     *   stu.id as `stu.id`, ④-1
+     *   stu.name as `stu.name`,
+     *   stu.age as `stu.age`,
+     *   stu.birth_day as `stu.birth_day`,
+     *   c.id as `c.id`,  ③-1
+     *   c.name as `c.name`,
+     *   c.class_hours as `c.class_hours`,
+     *   c.teacher_id as `c.teacher_id`,
+     *   c.creatime as `c.creatime`
      *  from student stu,student_course sc,course c
      *  where stu.id=sc.student_id and  c.id=sc.course_id
      *  and c.name in ? order by c.id
@@ -407,11 +510,11 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *         Map&lt;Integer,Object&gt;args = new HashMap&lt;&gt;();
      *         args.put(1,new String[]{"student1","student2","student3"});
      *         QueryMapNestOne2Many queryMapNestOne2Many = new QueryMapNestOne2Many();
-     *         queryMapNestOne2Many.set(Course.class, //子关联类
+     *         queryMapNestOne2Many.set(Course.class, //子类型
      *                 "courseList",  ①    //对应主类里的关联属性名称
-     *                 new String[]{"id"}, ②  //指定子关联类的唯一键属性（可能是多个属性共同组成唯一键），对应子关联类Course里id属性
-     *                 "c.",    ③   //限定sql里哪些列映射到子关联类
-     *                 null);   //指定子关联类里哪些属性被映射，如果为null表明所有属性被映射
+     *                 new String[]{"id"}, ②  //指定子类型的唯一键属性（可能是多个属性共同组成唯一键），对应子类型Course里id属性
+     *                 "c.",    ③   //限定sql里哪些列映射到子类型
+     *                 null);   //指定子类型里哪些属性被映射，如果为null表明所有属性被映射
      *         One2ManyMapNestOptions one2ManyMapNestOptions=MD.ofOne2Many(
      *                  "stu."   ④     //限定sql里哪些列被映射到主类里
      *                 , new String[]{"id"},  ⑤  //指定主类的主键属性，对应主类Student里的id属性
@@ -429,12 +532,12 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *     }
      * }
      *
-     * </pre></blockquote>
-     * ④处通过指定"stu."限定SQL语句里哪些列字段（③-1处）映射到主类里对应的属性。
-     * queryMapNestOne2Many对象设置了关联属性"courseList"（①处），对应到主类One2ManyStudent里的关联属性名courseList（①-1处），
-     * 在③处设置了"c."，这限定了SQL语句里哪些字段（③-1处）映射到子关联类（Course）里的属性。⑤处指定了主类里哪些属性组成唯一键来确定一个对象
-     * （即这些属性对应的表字段合起来是是唯一键），aka-dbutils利用这些属性对查询的记录进行分组，分组内的记录再通过子关联类主键属性（②处）去
-     * 掉重复生成的关联子对象，从而构成最终的关联子对象列表。
+     * </pre></blockquote><ul>
+     *<li>④处通过指定"stu."限定SQL语句里哪些列字段（④-1处）映射到主类里对应的属性。</li>
+     *<li> ①处queryMapNestOne2Many对象设置了关联属性"courseList"（①处），对应到主类One2ManyStudent里的关联属性名courseList（①-1处）。</li>
+     * <li>③处设置了"c."，这限定了SQL语句里哪些字段（③-1处）映射到子类型（Course）里的属性。</li>
+     * <li>⑤处指定了主类里哪些属性组成唯一键（这些属性对应的表字段合起来是是唯一键）来唯一标识一个对象，aka-dbutils利用这些属性对查询的记录进行分组，分组内的记录再通过子类型主键属性（②处）去
+     * 掉重复生成的关联子对象，从而构成最终的关联子对象列表。</li></ul>
      *
      * @param clazz                  映射到的对象所属类型
      * @param sqlQuery               sql语句
@@ -660,7 +763,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     boolean isColsed() throws DbException;
 
     /**
-     * 事务性操作的事务的提交，当 {@link #setAutoCommit(boolean)}设为false， 会用到此方法，一般对于事务性操作会用到，如果
+     * 事务性操作的事务的提交，当 {@link #setAutoCommit(boolean)}设为false，会用到此方法，一般对于事务性操作会用到，如果
      * 事务为分布式事务，则为空操作。
      *
      * @throws DbException

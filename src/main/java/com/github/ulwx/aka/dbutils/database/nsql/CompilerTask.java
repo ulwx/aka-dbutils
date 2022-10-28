@@ -131,6 +131,8 @@ public class CompilerTask {
                         JavaStringCompiler compiler = new JavaStringCompiler();
                         Map<String, byte[]> results = compiler.compile(className + ".java", source, classpath);
                         aClass = compiler.loadClass(classFullName, results);
+                        log.debug("compile " +
+                                classFullName + "finished!" );
                     } else {
                         aClass = CompilerUtils.compileAndLoadClass(classFullName, source, classpath);
                     }

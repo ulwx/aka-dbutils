@@ -6,13 +6,12 @@ import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.database.nsql.MDTemplate;
 import com.github.ulwx.aka.dbutils.database.nsql.NSQL;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
+import com.github.ulwx.aka.dbutils.tool.support.Path;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
+import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.Savepoint;
 import java.util.ArrayList;
@@ -46,29 +45,55 @@ public class MDataBaseImpl implements MDataBase {
         return this.dataBase.getDataBaseType();
     }
 
-    /**
-     * @param packageFullName :sql脚本所在都包，例如com.xx.yy
-     * @param sqlFileName     ：sql脚本的文件名，例如 db.sql
-     * @param throwWarning    脚本执行时如果出现warning，是否退出并回滚
-     * @param delimiters     脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
-     * @return 执行成功的结果 ，否则抛出异常
-     * @throws DbException
-     */
-    @Override
-    public String exeScript(String packageFullName, String sqlFileName, boolean throwWarning,String delimiters) throws DbException {
 
-        packageFullName = packageFullName.replace(".", "/");
-        String source = "/" + packageFullName + "/" + sqlFileName;
-        InputStream in = this.getClass().getResourceAsStream(source);
-        BufferedReader bufReader = null;
+    @Override
+    public String exeScriptInDir(String dirFilePath, String sqlFileName,
+                            boolean throwWarning,String delimiters,String encoding) throws DbException {
+
         try {
-            bufReader = new BufferedReader(new InputStreamReader(in, "utf-8"));
-            Map<String, Object> args = new HashMap<>();
-            ScriptOption scriptOption = new ScriptOption();
-            scriptOption.setSource(source);
-            scriptOption.setFromMDMethod(false);
-            args.put(ScriptOption.class.getName(), scriptOption);
-            return this.dataBase.exeScript(bufReader, throwWarning, delimiters,args);
+            File f = new File(dirFilePath,sqlFileName);
+            String source = f.toURI().toURL().toString();
+            Resource resource=getResource(source);
+            return exeScript(resource.getInputStream(),source,throwWarning,delimiters,encoding);
+        } catch (Exception e) {
+            if (e instanceof DbException) {
+                throw (DbException) e;
+            }
+            throw new DbException(e);
+        }
+    }
+    private Resource getResource(String source)throws Exception{
+        Resource[] rs= Path.getResourcesLikeAntPathMatch(source);
+        if(rs==null || rs.length==0 ){
+            throw new DbException("无法找到"+source+"文件!");
+        }else{
+            if(rs.length==1){
+                if(!rs[0].exists()){
+                    throw new DbException("无法找到"+source+"文件!");
+                }
+            }else{
+                String str="";
+                for(int i=0;i<rs.length; i++) {
+                    if(i==0){
+                        str=rs[i].getURL().toString();
+                        continue;
+                    }
+                    str=str+";"+ rs[i].getURL().toString();
+                }
+                throw new DbException("" + source + "存在多个文件!【"+str+"]");
+            }
+        }
+        return rs[0];
+    }
+
+    @Override
+    public String exeScript(String packageFullName, String sqlFileName,
+                            boolean throwWarning,String delimiters,String encoding) throws DbException {
+        try {
+            packageFullName = packageFullName.replace(".", "/");
+            String source = "classpath*:" + packageFullName + "/" + sqlFileName;
+            Resource resource=this.getResource(source);
+            return exeScript(resource.getInputStream(),source,throwWarning,delimiters,encoding);
         } catch (Exception e) {
             if (e instanceof DbException) {
                 throw (DbException) e;
@@ -78,7 +103,26 @@ public class MDataBaseImpl implements MDataBase {
 
     }
 
-
+   private String exeScript(InputStream in,String source, boolean throwWarning,String delimiters,String encoding){
+       BufferedReader bufReader = null;
+       try {
+           if(encoding==null || encoding.isEmpty()){
+               encoding="utf-8";
+           }
+           bufReader = new BufferedReader(new InputStreamReader(in, encoding));
+           Map<String, Object> args = new HashMap<>();
+           ScriptOption scriptOption = new ScriptOption();
+           scriptOption.setSource(source);
+           scriptOption.setFromMDMethod(false);
+           args.put(ScriptOption.class.getName(), scriptOption);
+           return this.dataBase.exeScript(bufReader, throwWarning, delimiters,args);
+       } catch (Exception e) {
+           if (e instanceof DbException) {
+               throw (DbException) e;
+           }
+           throw new DbException(e);
+       }
+   }
     @Override
     public String exeScript(String mdFullMethodName,boolean throwWarning, String delimiters, Map<String, Object> args) throws DbException {
         String[] strs = mdFullMethodName.split(":");
@@ -210,16 +254,7 @@ public class MDataBaseImpl implements MDataBase {
 
     }
 
-    /**
-     * 分页查询，返回的一页结果为Map列表
-     *
-     * @param mdFullMethodName 在md文件里定位sql查询语句的方法名，格式为： {@code com.github.ulwx.database.test.SysRightDao.md:getDataCount}，
-     *                         其中 com.github.ulwx.database.test.SysRightDao.md为包路径名称定位到com/ulwx/database/test/SysRightDao.md文件，
-     *                         冒号（:）后面的getDataCount为方法名，此方法名称下方为sql模板语句
-     * @param args             参数
-     * @return
-     * @throws DbException
-     */
+
     @Override
     public List<Map<String, Object>> queryMap(String mdFullMethodName, Map<String, Object> args) throws DbException {
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
@@ -241,13 +276,7 @@ public class MDataBaseImpl implements MDataBase {
         return this.dataBase.update(nsql.getExeSql(), nsql.getArgs());
     }
 
-    /**
-     * 根据type指定的接口生成动态代理。type接口里的方法映射到名称相同的md方法
-     *
-     * @param type 指定抽象接口，从而生成代理对象
-     * @param <T>
-     * @return 返回继承type接口的代理对象
-     */
+
     @Override
     public <T> T getMapper(Class<T> type) throws DbException {
         return MapperFactory.getMapper(type, this);
@@ -280,6 +309,7 @@ public class MDataBaseImpl implements MDataBase {
 
     @Override
     public int insert(String mdFullMethodName, Map<String, Object> args) throws DbException {
+
         NSQL nsql = NSQL.getNSQL(mdFullMethodName, args);
         return this.dataBase.insert(nsql.getExeSql(), nsql.getArgs());
     }
@@ -367,13 +397,6 @@ public class MDataBaseImpl implements MDataBase {
     }
 
 
-    /**
-     * 返回当前连接，如果force=true，若当前没有连接，则新生成一个连接；force=false，若连接
-     * 不存在或已经关闭则会返回null。
-     *
-     * @param force
-     * @return
-     */
     @Override
     public Connection getConnection(boolean force) {
         return this.dataBase.getConnection(force);
@@ -416,38 +439,18 @@ public class MDataBaseImpl implements MDataBase {
     }
 
 
-    /**
-     * 设置是否为事务操作，false表明为事务操作（事务分为常规事务和分布式事务），事务操作即多个语句功能一个数据库连接。通过setAutoCommit()方法
-     * 可以设置是否为事务操作，如果为事物操作，那么DataBaseMd里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
-     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
-     *
-     * @throws DbException
-     */
     @Override
     public void setAutoCommit(boolean b) throws DbException {
         this.dataBase.setAutoCommit(b);
     }
 
 
-    /**
-     * 返回是否为事务操作，false表明为事务操作，事务操作即多个语句功能一个数据库连接。通过setAutoCommit()方法
-     * 可以设置是否为事务操作，如果为事物操作，那么DataBase里所有默认自动关闭底层数据库连接的方法，都不会自动关闭
-     * 底层数据库连接，同一个事务里的所有方法共享一个数据库连接。用户必须手动通过close()方法关闭数据库连接
-     *
-     * @return
-     * @throws DbException
-     */
     @Override
     public boolean getAutoCommit() throws DbException {
         return this.dataBase.getAutoCommit();
     }
 
 
-    /**
-     * 用于事务性操作的回滚，如果事务为分布式事务，则为空操作。
-     *
-     * @throws DbException
-     */
     @Override
     public void rollback() throws DbException {
         this.dataBase.rollback();
@@ -458,12 +461,7 @@ public class MDataBaseImpl implements MDataBase {
         return this.dataBase.getSavepoint();
     }
 
-    /**
-     * 设置事务保存点，rollbackToSavepoint()方法会回滚到某个保存点，用于事务的局部回滚
-     *
-     * @param savepointName 保存点
-     * @throws DbException
-     */
+
     @Override
     public void setSavepoint(String savepointName) throws DbException {
         this.dataBase.setSavepoint(savepointName);
@@ -474,43 +472,26 @@ public class MDataBaseImpl implements MDataBase {
         this.dataBase.releaseSavepoint(savepointName);
     }
 
-    /**
-     * @param savepointName
-     * @throws DbException
-     */
     @Override
     public void rollbackToSavepoint(String savepointName) throws DbException {
         this.dataBase.rollbackToSavepoint(savepointName);
     }
 
 
-    /**
-     * 判断资源和底层数据库连接是否关闭
-     *
-     * @return
-     * @throws DbException
-     */
+
     @Override
     public boolean isColsed() throws DbException {
         return this.dataBase.isColsed();
     }
 
 
-    /**
-     * 事务性操作的事务的提交，当 {@link #setAutoCommit(boolean)}设为false，
-     * 会用到此方法，一般对于事务性操作会用到，如果 事务为分布式事务，则为空操作。
-     *
-     * @throws DbException
-     */
+
     @Override
     public void commit() throws DbException {
         this.dataBase.commit();
     }
 
 
-    /**
-     * 关闭数据库连接，释放底层占用资源
-     */
     @Override
     public void close() {
         this.dataBase.close();

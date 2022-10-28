@@ -107,6 +107,21 @@ SET
 `class_hours` = #{classHours},
 `creatime` = #{creatime} WHERE `name` = #{name}
 
+
+testInsertWithMdReturnKey
+====
+INSERT INTO course (
+name,
+class_hours,
+creatime
+)
+VALUES
+(
+#{name},
+#{classHours},
+#{creatime}
+)
+
 testDeleteWithMd
 ====
 DELETE FROM

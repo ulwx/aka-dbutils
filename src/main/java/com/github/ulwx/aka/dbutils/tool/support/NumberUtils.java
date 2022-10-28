@@ -372,7 +372,6 @@ public class NumberUtils {
 
     public static boolean isNumber(Object value) {
         if (value == null) return true;
-
         if (value instanceof Number) {
             return true;
         } else {

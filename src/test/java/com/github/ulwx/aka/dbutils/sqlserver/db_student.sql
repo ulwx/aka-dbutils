@@ -26,7 +26,7 @@ GO
 CREATE TABLE [dbo].[course] (
   [id] int  IDENTITY(1,1) NOT NULL,
   [name] nvarchar(20) COLLATE Chinese_PRC_CI_AS  NULL,
-  [class_hours] int  NOT NULL,
+  [class_hours] int  NULL,
   [teacher_id] int  NULL,
   [creatime] datetime2(7)  NULL
 )
@@ -83,7 +83,7 @@ GO
 SET IDENTITY_INSERT [dbo].[course] ON
 GO
 
-INSERT INTO [dbo].[course] ([id], [name], [class_hours], [teacher_id], [creatime]) VALUES (N'1', N'abcd1', N'11', N'1', N'2021-03-15 22:31:48.0000000')
+INSERT INTO [dbo].[course] ([id], [name], [class_hours], [teacher_id], [creatime]) VALUES (N'1', N'course1', N'11', N'1', N'2021-03-15 22:31:48.0000000')
 GO
 
 INSERT INTO [dbo].[course] ([id], [name], [class_hours], [teacher_id], [creatime]) VALUES (N'2', N'course2', N'12', N'2', N'2021-03-15 22:31:48.0000000')

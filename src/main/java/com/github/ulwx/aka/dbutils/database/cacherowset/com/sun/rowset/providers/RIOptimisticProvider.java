@@ -8,8 +8,6 @@ import com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.internal.
 
 import javax.sql.RowSetReader;
 import javax.sql.RowSetWriter;
-import javax.sql.rowset.spi.SyncFactory;
-import javax.sql.rowset.spi.SyncFactoryException;
 import javax.sql.rowset.spi.SyncProvider;
 import javax.sql.rowset.spi.SyncProviderException;
 import java.io.IOException;

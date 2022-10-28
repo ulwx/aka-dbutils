@@ -1,5 +1,6 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.parameter.IDGeneratorParmeter;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 
 public class MDMethods {
@@ -104,10 +105,18 @@ public class MDMethods {
 
     public static class InsertOptions {
         public static enum ReturnFlag {
-            AutoKey, UpdatedNum
+            AutoID, UpdatedNum
+        }
+        private IDGeneratorParmeter idGeneratorParmeter;
+        private ReturnFlag returnFlag = ReturnFlag.UpdatedNum;
+
+        public IDGeneratorParmeter getIdGeneratorParmeter() {
+            return idGeneratorParmeter;
         }
 
-        private ReturnFlag returnFlag = ReturnFlag.UpdatedNum;
+        public void setIdGeneratorParmeter(IDGeneratorParmeter idGeneratorParmeter) {
+            this.idGeneratorParmeter = idGeneratorParmeter;
+        }
 
         public ReturnFlag getReturnFlag() {
             return returnFlag;

@@ -24,7 +24,7 @@ public class PropertyUtil {
             try {
                 PropertyUtil.setProperty(toBean, key, val);
             } catch (Exception e) {
-                log.error("", e);
+                throw new IllegalArgumentException(e);
             }
         }
 
@@ -41,6 +41,13 @@ public class PropertyUtil {
                 if (method.getName().startsWith("set")) {
                     if (method.getParameterTypes().length == 1) {
                         if (method.getName().compareToIgnoreCase("set" + name) == 0) {
+                            if(value!=null){
+                                if(!method.getParameterTypes()[0].isAssignableFrom(value.getClass())){
+                                    if(NumberUtils.isNumber(value)){
+                                        value=NumberUtils.convertNumberToTargetClass((Number)value,method.getParameterTypes()[0]);
+                                    }
+                                }
+                            }
                             method.invoke(bean, value);
                         }
                     }
@@ -48,7 +55,7 @@ public class PropertyUtil {
 
             }
         } catch (Exception e) {
-
+            throw new IllegalArgumentException(e);
         }
 
     }
@@ -79,7 +86,7 @@ public class PropertyUtil {
             }
 
         } catch (Exception e) {
-            log.error("", e);
+            throw new IllegalArgumentException(e);
         }
         return null;
 
@@ -109,7 +116,7 @@ public class PropertyUtil {
             }
 
         } catch (Exception e) {
-            log.error("", e);
+            throw new IllegalArgumentException(e);
         }
         return null;
 
@@ -117,19 +124,19 @@ public class PropertyUtil {
 
     public static void setSimpleProperty(Object bean, String name, Object value) {
         setProperty(bean, name, value);
-
     }
 
     /**
-     * 对javaben进行反射，变成一个Map，通过get方法识别属性
-     *
-     * @param bean 反射的类
-     * @param t    需要反射的类
+     * 对bean进行反射，变成一个Map，通过get方法识别属性
+     * @param bean  反射的对象
+     * @param t    实际需要反射的类，bean存在继承的情况，t可以指定继承层级里某个层级类，提供这个层级类的反射
      * @return 属性对应的类型和值的map
      */
     @SuppressWarnings("rawtypes")
-    public static Map<String, TResult2<Class, Object>> describeForTypes(Object bean, Class t) throws Exception {
-        Map<String, TResult2<Class, Object>> map = new TreeMap<>();
+    public static Map<String, TResult2<Method, Object>> describeForTypes(Object bean, Class t) throws Exception {
+        Map<String, TResult2<Method, Object>> map = new TreeMap<>();
+        if(bean==null) return map;
+
         Method[] methods = t.getMethods();
         for (Method method : methods) {
             try {
@@ -148,8 +155,9 @@ public class PropertyUtil {
                 } else {
                     continue;
                 }
-                Object val = bean.getClass().getMethod(method.getName()).invoke(bean);
-                TResult2<Class, Object> tr = new TResult2<Class, Object>(returnType, val);
+                Method beanMethod= bean.getClass().getMethod(method.getName());
+                Object val = beanMethod.invoke(bean);
+                TResult2<Method, Object> tr = new TResult2<Method, Object>(beanMethod, val);
                 map.put(key, tr);
             } catch (Exception e) {
                 throw e;

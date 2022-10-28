@@ -5,7 +5,7 @@ public class TDouble implements TType {
     private Double value;
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Double.class;
     }
 

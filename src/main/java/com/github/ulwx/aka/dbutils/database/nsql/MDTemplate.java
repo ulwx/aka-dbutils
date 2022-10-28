@@ -127,8 +127,9 @@ public final class MDTemplate {
         }
     }
 
-    public static void handerString(StringBuilder sb, String handLine, TInteger tabNum, String packageName,
-                                    String className) {
+    public static void handerSQL(StringBuilder sb, String handLine, TInteger tabNum, String packageName,
+                                 String className) {
+        handLine=handLine.replace("\"","\\\"");
         // 判断handLine里是否有${}，表名是java表达式
         handLine = StringUtils.replaceAll(handLine, "\\$\\{(" + javaExpressReg + ")}", 1, new GroupHandler() {
             @Override
@@ -182,11 +183,10 @@ public final class MDTemplate {
                 lineNum++;
                 if (lineNum == 2) {
                     if (tempStr.startsWith("===") && tempStr.endsWith("===")) {
-                        //
+                        //正常
                     } else {
                         return null;
                     }
-                    ;
                 }
                 if (StringUtils.isEmpty(tempStr)) {
                     continue;
@@ -198,7 +198,7 @@ public final class MDTemplate {
                     if (StringUtils.hasText(curMethodName)) {
                         handerJava(sb, handLine, tabNum);
                     }
-                } else if (handLine.startsWith("===")) {// ===
+                } else if (handLine.startsWith("===") && handLine.endsWith("===")) {// ===
                     preMethodName = curMethodName;
                     curMethodName = preHandLine;
                     if (StringUtils.hasText(curMethodName)) {
@@ -209,13 +209,13 @@ public final class MDTemplate {
                     } else {
                         throw new DbException("===上没有方法名");
                     }
+
                 } else {// sql
                     if (StringUtils.hasText(curMethodName)) {// 已经找到了方法名称
                         String str = reader.readLine(); // 提前读下一行
                         if (str != null) {
                             str = str.trim();
-
-                            if (str.startsWith("===")) {// 表明handLine为方法名
+                            if (str.startsWith("===") && str.endsWith("===")) {// 表明handLine为方法名
                                 preMethodName = curMethodName;
                                 curMethodName = handLine;
                                 if (StringUtils.hasText(curMethodName)) {
@@ -228,24 +228,21 @@ public final class MDTemplate {
                                 }
 
                             } else if (str.startsWith("@")) {// handerString(sb, handLine, tabNum);
-
-                                handerString(sb, handLine, tabNum, packageName, className);
-
+                                handerSQL(sb, handLine, tabNum, packageName, className);
                                 if (StringUtils.hasText(curMethodName)) {
                                     handerJava(sb, str, tabNum);
                                 }
 
                             } else {// sql
-                                handerString(sb, handLine, tabNum, packageName, className);
-
+                                handerSQL(sb, handLine, tabNum, packageName, className);
                                 if (StringUtils.hasText(str)) {
-                                    handerString(sb, str, tabNum, packageName, className);
+                                    handerSQL(sb, str, tabNum, packageName, className);
                                 } else {
                                     continue;
                                 }
                             }
                         } else {
-                            handerString(sb, handLine, tabNum, packageName, className);
+                            handerSQL(sb, handLine, tabNum, packageName, className);
                             break;
                         }
                     }
@@ -276,8 +273,9 @@ public final class MDTemplate {
         String filePahtMd = packageName.replace(".", "/");
         filePahtMd = filePahtMd + "/" + StringUtils.trimTailString(className, "Md") + ".md";
         // 查找对应的sql语句
-        if (DbContext.permitDebugLog())
+        if (DbContext.permitDebugLog()) {
             log.debug("convert to java source from  md-file-path:" + filePahtMd + " ");
+        }
         InputStream in = MDTemplate.class.getResourceAsStream("/" + filePahtMd);
 
         BufferedReader bufReader = null;
@@ -330,7 +328,7 @@ public final class MDTemplate {
         Method method = clazz.getMethod(methodName, Map.class);
         String resultStr = (String) method.invoke(null, args);
         if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-            log.debug("mdmethod call and return sql=" + resultStr);
+            log.debug("mdmethod call and return sql: " + resultStr);
         }
         return resultStr;
     }

@@ -96,7 +96,7 @@ public class AdvanceUseDao {
             sql.append(sqltxt);
         });
         TInteger ret = MDbUtils.queryOne(DbPoolName, TInteger.class, MD.md(), map);
-        Assert.equal(sql.toString(), "SELECT COUNT(1) AS `value` FROM student WHERE (1=1) AND `name` ='add''b' AND `name` = 'add''b' AND `name` in('abc','efg','bed') AND `name` in( 'abc','efg','bed' ) AND `name` like '%add''b%' AND `name` like 'add''b%' AND `name` like 'add''b%' AND `name`=3  and id in (1,2,3 )  and id in (1,2,3 )");
+        Assert.equal(sql.toString(), "SELECT COUNT(1) AS `value` FROM student WHERE (1=1) AND `name` ='add''b' AND `name` = 'add''b' AND `name` in('abc','efg','bed') AND `name` in( 'abc','efg','bed' ) AND `name` like '%add''b%' AND `name` like 'add''b%' AND `name` like 'add''b%' AND `name`='3'  and id in (1,2,3 )  and id in (1,2,3 )");
 
     }
 

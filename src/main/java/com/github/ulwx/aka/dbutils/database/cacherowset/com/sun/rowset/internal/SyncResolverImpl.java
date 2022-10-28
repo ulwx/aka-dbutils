@@ -5,11 +5,13 @@ package com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.internal
 import com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.CachedRowSetImpl;
 import com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.JdbcRowSetResourceBundle;
 
-import javax.sql.*;
+import javax.sql.RowSet;
+import javax.sql.RowSetEvent;
+import javax.sql.RowSetInternal;
+import javax.sql.RowSetMetaData;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetMetaDataImpl;
 import javax.sql.rowset.RowSetWarning;
-import javax.sql.rowset.spi.SyncFactory;
 import javax.sql.rowset.spi.SyncProvider;
 import javax.sql.rowset.spi.SyncProviderException;
 import javax.sql.rowset.spi.SyncResolver;
@@ -17,7 +19,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Map;
 
 
 public class SyncResolverImpl extends CachedRowSetImpl implements SyncResolver {

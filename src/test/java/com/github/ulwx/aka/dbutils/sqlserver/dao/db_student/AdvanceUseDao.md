@@ -44,14 +44,14 @@ AND [name] like #{lname%}
 /*${MyUser%} 含%则只适用于like方式，直接替换模式，非预编译模式*/ 
 AND [name] like ${lname%} 
 /* ${=java表达式}*/ 
-AND [name]=${="xxx".length()} 
+AND [name]='${="xxx".length()}' 
 @ int f=0; 
 /* java代码 */ 
 @System.out.println("lname="+$$.lname+",f="+f);
 /* 引用同md文件其它md方法 */ 
 ${&someSqlfragment}
 /* 引用其它md文件其它md方法  */ 
-${&com.github.ulwx.aka.dbutils.mysql.dao.db_student.AdvanceUseDao.md:someSqlfragment}
+${&com.github.ulwx.aka.dbutils.sqlserver.dao.db_student.AdvanceUseDao.md:someSqlfragment}
 
 
 

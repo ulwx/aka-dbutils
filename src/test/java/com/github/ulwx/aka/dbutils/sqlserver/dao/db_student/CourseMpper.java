@@ -5,6 +5,7 @@ import com.github.ulwx.aka.dbutils.database.DataBaseSet;
 import com.github.ulwx.aka.dbutils.database.MDMethods.InsertOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
 import com.github.ulwx.aka.dbutils.database.MDataBase;
+import com.github.ulwx.aka.dbutils.database.annotation.AkaParam;
 import com.github.ulwx.aka.dbutils.sqlserver.domain.db.db_student.Course;
 
 import java.math.BigInteger;
@@ -35,8 +36,7 @@ public abstract class CourseMpper extends AkaMapper {
 
     public abstract Integer getOneIntegerReturnNull(String name);
 
-    public abstract Course getOneCourse(Integer id, String name, Map<String, Object> ars, Course cs);
-
+    public abstract Course getOneCourse(Integer id, @AkaParam("name") String name, Map<String, Object> ars, Course cs);
     public abstract List<Course> getCoursesByIds(Integer[] ids, String name, Map<String, Object> ars, Course cs);
 
     public abstract List<Course> getCouseList(String name);

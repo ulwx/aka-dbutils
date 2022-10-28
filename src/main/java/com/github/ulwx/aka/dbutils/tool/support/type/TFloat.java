@@ -4,7 +4,7 @@ public class TFloat implements TType {
     private Float value;
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Float.class;
     }
 

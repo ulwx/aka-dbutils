@@ -6,7 +6,6 @@ import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
 import com.github.ulwx.aka.dbutils.mysql.domain.cus.One2ManyStudent;
 import com.github.ulwx.aka.dbutils.mysql.domain.cus.One2OneStudent;
-import com.github.ulwx.aka.dbutils.tool.support.type.TInteger;
 
 import java.util.List;
 import java.util.Map;

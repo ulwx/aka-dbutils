@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbpool-config>
+
+    <setting>
+        <!--
+         全局设置的数据库表名与javaBean类名的转换规则，有三种转换规则，分别如下：
+         underline_to_camel：  表示下划线转驼峰，
+         normal：  为数据库表名和javaBean类名一致
+         first_letter_upcase： 为数据库表名转为javaBean类名时第一个字母大写
+        -->
+        <table-name-rule>underline_to_camel</table-name-rule>
+        <!--
+        全局设置的表字段与javaBean属性名的转换规则，有两种转换规则，分别如下：
+         underline_to_camel：  下划线转驼峰
+         normal：   为数据库表名和javabean属性一致
+        -->
+        <table-colum-rule>underline_to_camel</table-colum-rule>
+    </setting>
+    <!--
+    每个<dbpool>元素配置对应一个数据库连接池
+    type属性：现在只能指定tomcatdbpool，表示是使用的tomcat jdbc数据库连接池
+    table-name-rule属性：指定本数据源对应数据库的表名到javaBean类名的转换规则，覆盖setting里的全局规则
+    table-colum-rule属性：指定本数据源对应数据库里表字段与javaBean属性名的转换规则，覆盖setting里的全局规则
+    driverClassName：数据库的驱动名称
+    url： 连接字符串
+    username：用户名
+    password：用户密码,如果encrypt=1,则password值是通过aes算法加密后的，既通过DBPoolFactory.aesEncrypt(dbpassword)加密得到
+    checkoutTimeout：当数据库满时，等待从连接池里取出connection的最长时间，毫秒为单位
+    maxIdleTime ：最长空闲时间，以秒为单位，多于连接池里可容纳的最小connection数（由minPoolSize指定）的连接如果超过此时间就会被释放
+    maxPoolSize ：连接池可容纳连接connection最大数量
+    minPoolSize： 连接池可容纳的的connection最小数量
+    idleConnectionTestPeriod: 每次检测空闲连接的时间间隔（秒），如果检测时发现某空闲连接超过最长空闲时间（maxIdleTime）则清除，但连接池里的连接数会
+    会保留到minPoolSize指定的数量。此参数以秒为单位。
+    maxStatements：缓存的statement数
+    encrypt : password属性是否加密，0：不加密 1：加密（采用的是aes加密，通过DBPoolFactory.aesEncrypt(dbpassword)加密)
+    -->
+    <dbpool name="db_student_product" type="tomcatdbpool" table-name-rule="underline_to_camel"
+            table-colum-rule="underline_to_camel">
+        <property name="driverClassName">oracle.jdbc.driver.OracleDriver</property>
+        <property name="url">jdbc:oracle:thin:@//192.168.137.200:1521/ORCL</property>
+        <property name="username">db_student</property>
+        <property name="password">123456</property>
+        <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
+        <property name="checkoutTimeout">60000</property>
+        <property name="idleConnectionTestPeriod">30</property>
+        <property name="maxIdleTime">60</property>
+        <property name="maxPoolSize">10</property>
+        <property name="minPoolSize">2</property>
+        <property name="maxStatements">20</property>
+    </dbpool>
+
+</dbpool-config>

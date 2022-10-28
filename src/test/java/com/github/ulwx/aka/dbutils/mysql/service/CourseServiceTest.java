@@ -75,11 +75,11 @@ public class CourseServiceTest {
             LocalDateTime localDateTime = LocalDateTime.parse("2021-03-18 22:31:40", CTime.DTF_YMD_HH_MM_SS);
             course.setCreatime(localDateTime);
             courseDao.testUpdateInTrans(mdb,course);
-            mdb.setSavepoint("123");
+            mdb.setSavepoint("a123");
             localDateTime = LocalDateTime.parse("2021-03-21 22:31:40", CTime.DTF_YMD_HH_MM_SS);
             course.setCreatime(localDateTime);
             courseDao.testUpdateInTrans(mdb,course);
-            mdb.rollbackToSavepoint("123");
+            mdb.rollbackToSavepoint("a123");
             mdb.commit();
         } catch (Exception e){
             mdb.rollback();
@@ -113,7 +113,7 @@ public class CourseServiceTest {
             LocalDateTime localDateTime = LocalDateTime.parse("2021-03-18 22:31:40", CTime.DTF_YMD_HH_MM_SS);
             course.setCreatime(localDateTime);
             courseDao.testUpdateInTrans(mdb,course);
-            mdb.setSavepoint("123");
+            mdb.setSavepoint("a123");
             localDateTime = LocalDateTime.parse("2021-03-21 22:31:40", CTime.DTF_YMD_HH_MM_SS);
             course.setCreatime(localDateTime);
             courseDao.testUpdateInTrans(mdb,course);
@@ -138,7 +138,9 @@ public class CourseServiceTest {
         TResult<DataBase> tDataBase=new TResult<>();
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
-            public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod, Object result, Exception exception, String debugSql) {
+            public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
+                                              Object result, Exception exception,
+                                              String debugSql,long exeTime) {
                 tDataBase.setValue(dataBase);
             }
         });
@@ -167,7 +169,7 @@ public class CourseServiceTest {
                                               Method interceptedMethod,
                                               Object result,
                                               Exception exception,
-                                              String debugSql) {
+                                              String debugSql,long exeTime) {
                 tDataBase.setValue(dataBase);
             }
         });
@@ -198,7 +200,8 @@ public class CourseServiceTest {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception,
+                                              String debugSql,long exeTime) {
                 tDataBase.setValue(dataBase);
             }
         });
@@ -234,7 +237,7 @@ public class CourseServiceTest {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                         Object result, Exception exception, String debugSql) {
+                         Object result, Exception exception, String debugSql,long exeTime) {
                 tDataBase.setValue(dataBase);
             }
         });
@@ -271,7 +274,8 @@ public class CourseServiceTest {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception,
+                                              String debugSql,long exeTime) {
                 tDataBase.setValue(dataBase);
             }
         });
@@ -309,7 +313,8 @@ public class CourseServiceTest {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception,
+                                              String debugSql,long exeTime) {
                 tDataBases.getValue().put(dataBase.getDbPoolName(),dataBase);
             }
         });
@@ -342,7 +347,8 @@ public class CourseServiceTest {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception,
+                                              String debugSql,long exeTime) {
                 tDataBases.getValue().put(dataBase.getDbPoolName(),dataBase);
             }
         });
@@ -370,7 +376,8 @@ public class CourseServiceTest {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception,
+                                              String debugSql,long exeTime) {
                 tDataBases.getValue().put(dataBase.getDbPoolName(),dataBase);
             }
         });

@@ -1,6 +1,6 @@
 package com.github.ulwx.aka.dbutils.database;
 
-import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
+import com.github.ulwx.aka.dbutils.database.sql.TypeMapSystem;
 
 import javax.sql.RowSet;
 import javax.sql.rowset.CachedRowSet;
@@ -94,32 +94,32 @@ public class DataBaseSet {
     }
 
     public LocalDate getLocalDate(String columnName) throws DbException {
-        return SqlUtils.sqlDateToLocalDate(getDate(columnName));
+        return TypeMapSystem.sqlDateToLocalDate(getDate(columnName));
 
     }
 
     public LocalDate getLocalDate(int columnIndex) throws DbException {
-        return SqlUtils.sqlDateToLocalDate(getDate(columnIndex));
+        return TypeMapSystem.sqlDateToLocalDate(getDate(columnIndex));
 
     }
 
     public LocalDateTime getLocalDateTime(String columnName) throws DbException {
-        return SqlUtils.sqlTimestampToLocalDateTime(getTimestamp(columnName));
+        return TypeMapSystem.sqlTimestampToLocalDateTime(getTimestamp(columnName));
 
     }
 
     public LocalDateTime getLocalDateTime(int columnIndex) throws DbException {
-        return SqlUtils.sqlTimestampToLocalDateTime(getTimestamp(columnIndex));
+        return TypeMapSystem.sqlTimestampToLocalDateTime(getTimestamp(columnIndex));
 
     }
 
     public LocalTime getLocalTime(String columnName) throws DbException {
-        return SqlUtils.sqlTimeToLocalTime(getTime(columnName));
+        return TypeMapSystem.sqlTimeToLocalTime(getTime(columnName));
 
     }
 
     public LocalTime getLocalTime(int columnIndex) throws DbException {
-        return SqlUtils.sqlTimeToLocalTime(getTime(columnIndex));
+        return TypeMapSystem.sqlTimeToLocalTime(getTime(columnIndex));
 
     }
 

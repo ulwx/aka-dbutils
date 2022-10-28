@@ -50,6 +50,7 @@ public class DialectPageSqlTemplate {
             case PostgreSQL94Dialect:
             case PostgreSQL95Dialect:
             case PostgreSQL9Dialect:
+            case PostgreSQL10Dialect:
             case PostgreSQLDialect:
             case PostgresPlusDialect:
             case SQLiteDialect:
@@ -181,6 +182,7 @@ public class DialectPageSqlTemplate {
             case PostgreSQL94Dialect:
             case PostgreSQL95Dialect:
             case PostgreSQL9Dialect:
+            case PostgreSQL10Dialect:
             case PostgreSQLDialect:
             case PostgresPlusDialect:
             case SQLiteDialect:

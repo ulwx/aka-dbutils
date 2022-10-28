@@ -6,11 +6,7 @@ import com.github.ulwx.aka.dbutils.tool.support.Assert;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 
 abstract class ResourceUtils {
 

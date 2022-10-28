@@ -50,6 +50,31 @@
         <property name="minPoolSize">2</property>
         <property name="maxStatements">20</property>
     </dbpool>
+
+    <dbpool name="db_teacher_slave1" type="tomcatdbpool">
+        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
+        <property name="url">jdbc:mysql://localhost:3306/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+        <property name="username">root</property>
+        <property name="password">123456</property>
+        <property name="checkoutTimeout">60000</property>
+        <property name="idleConnectionTestPeriod">60</property>
+        <property name="maxIdleTime">60</property>
+        <property name="maxPoolSize">10</property>
+        <property name="minPoolSize">2</property>
+        <property name="maxStatements">20</property>
+    </dbpool>
+    <dbpool name="db_teacher_slave2" type="tomcatdbpool">
+        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
+        <property name="url">jdbc:mysql://localhost:3306/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+        <property name="username">root</property>
+        <property name="password">123456</property>
+        <property name="checkoutTimeout">60000</property>
+        <property name="idleConnectionTestPeriod">60</property>
+        <property name="maxIdleTime">60</property>
+        <property name="maxPoolSize">10</property>
+        <property name="minPoolSize">2</property>
+        <property name="maxStatements">20</property>
+    </dbpool>
     <dbpool name="db_teacher" type="tomcatdbpool">
         <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
         <property name="url">jdbc:mysql://localhost:3306/db_teacher?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>

@@ -27,7 +27,7 @@ public class TSqlDate implements TType {
     }
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Date.class;
     }
 }

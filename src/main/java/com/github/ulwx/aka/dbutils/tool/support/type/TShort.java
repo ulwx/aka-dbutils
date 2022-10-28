@@ -5,7 +5,7 @@ public class TShort implements TType {
     private Short value;
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Short.class;
     }
 

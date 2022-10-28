@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
+import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.tool.support.deepequal.DeepEquals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,17 +50,9 @@ public class ObjectUtils {
         return DeepEquals.deepEquals(src, dest);
     }
 
-    public static Map<String, Object> fromJavaBeanToMap(Object obj) {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(moduleForMapper);
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-        @SuppressWarnings("unchecked")
-        Map<String, Object> fieldMap = mapper.convertValue(obj, Map.class);
-        return fieldMap;
-    }
 
-    public static Map<String, Object> getMapFromResultSet(ResultSet rs) {
+
+    public static Map<String, Object> getMapFromResultSet(ResultSet rs, DBMS dbms) {
 
         Map<String, Object> map = new HashMap<String, Object>();
         try {
@@ -68,27 +61,45 @@ public class ObjectUtils {
 
             for (int i = 0; i < rsMeta.getColumnCount(); i++) {
                 String columnName = rsMeta.getColumnLabel(i + 1);
-                // log.debug("columnName=" + columnName + ",val=" + rs.getObject(columnName));
-
-                map.put(columnName, rs.getObject(columnName));
+                if(dbms.isOracleFamily() && columnName.equalsIgnoreCase("ROWNUM_")){
+                    continue;
+                }
+                Object value=getValueFromResult(columnName,rs);
+                map.put(columnName, value);
             }
 
         } catch (Exception e) {
             // TODO Auto-generated catch block
             log.error("", e);
         }
+
         return map;
 
     }
+    public static Object getValueFromResult(String labelName, ResultSet rs) {
 
-    public static boolean isDateType(Class type) {
-        if (type == Date.class || type == LocalDate.class || type == LocalDateTime.class ||
-                type == LocalTime.class) {
-            return true;
-        } else {
-            return false;
+        Object value = null;
+        try {
+            value=rs.getObject(labelName);
+            if(value==null) return null;
+
+            Class t=value.getClass();
+            if (t == java.sql.Date.class) {
+                value = CTime.sqlDateToLocalDate((java.sql.Date) value);
+            } else if (t == java.sql.Timestamp.class) {
+                value = CTime.sqlTimestampToLocalDateTime((java.sql.Timestamp) value);
+            } else if (t == java.sql.Time.class) {
+                value = CTime.sqlTimeToLocalTime((java.sql.Time) value);
+            }   else {
+
+            }
+
+        } catch (Exception ex) {
+            log.error("", ex);
         }
+        return value;
     }
+
 
     public static Object[] toObjectArray(Object source) {
         if (source instanceof Object[]) {
@@ -112,7 +123,22 @@ public class ObjectUtils {
         }
         return newArray;
     }
+    public static Map<String, Object> fromJavaBeanToMap2(Object obj) {
+        if(obj==null) return null;
+        Map<String, Object> map = new HashMap<String, Object>();
 
+        Class cls = obj.getClass();
+        Field[] fields = cls.getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            try {
+                map.put(field.getName(), field.get(obj));
+            } catch (Exception e) {
+                log.error("", e);
+            }
+        }
+        return map;
+    }
     public static String toJavascriptString(Object obj) throws Exception {
 
         String resultStr = "";

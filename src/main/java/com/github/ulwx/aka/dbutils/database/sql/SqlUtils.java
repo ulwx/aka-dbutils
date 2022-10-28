@@ -1,317 +1,47 @@
 package com.github.ulwx.aka.dbutils.database.sql;
 
 import com.github.ulwx.aka.dbutils.database.*;
+import com.github.ulwx.aka.dbutils.database.annotation.AkaColumn;
+import com.github.ulwx.aka.dbutils.database.annotation.AkaParam;
 import com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.CachedRowSetImpl;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
-import com.github.ulwx.aka.dbutils.database.dialect.DBType;
+import com.github.ulwx.aka.dbutils.database.parameter.AkaParamter;
+import com.github.ulwx.aka.dbutils.database.parameter.IDGeneratorParmeter;
 import com.github.ulwx.aka.dbutils.database.utils.DbConst;
 import com.github.ulwx.aka.dbutils.database.utils.Table2JavaNameUtils;
 import com.github.ulwx.aka.dbutils.tool.support.*;
-import com.github.ulwx.aka.dbutils.tool.support.type.*;
+import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
+import com.github.ulwx.aka.dbutils.tool.support.type.TString;
+import com.github.ulwx.aka.dbutils.tool.support.type.TType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.rowset.CachedRowSet;
+import java.lang.reflect.Method;
 import java.sql.*;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.*;
 
 
-class Column {
-    public String getTable_cat() {
-        return table_cat;
-    }
-
-    public void setTable_cat(String table_cat) {
-        this.table_cat = table_cat;
-    }
-
-    public String getTable_schem() {
-        return table_schem;
-    }
-
-    public void setTable_schem(String table_schem) {
-        this.table_schem = table_schem;
-    }
-
-    public String getTable_name() {
-        return table_name;
-    }
-
-    public void setTable_name(String table_name) {
-        this.table_name = table_name;
-    }
-
-    public String getColumn_name() {
-        return column_name;
-    }
-
-    public void setColumn_name(String column_name) {
-        this.column_name = column_name;
-    }
-
-    public int getData_type() {
-        return data_type;
-    }
-
-    public void setData_type(int data_type) {
-        this.data_type = data_type;
-    }
-
-    public String getType_name() {
-        return type_name;
-    }
-
-    public void setType_name(String type_name) {
-        this.type_name = type_name;
-    }
-
-    public int getColumn_size() {
-        return column_size;
-    }
-
-    public void setColumn_size(int column_size) {
-        this.column_size = column_size;
-    }
-
-    public int getNum_prec_radix() {
-        return num_prec_radix;
-    }
-
-    public void setNum_prec_radix(int num_prec_radix) {
-        this.num_prec_radix = num_prec_radix;
-    }
-
-    public String getRemarks() {
-        return remarks;
-    }
-
-    public void setRemarks(String remarks) {
-        this.remarks = remarks;
-    }
-
-    public String getIs_nullable() {
-        return is_nullable;
-    }
-
-    public void setIs_nullable(String is_nullable) {
-        this.is_nullable = is_nullable;
-    }
-
-    public String getIs_autoincrement() {
-        return is_autoincrement;
-    }
-
-    public void setIs_autoincrement(String is_autoincrement) {
-        this.is_autoincrement = is_autoincrement;
-    }
-
-    private String table_cat = "";
-    private String table_schem = "";
-    private String table_name = "";
-    private String column_name = "";
-    private int data_type;// SQL type from java.sql.Types
-    private String type_name;
-    private int column_size;
-    private int num_prec_radix;
-    private String remarks;
-    private String is_nullable;// "YES","NO" or ""
-    private String is_autoincrement;// "YES","NO" or ""
-}
-
 public class SqlUtils {
     private static Logger log = LoggerFactory.getLogger(SqlUtils.class);
-    public static Set<Class> simpleType = new HashSet<Class>();
-
-    public static Set<Class> sqlType = new HashSet<Class>();
-    public static Map<Integer, Class> sql2javaType = new HashMap<Integer, Class>();
-
-    public static Map<DBType, String> dbEscapeLefCharMap = new HashMap<DBType, String>();
-
-    static {
-        dbEscapeLefCharMap.put(DBType.MYSQL, "`");
-        dbEscapeLefCharMap.put(DBType.MS_SQL_SERVER, "[");
-        dbEscapeLefCharMap.put(DBType.ORACLE, "\"");
-    }
 
     public static String dbEscapeLef(DBMS dbms) {
-        String chars = dbEscapeLefCharMap.get(dbms.getDbType());
-        if (chars != null) {
-            return chars;
-        } else {
-            return "";
-        }
-    }
-
-    public static Map<DBType, String> dbEscapeRightCharMap = new HashMap<DBType, String>();
-
-    static {
-        dbEscapeRightCharMap.put(DBType.MYSQL, "`");
-        dbEscapeRightCharMap.put(DBType.MS_SQL_SERVER, "]");
-        dbEscapeRightCharMap.put(DBType.ORACLE, "\"");
+        return dbms.escapeLeft();
     }
 
     public static String dbEscapeRight(DBMS dbms) {
-        String chars = dbEscapeRightCharMap.get(dbms.getDbType());
-        if (chars != null) {
-            return chars;
-        } else {
-            return "";
-        }
-    }
-
-    public static Map<Class, Integer> javaType2sql = new HashMap<Class, Integer>();
-
-    static {
-        simpleType.add(boolean.class);
-        simpleType.add(Boolean.class);
-        simpleType.add(String.class);
-        simpleType.add(char.class);
-        simpleType.add(Character.class);
-        simpleType.add(byte.class);
-        simpleType.add(Byte.class);
-        simpleType.add(Integer.class);
-        simpleType.add(int.class);
-        simpleType.add(Long.class);
-        simpleType.add(long.class);
-        simpleType.add(Short.class);
-        simpleType.add(short.class);
-        simpleType.add(Float.class);
-        simpleType.add(float.class);
-        simpleType.add(Double.class);
-        simpleType.add(double.class);
-        simpleType.add(Date.class);
-        simpleType.add(LocalDate.class);
-        simpleType.add(LocalDateTime.class);
-        simpleType.add(LocalTime.class);//java.sql.Date
-        simpleType.add(java.math.BigDecimal.class);
-        simpleType.add(java.math.BigInteger.class);
-
-
-        sqlType.add(java.sql.Date.class);
-        sqlType.add(Time.class);
-        sqlType.add(Timestamp.class);//java.sql.Date
-        sqlType.add(Blob.class);
-        sqlType.add(Clob.class);
-
-        sqlType.add(Struct.class);
-        sqlType.add(Array.class);
-        sqlType.add(NClob.class);
-        sqlType.add(Struct.class);
-
-        simpleType.addAll(sqlType);
-
-        // ////////////////
-        sql2javaType.put(Types.BIGINT, Long.class);
-
-        sql2javaType.put(Types.INTEGER, Integer.class);
-        sql2javaType.put(Types.ARRAY, Array.class);
-        sql2javaType.put(Types.BLOB, Blob.class);
-        sql2javaType.put(Types.CLOB, Clob.class);
-        sql2javaType.put(Types.BOOLEAN, Boolean.class);
-        sql2javaType.put(Types.CHAR, String.class);
-        sql2javaType.put(Types.DATE, LocalDate.class);
-        sql2javaType.put(Types.DECIMAL, Double.class);
-        sql2javaType.put(Types.SMALLINT, Integer.class);
-        sql2javaType.put(Types.TINYINT, Integer.class);
-        sql2javaType.put(Types.TIME, LocalTime.class);
-        sql2javaType.put(Types.TIMESTAMP, LocalDateTime.class);
-        sql2javaType.put(Types.VARCHAR, String.class);
-        sql2javaType.put(Types.NVARCHAR, String.class);
-        sql2javaType.put(Types.LONGNVARCHAR, String.class);
-        sql2javaType.put(Types.NUMERIC, Double.class);
-
-        sql2javaType.put(Types.STRUCT, Struct.class);
-        sql2javaType.put(Types.REAL, Float.class);
-        sql2javaType.put(Types.LONGVARCHAR, String.class);
-        sql2javaType.put(Types.FLOAT, Float.class);
-        sql2javaType.put(Types.DOUBLE, Double.class);
-        sql2javaType.put(Types.BINARY, byte[].class);
-        sql2javaType.put(Types.BIT, Integer.class);
-        sql2javaType.put(Types.REF, Object.class);
-        sql2javaType.put(Types.VARBINARY, byte[].class);
-        sql2javaType.put(Types.LONGVARBINARY, byte[].class);
-
-
-        // //////
-        javaType2sql.put(Long.class, Types.BIGINT);
-        javaType2sql.put(long.class, Types.BIGINT);
-        javaType2sql.put(Integer.class, Types.INTEGER);
-        javaType2sql.put(int.class, Types.INTEGER);
-        javaType2sql.put(Array.class, Types.ARRAY);
-        javaType2sql.put(Blob.class, Types.BLOB);
-        javaType2sql.put(Clob.class, Types.CLOB);
-        javaType2sql.put(Boolean.class, Types.BOOLEAN);
-        javaType2sql.put(boolean.class, Types.BOOLEAN);
-        javaType2sql.put(Date.class, Types.TIMESTAMP);
-
-        javaType2sql.put(LocalDateTime.class, Types.TIMESTAMP);
-        javaType2sql.put(LocalTime.class, Types.TIME);
-        javaType2sql.put(LocalDate.class, Types.DATE);
-
-        javaType2sql.put(Double.class, Types.DOUBLE);//java.math.BigDecimal.class
-        javaType2sql.put(double.class, Types.DOUBLE);
-        javaType2sql.put(java.math.BigDecimal.class, Types.DOUBLE);
-        javaType2sql.put(java.math.BigInteger.class, Types.BIGINT);
-        javaType2sql.put(String.class, Types.VARCHAR);
-        javaType2sql.put(Struct.class, Types.STRUCT);
-        javaType2sql.put(Float.class, Types.FLOAT);
-        javaType2sql.put(float.class, Types.FLOAT);
-        javaType2sql.put(byte[].class, Types.BINARY);
-        javaType2sql.put((Class) DataBaseSet.class, Types.REF);
-        javaType2sql.put(ResultSet.class, Types.REF);
-
-
-    }
-
-
-    public static Date sqlTimestampTojavaDate(Timestamp value) {
-        Timestamp time = value;
-        Date dateTime = new Date();
-        dateTime.setTime(time.getTime());
-        return dateTime;
-
-    }
-
-    public static Date sqlDateTojavaDate(java.sql.Date value) {
-        Date dateTime = new Date();
-        dateTime.setTime(value.getTime());
-        return dateTime;
-
-    }
-
-    public static LocalDate sqlDateToLocalDate(java.sql.Date value) {
-        Instant instant = value.toInstant();
-        ZoneId zoneId = ZoneId.systemDefault();
-        LocalDate localDate = instant.atZone(zoneId).toLocalDate();
-        return localDate;
-    }
-
-    public static LocalDateTime sqlTimestampToLocalDateTime(java.sql.Timestamp value) {
-        Instant instant = value.toInstant();
-        ZoneId zoneId = ZoneId.systemDefault();
-        LocalDateTime localDateTime = instant.atZone(zoneId).toLocalDateTime();
-        return localDateTime;
-    }
-
-    public static LocalTime sqlTimeToLocalTime(java.sql.Time value) {
-        Instant instant = value.toInstant();
-        ZoneId zoneId = ZoneId.systemDefault();
-        LocalTime localTime = instant.atZone(zoneId).toLocalTime();
-        return localTime;
-    }
-
-    public static boolean checkedSimpleType(Class t) {
-        if (simpleType.contains(t)) {
-            return true;
-        }
-        return false;
+        return dbms.escapeRight();
     }
 
     private static String exportJavaBean(String dbpool, String tableName, String tableRemark,
-                                         Map map, String toPackage, boolean propertyLowcaseFirstChar, TString tclassName) {
-        Set set = map.keySet();
+                                         Map<String, Column> columMap,
+                                         String toPackage, boolean propertyLowcaseFirstChar,
+                                         TString tclassName) {
+        Set set = columMap.keySet();
         Iterator i = set.iterator();
         StringBuilder sb = new StringBuilder();
         StringBuilder sm = new StringBuilder();
@@ -322,8 +52,9 @@ public class SqlUtils {
         sb.append("import java.util.*;\n");
         sb.append("import java.sql.*;\n");
         sb.append("import java.time.*;\n");
-        sb.append("import " + MdbOptions.class.getName() + ";\n");
+        // sb.append("import " + MdbOptions.class.getName() + ";\n");
         sb.append("import " + ObjectUtils.class.getName() + ";\n");
+        sb.append("import " + AkaColumn.class.getName() + ";\n");
         sb.append("\n/*********************************************\n");
         sb.append(tableRemark);
         sb.append("\n***********************************************/\n");
@@ -343,23 +74,34 @@ public class SqlUtils {
             className = tableName;
         }
         tclassName.setValue(className);
-        sb.append("public class " + className + " extends " + MdbOptions.class.getSimpleName() +
+        sb.append("public class " + className +
                 " implements java.io.Serializable {\n\n");
-
-
         int n = 0;
         while (i.hasNext()) {
+            //@AkaColumn(isAutoincrement=
+            String annotionStr = "";
             String name = (String) i.next();
-            Column co = (Column) map.get(name);
+            Column co = (Column) columMap.get(name);
             Integer type = co.getData_type();
-            if (name.trim().equals("class")) {
-                name = "$class";
-            }
 
+            name = DBColum2JavaKyewordTool.toJavaPropery(name.trim());
+            if (co.getIs_autoincrement().equals("YES")) {
+                annotionStr = annotionStr + ",isAutoincrement=true";
+            }
+            if (co.getIs_nullable().equals("NO")) {
+                annotionStr = annotionStr + ",isNullable=false";
+            }
+            if (!annotionStr.isEmpty()) {
+                annotionStr = StringUtils.trimLeadingString(annotionStr, ",");
+                annotionStr = "@AkaColumn(" + annotionStr + ")";
+            }
             n++;
-            Class typeClass = (Class) SqlUtils.sql2javaType.get(type);
+            Class typeClass = (Class) TypeMapSystem.sql2javaType(co);
+            if (typeClass == null) {
+                throw new DbException("类型:" + type + "无法转换！" + "type=" + type + ",co=" + ObjectUtils.toPrettyJsonString(co));
+            }
             String typeName = typeClass.getSimpleName();
-            if (SqlUtils.checkedSimpleType(typeClass)) {
+            if (TypeMapSystem.checkedSimpleType(typeClass)) {
                 typeName = typeClass.getSimpleName();
             } else {
                 typeName = typeClass.getName();
@@ -387,6 +129,7 @@ public class SqlUtils {
                     + (name.charAt(0) + "").toUpperCase() + name.substring(1)
                     + "(" + typeName + " " + name + "){\n");
             sm.append("\t\tthis." + name + " = " + name + ";\n\t}");
+            sm.append("\n\t" + annotionStr);
             sm.append("\n\t" + "public " + typeName + " get"
                     + (name.charAt(0) + "").toUpperCase() + name.substring(1)
                     + "(){\n");
@@ -419,7 +162,9 @@ public class SqlUtils {
      * @param propertyLowcaseFirstChar 导出的属性第一个字符小写
      */
     public static void exportTables(String pool, String schema,
-                                    String toFolder, String toPackage, String remarkEncoding, boolean propertyLowcaseFirstChar) {
+                                    String toFolder, String toPackage,
+                                    String remarkEncoding,
+                                    boolean propertyLowcaseFirstChar) {
 
         DataBase db = null;
         try {
@@ -431,32 +176,35 @@ public class SqlUtils {
                 schema = conn.getCatalog();
             }
             ResultSet rs = null;
-            rs=dd.getTables(conn.getCatalog(), schema, "%",
+            rs = dd.getTables(conn.getCatalog(), schema, "%",
                     new String[]{"TABLE"});
 
             ArrayList<String> tablelist = new ArrayList();
-            ArrayList<String>  tableCommentList = new ArrayList();
-            ArrayList<Map<String,String>> tableColumCommentList = new ArrayList<>();
+            ArrayList<String> tableCommentList = new ArrayList();
+            ArrayList<Map<String, String>> tableColumCommentList = new ArrayList<>();
             while (rs.next()) {
                 String tableName = rs.getString("TABLE_NAME");
                 tablelist.add(tableName);
-
                 String tableComment = StringUtils.trim(rs.getString("REMARKS"));
-                Map<String,String> colCommentMap=null;
+                Map<String, String> colCommentMap = null;
                 if (StringUtils.isEmpty(tableComment)) {
-                    String sql =db.getDataBaseType().tableCommentSql(schema);
-                    String sqlColum=db.getDataBaseType().colCommentSql();
+                    String sql = db.getDataBaseType().queryTableCommentSql(schema);
+
+                    String sqlColum = db.getDataBaseType().queryColCommentSql();
                     try {
                         Map<Integer, Object> args = new HashMap<Integer, Object>();
                         args.put(1, tableName);
-                        DataBaseSet dbrs = db.queryForResultSet(sql, args);
-                        if (dbrs.next()) {
-                            tableComment = dbrs.getString("TABLE_COMMENT");
+                        DataBaseSet dbrs = null;
+                        if (!sql.isEmpty()) {
+                            dbrs = db.queryForResultSet(sql, args);
+                            if (dbrs.next()) {
+                                tableComment = dbrs.getString("TABLE_COMMENT");
+                            }
                         }
-                        if(!sqlColum.isEmpty()){
+                        if (!sqlColum.isEmpty()) {
                             colCommentMap = new HashMap<String, String>();
                             dbrs = db.queryForResultSet(sqlColum, args);
-                            if(dbrs!=null) {
+                            if (dbrs != null) {
                                 while (dbrs.next()) {
                                     String colName = dbrs.getString("COLUMN_NAME");
                                     String colComment = dbrs.getString("COLUMN_DESCRIPTION");
@@ -469,7 +217,7 @@ public class SqlUtils {
                     }
                 }
                 tableCommentList.add(tableComment);
-                if(colCommentMap!=null) {
+                if (colCommentMap != null) {
                     tableColumCommentList.add(colCommentMap);
                 }
             }
@@ -481,18 +229,19 @@ public class SqlUtils {
                 String tableName = (String) tablelist.get(i);
                 String tableRemark = (String) tableCommentList.get(i);
 
-                Map columMap = new LinkedHashMap();
+                Map<String, Column> columMap = new LinkedHashMap<>();
 
                 while (rs.next()) {
 
                     Column co = new Column();
+                    co.setDbms(db.getDataBaseType());
                     co.setColumn_name(rs.getString("COLUMN_NAME"));
                     co.setColumn_size(rs.getInt("COLUMN_SIZE"));
                     co.setData_type(rs.getInt("DATA_TYPE"));
                     co.setIs_nullable(rs.getString("IS_NULLABLE"));
-                    if(tableColumCommentList.size()>0){
+                    if (tableColumCommentList.size() > 0) {
                         co.setRemarks(tableColumCommentList.get(i).get(co.getColumn_name()));
-                    }else {
+                    } else {
                         String remark = rs.getString("REMARKS");
                         co.setRemarks(remark);
                     }
@@ -502,6 +251,13 @@ public class SqlUtils {
                     co.setTable_schem(rs.getString("TABLE_SCHEM"));
                     co.setType_name(rs.getString("TYPE_NAME"));
                     co.setIs_autoincrement(rs.getString("IS_AUTOINCREMENT"));
+                    co.setColumn_def(rs.getString("COLUMN_DEF"));
+                    try {
+                        co.setIs_generatedcolumn(rs.getString("IS_GENERATEDCOLUMN"));
+                    } catch (Exception ex) {
+                    }
+                    co.setSource_data_type(rs.getShort("SOURCE_DATA_TYPE"));
+                    co.setDecimal_digits(rs.getInt("DECIMAL_DIGITS"));
                     columMap.put(rs.getString("COLUMN_NAME"), co);
 
 
@@ -556,12 +312,6 @@ public class SqlUtils {
 
     }
 
-    public static boolean checkSqlType(Class t) {
-        if (sqlType.contains(t)) {
-            return true;
-        }
-        return false;
-    }
 
     public static boolean isTSimpleTypeWrapper(Class t) {
         if (TType.class.isAssignableFrom(t)) {
@@ -570,25 +320,94 @@ public class SqlUtils {
         return false;
     }
 
+    /**
+     * @param dbpoolName 数据库连接池名称
+     * @param outerClass 映射对象的类
+     * @param t          映射对象属性的类型
+     * @param prefix     sql前缀
+     * @param name       映射对象属性名称
+     * @param rs         结果集对象
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public static Object getValueFromResult(String dbpoolName, Class outerClass, Class t, String prefix,
-                                            String name, ResultSet rs, Map<String, String> map) {
+                                            String name, ResultSet rs) {
 
         Object value = null;
         try {
 
             if (isTSimpleTypeWrapper(outerClass)) {
                 Class innerType =
-                        ((TType) outerClass.getConstructor().newInstance()).getWrappedClass();
-                value = rs.getObject(1, innerType);
-            } else {
+                        ((TType) outerClass.getConstructor().newInstance()).wrappedClass();
+                t = innerType;
                 long start = System.currentTimeMillis();
-                if (map != null) {
-                    String mapName = map.get(name);
-                    if (mapName != null) {
-                        name = mapName;
+                value = rs.getObject(1);
+                if (value == null) {
+                    return null;
+                } else {
+                    if (NumberUtils.isNumber(value)) {
+                        value = NumberUtils.convertNumberToTargetClass((Number) value, t);
+                        return value;
                     }
                 }
+                if (t == String.class) {
+                    value = rs.getString(1);
+                } else if (t == Integer.class || t == int.class) {
+                    value = rs.getObject(1, Integer.class);
+                } else if (t == boolean.class || t == Boolean.class) {
+                    value = rs.getObject(1, Boolean.class);
+                } else if (t == Long.class || t == long.class) {
+                    value = rs.getObject(1, Long.class);
+                } else if (t == Short.class || t == short.class) {
+                    value = rs.getObject(1, Short.class);
+                } else if (t == Float.class || t == float.class) {
+                    value = rs.getObject(1, Float.class);
+                } else if (t == Double.class || t == double.class) {
+                    value = rs.getObject(1, Double.class);
+                } else if (t == Date.class) {
+                    value = rs.getTimestamp(1);
+                    if (value != null)
+                        value = TypeMapSystem
+                                .sqlTimestampTojavaDate((Timestamp) value);
+                } else if (t == java.sql.Date.class) {
+                    value = rs.getDate(1);
+                } else if (t == java.sql.Timestamp.class) {
+                    value = rs.getTimestamp(1);
+                } else if (t == java.sql.Time.class) {
+                    value = rs.getTime(1);
+                } else if (t == LocalDate.class) {
+                    value = rs.getDate(1);
+                    if (value != null)
+                        value = ((java.sql.Date) value).toLocalDate();
+                } else if (t == LocalDateTime.class) {
+                    value = rs.getTimestamp(1);
+                    if (value != null)
+                        value = ((Timestamp) value).toLocalDateTime();
+                } else if (t == LocalTime.class) {
+                    value = rs.getTime(1);
+                    if (value != null)
+                        value = ((Time) value).toLocalTime();
+                } else if (t == Byte.class || t == byte.class) {
+                    value = rs.getObject(1, Byte.class);
+                } else if (t == char.class || t == Character.class) {
+                    value = rs.getString(1);
+                    if (value != null && value.toString().length() > 0) {
+                        value = value.toString().charAt(0);
+                    } else {
+                        char c = '\0';
+                        value = c;
+                    }
+                } else if (t == java.math.BigDecimal.class) {
+                    value = rs.getBigDecimal(1);
+                } else if (t == java.math.BigInteger.class) {
+                    value = rs.getObject(1, Long.class);
+                    if (value != null)
+                        value = new java.math.BigInteger(Long.toString((Long) value));
+                } else {
+                    value = rs.getObject(1, t);
+                }
+            } else {
+                long start = System.currentTimeMillis();
                 String columName = getColumName(dbpoolName, name);
                 String labelName = prefix + columName;
                 String prefixName = prefix + name;//根据属性名称
@@ -603,6 +422,16 @@ public class SqlUtils {
                         }
                     }
                 }
+                value = rs.getObject(labelName);
+                if (value == null) {
+                    return null;
+                } else {
+                    if (NumberUtils.isNumber(value)) {
+                        value = NumberUtils.convertNumberToTargetClass((Number) value, t);
+                        return value;
+                    }
+                }
+
                 if (t == String.class) {
                     value = rs.getString(labelName);
                 } else if (t == Integer.class || t == int.class) {
@@ -620,7 +449,7 @@ public class SqlUtils {
                 } else if (t == Date.class) {
                     value = rs.getTimestamp(labelName);
                     if (value != null)
-                        value = SqlUtils
+                        value = TypeMapSystem
                                 .sqlTimestampTojavaDate((Timestamp) value);
                 } else if (t == java.sql.Date.class) {
                     value = rs.getDate(labelName);
@@ -662,18 +491,18 @@ public class SqlUtils {
             }
 
         } catch (Exception ex) {
-            log.error("", ex);
+            throw new DbException(ex);
         }
         return value;
     }
 
-    public static void getValueFromCallableStatement(CallableStatement rs,
+
+    public static void getValueFromCallableStatement(DBMS dbms, CallableStatement rs,
                                                      Map<Integer, Object> outParms, Map<Integer, Object> returnKeyValues)
             throws Exception {
 
         Object value = null;
         try {
-
             Set<Integer> keys = outParms.keySet();
             for (Integer key : keys) {
                 Object val = outParms.get(key);
@@ -681,238 +510,124 @@ public class SqlUtils {
                     val = val.getClass();
                 }
                 Class t = (Class) val;
-                if (t == String.class) {
-                    value = rs.getString(key);
-                } else if (t == Integer.class || t == int.class) {
-                    value = rs.getObject(key, Integer.class);
-                } else if (t == boolean.class || t == Boolean.class) {
-                    value = rs.getObject(key, Boolean.class);
-                } else if (t == Long.class || t == long.class) {
-                    value = rs.getObject(key, Long.class);
-                } else if (t == Short.class || t == short.class) {
-                    value = rs.getObject(key, Short.class);
-                } else if (t == Float.class || t == float.class) {
-                    value = rs.getObject(key, Float.class);
-                } else if (t == Double.class || t == double.class) {
-                    value = rs.getObject(key, Double.class);
-                } else if (t == Date.class) {
-                    value = rs.getTimestamp(key);
-                    if (value != null)
-                        value = SqlUtils
-                                .sqlTimestampTojavaDate((Timestamp) value);
-                } else if (t == java.sql.Date.class) {
-                    value = rs.getDate(key);
-                } else if (t == Timestamp.class) {
-                    value = rs.getTimestamp(key);
-                } else if (t == Time.class) {
-                    value = rs.getTime(key);
-                } else if (t == LocalDate.class) {
-                    value = rs.getDate(key);
-                    if (value != null)
-                        value = ((java.sql.Date) value).toLocalDate();
-                } else if (t == LocalDateTime.class) {
-                    value = rs.getTimestamp(key);
-                    if (value != null)
-                        value = ((Timestamp) value).toLocalDateTime();
-                } else if (t == LocalTime.class) {
-                    value = rs.getTime(key);
-                    if (value != null) {
-                        value = ((Time) value).toLocalTime();
-                    }
-                } else if (t == Byte.class || t == byte.class) {
-                    value = rs.getObject(key, Byte.class);
-                } else if (t == char.class || t == Character.class) {
-                    value = rs.getString(key);
-                    if (value != null) {
-                        if (value.toString().length() > 0) {
-                            value = value.toString().charAt(0);
-                        } else {
-                            value = '\0';
-                        }
-                    }
-                } else if (t == java.math.BigDecimal.class) {
-                    value = rs.getBigDecimal(key);
-                } else if (t == java.math.BigInteger.class) {
-                    value = rs.getObject(key, Long.class);
-                    if (value != null) {
-                        value = new java.math.BigInteger(Long.toString((Long) value));
-                    }
-                } else if (t == DataBaseSet.class || t == ResultSet.class) {
-                    value = rs.getObject(key, ResultSet.class);
-                    ResultSet rss = null;
-                    CachedRowSet crs = null;
-                    try {
-                        rss = (ResultSet) value;
-                        crs = new CachedRowSetImpl();
-                        crs.populate(rss);
-                    } finally {
-                        if (rss != null) {
-                            rss.close();
-                        }
-                    }
-                    if (t == ResultSet.class) value = crs;
-                    else if (t == DataBaseSet.class) {
-                        Object temp = new DataBaseSet(crs);
-                        value = temp;
-                    }
-                } else {
-                    value = rs.getObject(key, t);
 
+                value = rs.getObject(key);
+                if (value == null) {
+                    ///
+                } else if (NumberUtils.isNumber(value)) {
+                    value = NumberUtils.convertNumberToTargetClass((Number) value, t);
+                } else {
+                    if (t == String.class) {
+                        value = rs.getString(key);
+                    } else if (t == Integer.class || t == int.class) {
+                        value = rs.getInt(key);
+                    } else if (t == boolean.class || t == Boolean.class) {
+                        value = rs.getBoolean(key);
+                    } else if (t == Long.class || t == long.class) {
+                        value = rs.getLong(key);
+                    } else if (t == Short.class || t == short.class) {
+                        value = rs.getShort(key);
+                    } else if (t == Float.class || t == float.class) {
+                        value = rs.getFloat(key);
+                    } else if (t == Double.class || t == double.class) {
+                        value = rs.getDouble(key);
+                    } else if (t == Date.class) {
+                        value = rs.getTimestamp(key);
+                        if (value != null)
+                            value = TypeMapSystem
+                                    .sqlTimestampTojavaDate((Timestamp) value);
+                    } else if (t == java.sql.Date.class) {
+                        value = rs.getDate(key);
+                    } else if (t == Timestamp.class) {
+                        value = rs.getTimestamp(key);
+                    } else if (t == Time.class) {
+                        value = rs.getTime(key);
+                    } else if (t == LocalDate.class) {
+                        value = rs.getDate(key);
+                        if (value != null)
+                            value = ((java.sql.Date) value).toLocalDate();
+                    } else if (t == LocalDateTime.class) {
+                        value = rs.getTimestamp(key);
+                        if (value != null)
+                            value = ((Timestamp) value).toLocalDateTime();
+                    } else if (t == LocalTime.class) {
+                        value = rs.getTime(key);
+                        if (value != null) {
+                            value = ((Time) value).toLocalTime();
+                        }
+                    } else if (t == Byte.class || t == byte.class) {
+                        value = rs.getByte(key);
+                    } else if (t == char.class || t == Character.class) {
+                        value = rs.getString(key);
+                        if (value != null) {
+                            if (value.toString().length() > 0) {
+                                value = value.toString().charAt(0);
+                            } else {
+                                value = '\0';
+                            }
+                        }
+                    } else if (t == java.math.BigDecimal.class) {
+                        value = rs.getBigDecimal(key);
+                    } else if (t == java.math.BigInteger.class) {
+                        value = rs.getLong(key);
+                        if (value != null) {
+                            value = new java.math.BigInteger(Long.toString((Long) value));
+                        }
+                    } else if (t == DataBaseSet.class || t == ResultSet.class) {
+                        value = rs.getObject(key);
+                        ResultSet rss = null;
+                        CachedRowSet crs = null;
+                        try {
+                            rss = (ResultSet) value;
+                            crs = new CachedRowSetImpl();
+                            crs.populate(rss);
+                        } finally {
+                            if (rss != null) {
+                                rss.close();
+                            }
+                        }
+                        if (t == ResultSet.class) value = crs;
+                        else if (t == DataBaseSet.class) {
+                            Object temp = new DataBaseSet(crs);
+                            value = temp;
+                        }
+                    } else {
+                        value = rs.getObject(key);
+
+                    }
                 }
                 if (returnKeyValues != null)
                     returnKeyValues.put(key, value);
             }
         } catch (Exception ex) {
-            throw new Exception(ex);
+            throw new DbException(ex);
         }
 
     }
 
-    public static String generateSelectSqlBySelectObject(String dbpoolName, Object selectObject, Class reflectClass,
-                                                         Map<Integer, Object> returnvParameters, QueryOptions options,
-                                                         DBMS dataBaseType)
-            throws Exception {
+    public static String generateSelectSql(String dbpoolName,
+                                           Object selectObject,
+                                           Class reflectClass,
+                                           String[] whereProperteis,
+                                           Map<Integer, Object> returnvParameters,
+                                           QueryOptions options,
+                                           DBMS dataBaseType) throws Exception {
 
         String sql = "";
         String className = reflectClass.getSimpleName();
         String select = "select *";
-        if (selectObject instanceof MdbOptions) {
-            MdbOptions mm = (MdbOptions) selectObject;
-            String selectPartString = handSelectPartString(mm.selectOptions(), dbpoolName, dataBaseType);
-            if (!selectPartString.isEmpty()) {
-                select = selectPartString;
-            }
+        QueryHint queryHint = null;
+        if (options != null) {
+            queryHint = options.getQueryHint();
+
         }
-        sql = select + " from " + dbEscapeLef(dataBaseType) + getTableName(dbpoolName, className) + dbEscapeRight(dataBaseType) + " ";
-
-        try {
-            int index = 1;
-
-            String where = " where ";
-            Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(selectObject, reflectClass);
-            Set<?> set = map.keySet();
-
-            Iterator<?> inames = set.iterator();
-            while (inames.hasNext()) {
-                String name = (String) inames.next();
-
-                TResult2<Class, Object> tr2 = map.get(name);
-                Class<?> t = tr2.getFirstValue();
-                Object value = null;
-
-                // name为javabean属性名
-                if (SqlUtils.checkedSimpleType(t)) {// 简单类型
-
-                    value = tr2.getSecondValue();
-                    if (value != null) {
-                        where = where + dbEscapeLef(dataBaseType) + getColumName(dbpoolName, name) + dbEscapeRight(dataBaseType) + "=? and ";
-                        returnvParameters.put(index++, value);
-                    }
-                } else {
-                    continue;
-                }
-            }
-            where = StringUtils.trim(where);
-            where = StringUtils.trimTailString(where, "and");
-            if (!where.equals("where")) {
-                sql = sql + " " + where + " ";
-            }
-            if (selectObject instanceof MdbOptions) {
-                MdbOptions mm = (MdbOptions) selectObject;
-                if (mm.selectOptions() != null) {
-                    String tailPartString = handTailPartString(mm.selectOptions(), dbpoolName, dataBaseType);
-                    if (!tailPartString.isEmpty()) {
-                        sql = sql + tailPartString;
-                    }
-                    if (mm.selectOptions().limit() != null && mm.selectOptions().limit() >= 0) {
-                        sql = dataBaseType.pageSQL(sql, 1, mm.selectOptions().limit());
-
-                    } else {
-                        if (options != null && options.isLimitOne()) {
-                            sql = dataBaseType.pageSQL(sql, 1, 1);
-                        }
-                    }
-                }
-            }
-            return sql;
-        } catch (Exception e) {
-            throw e;
-        }
-
-    }
-
-
-    public static String handSelectPartString(SelOp so, String dbpoolName, DBMS dataBaseType) {
-        if (so == null) {
-            return "select * ";
-        }
-        if (StringUtils.isEmpty(so.select())) {
-            return "select * ";
-        }
-        return "select " + so.select() + " ";
-    }
-
-    public static String handTailPartString(SelOp so, String dbpoolName, DBMS dataBaseType) {
-        if (so == null) {
-            return "";
-        }
-        String orderStr = "";
-        if (so.orderBy() != null && !so.orderBy().isEmpty()) {
-            String[] strs = so.orderBy().split(",");
-
-            for (int i = 0; i < strs.length; i++) {
-                String s = strs[i].trim();
-                String[] temps = s.split(" +");
-
-                String part = SqlUtils.dbEscapeLef(dataBaseType)
-                        + SqlUtils.getColumName(dbpoolName, temps[0]) + SqlUtils.dbEscapeRight(dataBaseType);
-                if (temps.length >= 2) {
-                    part = part + " " + temps[1];
-                }
-                if (i == 0) {
-                    orderStr = orderStr + "" + part;
-                } else {
-                    orderStr = orderStr + "," + part;
-                }
-            }
-        }
-        String ret = "";
-
-        if (!orderStr.isEmpty()) {
-            ret = ret + " order by " + orderStr;
-        }
-
-        return ret;
-    }
-
-    public static String getPageSql(String sqlQuery, int pageNum, int pageSize, DBMS dataBaseType) {
-
-        sqlQuery = sqlQuery.trim();
-        String sql = dataBaseType.pageSQL(sqlQuery, pageNum, pageSize);
-        if (StringUtils.hasText(sql)) {
-            return sql;
-        } else {
-            throw new DbException("数据库不支持分页！");
-        }
-    }
-
-    public static String generateSelectSql(String dbpoolName, Object selectObject, Class reflectClass,
-                                           String[] whereProperteis, Map<Integer, Object> returnvParameters,
-                                           QueryOptions options, DBMS dataBaseType) throws Exception {
-
-        String sql = "";
-        String className = reflectClass.getSimpleName();
-        String select = "select *";
-        if (selectObject instanceof MdbOptions) {
-            MdbOptions mm = (MdbOptions) selectObject;
-            String selectPartString = handSelectPartString(mm.selectOptions(), dbpoolName, dataBaseType);
-            if (!selectPartString.isEmpty()) {
-                select = selectPartString;
+        if (queryHint != null) {
+            if (StringUtils.hasText(queryHint.select())) {
+                select = "select " + queryHint.select().trim();
             }
         }
         sql = select + " from " + dbEscapeLef(dataBaseType) +
                 getTableName(dbpoolName, className) + dbEscapeRight(dataBaseType) + " ";
-
         if (whereProperteis == null || whereProperteis.length == 0) {
             return sql;
         }
@@ -921,7 +636,6 @@ public class SqlUtils {
             return sql;
         }
         try {
-
             int index = 1;
             String where = " where ";
             for (int n = 0; n < keys.length; n++) {
@@ -934,28 +648,118 @@ public class SqlUtils {
                 returnvParameters.put(index++, value);
             }
             sql = sql + where;
-            if (selectObject instanceof MdbOptions) {
-                MdbOptions mm = (MdbOptions) selectObject;
-                if (mm.selectOptions() != null) {
-                    String tailPartString = handTailPartString(mm.selectOptions(), dbpoolName, dataBaseType);
-                    if (!tailPartString.isEmpty()) {
-                        sql = sql + tailPartString;
+            if (queryHint != null) {
+                if (StringUtils.hasText(queryHint.groupBy())) {
+                    sql = sql + " group by " + queryHint.groupBy().trim();
+                    if (StringUtils.hasText(queryHint.having())) {
+                        sql = sql + " having " + queryHint.having().trim();
                     }
-                    if (mm.selectOptions().limit() != null && mm.selectOptions().limit() >= 0) {
-                        sql = dataBaseType.pageSQL(sql, 1, mm.selectOptions().limit());
+                }
+                if (StringUtils.hasText(queryHint.orderBy())) {
+                    sql = sql + " order by  " + queryHint.orderBy().trim();
+                }
 
-                    } else {
-                        if (options != null && options.isLimitOne()) {
-                            sql = dataBaseType.pageSQL(sql, 1, 1);
-                        }
-                    }
+                if (queryHint.limit() != null) {
+                    sql = dataBaseType.topN(sql, queryHint.limit());
+                } else if (options != null && options.isLimitOne()) {
+                    sql = dataBaseType.topN(sql, 1);
                 }
             }
             return sql;
         } catch (Exception e) {
-            throw e;
+            throw new DbException(e);
         }
 
+    }
+
+    public static String generateSelectSqlBySelectObject(String dbpoolName, Object selectObject, Class reflectClass,
+                                                         Map<Integer, Object> returnvParameters, QueryOptions options,
+                                                         DBMS dataBaseType)
+            throws Exception {
+
+        String sql = "";
+        String className = reflectClass.getSimpleName();
+        String select = "select *";
+        QueryHint queryHint = null;
+        if (options != null) {
+            queryHint = options.getQueryHint();
+
+        }
+        if (queryHint != null) {
+            if (StringUtils.hasText(queryHint.select())) {
+                select = "select " + queryHint.select().trim();
+            }
+        }
+        sql = select + " from " +
+                dbEscapeLef(dataBaseType) + getTableName(dbpoolName, className) + dbEscapeRight(dataBaseType) + " ";
+        try {
+            int index = 1;
+            String where = " where ";
+            Map<String, TResult2<Method, Object>> map = PropertyUtil.describeForTypes(selectObject, reflectClass);
+            Set<?> set = map.keySet();
+
+            Iterator<?> inames = set.iterator();
+
+            while (inames.hasNext()) {
+                String name = (String) inames.next();
+
+                TResult2<Method, Object> tr2 = map.get(name);
+                Class<?> t = tr2.getFirstValue().getReturnType();
+                Object value = null;
+
+                // name为javabean属性名
+                if (TypeMapSystem.checkedSimpleType(t)) {// 简单类型
+
+                    value = tr2.getSecondValue();
+                    if (value != null) {
+                        where = where + dbEscapeLef(dataBaseType) + getColumName(dbpoolName, name) + dbEscapeRight(dataBaseType) + "=? and ";
+                        returnvParameters.put(index++, value);
+                    } else {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+            }
+            where = StringUtils.trim(where);
+            where = StringUtils.trimTailString(where, "and");
+            if (!where.equals("where")) {
+                sql = sql + " " + where + " ";
+            }
+            if (queryHint != null) {
+                if (StringUtils.hasText(queryHint.groupBy())) {
+                    sql = sql + " group by " + queryHint.groupBy().trim();
+                    if (StringUtils.hasText(queryHint.having())) {
+                        sql = sql + " having " + queryHint.having().trim();
+                    }
+                }
+                if (StringUtils.hasText(queryHint.orderBy())) {
+                    sql = sql + " order by  " + queryHint.orderBy().trim();
+                }
+
+                if (queryHint.limit() != null) {
+                    sql = dataBaseType.topN(sql, queryHint.limit());
+                } else if (options != null && options.isLimitOne()) {
+                    sql = dataBaseType.topN(sql, 1);
+                }
+            }
+            return sql.trim();
+        } catch (Exception e) {
+            throw new DbException(e);
+        }
+
+    }
+
+
+    public static String getPageSql(String sqlQuery, int pageNum, int pageSize, DBMS dataBaseType) {
+
+        sqlQuery = sqlQuery.trim();
+        String sql = dataBaseType.pageSQL(sqlQuery, pageNum, pageSize);
+        if (StringUtils.hasText(sql)) {
+            return sql;
+        } else {
+            throw new DbException("数据库不支持分页！");
+        }
     }
 
 
@@ -966,19 +770,19 @@ public class SqlUtils {
 
         List<String> whereProperteis = new ArrayList<>();
 
-        Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(deleteObject, reflectClass);
+        Map<String, TResult2<Method, Object>> map = PropertyUtil.describeForTypes(deleteObject, reflectClass);
         Set<?> set = map.keySet();
 
         Iterator<?> inames = set.iterator();
         int i = 0;
         while (inames.hasNext()) {
             String name = (String) inames.next();
-            TResult2<Class, Object> tr2 = map.get(name);
-            Class<?> t = tr2.getFirstValue();
+            TResult2<Method, Object> tr2 = map.get(name);
+            Class<?> t = tr2.getFirstValue().getReturnType();
             Object value = null;
 
             // name为javabean属性名
-            if (SqlUtils.checkedSimpleType(t)) {// 简单类型
+            if (TypeMapSystem.checkedSimpleType(t)) {// 简单类型
                 value = tr2.getSecondValue();
                 if (value != null) {
                     whereProperteis.add(name);
@@ -997,6 +801,7 @@ public class SqlUtils {
     }
 
     public static String getColumName(String dbStr, String proName) {
+        proName = DBColum2JavaKyewordTool.toDbColumName(proName);
         String colName = proName;
         String tableColumRule = DbConst.getTableColumRule(dbStr);
         if (StringUtils.isEmpty(tableColumRule)) {
@@ -1097,7 +902,7 @@ public class SqlUtils {
         String colPart = "set ";
         String[] keys = whereProperteis;
         try {
-            Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(updateObject, reflectClass);
+            Map<String, TResult2<Method, Object>> map = PropertyUtil.describeForTypes(updateObject, reflectClass);
             Set<?> set = map.keySet();
             Iterator<?> i = set.iterator();
             int index = 1;
@@ -1112,21 +917,15 @@ public class SqlUtils {
                         continue;
                     }
                 }
-                if (DataBaseKeyMap.getMap() != null) {
-                    String mapName = DataBaseKeyMap.getMap().get(name);
-                    if (mapName != null) {
-                        name = mapName;
-                    }
-                }
 
                 if (ArrayUtils.containsIgnoreCase(keys, name)) {
                     continue;
                 }
 
-                Class<?> t = map.get(name).getFirstValue();
+                Class<?> t = map.get(name).getFirstValue().getReturnType();
 
                 // name为javabean属性名
-                if (SqlUtils.checkedSimpleType(t)) {// 简单类型
+                if (TypeMapSystem.checkedSimpleType(t)) {// 简单类型
                     Object colValue = map.get(name).getSecondValue();
 
                     if (colValue != null) {
@@ -1153,7 +952,7 @@ public class SqlUtils {
 
             for (int n = 0; n < keys.length; n++) {
                 Object value = PropertyUtil.getProperty(updateObject, keys[n]);
-                where = where + getColumName(dbpoolName, keys[n]) + "=?";
+                where = where + dbEscapeLef(dataBaseType)+ getColumName(dbpoolName, keys[n]) +dbEscapeRight(dataBaseType) + "=?";
                 if (n < keys.length - 1) {
                     where = where + " and ";
                 }
@@ -1189,13 +988,13 @@ public class SqlUtils {
 
         String className = reflectClass.getSimpleName();
 
+        String prependSql = "";
         sql = "insert into " + dbEscapeLef(dataBaseType) + getTableName(dbpoolName, className) + dbEscapeRight(dataBaseType);
         String colPart = "(";
         String values = "values(";
 
         try {
-
-            Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(insertObject, reflectClass);
+            Map<String, TResult2<Method, Object>> map = PropertyUtil.describeForTypes(insertObject, reflectClass);
             Set<?> set = map.keySet();
             Iterator<?> i = set.iterator();
             int index = 1;
@@ -1208,23 +1007,46 @@ public class SqlUtils {
                         && !ArrayUtils.containsIgnoreCase(properties, name)) {
                     continue;
                 }
-                if (DataBaseKeyMap.getMap() != null) {
-                    String mapName = DataBaseKeyMap.getMap().get(name);
-                    if (mapName != null) {
-                        name = mapName;
-                    }
-                }
-                TResult2<Class, Object> tr2 = map.get(name);
-                Class<?> t = tr2.getFirstValue();
+
+                TResult2<Method, Object> tr2 = map.get(name);
+                Class<?> t = tr2.getFirstValue().getReturnType();
 
                 // name为javabean属性名
-                if (SqlUtils.checkedSimpleType(t)) {// 简单类型
+                if (TypeMapSystem.checkedSimpleType(t)) {// 简单类型
 
                     Object colValue = tr2.getSecondValue();
+                    AkaColumn akaColumn = tr2.getFirstValue().getAnnotation(AkaColumn.class);
+
+                    if (options != null) {
+                        GenerateID generateID = (GenerateID) options.getGenerateID();
+                        if (generateID != null) {
+                            if (generateID.getIdName() != null &&
+                                    generateID.getIdName().equals(name)) {
+                                colValue = generateID.getIdValue();
+                            }
+                        } else {
+                            if (akaColumn != null && akaColumn.isAutoincrement()) {
+                                generateID = new GenerateID();
+                                generateID.setIdName(name);
+                                options.setGenerateID(generateID);
+                            }
+                        }
+
+                    }
+
                     if (colValue == null) {
                         if (ignoreNull) {
                             continue;
                         } else {
+                            if (akaColumn != null) {
+                                if (akaColumn.isAutoincrement()) {
+                                    continue;
+                                }
+                                if (!akaColumn.isNullable()) {
+                                    throw new DbException(getTableName(dbpoolName, className) + "表里的列" + getColumName(dbpoolName, name) + "不能插入空值！");
+                                }
+                            }
+
                             colPart = colPart + dbEscapeLef(dataBaseType) + getColumName(dbpoolName, name) + dbEscapeRight(dataBaseType);
                             values = values + "null";
                             colPart = colPart + ",";
@@ -1232,14 +1054,20 @@ public class SqlUtils {
                             continue;
                         }
 
+                    } else {
+                        if (akaColumn != null && akaColumn.isAutoincrement()) {
+                            if (dataBaseType.isSQLServerFamily()) {
+                                prependSql = "SET IDENTITY_INSERT " + getTableName(dbpoolName, className) + " ON;";
+                            }
+                        }
                     }
-
                     colPart = colPart + dbEscapeLef(dataBaseType) + getColumName(dbpoolName, name) + dbEscapeRight(dataBaseType);
                     values = values + "?";
                     colPart = colPart + ",";
                     values = values + ",";
 
                     returnvParameters.put(index++, colValue);
+
 
                 } else {
                     String error = "insert a illegal type:[" + t + "]";
@@ -1253,6 +1081,9 @@ public class SqlUtils {
             sql = sql + " " + colPart + " " + values;
 
             //log.debug("generated sql:" + sql);
+            if (!prependSql.isEmpty()) {
+                sql = prependSql + sql;
+            }
             return sql;
         } catch (Exception e) {
             throw e;
@@ -1261,7 +1092,7 @@ public class SqlUtils {
     }
 
     public static String registForStoredProc(Map<Integer, Object> vParameters,
-                                             CallableStatement preStmt) throws SQLException {
+                                             CallableStatement preStmt,DBMS dbms) throws SQLException {
         String paramStr = ""; // add by jda at 2007/12/15
 
         if (vParameters != null && vParameters.size() > 0) {
@@ -1276,8 +1107,7 @@ public class SqlUtils {
                 if (!(val instanceof Class)) {
                     val = val.getClass();
                 }
-
-                preStmt.registerOutParameter(key, javaType2sql.get(val));
+                preStmt.registerOutParameter(key, TypeMapSystem.javaType2sql((Class) val,dbms));
                 paramStr = paramStr + "[" + key + ":" + val + "]";
 
             }
@@ -1455,6 +1285,9 @@ public class SqlUtils {
                     preStmt.setDouble(j, ((Double) obj).doubleValue());
                     paramStr = paramStr + "[" + j + ":"
                             + ((Double) obj).toString() + "]";
+                } else if (obj instanceof java.sql.Timestamp) {
+                    preStmt.setTimestamp(j, (Timestamp) obj);
+                    paramStr = paramStr + "[" + j + ":" + obj.toString() + "]";
                 } else if (obj instanceof java.sql.Date) {
                     preStmt.setDate(j, (java.sql.Date) obj);
                     paramStr = paramStr + "[" + j + ":"
@@ -1477,7 +1310,7 @@ public class SqlUtils {
                     Time tmsp = Time.valueOf((LocalTime) obj);
                     preStmt.setTime(j, tmsp);
                     paramStr = paramStr + "[" + j + ":" + tmsp.toString() + "]";
-                } else {
+                }  else {
                     preStmt.setObject(j, obj);
                     paramStr = paramStr + "[" + j + ":" + obj + "]";
 
@@ -1519,21 +1352,20 @@ public class SqlUtils {
 
             T bean = clazz.getDeclaredConstructor().newInstance();
 
-            Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
+            Map<String, TResult2<Method, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
             Set<?> set = map.keySet();
             Iterator<?> i = set.iterator();
 
             while (i.hasNext()) {
 
                 String name = (String) i.next();
-                Class<?> t = map.get(name).getFirstValue();
+                Class<?> t = map.get(name).getFirstValue().getReturnType();
                 Object value = null;
                 // name为javabean属性名
-                if (SqlUtils.checkedSimpleType(t)) {// 简单类型
+                if (TypeMapSystem.checkedSimpleType(t)) {// 简单类型
 
                     try {
-                        value = SqlUtils.getValueFromResult(dbpoolName, clazz, t, "", name, rs,
-                                DataBaseKeyMap.getMap());
+                        value = SqlUtils.getValueFromResult(dbpoolName, clazz, t, "", name, rs);
                         PropertyUtil.setProperty(bean, name, value);
                     } catch (Exception e) {
                         log.error("", e);
@@ -1546,9 +1378,8 @@ public class SqlUtils {
 
             return bean;
         } catch (Exception e) {
-            log.error("", e);
+            throw new DbException(e);
         }
-        return null;
 
     }
 

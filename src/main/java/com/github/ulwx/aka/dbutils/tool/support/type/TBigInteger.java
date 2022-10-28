@@ -27,7 +27,7 @@ public class TBigInteger implements TType {
     }
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return BigInteger.class;
     }
 }

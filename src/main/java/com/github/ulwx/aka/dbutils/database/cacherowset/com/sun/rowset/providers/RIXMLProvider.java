@@ -6,7 +6,10 @@ import com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.JdbcRowSe
 
 import javax.sql.RowSetReader;
 import javax.sql.RowSetWriter;
-import javax.sql.rowset.spi.*;
+import javax.sql.rowset.spi.SyncProvider;
+import javax.sql.rowset.spi.SyncProviderException;
+import javax.sql.rowset.spi.XmlReader;
+import javax.sql.rowset.spi.XmlWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 

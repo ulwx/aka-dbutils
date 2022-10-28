@@ -9,7 +9,20 @@ public class DBInterceptorInfo {
     private Object result;
     private Exception exception;
     private boolean success;
+    private long exeTimeMil;//执行的毫秒数
+    private long startTime;
 
+    public long getExeTimeMil() {
+        return exeTimeMil;
+    }
+
+    public void setExeTimeMil(long exeTimeMil) {
+        this.exeTimeMil = exeTimeMil;
+    }
+
+    public DBInterceptorInfo(){
+        this.startTime=System.currentTimeMillis();
+    }
     public DataBase getDataBase() {
         return dataBase;
     }
@@ -35,11 +48,13 @@ public class DBInterceptorInfo {
     }
 
     public Object getResult() {
+        this.exeTimeMil=System.currentTimeMillis()-this.startTime;
         return result;
     }
 
     public void setResult(Object result) {
         this.result = result;
+
     }
 
     public Exception getException() {

@@ -27,7 +27,7 @@ public class TLocalTime implements TType {
     }
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return LocalTime.class;
     }
 }

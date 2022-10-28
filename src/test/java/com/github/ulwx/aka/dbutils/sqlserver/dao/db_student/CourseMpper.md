@@ -127,14 +127,16 @@ select 1 union select 2 union select 3
 
 getOneLocalDateTime
 ===
-SELECT STR_TO_DATE('2014-04-22 15:47:06','%Y-%m-%d %H:%i:%s')
+SELECT CONVERT(datetime, '2014-04-22 15:47:06', 20)
+
 
 getOneTimestamp
 ===
-SELECT STR_TO_DATE('2014-04-22 15:47:06','%Y-%m-%d %H:%i:%s')
+SELECT CONVERT(datetime, '2014-04-22 15:47:06', 20)
 
 getOneTimestampList
 ===
-SELECT STR_TO_DATE('2014-04-22 15:47:06','%Y-%m-%d %H:%i:%s')
-union all SELECT STR_TO_DATE('2015-04-22 15:47:06','%Y-%m-%d %H:%i:%s')
+SELECT CONVERT(datetime, '2014-04-22 15:47:06', 20)
+union all SELECT CONVERT(datetime, '2015-04-22 15:47:06', 20)
+
 

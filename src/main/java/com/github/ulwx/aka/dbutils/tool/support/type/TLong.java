@@ -4,7 +4,7 @@ public class TLong implements TType {
     private Long value;
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Long.class;
     }
 

@@ -2,12 +2,11 @@ package com.github.ulwx.aka.dbutils.mysql.dao.db_student;
 
 import com.github.ulwx.aka.dbutils.database.AkaMapper;
 import com.github.ulwx.aka.dbutils.database.DataBaseSet;
-import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.MDMethods.InsertOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
 import com.github.ulwx.aka.dbutils.database.MDataBase;
+import com.github.ulwx.aka.dbutils.database.annotation.AkaParam;
 import com.github.ulwx.aka.dbutils.mysql.domain.db.db_student.Course;
-import com.github.ulwx.aka.dbutils.tool.support.Assert;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
@@ -37,7 +36,7 @@ public abstract class CourseMpper extends AkaMapper {
 
     public abstract Integer getOneIntegerReturnNull(String name);
 
-    public abstract Course getOneCourse(Integer id, String name, Map<String, Object> ars, Course cs);
+    public abstract Course getOneCourse(Integer id, @AkaParam("name") String name, Map<String, Object> ars, Course cs);
 
     public abstract List<Course> getCoursesByIds(Integer[] ids, String name, Map<String, Object> ars, Course cs);
 

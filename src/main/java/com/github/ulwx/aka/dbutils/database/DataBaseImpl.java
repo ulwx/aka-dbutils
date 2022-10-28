@@ -8,8 +8,11 @@ import com.github.ulwx.aka.dbutils.database.dbpool.DBPoolFactory;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.database.dialect.DialectClient;
 import com.github.ulwx.aka.dbutils.database.nsql.NSQL;
+import com.github.ulwx.aka.dbutils.database.parameter.AkaParamter;
+import com.github.ulwx.aka.dbutils.database.parameter.IDGeneratorParmeter;
 import com.github.ulwx.aka.dbutils.database.sql.BeanUtils;
 import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
+import com.github.ulwx.aka.dbutils.database.sql.TypeMapSystem;
 import com.github.ulwx.aka.dbutils.tool.BaseDao;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
 import com.github.ulwx.aka.dbutils.tool.support.*;
@@ -93,9 +96,7 @@ public class DataBaseImpl implements DataBase {
             return null;
         }
         if (ps.length == 0) {
-            if (ps.getClass().getComponentType() == String.class
-                    || ps.getClass().getComponentType() == GetFun.class ||
-                    ps.getClass().getComponentType() == CGetFun.class) {
+            if (ps.getClass().getComponentType() == String.class || ps.getClass().getComponentType() == GetFun.class || ps.getClass().getComponentType() == CGetFun.class) {
                 return new String[0];
             }
             throw new DbException("参数[" + ps + "]只支持String类型、GetFun类型、CGetFun类型");
@@ -126,31 +127,28 @@ public class DataBaseImpl implements DataBase {
         String str = "";
         if (stack.length > fromLevel) {
             for (int i = fromLevel; i < stack.length; i++) {
-                if (stack[i].getClassName().startsWith(DataBase.class.getPackage().getName())
-                        || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
+                if (stack[i].getClassName().startsWith(DataBase.class.getPackage().getName()) || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
 
                     continue;
-                } else if (stack[i].getClassName().startsWith("jdk.internal.")
-                        || stack[i].getClassName().startsWith("java.lang.")
-                        || stack[i].getClassName().contains("CGLIB$$")
-                        || stack[i].getClassName().startsWith("org.springframework")
-                ) {
+                } else if (stack[i].getClassName().startsWith("jdk.internal.") || stack[i].getClassName().startsWith("java.lang.") || stack[i].getClassName().contains("CGLIB$$") || stack[i].getClassName().startsWith("org.springframework")) {
 
                     continue;
                 }
 
                 if (upLevelNum == 0) {
-                    String tempInfo = "at " + stack[i].getClassName() + "." + stack[i].getMethodName() + "(" +
-                            stack[i].getFileName() +
-                            ":"
-                            + stack[i].getLineNumber() + "";
+
+                    String tempInfo = " at " + stack[i].getClassName() + "." + stack[i].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
                     upLevelNum++;
                     str = tempInfo;
+                    if (i - 1 >= 0) {
+                        tempInfo = " at " + stack[i - 1].getClassName() + "." + stack[i - 1].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
+
+                        str = tempInfo + "=>" + str;
+                        upLevelNum++;
+                    }
+
                 } else {
-                    String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" +
-                            stack[i].getFileName() +
-                            ":"
-                            + stack[i].getLineNumber() + ")";
+                    String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
                     if (upLevelNum < 3) {
                         str = tempInfo + "=>" + str;
                         upLevelNum++;
@@ -275,8 +273,7 @@ public class DataBaseImpl implements DataBase {
     public void connectDb(Connection connection, boolean externalControlConClose) {
         this.connectType = ConnectType.CONNECTION;
         this.externalControlConClose = externalControlConClose;
-        if (!this.isColsed())
-            throw new DbException("原有数据库连接没有关闭,不能重新连接！");
+        if (!this.isColsed()) throw new DbException("原有数据库连接没有关闭,不能重新连接！");
         long start0 = System.currentTimeMillis();
         this.setMainSlaveMode(false);
         this.mainSlaveModeConnectMode = MainSlaveModeConnectMode.Connect_MainServer;
@@ -297,8 +294,7 @@ public class DataBaseImpl implements DataBase {
         this.connectType = ConnectType.DATASOURCE;
         this.dbPoolName = "";
         try {
-            if (conn != null)
-                return;
+            if (conn != null) return;
             this.setMainSlaveMode(false);
             this.mainSlaveModeConnectMode = MainSlaveModeConnectMode.Connect_MainServer;
             this.dataSource = dataSource;
@@ -333,11 +329,9 @@ public class DataBaseImpl implements DataBase {
                             }
                             msg = "获取从库链接";
                             this.connectedToMaster = false;
-                            TResult<Connection> tResult = new TResult<>();
                             TResult<String> tslaveName = new TResult<>();
                             String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
-                            DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName, tResult);
-                            this.conn = tResult.getValue();
+                            DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName);
                             this.dataSource = ds;
 
                         } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
@@ -357,10 +351,8 @@ public class DataBaseImpl implements DataBase {
                                     this.connectedToMaster = false;
 
                                     String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
-                                    TResult<Connection> tResult = new TResult<>();
                                     TResult<String> tslaveName = new TResult<>();
-                                    DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName, tResult);
-                                    this.conn = tResult.getValue();
+                                    DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName);
                                     this.dataSource = ds;
                                     ///
                                 }
@@ -399,18 +391,11 @@ public class DataBaseImpl implements DataBase {
                 this.setInternalConnectionAutoCommit(this.getAutoCommit());
                 this.setDataBaseType(conn);
                 if (DbContext.permitDebugLog()) {
-                    log.debug("fetch a new connection from [" + this.getConnectInfo()
-                            + "]" + msg + ",connect time:"
-                            + (System.currentTimeMillis() - start0) + " 毫秒");
+                    log.debug("fetch a new connection from [" + this.getConnectInfo() + "]" + msg + ",connect time:" + (System.currentTimeMillis() - start0) + " 毫秒");
                 }
 
             }
 
-            for (String key : this.savePointMap.keySet()) {
-                if (this.savePointMap.get(key) == null) {
-                    this.setRealSavepoint(key);
-                }
-            }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
@@ -418,25 +403,14 @@ public class DataBaseImpl implements DataBase {
         }
     }
 
-    /**
-     * 从dbpool.xml里设置的连接池获得连接,如果想指定非dbpool.xml文件里的连接池，可以按如下格式：
-     * <pre>
-     * 格式为：配置xml文件名称#连接池名称
-     * mydbpool.xml#sysdb
-     * </pre>
-     *
-     * @param dbPoolName 对应于dbpool.xml里的元素dbpool的name属性值,格式为：[配置xml文件名称]#[连接池名称]，
-     *                   如果为：dbpool.xml#连接池名称，则dbpool.xml#可以省略
-     * @throws DbException 异常
-     */
+
     @Override
     public void connectDb(String dbPoolName) throws DbException {
 
         this.connectType = ConnectType.POOL;
         this.dbPoolName = dbPoolName;
         try {
-            if (conn != null)
-                return;
+            if (conn != null) return;
             // 设置是否是主从模式
             String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
             DBPoolFactory dbPoolFactory = DBPoolFactory.getInstance(strs[0]);
@@ -463,29 +437,16 @@ public class DataBaseImpl implements DataBase {
         return new DataBaseSet(doCachedQuery(sqlQuery, args));
     }
 
-    /**
-     * 此方法返回查询到的离线结果集，操作完成后，会默认自动关闭底层连接，不需要调用close()方法关闭 连接
-     *
-     * @param sqlQuery    SQL语句
-     * @param vParameters 参数
-     * @param page        当前页
-     * @param perPage     每页多少行
-     * @param pageBean    返回的分页信息
-     * @param countSql    查询总数的sql语句，根据它查询总数；也可以指定一个整数字符串，用于指定总数；
-     *                    如果指定null或""字符串，那么系统会根据sqlQuery自动生成查询总数sql语句
-     * @return 返回DataBaseSet对象
-     * @throws DbException 异常
-     */
+
     @Override
-    public DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage,
-                                         PageBean pageBean, String countSql) throws DbException {
+    public DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
         DataBaseSet ret = null;
-        this.configInterceptorForMehtod("queryForResultSet", String.class, Map.class,
-                int.class, int.class, PageBean.class, String.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
-            return ret = new DataBaseSet(
-                    this.doCachedPageQuery(sqlQuery, args, page, perPage, pageBean, countSql));
+            return ret = new DataBaseSet(this.doCachedPageQuery(sqlQuery, args, page, perPage, pageBean, countSql));
         } catch (Exception e) {
             this.configInterceptorForException(e);
             if (e instanceof DbException) throw e;
@@ -499,7 +460,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public DataBaseSet queryForResultSet(String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
         DataBaseSet ret = null;
-        this.configInterceptorForMehtod("queryForResultSet", String.class, Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
             return ret = new DataBaseSet(doCachedQuery(sqlQuery, args));
@@ -529,8 +492,7 @@ public class DataBaseImpl implements DataBase {
      * @throws DbException
      */
 
-    private <T> List<T> doPageQueryObject(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
-                                          PageBean pageBean, RowMapper<T> rowMapper, String countSql) throws DbException {
+    private <T> List<T> doPageQueryObject(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageBean, RowMapper<T> rowMapper, String countSql) throws DbException {
 
         Collection<Object> vParameters = CollectionUtils.getSortedValues(args);
 
@@ -543,10 +505,10 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageBean,
-                                 RowMapper<T> rowMapper, String countSql) throws DbException {
-        this.configInterceptorForMehtod("queryList", String.class, Map.class,
-                int.class, int.class, PageBean.class, RowMapper.class, String.class);
+    public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageBean, RowMapper<T> rowMapper, String countSql) throws DbException {
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<T> ret = null;
         try {
             return ret = this.doPageQueryObject(sqlQuery, args, page, perPage, pageBean, rowMapper, countSql);
@@ -560,26 +522,20 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private List<Map<String, Object>> doPageQueryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
-                                                     PageBean pageBean, String countSql) throws DbException {
-
+    private List<Map<String, Object>> doPageQueryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
         List<Map<String, Object>> list = doPageQueryObject(sqlQuery, args, page, perPage, pageBean,
-                new RowMapper<Map<String, Object>>() {
-                    @Override
-                    public Map<String, Object> mapRow(DataBaseSet rs) throws Exception {
-                        return ObjectUtils.getMapFromResultSet(rs.getResultSet());
-
-                    }
+                (rs)->{
+                    return ObjectUtils.getMapFromResultSet(rs.getResultSet(),this.getDataBaseType());
                 }, countSql);
         return list;
 
     }
 
     @Override
-    public List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage,
-                                              PageBean pageBean, String countSql) throws DbException {
-        this.configInterceptorForMehtod("queryMap", Map.class,
-                int.class, int.class, PageBean.class, String.class);
+    public List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<Map<String, Object>> ret = null;
         try {
             return ret = this.doPageQueryMap(sqlQuery, args, page, perPage, pageBean, countSql);
@@ -594,13 +550,11 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private CachedRowSet doCachedPageQuery(String sqlQuery, Collection<Object> vParameters, int page, int perPage,
-                                           PageBean pageBean, String countSql) throws DbException {
+    private CachedRowSet doCachedPageQuery(String sqlQuery, Collection<Object> vParameters, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
 
         CachedRowSet crs = null;
         try {
-            String pageSql = this.getPagedSql(sqlQuery, vParameters, page, perPage,
-                    pageBean, countSql);
+            String pageSql = this.getPagedSql(sqlQuery, vParameters, page, perPage, pageBean, countSql);
             if (StringUtils.isEmpty(pageSql)) {
                 return new CachedRowSetImpl();
             }
@@ -631,8 +585,7 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters)
-            throws DbException {
+    private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters) throws DbException {
         return this.doCachedQuery(sqlQuery, vParameters, false);
     }
 
@@ -643,8 +596,7 @@ public class DataBaseImpl implements DataBase {
      * @return
      * @throws DbException
      */
-    private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters, boolean internalUse)
-            throws DbException {
+    private CachedRowSet doCachedQuery(String sqlQuery, Collection<Object> vParameters, boolean internalUse) throws DbException {
 
         CachedRowSet crs = null;
         try {
@@ -703,8 +655,7 @@ public class DataBaseImpl implements DataBase {
      * @return
      */
 
-    private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters)
-            throws DbException {
+    private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
         return this.doQueryClassOne2One(clazz, sqlQuery, vParameters, (One2OneMapNestOptions) null);
 
     }
@@ -712,7 +663,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
         List<T> ret = null;
-        this.configInterceptorForMehtod("queryList", Class.class, String.class, Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.doQueryClass(clazz, sqlQuery, vParameters);
         } catch (Exception e) {
@@ -740,7 +693,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> T queryOne(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters) throws DbException {
-        this.configInterceptorForMehtod("queryOne", Class.class, String.class, Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         T ret = null;
         try {
             return ret = this.doQueryClassOne(clazz, sqlQuery, vParameters);
@@ -755,25 +710,60 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private <T> List<T> doQueryClassForObject(Class<T> clazz, T selectObject, String[] whereProperteis, QueryOptions queryOptions) throws DbException {
+    private <T> List<T> doQueryClassForObject(Class<T> clazz, T selectObject,
+                                              String[] whereProperteis,
+                                              QueryOptions queryOptions) throws DbException {
         String sql = "";
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
+            Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = selectObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
+            if (handClass != null ) {
+                reflectClass = handClass;
             }
             this.sqlType = SQLType.SELECT;
             this.fetchConnection();
-            sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass, whereProperteis, vParameters,
-                    queryOptions, this.getDataBaseType());
-            DbContext.clearReflectClass();
+            QueryOptions options = fetchQueryOptions(queryOptions);
+            sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass,
+                    whereProperteis, vParameters, options, this.getDataBaseType());
+
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
+        } finally {
+            DbContext.clearQueryHint();
+            DbContext.clearReflectClass();
         }
         return doQueryClass(clazz, sql, vParameters);
+    }
+
+    private QueryOptions fetchQueryOptions(QueryOptions options) {
+        QueryHint queryHint = DbContext.getQueryHint();
+        if (queryHint != null) {
+            if (options == null) {
+                options = new QueryOptions();
+            }
+            options.setQueryHint(queryHint);
+            try {
+                Method method = DbContext.getDBInterceptorInfo().getInterceptedMethod();
+                Method f = DBObjectOperation.class.getMethod(method.getName(), method.getParameterTypes());
+                if (method.getName().startsWith("query")) {
+                    if(options.getQueryHint()!=null &&
+                            options.getQueryHint().limit()!=null){
+                        if(ArrayUtils.contains(method.getParameterTypes(),PageBean.class)){
+                            throw new IllegalArgumentException("QueryHint不能设置到对象分页查询操作！");
+                        }
+                    }
+
+                } else {
+                    throw new IllegalArgumentException("QueryHint不能设置到非对象查询操作！");
+                }
+            } catch (Exception e) {
+                throw new DbException(e);
+            }
+
+        }
+        return options;
     }
 
     @SuppressWarnings("unchecked")
@@ -781,19 +771,23 @@ public class DataBaseImpl implements DataBase {
         String sql = "";
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
+            Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = selectObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
+            if (handClass != null ) {
+                reflectClass =handClass;
             }
             this.sqlType = SQLType.SELECT;
             this.fetchConnection();
-            sql = SqlUtils.generateSelectSqlBySelectObject(this.dbPoolName, selectObject, reflectClass, vParameters,
-                    options, this.getDataBaseType());
-            DbContext.clearReflectClass();
+            options = fetchQueryOptions(options);
+            sql = SqlUtils.generateSelectSqlBySelectObject(this.dbPoolName,
+                    selectObject, reflectClass, vParameters, options, this.getDataBaseType());
+
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
+        } finally {
+            DbContext.clearQueryHint();
+            DbContext.clearReflectClass();
         }
         return doQueryClass((Class<T>) selectObject.getClass(), sql, vParameters);
     }
@@ -810,7 +804,7 @@ public class DataBaseImpl implements DataBase {
      * String sql = "select n.*,p.*,a.* from news n left outer join photos p on
      * n.id=p.newsid  left outer join archives a  on n.id=a.newsid  where n.type=?  and n.audi=1 order by n.id desc";
      * </pre></blockquote>
-     * 如果sqlPrefix指定"n."，clazz指定New.class，则对n.*所属的字段会映射到New类对象
+     * 如果one2OneMapNestOptions里sqlPrefix指定"n."，clazz指定New.class，则对n.*所属的字段会映射到New类对象
      *
      * @param clazz                 指定映射父对象所属的类
      * @param sqlQuery              sql语句
@@ -820,9 +814,7 @@ public class DataBaseImpl implements DataBase {
      * @return 返回查询到的列表
      * @throws DbException
      */
-    private <T> List<T> doQueryClassOne2One(Class<T> clazz, String sqlQuery,
-                                            Map<Integer, Object> vParameters,
-                                            One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
+    private <T> List<T> doQueryClassOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
 
         if (one2OneMapNestOptions != null) {
             Assert.hasText(one2OneMapNestOptions.getSqlPrefix());
@@ -831,17 +823,16 @@ public class DataBaseImpl implements DataBase {
             String sqlPrefix = one2OneMapNestOptions.getSqlPrefix();
             return this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, null);
         } else {
-            return this.doQueryClass(clazz, sqlQuery, vParameters, (QueryMapNestOne2One[]) null,
-                    null, null);
+            return this.doQueryClass(clazz, sqlQuery, vParameters, (QueryMapNestOne2One[]) null, null, null);
         }
 
     }
 
     @Override
-    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
-                                        One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
-        this.configInterceptorForMehtod("queryListOne2One",
-                Class.class, String.class, Map.class, One2OneMapNestOptions.class);
+    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, One2OneMapNestOptions one2OneMapNestOptions) throws DbException {
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<T> ret = null;
         try {
             return ret = this.doQueryClassOne2One(clazz, sqlQuery, vParameters, one2OneMapNestOptions);
@@ -869,23 +860,17 @@ public class DataBaseImpl implements DataBase {
      * @return
      * @throws DbException
      */
-    private <T> List<T> doPageQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page,
-                                         int perPage, PageBean pageBean, String countSql) throws DbException {
-        return this.doPageQueryClass(clazz, null, sqlQuery, vParameters, (QueryMapNestOne2One[]) null, page, perPage,
-                pageBean, countSql);
+    private <T> List<T> doPageQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
+        return this.doPageQueryClass(clazz, null, sqlQuery, vParameters, (QueryMapNestOne2One[]) null, page, perPage, pageBean, countSql);
     }
 
     @Override
-    public <T> List<T> queryList(Class<T> clazz, String sqlQuery,
-                                 Map<Integer, Object> vParameters,
-                                 int page,
-                                 int perPage,
-                                 PageBean pageBean,
-                                 String countSql) throws DbException {
+    public <T> List<T> queryList(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
 
         List<T> ret = null;
-        this.configInterceptorForMehtod("queryList", Class.class, String.class, Map.class,
-                int.class, int.class, PageBean.class, String.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.doPageQueryClass(clazz, sqlQuery, vParameters, page, perPage, pageBean, countSql);
         } catch (Exception e) {
@@ -915,9 +900,7 @@ public class DataBaseImpl implements DataBase {
      * @return
      * @throws DbException
      */
-    private <T> List<T> doPageQueryClass(Class<T> clazz, String sqlPrefix, String sqlQuery,
-                                         Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList, int page, int perPage,
-                                         PageBean pageBean, String countSql) throws DbException {
+    private <T> List<T> doPageQueryClass(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
         Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
 
         String pageSql = this.getPagedSql(sqlQuery, args, page, perPage, pageBean, countSql);
@@ -929,21 +912,16 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
-                                        One2OneMapNestOptions one2OneMapNestOptions,
-                                        int page, int perPage, PageBean pageBean, String countSql)
-            throws DbException {
+    public <T> List<T> queryListOne2One(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, One2OneMapNestOptions one2OneMapNestOptions, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
         Assert.notNull(one2OneMapNestOptions);
         Assert.hasText(one2OneMapNestOptions.getSqlPrefix());
         Assert.notEmpty(one2OneMapNestOptions.getQueryMapNestOne2Ones());
-        this.configInterceptorForMehtod("queryListOne2One",
-                Class.class, String.class, Map.class, One2OneMapNestOptions.class,
-                int.class, int.class, PageBean.class, String.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<T> ret = null;
         try {
-            return ret = this.doPageQueryClass(clazz, one2OneMapNestOptions.getSqlPrefix(),
-                    sqlQuery, vParameters, one2OneMapNestOptions.getQueryMapNestOne2Ones(), page, perPage,
-                    pageBean, countSql);
+            return ret = this.doPageQueryClass(clazz, one2OneMapNestOptions.getSqlPrefix(), sqlQuery, vParameters, one2OneMapNestOptions.getQueryMapNestOne2Ones(), page, perPage, pageBean, countSql);
         } catch (Exception e) {
             this.configInterceptorForException(e);
             if (e instanceof DbException) throw e;
@@ -971,11 +949,8 @@ public class DataBaseImpl implements DataBase {
      * @return
      * @throws DbException
      */
-    private <T> List<T> doPageQueryClassOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery,
-                                                Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList, int page, int perPage,
-                                                PageBean pageBean, String countSql) throws DbException {
-        return this.doPageQueryClass(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage,
-                pageBean, countSql);
+    private <T> List<T> doPageQueryClassOne2One(Class<T> clazz, String sqlPrefix, String sqlQuery, Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
+        return this.doPageQueryClass(clazz, sqlPrefix, sqlQuery, vParameters, queryMapNestList, page, perPage, pageBean, countSql);
 
     }
 
@@ -992,8 +967,7 @@ public class DataBaseImpl implements DataBase {
      * @return 返回查询结果
      * @throws DbException
      */
-    private <T> List<T> doQueryClassOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery,
-                                             Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
+    private <T> List<T> doQueryClassOne2Many(Class<T> clazz, String sqlPrefix, String[] parentBeanKeys, String sqlQuery, Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList) throws DbException {
 
         List<T> list = this.doQueryClass(clazz, sqlQuery, vParameters, queryMapNestList, sqlPrefix, parentBeanKeys);
         // 过滤，并进行子类赋值
@@ -1024,19 +998,17 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> List<T> queryListOne2Many(Class<T> clazz, String sqlQuery,
-                                         Map<Integer, Object> vParameters,
-                                         One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
+    public <T> List<T> queryListOne2Many(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, One2ManyMapNestOptions one2ManyMapNestOptions) throws DbException {
         Assert.notNull(one2ManyMapNestOptions);
         Assert.hasText(one2ManyMapNestOptions.getSqlPrefix());
         Assert.notEmpty(one2ManyMapNestOptions.getQueryMapNestOne2Manys());
         Assert.notEmpty(one2ManyMapNestOptions.getParentBeanKeys());
         List<T> ret = null;
-        this.configInterceptorForMehtod("queryListOne2Many",
-                Class.class, String.class, Map.class, One2ManyMapNestOptions.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
-            return ret = this.doQueryClassOne2Many(clazz, one2ManyMapNestOptions.getSqlPrefix(),
-                    one2ManyMapNestOptions.getParentBeanKeys(), sqlQuery, vParameters, one2ManyMapNestOptions.getQueryMapNestOne2Manys());
+            return ret = this.doQueryClassOne2Many(clazz, one2ManyMapNestOptions.getSqlPrefix(), one2ManyMapNestOptions.getParentBeanKeys(), sqlQuery, vParameters, one2ManyMapNestOptions.getQueryMapNestOne2Manys());
         } catch (Exception e) {
             this.configInterceptorForException(e);
             if (e instanceof DbException) throw e;
@@ -1048,8 +1020,7 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private <T> List<T> doQueryObject(String sqlQuery, Collection<Object> vParameters,
-                                      RowMapper<T> rowMapper) throws DbException {
+    private <T> List<T> doQueryObject(String sqlQuery, Collection<Object> vParameters, RowMapper<T> rowMapper) throws DbException {
 
         boolean close = this.getAutoCommit();
 
@@ -1094,8 +1065,7 @@ public class DataBaseImpl implements DataBase {
      * @return
      * @throws DbException
      */
-    private <T> List<T> doQueryObject(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper)
-            throws DbException {
+    private <T> List<T> doQueryObject(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException {
 
         Collection<Object> vParameters = CollectionUtils.getSortedValues(args);
 
@@ -1105,7 +1075,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> List<T> queryList(String sqlQuery, Map<Integer, Object> args, RowMapper<T> rowMapper) throws DbException {
-        this.configInterceptorForMehtod("queryList", String.class, Map.class, RowMapper.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<T> ret = null;
         try {
             return ret = this.doQueryObject(sqlQuery, args, rowMapper);
@@ -1120,16 +1092,8 @@ public class DataBaseImpl implements DataBase {
     }
 
     private List<Map<String, Object>> doQueryMap(String sqlQuery, Map<Integer, Object> args) throws DbException {
-
-        List<Map<String, Object>> list = doQueryObject(sqlQuery, args, new RowMapper<Map<String, Object>>() {
-
-            @Override
-            public Map<String, Object> mapRow(DataBaseSet rs) throws Exception {
-
-                return ObjectUtils.getMapFromResultSet(rs.getResultSet());
-
-            }
-        });
+        List<Map<String, Object>> list = doQueryObject(sqlQuery, args,
+                (rs)->{return ObjectUtils.getMapFromResultSet(rs.getResultSet(),this.getDataBaseType());});
 
         return list;
 
@@ -1137,7 +1101,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public List<Map<String, Object>> queryMap(String sqlQuery, Map<Integer, Object> args) throws DbException {
-        this.configInterceptorForMehtod("queryMap", Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<Map<String, Object>> ret = null;
         try {
             return ret = this.doQueryMap(sqlQuery, args);
@@ -1151,17 +1117,11 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private <T> List<T> doQueryClass(Class<T> clazz,
-                                     String sqlQuery,
-                                     Map<Integer, Object> vParameters,
-                                     QueryMapNestOne2One[] queryMapNestList,
-                                     String sqlPrefix,
-                                     String[] parentBeanKeys) throws DbException {
+    private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, QueryMapNestOne2One[] queryMapNestList, String sqlPrefix, String[] parentBeanKeys) throws DbException {
 
         ArrayList<T> list = new ArrayList<>();
         Map<String, T> keyMapList = new LinkedHashMap<>();
-        if (sqlPrefix == null)
-            sqlPrefix = "";
+        if (sqlPrefix == null) sqlPrefix = "";
         try {
             DataBaseSet rs = this.doQuery(sqlQuery, vParameters);
             this.rs = rs.getResultSet();
@@ -1169,20 +1129,18 @@ public class DataBaseImpl implements DataBase {
             while (rs.next()) {
                 try {
                     T bean = clazz.getDeclaredConstructor().newInstance();
-                    Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
+                    Map<String, TResult2<Method, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
                     Set<?> set = map.keySet();
                     Iterator<?> i = set.iterator();
                     while (i.hasNext()) {
 
                         String name = (String) i.next();
-                        TResult2<Class, Object> tr2 = map.get(name);
-                        Class<?> t = tr2.getFirstValue();
+                        TResult2<Method, Object> tr2 = map.get(name);
+                        Class<?> t = tr2.getFirstValue().getReturnType();
                         Object value = null;
                         // name为javabean属性名
-                        if (SqlUtils.checkedSimpleType(t)) {// 简单类型
-                            value = SqlUtils.getValueFromResult(this.dbPoolName, clazz, t, sqlPrefix, name, rs.getResultSet(),
-                                    DataBaseKeyMap.getMap());
-
+                        if (TypeMapSystem.checkedSimpleType(t)) {// 简单类型
+                            value = SqlUtils.getValueFromResult(this.dbPoolName, clazz, t, sqlPrefix, name, rs.getResultSet());
                             PropertyUtil.setProperty(bean, name, value);
 
                         } else {
@@ -1194,8 +1152,7 @@ public class DataBaseImpl implements DataBase {
                                 int mapRelation = queryMapNest.getMapRelation();
                                 String toPropertyName = queryMapNest.getToPropertyName();
                                 String prefix = queryMapNest.getPrefix();
-                                if (prefix == null)
-                                    prefix = "";
+                                if (prefix == null) prefix = "";
                                 String[] toPros = queryMapNest.getToChildPros();
 
                                 if (mapRelation == MapNest.ONE_TO_ONE) {
@@ -1205,8 +1162,7 @@ public class DataBaseImpl implements DataBase {
 
                                         Object nestedObj = nestedClass.getDeclaredConstructor().newInstance();
 
-                                        nestedObj = BeanUtils.setOne2One(this.dbPoolName, nestedObj, toPros, prefix,
-                                                rs);
+                                        nestedObj = BeanUtils.setOne2One(this.dbPoolName, nestedObj, toPros, prefix, rs);
                                         PropertyUtil.setProperty(bean, toPropertyName, nestedObj);
 
                                     } else {// 表明不进行映射的属性
@@ -1265,14 +1221,11 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters,
-                                     QueryMapNestOne2Many[] queryMapNestList, String sqlPrefix, String[] parentBeanKeys)
-            throws DbException {
+    private <T> List<T> doQueryClass(Class<T> clazz, String sqlQuery, Map<Integer, Object> vParameters, QueryMapNestOne2Many[] queryMapNestList, String sqlPrefix, String[] parentBeanKeys) throws DbException {
 
         ArrayList<T> list = new ArrayList<T>();
         Map<String, T> keyList = new LinkedHashMap<>();
-        if (sqlPrefix == null)
-            sqlPrefix = "";
+        if (sqlPrefix == null) sqlPrefix = "";
         try {
 
             DataBaseSet rs = this.doQuery(sqlQuery, vParameters);
@@ -1281,23 +1234,22 @@ public class DataBaseImpl implements DataBase {
                 try {
 
                     T bean = clazz.getDeclaredConstructor().newInstance();
-                    Map<String, TResult2<Class, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
+                    Map<String, TResult2<Method, Object>> map = PropertyUtil.describeForTypes(bean, bean.getClass());
                     Set<?> set = map.keySet();
                     Iterator<?> i = set.iterator();
 
                     while (i.hasNext()) {
 
                         String name = (String) i.next();
-                        TResult2<Class, Object> re2 = map.get(name);
+                        TResult2<Method, Object> re2 = map.get(name);
 
-                        Class<?> t = re2.getFirstValue();
+                        Class<?> t = re2.getFirstValue().getReturnType();
                         Object value = null;
 
                         // name为javabean属性名
-                        if (SqlUtils.checkedSimpleType(t)) {// 简单类型
+                        if (TypeMapSystem.checkedSimpleType(t)) {// 简单类型
 
-                            value = SqlUtils.getValueFromResult(this.dbPoolName, clazz, t, sqlPrefix, name, rs.getResultSet(),
-                                    DataBaseKeyMap.getMap());
+                            value = SqlUtils.getValueFromResult(this.dbPoolName, clazz, t, sqlPrefix, name, rs.getResultSet());
                             PropertyUtil.setProperty(bean, name, value);
                         } else {
 
@@ -1308,25 +1260,21 @@ public class DataBaseImpl implements DataBase {
                                 int mapRelation = queryMapNest.getMapRelation();
                                 String toPropertyName = queryMapNest.getToPropertyName();
                                 String prefix = queryMapNest.getPrefix();
-                                if (prefix == null)
-                                    prefix = "";
+                                if (prefix == null) prefix = "";
                                 String[] toPros = queryMapNest.getToChildPros();
 
                                 if (mapRelation == MapNest.ONE_TO_MANY) {
                                     if (name.equals(toPropertyName)) {
                                         QueryMapNestOne2Many queryMapNestMany = (QueryMapNestOne2Many) queryMapNest;
-                                        Map<String, LinkedHashMap<String, Object>> result = queryMapNestMany
-                                                .getResult();
+                                        Map<String, LinkedHashMap<String, Object>> result = queryMapNestMany.getResult();
                                         String[] nestedBeanPropertyKeys = queryMapNestMany.getNestedBeanPropertyKeys();
 
                                         Class<?> nestedClass = queryMapNestMany.getNestedClassType();
                                         Object nestedObj = nestedClass.getDeclaredConstructor().newInstance();
 
-                                        nestedObj = BeanUtils.setOne2One(this.dbPoolName, nestedObj, toPros, prefix,
-                                                rs);
+                                        nestedObj = BeanUtils.setOne2One(this.dbPoolName, nestedObj, toPros, prefix, rs);
 
-                                        String parentKeyValue = BeanUtils.getKeyValue(this.dbPoolName, bean, sqlPrefix,
-                                                parentBeanKeys, rs);
+                                        String parentKeyValue = BeanUtils.getKeyValue(this.dbPoolName, bean, sqlPrefix, parentBeanKeys, rs);
                                         LinkedHashMap<String, Object> nestlist = result.get(parentKeyValue);
 
                                         if (nestlist == null) {
@@ -1334,8 +1282,7 @@ public class DataBaseImpl implements DataBase {
                                             result.put(parentKeyValue, nestlist);
                                         }
                                         if (nestedBeanPropertyKeys != null && nestedBeanPropertyKeys.length > 0) {// //过滤重复的值
-                                            String nestKeyValueStr = BeanUtils.getKeyValue(nestedObj,
-                                                    nestedBeanPropertyKeys);
+                                            String nestKeyValueStr = BeanUtils.getKeyValue(nestedObj, nestedBeanPropertyKeys);
                                             if (nestKeyValueStr != null) {
                                                 Object find = nestlist.get(nestKeyValueStr);
                                                 if (find == null) {
@@ -1403,77 +1350,14 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private static String trimTailOrderBy(String sql, TString orderStr) {
-        sql = sql.trim();
-        String newSql = "";
-        String reg = "order\\s+by\\s+\\S+(\\s+(asc|desc))?";
-        TInteger startPos = new TInteger();
-        boolean isEnd = StringUtils.endsWith(sql, reg, true, startPos);
-        if (isEnd) {
-            if (orderStr != null) {
-                orderStr.setValue(sql.substring(startPos.getValue()));
-            }
-            newSql = sql.substring(0, startPos.getValue());
-        } else {
-            if (orderStr != null) {
-                orderStr.setValue("");
-            }
-            newSql = sql;
-        }
-        return newSql;
-    }
 
     private String getCountSql(String sqlQuery) throws Exception {
-
-        if (sqlQuery == null)
-            return null;
-        String sql = sqlQuery.trim();
-
-        String maxSql = "";
-        sqlQuery = sqlQuery.trim();
-
-        sqlQuery = trimTailOrderBy(sqlQuery, new TString());
-
-        StringBuilder sb = new StringBuilder(sqlQuery);
-        if (!StringUtils.startsWithIgnoreCase(sqlQuery, "select")) {
-            throw new DbException("语句不是select查询语句！");
-        }
-        if (this.dataBaseType.isSQLServerFamily()) {
-
-            String regx = "select\\s+top";
-
-            TInteger tend = new TInteger();
-            boolean hasTop = StringUtils.startsWith(sb.toString(), regx, true);
-
-            if (!hasTop) {
-                int from = StringUtils.indexOf(sql, "from", true);
-                String regx2 = "select\\s+distinct";
-                if (StringUtils.startsWith(sql, regx2, true)) {
-                    maxSql = "select count(1) from (" + sb.toString() + ") t";
-                } else {
-
-                    String tempStr = sb.substring(6, from);
-                    maxSql = sb.replace(6, from, " count(*) ").toString();
-                } // select is 6 characters
-            } else {
-                maxSql = "select count(1) from (" + sb.toString() + ") t";
-            }
-
-        } else if (this.dataBaseType.isMySqlFamily()) {
-            maxSql = "select count(1) from (" + sb.toString() + ") t";
-        } else {
-            maxSql = "select count(1) from (" + sb.toString() + ") t";
-        }
-
-        return maxSql;
-
+        return this.dataBaseType.CountSql(sqlQuery);
     }
 
-    private String getPagedSql(String sqlQuery, Collection<Object> vParameters, int page, int perPage,
-                               PageBean pageBean, String countSql) throws DbException {
+    private String getPagedSql(String sqlQuery, Collection<Object> vParameters, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
 
-        if (sqlQuery == null)
-            return null;
+        if (sqlQuery == null) return null;
         String sql = sqlQuery.trim();
 
         int total = 0;
@@ -1491,11 +1375,10 @@ public class DataBaseImpl implements DataBase {
                 total = -1;
             } else {
                 if (StringUtils.isEmpty(maxSql)) {//自动生成查询总行数的SQL语句
-                    String tsql = this.trimTailOrderBy(sqlQuery, new TString());
-                    maxSql = this.getCountSql(tsql);
+                    maxSql = this.getCountSql(sqlQuery);
 
                 } else {// 说明指定了查询总行数的sql语句
-                    maxSql = this.trimTailOrderBy(maxSql, new TString());
+                    maxSql = this.dataBaseType.trimTailOrderBy(maxSql, new TString());
                 }
 
                 RowSet rs = this.doCachedQuery(maxSql, vParameters, true);// 不关闭数据库连接
@@ -1511,8 +1394,7 @@ public class DataBaseImpl implements DataBase {
             if (pageBean.isEmpty()) {
                 return "";
             }
-            sql = SqlUtils.getPageSql(sqlQuery, pageBean.getPage(), pageBean.getPerPage(),
-                    this.dataBaseType);
+            sql = SqlUtils.getPageSql(sqlQuery, pageBean.getPage(), pageBean.getPerPage(), this.dataBaseType);
 
             return sql;
 
@@ -1616,7 +1498,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public int del(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-        this.configInterceptorForMehtod("del", String.class, Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             return ret = this.executeBindDelete(sqltext, vParameters);
@@ -1648,7 +1532,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public int update(String sqltext, Map<Integer, Object> vParameters) throws DbException {
         Integer ret = null;
-        this.configInterceptorForMehtod("update", String.class, Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.executeBindUpdate(sqltext, vParameters);
         } catch (Exception e) {
@@ -1688,9 +1574,7 @@ public class DataBaseImpl implements DataBase {
      * @throws DbException
      */
 
-    private void executeStoredProcedure(String sqltext, Map<String, Object> parms,
-                                        Map<Integer, Object> outPramsValues,
-                                        List<DataBaseSet> returnDataBaseSets) throws DbException {
+    private void executeStoredProcedure(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues, List<DataBaseSet> returnDataBaseSets) throws DbException {
         boolean close = true;
         try {
 
@@ -1743,7 +1627,7 @@ public class DataBaseImpl implements DataBase {
             String inParamStr = SqlUtils.setToPreStatment(inParms, cs);
 
             // 注册输出参数
-            String outParamStr = SqlUtils.registForStoredProc(outParms, cs);
+            String outParamStr = SqlUtils.registForStoredProc(outParms, cs,this.dataBaseType);
 
             Map<Integer, Object> inOutParms = new HashMap<Integer, Object>();
             inOutParms.putAll(inParms);
@@ -1763,8 +1647,7 @@ public class DataBaseImpl implements DataBase {
             }
             if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                 String line = System.getProperty("line.separator");
-                log.debug(
-                        "sql [" + sqltext + "]" + " in param[ " + inParamStr + " ]" + "out param[" + outParamStr + "]");
+                log.debug("sql [" + sqltext + "]" + " in param[ " + inParamStr + " ]" + "out param[" + outParamStr + "]");
                 log.debug("[" + getConnectInfo() + "][" + getCallerInf() + "]");
                 log.debug("debugSql[" + debugSql + "]");
 
@@ -1801,7 +1684,7 @@ public class DataBaseImpl implements DataBase {
 
             // 取输出参数
 
-            SqlUtils.getValueFromCallableStatement(cs, outParms, outPramsValues);
+            SqlUtils.getValueFromCallableStatement(this.getDataBaseType(), cs, outParms, outPramsValues);
 
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -1823,11 +1706,10 @@ public class DataBaseImpl implements DataBase {
 
 
     @Override
-    public void callStoredPro(String sqltext, Map<String, Object> parms,
-                              Map<Integer, Object> outPramsValues,
-                              List<DataBaseSet> returnDataBaseSets) throws DbException {
-        this.configInterceptorForMehtod("callStoredPro",
-                String.class, Map.class, Map.class, List.class);
+    public void callStoredPro(String sqltext, Map<String, Object> parms, Map<Integer, Object> outPramsValues, List<DataBaseSet> returnDataBaseSets) throws DbException {
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             this.executeStoredProcedure(sqltext, parms, outPramsValues, returnDataBaseSets);
 
@@ -1841,17 +1723,52 @@ public class DataBaseImpl implements DataBase {
 
     }
 
+    /**
+     *
+     * @param sqltext
+     * @param vParameters
+     * @return  返回两个元素的数组，0位置的元素为更新的个数，1位置的元素为主键值（如果存在，否则为-1）
+     * @throws DbException
+     */
     private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters) throws DbException {
         return this.executeBindUpdate(sqltext, vParameters, false, null);
     }
 
+    private List<Object>  handerParameters(Collection<Object> vParameters,TResult<GenerateID> result){
+        List<Object> vParametersList=new ArrayList<>();
+        if(vParameters==null){
+            return vParametersList;
+        }
+        vParametersList.addAll(vParameters);
+        for(int k=0; k<vParametersList.size(); k++){
+            Object obj=vParametersList.get(k);
+            if(obj instanceof AkaParamter){
+                if (obj instanceof IDGeneratorParmeter) {
+                    IDGeneratorParmeter idGeneratorParmeter = (IDGeneratorParmeter) obj;
+                    String sequenceName=idGeneratorParmeter.getSequenceName();
+                    SequenceInfo sequenceInfo=new SequenceInfo();
+                    sequenceInfo.setSequenceName(sequenceName);
+                    sequenceInfo.setIdName(idGeneratorParmeter.getName());
+                    sequenceInfo.setCallBeforeInsert(true);
+                    this.handSequenceForQueryID(sequenceInfo,true);
+                    GenerateID generateID= sequenceInfo.getGenerateID();
+                    vParametersList.set(k,generateID.getIdValue());
+                    if(result!=null){
+                        result.setValue(generateID);
+                    }
+
+                }
+            }
+        }
+        return vParametersList;
+    }
     /**
      * 执行更新操作
      *
      * @param sqltext
      * @param vParameters
      * @param innerUse    是否是内部使用，如果是内部使用，则不需要关闭连接
-     * @return 返回两个元素的数组，0位置的元素为更新的个数，1位置的元素为主键（如果存在，否则为-1）
+     * @return 返回两个元素的数组，0位置的元素为更新的个数，1位置的元素为主键值（如果存在，否则为-1）
      * @throws DbException
      */
     private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters, boolean innerUse, Integer index) throws DbException {
@@ -1861,10 +1778,10 @@ public class DataBaseImpl implements DataBase {
         try {
             sqltext = sqltext.trim();
             PreparedStatement preStmt = this.getPreparedStatement(sqltext);
-
-            String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
-
-            String debugSql = SqlUtils.generateDebugSql(sqltext, vParameters, this.getDataBaseType());
+            TResult<GenerateID> result=new TResult<>();
+            List<Object> vParametersList=this.handerParameters(vParameters,result);
+            String paramStr = SqlUtils.setToPreStatment(vParametersList, preStmt);
+            String debugSql = SqlUtils.generateDebugSql(sqltext, vParametersList, this.getDataBaseType());
             if (DbContext.getDebugSQLListener() != null) {
                 DbContext.getDebugSQLListener().accept(debugSql);
             }
@@ -1888,23 +1805,30 @@ public class DataBaseImpl implements DataBase {
             }
             twoInt[0] = count;
             try {
-
                 if (this.sqlType == SQLType.INSERT) {
-                    ResultSet keys = preStmt.getGeneratedKeys();
-                    if (keys.next()) {
-                        twoInt[1] = keys.getLong(1);
-                    } else {
-                        twoInt[1] = -1;
+                    if(!this.getDataBaseType().isOracleFamily()){//oracle不支持getGeneratedKeys操作
+                        ResultSet keys = preStmt.getGeneratedKeys();
+                        if (keys.next()) {
+                            twoInt[1] = keys.getLong(1);
+                        } else {
+                            twoInt[1] = -1;
+                        }
+                        keys.close();
                     }
-                    keys.close();
+                    if(twoInt[1]==-1){
+                       if(result.getValue()!=null){
+                           twoInt[1]=(long) result.getValue().getIdValue();
+                       }
+                    }
                 } else {
                     twoInt[1] = -1;
                 }
 
             } catch (Throwable e) {
                 twoInt[1] = -1;
-                log.error("您的驱动程序不支持生成主键的操作（PreparedStatement.getGeneratedKeys()），建议更换您的数据库驱动程序版本"
-                        + "使之支持jdbc3.0标准！返回-1");
+                log.error(
+                        "您的驱动程序不支持生成主键的操作（PreparedStatement.getGeneratedKeys()），" +
+                                "建议更换您的数据库驱动程序版本使之支持jdbc4.0标准！",e);
             }
 
         } catch (Exception e) {
@@ -1951,7 +1875,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public int insert(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-        this.configInterceptorForMehtod("insert", String.class, Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             return ret = this.executeBindInsert(sqltext, vParameters);
@@ -1985,9 +1911,9 @@ public class DataBaseImpl implements DataBase {
 
     /**
      * 向数据库插入在insertObject里properties数组指定的属性，如果在properties中的某
-     * 个属性对应insertObject属性值为空，那么会忽略此属性，不会插入空值到数据库。
+     * 个属性对应insertObject属性值为空，会根据ignoreNull设置来决定是否忽略此属性，如果忽略则不会插入空值到数据库。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
+     * 此方法会默认自动关闭底层数据库连接，所以不需要 用close()方法
      *
      * @param <T>
      * @param insertObject
@@ -2000,26 +1926,63 @@ public class DataBaseImpl implements DataBase {
 
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
+            Class<?> handClass = DbContext.getReflectClass();
+
             Class<?> reflectClass = insertObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
+            if (handClass != null ) {
+                reflectClass = handClass;
             }
+
             this.sqlType = SQLType.INSERT;
             this.fetchConnection();
-            String sqltext = SqlUtils.generateInsertSql(this.dbPoolName, properties, insertObject, reflectClass,
-                    vParameters, null, ignoreNull, this.getDataBaseType());
+            //查询sequence
+            SequenceInfo sequeceInfo = DbContext.getGenerateIDForInsert();
+            handSequenceForQueryID(sequeceInfo,true);
+            GenerateID generateID =(sequeceInfo!=null?sequeceInfo.getGenerateID():null);
+            UpdateOptions updateOptions=new UpdateOptions();
+            updateOptions.setGenerateID(generateID);
+            String sqltext = SqlUtils.generateInsertSql(this.dbPoolName, properties, insertObject, reflectClass, vParameters,
+                    updateOptions, ignoreNull, this.getDataBaseType());
             DbContext.clearReflectClass();
+            int ret = this.executeBindInsert(sqltext, vParameters);
 
-            return this.executeBindInsert(sqltext, vParameters);
+            handSequenceForQueryID(sequeceInfo, false);
+            generateID = (sequeceInfo!=null?sequeceInfo.getGenerateID():null);;
+            if (generateID != null && generateID.getIdName() != null) {
+                PropertyUtil.setProperty(insertObject, generateID.getIdName(), generateID.getIdValue());
+            }
+            return ret;
 
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
+        } finally {
+            DbContext.removeGenerateIDForInsert();
         }
 
     }
 
+    private void handSequenceForQueryID( SequenceInfo sequeceInfo,
+                                              boolean beforeOrAfter) {
+        if (sequeceInfo != null ) {
+            boolean callBeforeInsert =  sequeceInfo.getCallBeforeInsert();
+            if (callBeforeInsert == beforeOrAfter) {
+                String sequenceSql = this.getDataBaseType().
+                        getSequenceSql((String) sequeceInfo.getSequenceName(), callBeforeInsert);
+                SQLType oldSqlType=this.sqlType;
+                DataBaseSet rs = this.doQuery(sequenceSql, (Map<Integer, Object>) null);
+                this.sqlType=oldSqlType;
+                if (rs.next()) {
+                    GenerateID generateID=new GenerateID();
+                    generateID.setSequenceInfo(sequeceInfo);
+                    sequeceInfo.setGenerateID(generateID);
+                    generateID.setIdName((String) sequeceInfo.getIdName());
+                    generateID.setIdValue(rs.getLong(1));
+                }
+
+            }
+        }
+    }
 
     /**
      * 把某对象的指定的属性插入到数据库到数据库，并返回主键，有些数据库的驱动程序不会返回主键，所以要根据具体数据库而言，如mysql数据库可以返回主键。
@@ -2033,27 +1996,53 @@ public class DataBaseImpl implements DataBase {
      * @return
      * @throws DbException
      */
-    private <T> long excuteInsertClassReturnKey(T insertObject, String[] properties, boolean ignoreNull) throws DbException {
+    private <T> long excuteInsertClassReturnKey(T insertObject,
+                                                String[] properties, boolean ignoreNull) throws DbException {
 
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
+
             Class<?> reflectClass = insertObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
+            Class<?> handClass = DbContext.getReflectClass();
+            if (handClass != null ) {
+                reflectClass = handClass;
             }
             this.sqlType = SQLType.INSERT;
             this.fetchConnection();
-            String sqltext = SqlUtils.generateInsertSql(this.dbPoolName, properties, insertObject, reflectClass,
-                    vParameters, null, ignoreNull, this.getDataBaseType());
+            //查询sequence
+            SequenceInfo sequeceInfo = DbContext.getGenerateIDForInsert();
+            handSequenceForQueryID(sequeceInfo, true);
+            GenerateID generateID = (sequeceInfo!=null?sequeceInfo.getGenerateID():null);
+            UpdateOptions updateOptions=new UpdateOptions();
+            updateOptions.setGenerateID(generateID);
+            String sqltext = SqlUtils.generateInsertSql(this.dbPoolName, properties,
+                    insertObject, reflectClass, vParameters, updateOptions, ignoreNull, this.getDataBaseType());
 
             DbContext.clearReflectClass();
+            long ret = this.executeBindInsertReturnKey(sqltext, vParameters);
 
-            return this.executeBindInsertReturnKey(sqltext, vParameters);
+            handSequenceForQueryID(sequeceInfo, false);
+            generateID = (sequeceInfo!=null?sequeceInfo.getGenerateID():null);
+
+            if (generateID != null && generateID.getIdName() != null) {
+                PropertyUtil.setProperty(insertObject, generateID.getIdName(), generateID.getIdValue());
+                ret = (long) generateID.getIdValue();
+            }else{
+                if(ret!=-1 && updateOptions.getGenerateID()!=null){
+                    if(StringUtils.hasText(updateOptions.getGenerateID().getIdName()) ){
+                        PropertyUtil.setProperty(insertObject, updateOptions.getGenerateID().getIdName(),
+                                ret);
+                    }
+                }
+            }
+            return ret;
 
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
+        } finally {
+
+            DbContext.removeGenerateIDForInsert();
         }
 
     }
@@ -2075,135 +2064,65 @@ public class DataBaseImpl implements DataBase {
 
 
     /**
-     * 插入多个对象的指定属性,此方法必须保证insertObjects是相同的类型
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
-     *
-     * @param <T>
-     * @param insertObjects 待插入的对象
-     * @param properties    对象的属性
-     * @return
+     * @param insertObjects：待插入数据库的对象,此方法必须保证insertObjects是相同的类型
+     * @param properties：属性数组，用于指定哪些属性需要插入数据库
+     * @param ignoreNull                                         ：忽略为空的属性
+     * @return int数组，元素值反映了每个对象插入后的状态
      * @throws DbException
      */
     private <T> int[] excuteInsertClass(T[] insertObjects, String[] properties, boolean ignoreNull) throws DbException {
-
-        String[][] pros = new String[insertObjects.length][];
-        ArrayUtils.fill(pros, properties);
-        return this.excuteInsertObjects(insertObjects, pros, ignoreNull);
-    }
-
-
-    /**
-     * 插入多个对象指定的属性到数据库，insertObjects里的每个对象对应一个属性数组，所以为二维数组，不忽略为null的属性
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
-     *
-     * @param insertObjects：待插入数据库的对象数组
-     * @param properties：属性数组，用于指定对象的哪些属性需要插入数据库；每个对象对应一个属性数组
-     * @return
-     * @throws DbException
-     */
-    private int[] excuteInsertWholeObjects(Object[] insertObjects, String[][] properties) throws DbException {
-
-        return excuteInsertObjects(insertObjects, properties, false);
-    }
-
-    /**
-     * @param insertObjects：待插入数据库的对象
-     * @param properties：属性数组，用于指定哪些属性需要插入数据库
-     * @param ignoreNull                      ：忽略为空的属性
-     * @return
-     * @throws DbException
-     */
-    private int[] excuteInsertObjects(Object[] insertObjects, String[][] properties, boolean ignoreNull)
-            throws DbException {
         int length = insertObjects.length;
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
         try {
-            boolean optimize = true;
-            Class<?>[] handClassList = DbContext.getReflectClass();
+            Class<?> handClass = DbContext.getReflectClass();
             this.sqlType = SQLType.INSERT;
             this.fetchConnection();
-            for (int i = 0; i < maps.length; i++) {
+            List<GenerateID> listGenerateID = new ArrayList<>();
+            try {
+                SequenceInfo sequeceInfo = DbContext.getGenerateIDForInsert();
+                for (int i = 0; i < maps.length; i++) {
+                    Object obj = insertObjects[i];
+                    Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
+                    String[] pros = properties;
+                    Class reflectClass = obj.getClass();
+                    if (handClass != null) {
+                        reflectClass = handClass;
+                    }
+                    handSequenceForQueryID(sequeceInfo, true);
+                    GenerateID generateID = (sequeceInfo!=null?sequeceInfo.getGenerateID():null);
+                    UpdateOptions updateOptions=new UpdateOptions();
+                    updateOptions.setGenerateID(generateID);
+                    String sql = SqlUtils.generateInsertSql(this.dbPoolName, pros, obj, reflectClass, vParameters,
+                            updateOptions, ignoreNull, this.getDataBaseType());
+                    listGenerateID.add(generateID);
+                    maps[i] = vParameters;
+                    sqltexts[i] = sql;
 
-                Object obj = insertObjects[i];
-
-                Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
-                String[] pros = null;
-                if (properties != null && properties.length > 0) {
-                    pros = properties[i];
                 }
-
-                Class reflectClass = obj.getClass();
-                if (handClassList != null && handClassList.length > 0) {
-                    if (handClassList.length == 1) {
-                        reflectClass = handClassList[0];
-                    } else {
-                        reflectClass = handClassList[i];
-                    }
-                }
-
-                String sql = SqlUtils.generateInsertSql(this.dbPoolName, pros, obj, reflectClass, vParameters,
-                        null, ignoreNull, this.getDataBaseType());
-
-                maps[i] = vParameters;
-                sqltexts[i] = sql;
-
-                if (i > 0) {
-                    if (!sql.equals(sqltexts[0])) {
-                        optimize = false;
-                    }
-                    if (!ArrayUtils.isEquals(pros, properties[0])) {
-                        optimize = false;
-                    }
+            }finally {
+                DbContext.removeGenerateIDForInsert();
+                DbContext.clearReflectClass();
+            }
+            @SuppressWarnings("unchecked") List<Map<Integer, Object>> list = Arrays.asList(maps);
+            int[] res = this.executeBindBatch(sqltexts[0], list);
+            for (int n = 0; n < insertObjects.length; n++) {
+                GenerateID updateOptions = listGenerateID.get(n);
+                if (updateOptions != null && updateOptions.getIdValue() != null) {
+                    PropertyUtil.setProperty(insertObjects[n], updateOptions.getIdName(), updateOptions.getIdValue());
                 }
             }
-            DbContext.clearReflectClass();
-
-            if (optimize) {// 可以优化成批量更新
-                @SuppressWarnings("unchecked")
-                List<Map<Integer, Object>> list = Arrays.asList(maps);
-                int[] res = this.executeBindBatch(sqltexts[0], list);
-                return res;
-            } else {
-                int[] res = this.executeBindBatch(sqltexts, maps);
-
-                return res;
-            }
+            return res;
 
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
+        } finally {
+
         }
 
     }
 
-    /**
-     * 插入多个对象的所有属性到数据库，如果对象里某个属性为空，会忽略此属性
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
-     *
-     * @param insertObjects 待插入的对象，可以为不同类型的类
-     * @return
-     * @throws DbException
-     */
-    private int[] excuteInsertWholeObjects(Object[] insertObjects) throws DbException {
-        return this.excuteInsertWholeObjects(insertObjects, (String[][]) null);
-    }
-
-    /**
-     * 插入多个对象的所有属性到数据库，不忽略为null的属性
-     * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要 调用close()方法
-     *
-     * @param insertObjects 待插入的对象，可以为不同类型的类
-     * @return
-     * @throws DbException
-     */
-    private int[] excuteInsertObjects(Object[] insertObjects) throws DbException {
-        return this.excuteInsertObjects(insertObjects, (String[][]) null, true);
-    }
 
     /**
      * 插入多个对象到数据库，如果对象里某个属性为空，会忽略此属性
@@ -2236,15 +2155,14 @@ public class DataBaseImpl implements DataBase {
 
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
+            Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = updateObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
+            if (handClass != null ) {
+                reflectClass = handClass;
             }
             this.sqlType = SQLType.UPDATE;
             this.fetchConnection();
-            String sqltext = SqlUtils.generateUpdateSql(this.dbPoolName, properties, updateObject, reflectClass,
-                    whereForProperties, vParameters, null, true, this.getDataBaseType());
+            String sqltext = SqlUtils.generateUpdateSql(this.dbPoolName, properties, updateObject, reflectClass, whereForProperties, vParameters, null, true, this.getDataBaseType());
             DbContext.clearReflectClass();
             return this.executeBindUpdate(sqltext, vParameters);
 
@@ -2271,23 +2189,23 @@ public class DataBaseImpl implements DataBase {
 
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
+
+            Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = updateObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
+            if (handClass != null ) {
+                reflectClass = handClass;
             }
             this.sqlType = SQLType.UPDATE;
             this.fetchConnection();
-            String sqltext = SqlUtils.generateUpdateSql(this.dbPoolName, properties, updateObject, reflectClass,
-                    whereForProperties, vParameters, null
-                    , false, this.getDataBaseType());
+            String sqltext = SqlUtils.generateUpdateSql(this.dbPoolName, properties, updateObject, reflectClass, whereForProperties, vParameters, null, false, this.getDataBaseType());
             DbContext.clearReflectClass();
-
             return this.executeBindUpdate(sqltext, vParameters);
 
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
+        } finally {
+
         }
 
     }
@@ -2322,15 +2240,14 @@ public class DataBaseImpl implements DataBase {
     private <T> int excuteDeleteClass(T deleteObject, String[] whereProperteis) throws DbException {
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
+            Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = deleteObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
+            if (handClass != null ) {
+                reflectClass = handClass;
             }
             this.sqlType = SQLType.DELETE;
             this.fetchConnection();
-            String sql = SqlUtils.generateDeleteSql(this.dbPoolName, deleteObject, reflectClass, whereProperteis,
-                    vParameters, null, this.getDataBaseType());
+            String sql = SqlUtils.generateDeleteSql(this.dbPoolName, deleteObject, reflectClass, whereProperteis, vParameters, null, this.getDataBaseType());
             DbContext.clearReflectClass();
             return this.executeBindDelete(sql, vParameters);
 
@@ -2352,15 +2269,14 @@ public class DataBaseImpl implements DataBase {
     private <T> int excuteDeleteClass(T deleteObject) throws DbException {
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-            Class<?>[] handClassList = DbContext.getReflectClass();
+            Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = deleteObject.getClass();
-            if (handClassList != null && handClassList.length > 0) {
-                reflectClass = handClassList[0];
+            if (handClass != null) {
+                reflectClass =handClass;
             }
             this.sqlType = SQLType.DELETE;
             this.fetchConnection();
-            String sql = SqlUtils.generateDeleteSqlByObject(this.dbPoolName, deleteObject, reflectClass, vParameters,
-                    null, this.getDataBaseType());
+            String sql = SqlUtils.generateDeleteSqlByObject(this.dbPoolName, deleteObject, reflectClass, vParameters, null, this.getDataBaseType());
             DbContext.clearReflectClass();
             return this.executeBindDelete(sql, vParameters);
 
@@ -2478,8 +2394,7 @@ public class DataBaseImpl implements DataBase {
      * @return
      * @throws DbException
      */
-    private int[] excuteUpdateWholeObjects(Object[] objects, String[][] whereProperteis, String[][] updateProperties)
-            throws DbException {
+    private int[] excuteUpdateWholeObjects(Object[] objects, String[][] whereProperteis, String[][] updateProperties) throws DbException {
 
         return excuteUpdateObjects(objects, whereProperteis, updateProperties, false);
     }
@@ -2507,14 +2422,13 @@ public class DataBaseImpl implements DataBase {
      * @return
      * @throws DbException
      */
-    private int[] excuteUpdateObjects(Object[] objects, String[][] whereProperteis, String[][] updateProperties, boolean ignoreNull)
-            throws DbException {
+    private int[] excuteUpdateObjects(Object[] objects, String[][] whereProperteis, String[][] updateProperties, boolean ignoreNull) throws DbException {
         int length = objects.length;
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
         boolean optimize = true;
         try {
-            Class[] handClassList = DbContext.getReflectClass();
+            Class handClass = DbContext.getReflectClass();
             this.sqlType = SQLType.UPDATE;
             this.fetchConnection();
             for (int i = 0; i < maps.length; i++) {
@@ -2523,20 +2437,14 @@ public class DataBaseImpl implements DataBase {
                 String[] whereps = whereProperteis[i];
                 Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
                 String[] pros = null;
-                if (updateProperties != null)
-                    pros = updateProperties[i];
+                if (updateProperties != null) pros = updateProperties[i];
 
                 Class reflectClass = obj.getClass();
-                if (handClassList != null && handClassList.length > 0) {
-                    if (handClassList.length == 1) {
-                        reflectClass = handClassList[0];
-                    } else {
-                        reflectClass = handClassList[i];
-                    }
+                if (handClass != null ) {
+                    reflectClass = handClass;
                 }
-                String sql = SqlUtils.generateUpdateSql(this.dbPoolName, pros, obj, reflectClass, whereps, vParameters,
-                        null, ignoreNull, this.getDataBaseType());
-
+                String sql = SqlUtils.generateUpdateSql(this.dbPoolName, pros, obj, reflectClass, whereps, vParameters, null, ignoreNull, this.getDataBaseType());
+                DbContext.clearReflectClass();
                 maps[i] = vParameters;
                 sqltexts[i] = sql;
 
@@ -2549,11 +2457,9 @@ public class DataBaseImpl implements DataBase {
                     }
                 }
             }
-            DbContext.clearReflectClass();
 
             if (optimize) {// 可以优化成批量更新
-                @SuppressWarnings("unchecked")
-                List<Map<Integer, Object>> list = Arrays.asList(maps);
+                @SuppressWarnings("unchecked") List<Map<Integer, Object>> list = Arrays.asList(maps);
                 int[] res = this.executeBindBatch(sqltexts[0], list);
                 return res;
             } else {
@@ -2583,7 +2489,7 @@ public class DataBaseImpl implements DataBase {
         String[] sqltexts = new String[length];
         boolean optimize = true;
         try {
-            Class[] handClassList = DbContext.getReflectClass();
+            Class handClass = DbContext.getReflectClass();
             this.sqlType = SQLType.DELETE;
             this.fetchConnection();
             for (int i = 0; i < maps.length; i++) {
@@ -2592,15 +2498,10 @@ public class DataBaseImpl implements DataBase {
                 Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
 
                 Class reflectClass = obj.getClass();
-                if (handClassList != null && handClassList.length > 0) {
-                    if (handClassList.length == 1) {
-                        reflectClass = handClassList[0];
-                    } else {
-                        reflectClass = handClassList[i];
-                    }
+                if (handClass != null ) {
+                    reflectClass = handClass;
                 }
-                String sql = SqlUtils.generateDeleteSql(this.dbPoolName, obj, reflectClass, oneWhereProperties,
-                        vParameters, null, this.getDataBaseType());
+                String sql = SqlUtils.generateDeleteSql(this.dbPoolName, obj, reflectClass, oneWhereProperties, vParameters, null, this.getDataBaseType());
 
                 maps[i] = vParameters;
                 sqltexts[i] = sql;
@@ -2614,8 +2515,7 @@ public class DataBaseImpl implements DataBase {
             DbContext.clearReflectClass();
 
             if (optimize) {// 可以优化成批量更新
-                @SuppressWarnings("unchecked")
-                List<Map<Integer, Object>> list = Arrays.asList(maps);
+                @SuppressWarnings("unchecked") List<Map<Integer, Object>> list = Arrays.asList(maps);
                 int[] res = this.executeBindBatch(sqltexts[0], list);
                 return res;
             } else {
@@ -2655,12 +2555,14 @@ public class DataBaseImpl implements DataBase {
     private long executeBindInsertReturnKey(String sqltext, Map<Integer, Object> vParameters) throws DbException {
 
         Collection<Object> args = CollectionUtils.getSortedValues(vParameters);
-        return this.executeBindOneInsert(sqltext, args);
+        return this.executeBindOneInsertReturnKey(sqltext, args);
     }
 
     @Override
     public long insertReturnKey(String sqltext, Map<Integer, Object> vParameters) throws DbException {
-        this.configInterceptorForMehtod("insertReturnKey", String.class, Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Long ret = null;
         try {
             return ret = this.executeBindInsertReturnKey(sqltext, vParameters);
@@ -2675,7 +2577,7 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private long executeBindOneInsert(String sqltext, Collection<Object> vParameters) throws DbException {
+    private long executeBindOneInsertReturnKey(String sqltext, Collection<Object> vParameters) throws DbException {
         long[] twoInt = this.executeBindUpdate(sqltext, vParameters);
         return twoInt[1];
     }
@@ -2725,8 +2627,7 @@ public class DataBaseImpl implements DataBase {
             if (conn != null) {
                 conn.rollback();
                 clearSavePoint();
-                if (DbContext.permitDebugLog())
-                    log.debug(this.getConnectInfo() + ":rollbacked done!");
+                if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ":rollbacked done!");
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -2739,22 +2640,16 @@ public class DataBaseImpl implements DataBase {
         return this.savePointMap;
     }
 
-    /**
-     * 设置保存点
-     *
-     * @param savepointName 保存点的名称
-     * @throws DbException
-     */
     @Override
     public void setSavepoint(String savepointName) throws DbException {
         Assert.hasText(savepointName);
         if (this.savePointMap.containsKey(savepointName)) {
             return;
         } else {
-            this.savePointMap.put(savepointName, null);
-            if (!this.isColsed()) {
-                this.setRealSavepoint(savepointName);
+            if (this.isColsed()) {
+                this.fetchConnection();
             }
+            this.setRealSavepoint(savepointName);
         }
     }
 
@@ -2772,12 +2667,16 @@ public class DataBaseImpl implements DataBase {
 
         }
     }
-
+    private final  static String SavepointReg="[a-zA-Z][a-zA-Z01-9_]*";
     private void setRealSavepoint(String savepointName) throws DbException {
         try {
             if (savepointName != null && !savepointName.isEmpty() && !this.isColsed()) {
-                if (savePointMap.containsKey(savepointName) && savePointMap.get(savepointName) == null) {
-                    Savepoint savepoint = conn.setSavepoint(savepointName);
+                if(!savepointName.matches(SavepointReg)){
+                    throw new DbException("保存点名称"+savepointName+"不符合要求。必须是字母开头后面接数字字母组合！");
+                }
+                Savepoint savepoint=null;
+                if (!savePointMap.containsKey(savepointName)) {
+                    savepoint = conn.setSavepoint(savepointName);
                     if (DbContext.permitDebugLog()) {
                         log.debug(this.getConnectInfo() + ": Savepoint:" + savepointName + "  ok!");
                     }
@@ -2793,8 +2692,7 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public void rollbackToSavepoint(String savepointName) throws DbException {
-        if (!savePointMap.containsKey(savepointName)
-                || savePointMap.get(savepointName) == null) {
+        if (!savePointMap.containsKey(savepointName) || savePointMap.get(savepointName) == null) {
             return;
         } else {
             try {
@@ -2811,12 +2709,7 @@ public class DataBaseImpl implements DataBase {
         }
     }
 
-    /**
-     * 判断资源和底层数据库连接是否关闭
-     *
-     * @return
-     * @throws DbException
-     */
+
     @Override
     public boolean isColsed() throws DbException {
         boolean result = false;
@@ -2835,20 +2728,14 @@ public class DataBaseImpl implements DataBase {
         this.savePointMap.clear();
     }
 
-    /**
-     * 事务性操作的事务的提交，当 {@link #setAutoCommit(boolean)}设为false， 会用到此方法，一般对于事务性操作会用到，如果
-     * 事务为分布式事务，则为空操作。
-     *
-     * @throws DbException
-     */
+
     @Override
     public void commit() throws DbException {
         try {
             if (conn != null) {
                 conn.commit();
                 clearSavePoint();
-                if (DbContext.permitDebugLog())
-                    log.debug("[" + this.getConnectInfo() + "]commited done!");
+                if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commited done!");
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -2863,8 +2750,7 @@ public class DataBaseImpl implements DataBase {
      * @return 返回每条语句更新记录的条数，执行错误，会抛出异常
      * @throws DbException
      */
-    private int[] executeBindBatchBy(String sqltext, List<Collection<Object>> vParametersArray)
-            throws DbException {
+    private int[] executeBindBatchBy(String sqltext, List<Collection<Object>> vParametersArray) throws DbException {
         Boolean backAutoCommit = null;
         int[] count = null;
         try {
@@ -2890,7 +2776,9 @@ public class DataBaseImpl implements DataBase {
                     }
                 }
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                    log.debug("[" + this.getConnectInfo() + "][" + callInfo + "]");
+                    if(m==0) {
+                        log.debug("[" + this.getConnectInfo() + "][" + callInfo + "]");
+                    }
                     log.debug("" + m + ".debugSql[" + debugSql + "]");
                 }
                 String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
@@ -2900,11 +2788,24 @@ public class DataBaseImpl implements DataBase {
             boolean error = false;
             count = preStmt.executeBatch();
             int i = 0;
+            String updateInfo="更新条数:";
             for (i = 0; i < count.length; i++) {
                 if (count[i] < 0) {
-                    error = true;
-                    break;
+                    if(count[i]==Statement.SUCCESS_NO_INFO){
+                        error=false;
+                        if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
+                            log.debug("" + i + "-更新条数:未知");
+                        }
+                    }else if(count[i]==Statement.EXECUTE_FAILED){
+                        error = true;
+                        break;
+                    }
+                }else{
+                    if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
+                        log.debug("" + i + ".更新条数:"+count[i]);
+                    }
                 }
+
             }
             if (backAutoCommit) {
                 if (error) {
@@ -2919,7 +2820,11 @@ public class DataBaseImpl implements DataBase {
         } catch (Exception e) {
             count = null;
             if (backAutoCommit) {
-                this.rollback();
+                try {
+                    this.rollback();
+                }catch (Exception e2){
+                    log.error("",e2);
+                }
             }
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
@@ -2978,6 +2883,7 @@ public class DataBaseImpl implements DataBase {
                         args = CollectionUtils.getSortedValues(vParametersArray[i]);
                     }
                 }
+
                 long[] twoInt = this.executeBindUpdate(sqltxts[i], args, true, i);
                 int ret = (int) twoInt[0];// 返回记录的行数
                 res[i] = ret;
@@ -2994,7 +2900,6 @@ public class DataBaseImpl implements DataBase {
             return res;
         } catch (Exception ex) {
             res = null;
-            ;
             try {
                 if (bkCommit) {
                     this.rollback();
@@ -3023,7 +2928,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public int[] update(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
         int[] ret = null;
-        this.configInterceptorForMehtod("update", String[].class, Map[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.executeBindBatch(sqltxts, vParametersArray);
         } catch (Exception e) {
@@ -3038,7 +2945,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public int[] insert(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
-        this.configInterceptorForMehtod("insert", String[].class, Map[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
             return ret = this.executeBindBatch(sqltxts, vParametersArray);
@@ -3053,13 +2962,13 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     * 批量更新操作（增，删，改），返回每条语句更新记录的行数
+     * 批量更新操作（增，删，改），返回每条语句更新记录的行数。
      * <p>
-     * 此方法会默认自动关闭底层数据库连接，所以不需要调用close()方法
+     * 注意：此方法会默认自动关闭底层数据库连接，所以不需要调用close()方法。
      *
      * @param sqltxt          执行的sql语句
-     * @param vParametersList 每条语句所携带的参数，每条语句对应一个Map，每个Map存放相应语句的参数
-     * @return 返回每条语句更新记录的行数，执行错误，会抛出异常
+     * @param vParametersList 每条语句所携带的参数不同，每条语句的参数对应一个Map用于存放这条语句的参数。
+     * @return 返回每条语句更新记录的行数，执行错误，会抛出异常。
      * @throws DbException
      */
     private int[] executeBindBatch(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException {
@@ -3077,7 +2986,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public int[] update(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException {
         int[] ret = null;
-        this.configInterceptorForMehtod("update", String.class, List.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.executeBindBatch(sqltxt, vParametersList);
         } catch (Exception e) {
@@ -3094,7 +3005,9 @@ public class DataBaseImpl implements DataBase {
     public int[] insert(String sqltxt, List<Map<Integer, Object>> vParametersList) throws DbException {
 
         int[] ret = null;
-        this.configInterceptorForMehtod("insert", String.class, List.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.executeBindBatch(sqltxt, vParametersList);
         } catch (Exception e) {
@@ -3122,7 +3035,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public int[] update(ArrayList<String> sqltxts) throws DbException {
         int[] ret = null;
-        this.configInterceptorForMehtod("update", ArrayList.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.executeBatch(sqltxts);
         } catch (Exception e) {
@@ -3136,42 +3051,31 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    public void configInterceptorForMehtod(String mname, Class<?>... parameterTypes) {
-
-        try {
-            if (DbContext.getDBInterceptor() != null) {
-                Method method = this.getClass().getMethod(mname, parameterTypes);
-                DBInterceptorInfo dbInterceptorInfo = new DBInterceptorInfo();
-                dbInterceptorInfo.setDataBase(this);
-                dbInterceptorInfo.setInterceptedMethod(method);
-                DbContext.setDBInterceptorInfo(dbInterceptorInfo);
-            }
-        } catch (NoSuchMethodException e) {
-            log.error("" + e, e);
-        }
+    private void configInterceptorForMehtod(Method method) {
+        DBInterceptorInfo dbInterceptorInfo = new DBInterceptorInfo();
+        dbInterceptorInfo.setDataBase(this);
+        dbInterceptorInfo.setInterceptedMethod(method);
+        DbContext.setDBInterceptorInfo(dbInterceptorInfo);
     }
 
     private void configInterceptorForException(Exception e) {
 
-        if (DbContext.getDBInterceptor() != null) {
-            DBInterceptorInfo dbInterceptorInfo = DbContext.getDBInterceptorInfo();
-            dbInterceptorInfo.setException(e);
-        }
+        DBInterceptorInfo dbInterceptorInfo = DbContext.getDBInterceptorInfo();
+        dbInterceptorInfo.setException(e);
     }
 
     private void configInterceptorForPostExecute(Object result) {
 
+        DBInterceptorInfo dbInterceptorInfo = DbContext.getDBInterceptorInfo();
+        dbInterceptorInfo.setResult(result);
         if (DbContext.getDBInterceptor() != null) {
-            DBInterceptorInfo dbInterceptorInfo = DbContext.getDBInterceptorInfo();
-            dbInterceptorInfo.setResult(result);
             DBInterceptor dbInterceptor = DbContext.getDBInterceptor();
             dbInterceptor.postDbOperationExeute(dbInterceptorInfo.getDataBase(),
-                    dbInterceptorInfo.getInterceptedMethod(),
-                    dbInterceptorInfo.getResult(),
-                    dbInterceptorInfo.getException(),
-                    dbInterceptorInfo.getDebugSql());
-            DbContext.removeDBInterceptorInfo();
+                    dbInterceptorInfo.getInterceptedMethod(), dbInterceptorInfo.getResult(),
+                    dbInterceptorInfo.getException(), dbInterceptorInfo.getDebugSql(),
+                    dbInterceptorInfo.getExeTimeMil());
         }
+        DbContext.removeDBInterceptorInfo();
 
     }
 
@@ -3179,7 +3083,9 @@ public class DataBaseImpl implements DataBase {
     public int[] insert(ArrayList<String> sqltxts) throws DbException {
 
         int[] ret = null;
-        this.configInterceptorForMehtod("insert", ArrayList.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.executeBatch(sqltxts);
         } catch (Exception e) {
@@ -3203,10 +3109,15 @@ public class DataBaseImpl implements DataBase {
 
             if (this.sqlType == SQLType.SELECT) {
                 this.fetchConnection();
-                ps = conn.prepareStatement(sqltxt, ResultSet.CONCUR_READ_ONLY);
+                ps = conn.prepareStatement(sqltxt, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             } else if (this.sqlType == SQLType.INSERT) {
                 this.fetchConnection();
-                ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
+                Method method = DbContext.getDBInterceptorInfo().getInterceptedMethod();
+                if(this.getDataBaseType().isOracleFamily()){
+                    ps = conn.prepareStatement(sqltxt);
+                }else {
+                    ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
+                }
             } else if (this.sqlType == SQLType.UPDATE) {
                 this.fetchConnection();
                 ps = conn.prepareStatement(sqltxt);
@@ -3229,6 +3140,41 @@ public class DataBaseImpl implements DataBase {
             throw new DbException(e);
         }
         return ps;
+    }
+
+    private Statement getStatement(String sqltxt) throws DbException {
+        Statement statement = null;
+        try {
+            this.sqlType = SqlUtils.decideSqlType(sqltxt);
+
+            if (this.sqlType == SQLType.SELECT) {
+                this.fetchConnection();
+                statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            } else if (this.sqlType == SQLType.INSERT) {
+                this.fetchConnection();
+                statement = conn.createStatement();
+            } else if (this.sqlType == SQLType.UPDATE) {
+                this.fetchConnection();
+                statement = conn.createStatement();
+            } else if (this.sqlType == SQLType.DELETE) {
+                this.fetchConnection();
+                statement = conn.createStatement();
+            } else if (this.sqlType == SQLType.STORE_DPROCEDURE) {
+                this.fetchConnection();
+                statement = conn.createStatement();
+            } else if (this.sqlType == SQLType.OTHER) { //create,drop等
+                this.fetchConnection();
+                statement = conn.createStatement();
+
+            } else {
+                throw new DbException("不能决定sql语句的类型！");
+            }
+
+        } catch (Exception e) {
+            if (e instanceof DbException) throw (DbException) e;
+            throw new DbException(e);
+        }
+        return statement;
     }
 
     /**
@@ -3288,8 +3234,7 @@ public class DataBaseImpl implements DataBase {
                             conn.close();
                             conn = null;
                             clearSavePoint();
-                            if (DbContext.permitDebugLog())
-                                log.debug("[" + this.getConnectInfo() + "]:closed!");
+                            if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]:closed!");
                         }
                     } catch (Exception ex) {
                         log.error(this.getConnectInfo() + ":close fail!", ex);
@@ -3315,7 +3260,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int insertBy(T insertObject) throws DbException {
-        this.configInterceptorForMehtod("insertBy", Object.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             return ret = this.excuteInsertClass(insertObject);
@@ -3332,7 +3279,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> long insertReturnKeyBy(T insertObject) throws DbException {
         Long ret = null;
-        this.configInterceptorForMehtod("insertReturnKeyBy", Object.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.excuteInsertClassReturnKey(insertObject);
         } catch (Exception e) {
@@ -3348,7 +3297,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int[] insertBy(T[] objs) throws DbException {
-        this.configInterceptorForMehtod("insertBy", Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
             return ret = this.excuteInsertClass(objs);
@@ -3365,7 +3316,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int insertBy(T insertObject, Object[] insertProperties) throws DbException {
-        this.configInterceptorForMehtod("insertBy", Object.class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             return ret = this.excuteInsertClass(insertObject, getPNames(insertProperties), false);
@@ -3383,7 +3336,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties) throws DbException {
         Long ret = null;
-        this.configInterceptorForMehtod("insertReturnKeyBy", Object.class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.excuteInsertClassReturnKey(insertObject, getPNames(insertProperties), false);
 
@@ -3399,7 +3354,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int[] insertBy(T[] objs, Object[] insertProperties) throws DbException {
-        this.configInterceptorForMehtod("insertBy", Object[].class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
             return ret = this.excuteInsertClass(objs, getPNames(insertProperties), false);
@@ -3417,7 +3374,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> long insertReturnKeyBy(T insertObject, boolean includeNull) throws DbException {
         Long ret = null;
-        this.configInterceptorForMehtod("insertReturnKeyBy", Object.class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.excuteInsertClassReturnKey(insertObject, null, !includeNull);
         } catch (Exception e) {
@@ -3433,7 +3392,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int insertBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
-        this.configInterceptorForMehtod("insertBy", Object.class, Object[].class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             return ret = this.excuteInsertClass(insertObject, getPNames(insertProperties), !includeNull);
@@ -3451,7 +3412,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties, boolean includeNull) throws DbException {
         Long ret = null;
-        this.configInterceptorForMehtod("insertReturnKeyBy", Object.class, Object[].class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.excuteInsertClassReturnKey(insertObject, getPNames(insertProperties), !includeNull);
 
@@ -3468,7 +3431,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int[] insertBy(T[] objs, boolean includeNull) throws DbException {
-        this.configInterceptorForMehtod("insertBy", Object[].class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
             return ret = this.excuteInsertClass(objs, (String[]) null, !includeNull);
@@ -3487,7 +3452,9 @@ public class DataBaseImpl implements DataBase {
     public <T> int[] insertBy(T[] objs, Object[] insertProperties, boolean includeNull) throws DbException {
 
         int[] ret = null;
-        this.configInterceptorForMehtod("insertBy", Object[].class, Object[].class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.excuteInsertClass(objs, getPNames(insertProperties), !includeNull);
         } catch (Exception e) {
@@ -3504,7 +3471,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> int updateBy(T updateObject, Object[] whereProperteis) throws DbException {
         Integer ret = null;
-        this.configInterceptorForMehtod("updateBy", Object.class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.excuteUpdateClass(updateObject, getPNames(whereProperteis));
         } catch (Exception e) {
@@ -3519,7 +3488,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int updateBy(T updateObject, Object[] whereProperteis, Object[] properties) throws DbException {
-        this.configInterceptorForMehtod("updateBy", Object.class, Object[].class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             return ret = this.excuteUpdateClass(updateObject, getPNames(whereProperteis), getPNames(properties));
@@ -3535,7 +3506,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int[] updateBy(T[] objects, Object[] whereProperteis, Object[] properties) throws DbException {
-        this.configInterceptorForMehtod("updateBy", Object[].class, Object[].class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
             return ret = this.excuteUpdateClass(objects, getPNames(whereProperteis), getPNames(properties));
@@ -3552,7 +3525,9 @@ public class DataBaseImpl implements DataBase {
     @Override
     public <T> int[] updateBy(T[] objects, Object[] whereProperteis) throws DbException {
         int[] ret = null;
-        this.configInterceptorForMehtod("updateBy", Object[].class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
             return ret = this.excuteUpdateClass(objects, getPNames(whereProperteis));
         } catch (Exception e) {
@@ -3567,7 +3542,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int updateBy(T updateObject, Object[] whereProperties, boolean includeNull) throws DbException {
-        this.configInterceptorForMehtod("updateBy", Object.class, Object[].class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             if (includeNull) {
@@ -3587,7 +3564,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int updateBy(T updateObject, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
-        this.configInterceptorForMehtod("updateBy", Object.class, Object[].class, Object[].class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             if (includeNull) {
@@ -3607,8 +3586,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, Object[] updateProperties, boolean includeNull) throws DbException {
-        this.configInterceptorForMehtod("updateBy", Object[].class, Object[].class, Object[].class,
-                boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
             if (includeNull) {
@@ -3628,7 +3608,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int[] updateBy(T[] updateObjects, Object[] whereProperties, boolean includeNull) throws DbException {
-        this.configInterceptorForMehtod("updateBy", Object[].class, Object[].class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
             if (includeNull) {
@@ -3649,7 +3631,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> T queryOneBy(T selectObject, Object[] whereProperteis) throws DbException {
-        this.configInterceptorForMehtod("queryOneBy", Object.class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         T ret = null;
         try {
             QueryOptions queryOptions = new QueryOptions();
@@ -3673,7 +3657,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis) throws DbException {
-        this.configInterceptorForMehtod("queryListBy", Object.class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<T> ret = null;
         try {
             return ret = this.doQueryClassForObject((Class<T>) selectObject.getClass(), selectObject, getPNames(whereProperteis), null);
@@ -3689,30 +3675,33 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> List<T> queryListBy(T selectObject, Object[] whereProperteis,
-                                   int page, int perPage, PageBean pb)
-            throws DbException {
+                                   int page, int perPage, PageBean pb) throws DbException {
         List<T> ret = null;
-        this.configInterceptorForMehtod("queryListBy", Object.class, Object[].class,
-                int.class, int.class, PageBean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         try {
-
             String sql = "";
             Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
             try {
-                Class<?>[] handClassList = DbContext.getReflectClass();
+                Class<?> handClass = DbContext.getReflectClass();
                 Class<?> reflectClass = selectObject.getClass();
-                if (handClassList != null && handClassList.length > 0) {
-                    reflectClass = handClassList[0];
+                if (handClass != null ) {
+                    reflectClass = handClass;
                 }
                 this.sqlType = SQLType.SELECT;
                 this.fetchConnection();
-                sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject, reflectClass, getPNames(whereProperteis), vParameters,
-                        null, this.getDataBaseType());
-                DbContext.clearReflectClass();
+                QueryOptions options = fetchQueryOptions(null);
+                sql = SqlUtils.generateSelectSql(this.dbPoolName, selectObject,
+                        reflectClass, getPNames(whereProperteis),
+                        vParameters, options, this.getDataBaseType());
 
             } catch (Exception e) {
                 if (e instanceof DbException) throw (DbException) e;
                 throw new DbException(e);
+            } finally {
+                DbContext.clearQueryHint();
+                DbContext.clearReflectClass();
             }
             return ret = this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
         } catch (Exception e) {
@@ -3728,34 +3717,36 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> List<T> queryListBy(T selectObject, int page, int perPage, PageBean pb) throws DbException {
-        this.configInterceptorForMehtod("queryListBy", Object.class, int.class, int.class, PageBean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<T> ret = null;
         try {
-            if (selectObject instanceof MdbOptions) {
-                MdbOptions mm = (MdbOptions) selectObject;
-                if (mm.selectOptions() != null) {
-                    if (mm.selectOptions().limit() != null && mm.selectOptions().limit() >= 0) {
-                        throw new DbException("根据对象分页查询不能通过selectObject#selectOptions()#limit()指定limit！");
-                    }
-                }
-            }
+
             String sql = "";
             Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
             try {
-                Class<?>[] handClassList = DbContext.getReflectClass();
+                Class<?> handClass = DbContext.getReflectClass();
                 Class<?> reflectClass = selectObject.getClass();
-                if (handClassList != null && handClassList.length > 0) {
-                    reflectClass = handClassList[0];
+                if (handClass != null ) {
+                    reflectClass = handClass;
                 }
                 this.sqlType = SQLType.SELECT;
                 this.fetchConnection();
-                sql = SqlUtils.generateSelectSqlBySelectObject(this.dbPoolName, selectObject, reflectClass, vParameters,
-                        null, this.getDataBaseType());
+                QueryOptions options = fetchQueryOptions(null);
+                sql = SqlUtils.generateSelectSqlBySelectObject(this.dbPoolName,
+                        selectObject,
+                        reflectClass,
+                        vParameters,
+                        options,
+                        this.getDataBaseType());
 
-                DbContext.clearReflectClass();
             } catch (Exception e) {
                 if (e instanceof DbException) throw (DbException) e;
                 throw new DbException(e);
+            } finally {
+                DbContext.clearReflectClass();
+                DbContext.clearQueryHint();
             }
             return ret = this.doPageQueryClass((Class<T>) selectObject.getClass(), sql, vParameters, page, perPage, pb, null);
         } catch (Exception e) {
@@ -3771,7 +3762,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> List<T> queryListBy(T selectObject) throws DbException {
-        this.configInterceptorForMehtod("queryListBy", Object.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         List<T> ret = null;
         try {
             return ret = this.doQueryClassForObject(selectObject, (QueryOptions) null);
@@ -3787,7 +3780,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> T queryOneBy(T selectObject) throws DbException {
-        this.configInterceptorForMehtod("queryOneBy", Object.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         T ret = null;
         try {
             QueryOptions queryOptions = new QueryOptions();
@@ -3812,8 +3807,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int delBy(T deleteObject, Object[] whereProperteis) throws DbException {
-        this.configInterceptorForMehtod("delBy",
-                Object.class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             return ret = this.excuteDeleteClass(deleteObject, getPNames(whereProperteis));
@@ -3828,8 +3824,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int[] delBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
-        this.configInterceptorForMehtod("delBy",
-                Object[].class, Object[].class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
             return ret = this.excuteDeleteClass(deleteObjects, getPNames(whereProperteis));
@@ -3845,7 +3842,9 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public <T> int insertBy(T insertObject, boolean includeNull) throws DbException {
-        this.configInterceptorForMehtod("insertBy", Object.class, boolean.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         Integer ret = null;
         try {
             return ret = this.excuteInsertClass(insertObject, null, !includeNull);
@@ -3861,9 +3860,11 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public String exeScript(Reader reader, boolean throwWarning,String delimiters, Map<String, Object> args) throws DbException {
+    public String exeScript(Reader reader, boolean throwWarning, String delimiters, Map<String, Object> args) throws DbException {
 
-        this.configInterceptorForMehtod("exeScript", Reader.class, boolean.class, Map.class);
+        Method enclosingMethod = new Object() {
+        }.getClass().getEnclosingMethod();
+        this.configInterceptorForMehtod(enclosingMethod);
         String ret = null;
         try {
             ret = this.exeBatchSQLTemplate(() -> {
@@ -3874,16 +3875,7 @@ public class DataBaseImpl implements DataBase {
                     scriptRunner.setThrowWarning(throwWarning);
                     scriptRunner.setRemoveCRs(true);
                     scriptRunner.setArgs(args);
-                    if(delimiters==null || delimiters.isEmpty()){
-                        if(this.getDataBaseType().isMySqlFamily()){
-                            scriptRunner.setDelimiter(";");
-                        }else if(this.getDataBaseType().isSQLServerFamily()){
-                            scriptRunner.setDelimiter("GO");
-                        }
-                    }else{
-                        scriptRunner.setDelimiter(delimiters);
-                    }
-
+                    scriptRunner.setDelimiter(delimiters);
                     return scriptRunner.runScriptByLine(reader);
                 } catch (Exception e) {
                     if (e instanceof DbException) throw (DbException) e;
@@ -3955,11 +3947,6 @@ public class DataBaseImpl implements DataBase {
 
         private final String LINE_SEPARATOR = System.getProperty("line.separator", "\n");
 
-        private final String DEFAULT_DELIMITER = ";";
-        private final String DELIMITER_LINE_START = "DELIMITER ";
-        private final Pattern DELIMITER_PATTERN = Pattern
-                .compile("^\\s*((--)|(//))?\\s*(//)?\\s*@DELIMITER\\s+([^\\s]+)", Pattern.CASE_INSENSITIVE);
-
         private final Connection connection;
         private boolean throwWarning = true;
         private boolean removeCRs = true;
@@ -3969,7 +3956,8 @@ public class DataBaseImpl implements DataBase {
         private PrintWriter resultPrintWriter = new PrintWriter(resultWriter);
         private String transactionId = "";
         private Map<String, Object> args = null;
-        private String delimiter = DEFAULT_DELIMITER;
+        private String delimiter;
+        private String usingDelimiter;
 
         public ScriptRunner(Connection connection) {
             this.connection = connection;
@@ -4000,14 +3988,87 @@ public class DataBaseImpl implements DataBase {
 
         public void setDelimiter(String delimiter) {
             this.delimiter = delimiter;
+            if (delimiter == null || delimiter.isEmpty()) {
+                this.delimiter = this.defaultScriptDelimiters();
+            }
         }
 
         public String runScriptByLine(Reader reader) {
             return executeLineByLine(reader);
         }
 
+        private final Pattern MYSQL_DELIMITER_PATTERN = Pattern.compile("^\\s*((--)|(//))?\\s*(//)?\\s*@DELIMITER\\s+([^\\s]+)", Pattern.CASE_INSENSITIVE);
+
+        public Pattern DelimitersPattern() {
+            if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
+                return MYSQL_DELIMITER_PATTERN;
+            } else if (DataBaseImpl.this.getDataBaseType().isSQLServerFamily()) {
+                return null;
+            } else {
+                return null;
+            }
+        }
+
+        ;
+
+        public String defaultScriptDelimiters() {
+            if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
+                return ";";
+            } else if (DataBaseImpl.this.getDataBaseType().isSQLServerFamily()) {
+                return "GO";
+            } else {
+                return ";";
+            }
+        }
+
+
+        public boolean ScriptDelimiterLine(String trimmedLine, TString tlimiterStr,StringBuilder command) {
+            if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
+                if (StringUtils.startsWithIgnoreCase(trimmedLine, "DELIMITER ")) {
+                    String delimiterStr = StringUtils.substring(trimmedLine, "DELIMITER ".length()).trim();
+                    tlimiterStr.setValue(delimiterStr);
+                    return true;
+                }
+            } else if (DataBaseImpl.this.getDataBaseType().isPostgresFamily()) {
+                String str = StringUtils.searchFirstSubStrByReg(trimmedLine, "AS\\s+(\\$\\S+\\$)", 1);
+                if (str != null && !str.isEmpty()) {
+                    tlimiterStr.setValue(str);
+                    command.append(trimmedLine);
+                    command.append(LINE_SEPARATOR);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if(DataBaseImpl.this.getDataBaseType().isOracleFamily()){
+                int  ret = StringUtils.indexOf(trimmedLine, "\\s*(BEGIN|FUNCTION|PROCEDURE)\\s*", true);
+                if (ret>=0) {
+                    tlimiterStr.setValue("/");
+                    command.append(trimmedLine);
+                    command.append(LINE_SEPARATOR);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            return false;
+
+        }
+
+        public boolean ScriptDelimiterLineEnd(String trimmedLine, String delimiter, TInteger tstartPos, TInteger tEndPos) {
+            int startPos = StringUtils.indexOf(trimmedLine, EscapeUtil.escapeRegex(delimiter), true, tEndPos);
+            if (startPos >= 0) {
+                tstartPos.setValue(startPos);
+                return true;
+            }
+
+            return false;
+
+        }
+
         private String executeLineByLine(Reader reader) {
 
+            this.usingDelimiter = this.delimiter;
             StringBuilder command = new StringBuilder();
             try {
                 BufferedReader lineReader = new BufferedReader(reader);
@@ -4028,26 +4089,40 @@ public class DataBaseImpl implements DataBase {
 
         private void checkForMissingLineTerminator(StringBuilder command) {
             if (command != null && command.toString().trim().length() > 0) {
-                throw new DbException("Line missing end-of-line terminator (" + delimiter + ") => " + command);
+                throw new DbException("Line missing end-of-line terminator (" + this.usingDelimiter + ") => " + command);
             }
         }
 
         private boolean handleLine(StringBuilder command, String line) throws Exception {
             String trimmedLine = line.trim();
+            TString tDelimter = new TString("");
+            TInteger delimterStartPos = new TInteger(-1);
+            TInteger delimterEndPos = new TInteger(-1);
             if (lineIsComment(trimmedLine)) {
-                Matcher matcher = DELIMITER_PATTERN.matcher(trimmedLine);
-                if (matcher.find()) {
-                    delimiter = matcher.group(5);
+                Pattern pattern = this.DelimitersPattern();
+                if (pattern != null) {
+                    Matcher matcher = pattern.matcher(trimmedLine);
+                    if (matcher.find()) {
+                        this.usingDelimiter = matcher.group(5);
+                    }
                 }
-            } else if (delimiterLine(trimmedLine)) {
-                String delimiterStr = StringUtils.substring(trimmedLine, DELIMITER_LINE_START.length()).trim();
-                this.delimiter = delimiterStr;
-            } else if (commandReadyToExecute(trimmedLine)) {
-                int lastDelimiterPos = line.lastIndexOf(delimiter);
-                command.append(line.substring(0, lastDelimiterPos));
+            } else if (delimiterLine(trimmedLine, tDelimter,command)) {
+                this.usingDelimiter = tDelimter.getValue();
+
+            } else if (commandReadyToExecute(trimmedLine, delimterStartPos, delimterEndPos)) {
+                String str = trimmedLine.substring(0, delimterStartPos.getValue());
+
+                command.append(str);
                 command.append(LINE_SEPARATOR);
-                executePreparedStatement(command.toString());
+                if (StringUtils.hasText(command.toString())) {
+                    try {
+                        executePreparedStatement(command.toString());
+                    } catch (Exception e) {
+                        throw new DbException("["+command.toString()+"]",e);
+                    }
+                }
                 command.setLength(0);
+                command.append(trimmedLine.substring(delimterEndPos.getValue()).trim());
 
             } else if (trimmedLine.length() > 0) {
                 command.append(line);
@@ -4060,23 +4135,29 @@ public class DataBaseImpl implements DataBase {
             return trimmedLine.startsWith("//") || trimmedLine.startsWith("--");
         }
 
-        private boolean delimiterLine(String trimmedLine) {
-            if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
-                return StringUtils.startsWithIgnoreCase(trimmedLine, DELIMITER_LINE_START);
-            } else {
-                return false;
-            }
+        private boolean delimiterLine(String trimmedLine, TString tstr,StringBuilder command) {
+            return this.ScriptDelimiterLine(trimmedLine, tstr,command);
 
         }
 
-        private boolean commandReadyToExecute(String trimmedLine) {
-            if (trimmedLine.endsWith(delimiter.toLowerCase())||trimmedLine.endsWith(delimiter.toUpperCase())) return true;
-            return false;
+        private boolean commandReadyToExecute(String trimmedLine, TInteger delimiterStartPos, TInteger delimiterEndPos) {
+
+            boolean ret = this.ScriptDelimiterLineEnd(trimmedLine, this.usingDelimiter, delimiterStartPos, delimiterEndPos);
+            if (ret) {
+                if (DataBaseImpl.this.getDataBaseType().isPostgresFamily()) {
+                    if (this.usingDelimiter.startsWith("$")) {
+                        ret = false;
+                    }
+
+                }
+                this.usingDelimiter = this.delimiter;
+            }
+            return ret;
         }
 
         private void executePreparedStatement(String command) throws Exception {
 
-            PreparedStatement statement = null;
+            Statement statement = null;
             try {
                 boolean handArgs = false;
                 String source = "";
@@ -4088,11 +4169,16 @@ public class DataBaseImpl implements DataBase {
                 if (this.args != null && args.size() > 0) {
                     ScriptOption scriptOption = (ScriptOption) this.args.get(ScriptOption.class.getName());
                     if (scriptOption != null) {
-                        source = scriptOption.getSource();
-                        if (scriptOption.isFromMDMethod()) {
+                        if (this.args.size() > 1) {
                             handArgs = true;
+                        } else {//this.args.size()==1
+                            handArgs = false;
                         }
+                    } else {
+
                     }
+                } else {
+                    handArgs = false;
                 }
                 String preparedSql = sqltext;
                 NSQL nsql = null;
@@ -4100,9 +4186,12 @@ public class DataBaseImpl implements DataBase {
                     nsql = NSQL.getNSQL(sqltext, source, this.args);
                     preparedSql = nsql.getExeSql();
                 }
-                statement = DataBaseImpl.this.getPreparedStatement(preparedSql);
+
                 if (handArgs) {
-                    String paramStr = SqlUtils.setToPreStatment(nsql.getArgs(), statement);
+                    statement = DataBaseImpl.this.getPreparedStatement(preparedSql);
+                    String paramStr = SqlUtils.setToPreStatment(nsql.getArgs(), (PreparedStatement) statement);
+                } else {
+                    statement = DataBaseImpl.this.getStatement(preparedSql);
                 }
                 statement.setEscapeProcessing(escapeProcessing);
                 String debugSql = "";
@@ -4131,7 +4220,12 @@ public class DataBaseImpl implements DataBase {
                     }
                 }
                 long start = System.currentTimeMillis();
-                boolean hasResults = statement.execute();
+                boolean hasResults = false;
+                if (statement instanceof PreparedStatement) {
+                    hasResults = ((PreparedStatement) statement).execute();
+                } else {
+                    hasResults = statement.execute(preparedSql);
+                }
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
 
                     log.debug("sql执行:" + (System.currentTimeMillis() - start) + (!hasResults ? ",更新条数:" + statement.getUpdateCount() : ""));
@@ -4142,10 +4236,6 @@ public class DataBaseImpl implements DataBase {
                     hasResults = statement.getMoreResults();
                 }
 
-            } catch (SQLWarning e) {
-                throw e;
-            } catch (SQLException e) {
-                throw e;
             } finally {
                 try {
                     if (statement != null) {

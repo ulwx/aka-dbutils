@@ -14,9 +14,10 @@ public class Utils {
                 "c:/dbutils_demo/db_teacher",
                 "com.github.ulwx.aka.dbutils.sqlserver.domain.db.db_teacher",
                 "utf-8",true);
+        importDbStudent();
+        inportDbTeacher();
         System.out.println("ok!");
 
-       // importDbStudent();
     }
     public static void importDbStudent(){
         DbContext.permitDebugLog(false);
@@ -30,11 +31,11 @@ public class Utils {
         DbContext.permitDebugLog(false);
         MDbUtils.exeScript("sqlserver/dbpool.xml#db_teacher",
                 "com.github.ulwx.aka.dbutils.sqlserver",
-                "db_teacher.sql", false,null);
-        MDbUtils.exeScript("sqlserver/dbpool.xml#db_teacher",
+                "db_teacher.sql", false,null,null);
+        MDbUtils.exeScript("sqlserver/dbpool.xml#db_teacher_slave1",
                 "com.github.ulwx.aka.dbutils.sqlserver",
                 "db_teacher_slave1.sql", false,null);
-        MDbUtils.exeScript("sqlserver/dbpool.xml#db_teacher",
+        MDbUtils.exeScript("sqlserver/dbpool.xml#db_teacher_slave2",
                 "com.github.ulwx.aka.dbutils.sqlserver",
                 "db_teacher_slave2.sql", false,null);
         DbContext.permitDebugLog(true);

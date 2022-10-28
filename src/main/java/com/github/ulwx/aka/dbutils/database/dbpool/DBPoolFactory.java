@@ -92,26 +92,31 @@ public class DBPoolFactory {
         return MD.parsePoolName(dbPoolXmlFileNameAndDbPoolName);
     }
 
-    public static DBPoolFactory getInstance(String dbPoolXmlFileName) throws Exception {
-        DBPoolFactory dbPoolFactory = dbpoolFactoryMap.get(dbPoolXmlFileName);
-        if (dbPoolFactory == null) {
-            synchronized (DBPoolFactory.class) {
-                dbPoolFactory = dbpoolFactoryMap.get(dbPoolXmlFileName);
-                if (dbPoolFactory == null) {
-                    Resource[] resources = ReadConfig.getResource(dbPoolXmlFileName);
-                    ReadConfig.checkResource(resources, dbPoolXmlFileName);
-                    dbPoolFactory = new DBPoolFactory(dbPoolXmlFileName);
-                    dbpoolFactoryMap.put(dbPoolXmlFileName, dbPoolFactory);
-                    DO_INI_SAME_THREAD.set(true);
-                    dbPoolFactory.initDbPoolFactory();
-                    DO_INI_SAME_THREAD.set(false);
+    public static DBPoolFactory getInstance(String dbPoolXmlFileName) {
+        try {
+            DBPoolFactory dbPoolFactory = dbpoolFactoryMap.get(dbPoolXmlFileName);
+            if (dbPoolFactory == null) {
+                synchronized (DBPoolFactory.class) {
+                    dbPoolFactory = dbpoolFactoryMap.get(dbPoolXmlFileName);
+                    if (dbPoolFactory == null) {
+                        Resource[] resources = ReadConfig.getResource(dbPoolXmlFileName);
+                        ReadConfig.checkResource(resources, dbPoolXmlFileName);
+                        dbPoolFactory = new DBPoolFactory(dbPoolXmlFileName);
+                        dbpoolFactoryMap.put(dbPoolXmlFileName, dbPoolFactory);
+                        DO_INI_SAME_THREAD.set(true);
+                        dbPoolFactory.initDbPoolFactory();
+                        DO_INI_SAME_THREAD.set(false);
 
+                    }
                 }
             }
+            //检测dbPoolFactory对象是否构造完成
+            dbPoolFactory.checkInitIsFinished();
+            return dbPoolFactory;
+        } catch (Exception ex) {
+            if (ex instanceof DbException) throw (DbException) ex;
+            throw new DbException(ex);
         }
-        //检测dbPoolFactory对象是否构造完成
-        dbPoolFactory.checkInitIsFinished();
-        return dbPoolFactory;
 
     }
 
@@ -674,10 +679,9 @@ public class DBPoolFactory {
      * 根据连接池的名称选择从库
      *
      * @param poolName 连接池名称
-     * @param result   返回从库的数据库连接
      * @return 返回DataSource对象
      */
-    public DataSource selectSlaveDbPool(String poolName, TResult<String> slaveName, TResult<Connection> result) {
+    public DataSource selectSlaveDbPool(String poolName, TResult<String> slaveName) {
         //checkInitIsFinished();
         try {
             rwLock.readLock().lock();
@@ -709,30 +713,8 @@ public class DBPoolFactory {
                         cnt++;
                         continue;
                     }
-                    if (result != null) {
-                        Connection connection = null;
-                        try {
-                            connection = dss.getConnection();
-                            result.setValue(connection);
-                            slaveName.setValue(availableDssNames.get(index));
-                            return dss;
-                        } catch (Exception exception) {
-                            if (connection != null) {
-                                try {
-                                    connection.close();
-                                    result.setValue(null);
-                                } catch (SQLException throwables) {
-                                }
-                            }
-                            log.error("获取从库连接失败！" + exception + ",继续尝试选择其它从库获取！", exception);
-                            index++;
-                            cnt++;
-
-                        }
-                    } else {
-                        slaveName.setValue(availableDssNames.get(index));
-                        return dss;
-                    }
+                    slaveName.setValue(availableDssNames.get(index));
+                    return dss;
                 }
             } else {
                 throw new DbException("所有从库连接无法获取，可能从库出现故障！");

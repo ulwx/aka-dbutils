@@ -44,7 +44,7 @@ AND `name` like #{lname%}
 /*${MyUser%} 含%则只适用于like方式，直接替换模式，非预编译模式*/ 
 AND `name` like ${lname%} 
 /* ${=java表达式}*/ 
-AND `name`=${="xxx".length()} 
+AND `name`='${="xxx".length()}'
 @ int f=0; 
 /* java代码 */ 
 @System.out.println("lname="+$$.lname+",f="+f);

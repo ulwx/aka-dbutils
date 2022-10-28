@@ -1,7 +1,6 @@
 package com.github.ulwx.aka.dbutils.mysql.dao.db_student;
 
 import com.github.ulwx.aka.dbutils.database.*;
-import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
 import com.github.ulwx.aka.dbutils.mysql.Utils;
 import com.github.ulwx.aka.dbutils.mysql.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.mysql.domain.db.db_teacher.Teacher;
@@ -79,22 +78,9 @@ public class CourseDao {
 
         course = new Course();
         course.setTeacherId(1);
-        course.selectOptions().select("class_hours as classHours , id").
-                orderBy("classHours desc").limit(2);
         list = MDbUtils.queryListBy(DbPoolName, course);
 
-        List compareToList = new ArrayList();
-        compareTo = new Course();
-        compareTo.setId(18);
-        compareTo.setClassHours(24);
-        compareToList.add(compareTo);
-
-        compareTo = new Course();
-        compareTo.setId(15);
-        compareTo.setClassHours(21);
-        compareToList.add(compareTo);
-
-        Assert.equal(list, compareToList);
+        Assert.equal(list.toString(),"[{\"id\":1,\"name\":\"course1\",\"classHours\":11,\"teacherId\":1,\"creatime\":\"2021-03-15 22:31:48\"}, {\"id\":5,\"name\":\"course5\",\"classHours\":11,\"teacherId\":1,\"creatime\":\"2021-03-15 22:31:48\"}, {\"id\":6,\"name\":\"course6\",\"classHours\":12,\"teacherId\":1,\"creatime\":\"2021-03-15 22:31:48\"}, {\"id\":11,\"name\":\"course11\",\"classHours\":17,\"teacherId\":1,\"creatime\":\"2021-03-15 22:31:48\"}, {\"id\":15,\"name\":\"course15\",\"classHours\":21,\"teacherId\":1,\"creatime\":\"2021-03-15 22:31:48\"}, {\"id\":18,\"name\":\"course18\",\"classHours\":24,\"teacherId\":1,\"creatime\":\"2021-03-15 22:31:48\"}]");
 
     }
 
@@ -103,7 +89,6 @@ public class CourseDao {
         PageBean pageBean = new PageBean();
         Course course = new Course();
         course.setTeacherId(1);
-        course.selectOptions().orderBy("id asc");
         StringBuffer sql = new StringBuffer();
         DbContext.setDebugSQLListener(sqltxt -> {
             if (sql.length() > 0) {
@@ -111,12 +96,14 @@ public class CourseDao {
             }
             sql.append(sqltxt);
         });
+        QueryHint hint=new QueryHint();
+        hint.orderBy("id asc");
+        DbContext.setQueryHint(hint);
         List<Course> list =
                 MDbUtils.queryListBy(DbPoolName, course, 2, 4, pageBean); // ①
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
-                "select count(1) from (select *  from `course`  where `teacher_id`=1) t;" +
-                        "select *  from `course`  where `teacher_id`=1   order by `id` asc limit 4, 4");
+                "select count(1) from (select * from `course`  where `teacher_id`=1) t;select * from `course`  where `teacher_id`=1   order by  id asc limit 4, 4");
         Course compareTo = null;
         List compareToList = new ArrayList();
         compareTo = new Course();
@@ -136,29 +123,13 @@ public class CourseDao {
         compareTo.setCreatime(LocalDateTime.parse("2021-03-15 22:31:48",
                 CTime.DTF_YMD_HH_MM_SS));
         compareToList.add(compareTo);
-
         Assert.equal(list, compareToList);
-
-        course.selectOptions().select("class_hours as classHours , id").
-                orderBy("id desc")
-        //.limit(11)   //针对下方的对象分页查询方法，此处不能调用limit(n)方法，否则会报错。
-        ;
+        QueryHint queryHint=MD.ofQueryHint().select("class_hours as classHours , id").
+                orderBy("id desc");
+        DbContext.setQueryHint(queryHint);
         list = MDbUtils.queryListBy(DbPoolName, course, 2, 3, pageBean);
 
-        compareToList = new ArrayList();
-        compareTo = new Course();
-        compareTo.setId(6);
-        compareTo.setClassHours(12);
-        compareToList.add(compareTo);
-        compareTo = new Course();
-        compareTo.setId(5);
-        compareTo.setClassHours(11);
-        compareToList.add(compareTo);
-        compareTo = new Course();
-        compareTo.setId(1);
-        compareTo.setClassHours(11);
-        compareToList.add(compareTo);
-        Assert.equal(list, compareToList);
+        Assert.equal(list.toString(), "[{\"id\":6,\"name\":null,\"classHours\":12,\"teacherId\":null,\"creatime\":null}, {\"id\":5,\"name\":null,\"classHours\":11,\"teacherId\":null,\"creatime\":null}, {\"id\":1,\"name\":null,\"classHours\":11,\"teacherId\":null,\"creatime\":null}]");
 
     }
 
@@ -175,7 +146,7 @@ public class CourseDao {
                 course, MD.of(course::getName, course::getCreatime));
         DbContext.removeDebugSQLListener();
 
-        Assert.equal(sql.toString(), "select *  from `course`  where `name`='course1' and `creatime`=null");
+        Assert.equal(sql.toString(), "select * from `course`  where `name`='course1' and `creatime`=null");
         Assert.isTrue(list.isEmpty());
 
     }
@@ -390,7 +361,7 @@ public class CourseDao {
             course.setId(rs.getInt("id"));
             course.setName(rs.getString("name"));
             course.setClassHours(rs.getInt("class_hours"));
-            course.setCreatime(SqlUtils.sqlTimestampToLocalDateTime(rs.getTimestamp("creatime")));
+            course.setCreatime(CTime.sqlTimestampToLocalDateTime(rs.getTimestamp("creatime")));
             return course;
         });
         for (int i = 0; i < list.size(); i++) {
@@ -562,13 +533,13 @@ public class CourseDao {
                 "insert into `course` (`creatime`,`name`) values('2021-03-15 22:31:40','add')");
         ret = MDbUtils.insertBy(DbPoolName, course, true);
         Assert.equal(sql.toString(),
-                "insert into `course` (`class_hours`,`creatime`,`id`,`name`,`teacher_id`) values(null,'2021-03-15 22:31:40',null,'add',null)");
+                "insert into `course` (`class_hours`,`creatime`,`name`,`teacher_id`) values(null,'2021-03-15 22:31:40','add',null)");
         ret = MDbUtils.insertBy(DbPoolName, course, MD.of("name", "id"));
         Assert.equal(sql.toString(),
-                "insert into `course` (`id`,`name`) values(null,'add')");
+                "insert into `course` (`name`) values('add')");
         ret = MDbUtils.insertBy(DbPoolName, course, MD.of(Course::getName, Course::getId));
         Assert.equal(sql.toString(),
-                "insert into `course` (`id`,`name`) values(null,'add')");
+                "insert into `course` (`name`) values('add')");
         ret = MDbUtils.insertBy(DbPoolName, course, MD.of(Course::getName, Course::getId), false);
         Assert.equal(sql.toString(),
                 "insert into `course` (`name`) values('add')");
@@ -588,9 +559,10 @@ public class CourseDao {
             sql.append(sqltxt);
         });
         int key = (int) MDbUtils.insertReturnKeyBy(DbPoolName, course);
-        DbContext.removeDebugSQLListener();
+        Assert.equal(course.getId(),key);
         Assert.equal(sql.toString(),
                 "insert into `course` (`creatime`,`name`) values('2021-03-15 22:31:40','add')");
+        DbContext.removeDebugSQLListener();
 
     }
 
@@ -621,15 +593,15 @@ public class CourseDao {
         sql.setLength(0);
         rets = MDbUtils.insertBy(DbPoolName, courses, true);
         Assert.equal(sql.toString(),
-                "insert into `course` (`class_hours`,`creatime`,`id`,`name`,`teacher_id`) values(null,'2021-03-15 22:31:40',null,'add1',null);insert into `course` (`class_hours`,`creatime`,`id`,`name`,`teacher_id`) values(null,'2021-03-15 22:31:40',null,'add2',null);insert into `course` (`class_hours`,`creatime`,`id`,`name`,`teacher_id`) values(null,'2021-03-15 22:31:40',null,'add3',null)");
+                "insert into `course` (`class_hours`,`creatime`,`name`,`teacher_id`) values(null,'2021-03-15 22:31:40','add1',null);insert into `course` (`class_hours`,`creatime`,`name`,`teacher_id`) values(null,'2021-03-15 22:31:40','add2',null);insert into `course` (`class_hours`,`creatime`,`name`,`teacher_id`) values(null,'2021-03-15 22:31:40','add3',null)");
         sql.setLength(0);
         rets = MDbUtils.insertBy(DbPoolName, courses, MD.of("name", "id"));
         Assert.equal(sql.toString(),
-                "insert into `course` (`id`,`name`) values(null,'add1');insert into `course` (`id`,`name`) values(null,'add2');insert into `course` (`id`,`name`) values(null,'add3')");
+                "insert into `course` (`name`) values('add1');insert into `course` (`name`) values('add2');insert into `course` (`name`) values('add3')");
         sql.setLength(0);
         rets = MDbUtils.insertBy(DbPoolName, courses, MD.of(Course::getName, Course::getId));
         Assert.equal(sql.toString(),
-                "insert into `course` (`id`,`name`) values(null,'add1');insert into `course` (`id`,`name`) values(null,'add2');insert into `course` (`id`,`name`) values(null,'add3')");
+                "insert into `course` (`name`) values('add1');insert into `course` (`name`) values('add2');insert into `course` (`name`) values('add3')");
         sql.setLength(0);
         rets = MDbUtils.insertBy(DbPoolName, courses, MD.of(Course::getName, Course::getId), false);
         Assert.equal(sql.toString(),
@@ -652,16 +624,16 @@ public class CourseDao {
         });
         ret = MDbUtils.updateBy(DbPoolName, course, MD.of("name", "id"));
         Assert.equal(sql.toString(),
-                "update `course`  set `creatime`='2021-03-15 22:31:40' where name='add' and id=null");
+                "update `course`  set `creatime`='2021-03-15 22:31:40' where `name`='add' and `id`=null");
         ret = MDbUtils.updateBy(DbPoolName, course, MD.of(Course::getName, Course::getId));
         Assert.equal(sql.toString(),
-                "update `course`  set `creatime`='2021-03-15 22:31:40' where name='add' and id=null");
+                "update `course`  set `creatime`='2021-03-15 22:31:40' where `name`='add' and `id`=null");
         ret = MDbUtils.updateBy(DbPoolName, course, MD.of("name", "id"), true);
         Assert.equal(sql.toString(),
-                "update `course`  set `class_hours`=null,`creatime`='2021-03-15 22:31:40',`teacher_id`=null where name='add' and id=null");
+                "update `course`  set `class_hours`=null,`creatime`='2021-03-15 22:31:40',`teacher_id`=null where `name`='add' and `id`=null");
         ret = MDbUtils.updateBy(DbPoolName, course, MD.of("name"), MD.of(Course::getCreatime));
         Assert.equal(sql.toString(),
-                "update `course`  set `creatime`='2021-03-15 22:31:40' where name='add'");
+                "update `course`  set `creatime`='2021-03-15 22:31:40' where `name`='add'");
 
         DbContext.removeDebugSQLListener();
 
@@ -679,7 +651,7 @@ public class CourseDao {
         });
         rets = MDbUtils.updateBy(DbPoolName, courses, MD.of("name"));
         Assert.equal(sql2.toString(),
-                "update `course`  set `creatime`='2021-03-15 22:31:40' where name='add';update `course`  set `creatime`='2021-03-15 22:31:40' where name='add1'");
+                "update `course`  set `creatime`='2021-03-15 22:31:40' where `name`='add';update `course`  set `creatime`='2021-03-15 22:31:40' where `name`='add1'");
 
     }
 
@@ -698,7 +670,7 @@ public class CourseDao {
         });
         ret = MDbUtils.updateBy(DbPoolName, course, MD.of("name", "id"));
         DbContext.removeDebugSQLListener();
-        Assert.equal(sql.toString(), "update `course`  set `creatime`='2021-03-15 22:31:40' where name='add' and id=1");
+        Assert.equal(sql.toString(), "update `course`  set `creatime`='2021-03-15 22:31:40' where `name`='add' and `id`=1");
 
     }
 
@@ -852,7 +824,56 @@ public class CourseDao {
         DbContext.removeDebugSQLListener();
 
     }
+    @Test
+    public void testInsertWithMdReturnKey() {
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            sql.setLength(0);
+            sql.append(sqltxt);
+        });
+        LocalDateTime localDateTime = LocalDateTime.parse("2021-03-15 22:31:40", CTime.DTF_YMD_HH_MM_SS);
 
+        Map<String, Object> args = new HashMap<>();
+        args.put("name", "course_md");
+        args.put("classHours", 123);
+        args.put("creatime", localDateTime);
+        long ret=MDbUtils.insertReturnKey(DbPoolName, MD.md(), args);
+        Assert.equal(ret,22);
+        Assert.equal(sql.toString(),
+                "INSERT INTO course ( name, class_hours, creatime ) VALUES ( 'course_md', 123, '2021-03-15 22:31:40' )");
+
+    }
+
+    @Test
+    public void testInsertWithSQL() {
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            sql.setLength(0);
+            sql.append(sqltxt);
+        });
+        LocalDateTime localDateTime = LocalDateTime.parse("2021-03-15 22:31:40", CTime.DTF_YMD_HH_MM_SS);
+
+        Map<String, Object> args = new HashMap<>();
+        args.put("name", "course_md");
+        args.put("classHours", 123);
+        args.put("creatime", localDateTime);
+        String sqlContent="INSERT INTO course (" +
+                "name," +
+                "class_hours," +
+                "creatime" +
+                ")" +
+                "VALUES" +
+                "(" +
+                "#{name}," +
+                "#{classHours}," +
+                "#{creatime}" +
+                ")";
+        long ret=MDbUtils.insertReturnKey(DbPoolName, "sql:"+sqlContent, args);
+        Assert.equal(ret,22);
+        Assert.equal(sql.toString(),
+                "INSERT INTO course (name,class_hours,creatime)VALUES('course_md',123,'2021-03-15 22:31:40')");
+
+    }
     @Test
     public void testExeSqlScript() throws Exception {
         LocalDateTime localDateTime = LocalDateTime.parse("2021-03-15 22:31:40", CTime.DTF_YMD_HH_MM_SS);
@@ -875,6 +896,7 @@ public class CourseDao {
         sql.setLength(0);
         str = MDbUtils.exeScript(DbPoolName, CourseDao.class.getPackage().getName(),
                 "testscript.sql", false,null);
+        System.out.println("str="+str);
         Assert.hasText(str);
         DbContext.removeDebugSQLListener();
 
@@ -886,6 +908,7 @@ public class CourseDao {
         Map<String, Object> args = new HashMap<>();
         args.put("name:in", "course1");
         args.put("count:out", int.class);//存入的是类型
+
         Map<String, Object> out = new HashMap<>();
         List<DataBaseSet> list = new ArrayList<>();
         StringBuffer sql = new StringBuffer();
@@ -913,7 +936,7 @@ public class CourseDao {
     public void testStoredFunc() throws Exception {
         Map<String, Object> args = new HashMap<>();
         args.put("name:in", "course1");
-        args.put("count:out", int.class);
+        args.put("count:out", int.class); //
         Map<String, Object> outMap = new HashMap<>();
         StringBuffer sql = new StringBuffer();
         DbContext.setDebugSQLListener(sqltxt -> {

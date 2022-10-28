@@ -1,31 +1,14 @@
 
 package com.github.ulwx.aka.dbutils.tool.support.path;
 
+import com.github.ulwx.aka.dbutils.tool.support.Assert;
+
 import java.beans.Introspector;
 import java.io.Closeable;
 import java.io.Externalizable;
 import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Proxy;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
-
-import com.github.ulwx.aka.dbutils.tool.support.Assert;
+import java.lang.reflect.*;
+import java.util.*;
 
 abstract class ClassUtils {
 

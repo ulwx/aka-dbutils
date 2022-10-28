@@ -14,8 +14,18 @@ public class Utils {
                 "c:/dbutils_demo/db_teacher",
                 "com.github.ulwx.aka.dbutils.mysql.domain.db.db_teacher",
                 "utf-8",true);
-        System.out.println("ok!");
 
+        importDbStudent();
+        inportDbTeacher();
+        System.out.println("ok!");
+    }
+
+    public static void importDbStudentFromFile(){
+        DbContext.permitDebugLog(false);
+        MDbUtils.exeScriptInDir("mysql/dbpool.xml#db_student",
+                "D:\\suncj\\jydsource\\common\\common\\aka-dbutils\\src\\test\\java\\com\\github\\ulwx\\aka\\dbutils\\mysql",
+                "db_student.sql", false,null,"utf-8");
+        DbContext.permitDebugLog(true);
     }
     public static void importDbStudent(){
         DbContext.permitDebugLog(false);
@@ -30,10 +40,10 @@ public class Utils {
         MDbUtils.exeScript("mysql/dbpool.xml#db_teacher",
                 "com.github.ulwx.aka.dbutils.mysql",
                 "db_teacher.sql", false,null);
-        MDbUtils.exeScript("mysql/dbpool.xml#db_teacher",
+        MDbUtils.exeScript("mysql/dbpool.xml#db_teacher_slave1",
                 "com.github.ulwx.aka.dbutils.mysql",
                 "db_teacher_slave1.sql", false,null);
-        MDbUtils.exeScript("mysql/dbpool.xml#db_teacher",
+        MDbUtils.exeScript("mysql/dbpool.xml#db_teacher_slave2",
                 "com.github.ulwx.aka.dbutils.mysql",
                 "db_teacher_slave2.sql", false,null);
         DbContext.permitDebugLog(true);

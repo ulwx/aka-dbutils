@@ -50,6 +50,30 @@
         <property name="minPoolSize">2</property>
         <property name="maxStatements">20</property>
     </dbpool>
+    <dbpool name="db_teacher_slave1" type="tomcatdbpool">
+        <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave1;trustServerCertificate=true</property>
+        <property name="username">sa</property>
+        <property name="password">scj_123123</property>
+        <property name="checkoutTimeout">60000</property>
+        <property name="idleConnectionTestPeriod">60</property>
+        <property name="maxIdleTime">60</property>
+        <property name="maxPoolSize">10</property>
+        <property name="minPoolSize">2</property>
+        <property name="maxStatements">20</property>
+    </dbpool>
+    <dbpool name="db_teacher_slave2" type="tomcatdbpool">
+        <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+        <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher_slave2;trustServerCertificate=true</property>
+        <property name="username">sa</property>
+        <property name="password">scj_123123</property>
+        <property name="checkoutTimeout">60000</property>
+        <property name="idleConnectionTestPeriod">60</property>
+        <property name="maxIdleTime">60</property>
+        <property name="maxPoolSize">10</property>
+        <property name="minPoolSize">2</property>
+        <property name="maxStatements">20</property>
+    </dbpool>
     <dbpool name="db_teacher" type="tomcatdbpool">
         <property name="driverClassName">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
         <property name="url">jdbc:sqlserver://192.168.137.200:1433;databaseName=db_teacher;trustServerCertificate=true</property>
@@ -105,5 +129,5 @@
     -->
     <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.sqlserver.MyIDBPoolAttrSourceTest"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
-            check-time="10"/>
+            check-time="0"/>
 </dbpool-config>

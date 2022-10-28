@@ -36,7 +36,7 @@ public interface DBObjectOperation {
      * @return 返回插入记录的行数（成功为1，不成功为0）
      * @throws DbException
      */
-    public <T> int insertBy(T insertObject, Object[] insertProperties) throws DbException;
+    public <T> int insertBy(T insertObject, Object... insertProperties) throws DbException;
 
     /**
      * 插入对象指定属性到数据库，根据此对象里的属性、insertProperties、includeNull三者反射生成insert语句
@@ -81,7 +81,7 @@ public interface DBObjectOperation {
      * @return 返回每个对象是否插入成功数组，数组里的某索引位置int值反映objs里对应对象是否插入成功的标志，1：表示成功  0：不是没有插入任何值
      * @throws DbException
      */
-    public <T> int[] insertBy(T[] objs, Object[] insertProperties) throws DbException;
+    public <T> int[] insertBy(T[] objs, Object... insertProperties) throws DbException;
 
     /**
      * 批量插入对象里insertProperties指定属性到数据库，includeNull决定insertProperties里为null值的属性是否插入到数据库
@@ -118,21 +118,21 @@ public interface DBObjectOperation {
     public <T> long insertReturnKeyBy(T insertObject, boolean includeNull) throws DbException;
 
     /**
-     * 插入指定对象里insertProperties指定的属性到数据库并返回生成的主键id，insertProperties里为null值的属性也会插入数据库
+     * 插入指定对象里insertProperties指定的属性到数据库并返回生成的主键id，insertProperties里为null值的属性也会插入数据库。
      *
-     * @param insertObject     指定的插入对象，根据此对象里insertProperties指定的属性反射生成insert语句，insertProperties里为null值的属性也会插入数据库
-     * @param insertProperties 指定哪些属性插入奥数据库
+     * @param insertObject     指定的插入对象，根据此对象里insertProperties指定的属性反射生成insert语句，insertProperties里为null值的属性也会插入数据库。
+     * @param insertProperties 指定哪些属性插入奥数据库。
      * @param <T>
      * @return 返回生成的主键id
      * @throws DbException
      */
-    public <T> long insertReturnKeyBy(T insertObject, Object[] insertProperties) throws DbException;
+    public <T> long insertReturnKeyBy(T insertObject, Object... insertProperties) throws DbException;
 
     /**
      * 根据对象里的insertProperties指定的属性反射生成insert语句，includeNull决定是否插入insertProperties里为null值的属性。
      *
-     * @param insertObject     指定的插入对象，根据此对象里的insertProperties指定的属性反射生成insert语句
-     * @param insertProperties 指定插入对象里哪些属性需要插入
+     * @param insertObject     指定的插入对象，根据此对象里的insertProperties指定的属性反射生成insert语句。
+     * @param insertProperties 指定插入对象里哪些属性需要插入。
      * @param includeNull      决定是否插入insertProperties里为null值的属性。
      * @param <T>
      * @return 返回插入记录后生成的主键id
@@ -146,12 +146,12 @@ public interface DBObjectOperation {
      * 但会忽略其中值为null的属性。
      *
      * @param updateObject    根据此对象生成update语句。去除whereProperties里的属性，对象里的其它属性会生成update语句里的set语句部分， 但会忽略其中值为null的属性。
-     * @param whereProperties 指定对象里哪些属性来生成where条件部分（不要忽略whereProperties里值为null的属性）
+     * @param whereProperties 指定对象里哪些属性来生成where条件部分（不要忽略whereProperties里值为null的属性）、
      * @param <T>
-     * @return 返回更新记录的条数
+     * @return 返回更新记录的条数。
      * @throws DbException
      */
-    public <T> int updateBy(T updateObject, Object[] whereProperties) throws DbException;
+    public <T> int updateBy(T updateObject, Object... whereProperties) throws DbException;
 
     /**
      * 根据指定对象更改新对应的表记录，aka-dbutils会根据对象生成更新语句，需要通过whereProperties指定对象里哪些
@@ -276,7 +276,7 @@ public interface DBObjectOperation {
      * @return 查询一条记录并返回填充，对象的类型与selectObject的类型一致。
      * @throws DbException
      */
-    public <T> T queryOneBy(T selectObject, Object[] whereProperties) throws DbException;
+    public <T> T queryOneBy(T selectObject, Object... whereProperties) throws DbException;
 
     /**
      * 根据selectObject存在于whereProperties里的属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，whereProperties指定
@@ -288,7 +288,7 @@ public interface DBObjectOperation {
      * @return 返回查询的记录填充的对象列表，对象的类型与selectObject的类型一致
      * @throws DbException
      */
-    public <T> List<T> queryListBy(T selectObject, Object[] whereProperties) throws DbException;
+    public <T> List<T> queryListBy(T selectObject, Object... whereProperties) throws DbException;
 
     /**
      * 根据selectObject的非空属性生成select语句的where条件部分，每个属性构成的条件之间是and关系，如：
@@ -361,7 +361,7 @@ public interface DBObjectOperation {
      * @return 返回删除的条数
      * @throws DbException
      */
-    public <T> int delBy(T deleteObject, Object[] whereProperties) throws DbException;
+    public <T> int delBy(T deleteObject, Object... whereProperties) throws DbException;
 
     /**
      * 根据deleteObjects对象数组生批量成delete语句，删除相应的记录，其中whereProperties里指定的
@@ -374,7 +374,7 @@ public interface DBObjectOperation {
      * @return 数组里每个对象生成的delete语句执行后返回删除的条数
      * @throws DbException
      */
-    public <T> int[] delBy(T[] deleteObjects, Object[] whereProperties) throws DbException;
+    public <T> int[] delBy(T[] deleteObjects, Object... whereProperties) throws DbException;
 
 
 }

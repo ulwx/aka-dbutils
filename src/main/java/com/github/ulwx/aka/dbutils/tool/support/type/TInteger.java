@@ -5,7 +5,7 @@ public class TInteger implements TType {
     private Integer value;
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Integer.class;
     }
 

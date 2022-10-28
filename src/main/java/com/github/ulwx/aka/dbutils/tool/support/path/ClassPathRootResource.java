@@ -12,10 +12,18 @@ public class ClassPathRootResource implements Resource {
     private String relativePath;
     private String classPath;
 
+    /**
+     * 得到资源类路径
+     * @return
+     */
     public String getClassPath() {
         return classPath;
     }
 
+    /**
+     * 得到相对classpath root的相对文件路径
+     * @return
+     */
     public String getRelativePath() {
         return relativePath;
     }
@@ -40,6 +48,10 @@ public class ClassPathRootResource implements Resource {
         this.resource = resource;
     }
 
+    /**
+     * 得到资源
+     * @return
+     */
     public Resource getResource() {
         return resource;
     }

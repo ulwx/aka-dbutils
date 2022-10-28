@@ -5,7 +5,7 @@ public class TString implements TType {
     private String value;
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return String.class;
     }
 

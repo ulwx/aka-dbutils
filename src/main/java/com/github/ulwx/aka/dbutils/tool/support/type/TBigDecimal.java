@@ -27,7 +27,7 @@ public class TBigDecimal implements TType {
     }
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return BigDecimal.class;
     }
 }

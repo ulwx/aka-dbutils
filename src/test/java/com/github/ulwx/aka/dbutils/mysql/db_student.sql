@@ -27,7 +27,7 @@ CREATE TABLE `course` (
   `teacher_id` int(11) DEFAULT '0' COMMENT '对应于db_teacher数据库里的teacher表',
   `creatime` datetime DEFAULT NULL COMMENT '建立时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8 COMMENT='课程';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='课程';
 
 /*Data for the table `course` */
 
@@ -64,7 +64,7 @@ CREATE TABLE `student` (
   `age` int(11) DEFAULT '0' COMMENT '年龄',
   `birth_day` date DEFAULT NULL COMMENT '出生日期',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COMMENT='学生';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='学生';
 
 /*Data for the table `student` */
 
@@ -92,7 +92,7 @@ CREATE TABLE `student_course` (
   `student_id` int(11) DEFAULT NULL COMMENT '学生id',
   `course_id` int(11) DEFAULT NULL COMMENT '课程id',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 /*Data for the table `student_course` */
 
@@ -118,7 +118,7 @@ CREATE TABLE `student_many_courses` (
   `student_id` int(11) DEFAULT NULL COMMENT '学生id',
   `course_id` int(11) DEFAULT NULL COMMENT '课程id',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 /*Data for the table `student_many_courses` */
 
@@ -146,7 +146,7 @@ CREATE TABLE `t1` (
   `key_b` datetime DEFAULT NULL,
   `key_c` varchar(30) DEFAULT '',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 /*Data for the table `t1` */
 
@@ -160,7 +160,7 @@ CREATE TABLE `t2` (
   `key_a` int(11) DEFAULT '0',
   `key_b` int(11) DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 /*Data for the table `t2` */
 

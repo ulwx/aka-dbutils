@@ -3,7 +3,6 @@
 package com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset;
 
 import javax.sql.RowSet;
-import javax.sql.RowSetEvent;
 import javax.sql.RowSetListener;
 import javax.sql.RowSetMetaData;
 import javax.sql.rowset.*;

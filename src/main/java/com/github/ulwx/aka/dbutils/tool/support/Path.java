@@ -72,6 +72,11 @@ public class Path {
     }
 
 
+    /**
+     * 得到执行class的文件路径
+     * @param clazz
+     * @return
+     */
     public static String getCurClassExecutePath(Class clazz) {
         try {
             return new File(clazz.getResource("").toURI()).getAbsolutePath();
@@ -99,6 +104,13 @@ public class Path {
         return "";
     }
 
+    /**
+     * 根据文件后缀在某个目录下查找（是否递归）文件并将绝对文件路径名称存入到fileNames里
+     * @param fromDir
+     * @param recursive
+     * @param fileNames
+     * @param suffix
+     */
     public static void findAndAddInPackageByFile(String fromDir, final boolean recursive,
                                                  List<String> fileNames, String suffix) {
 

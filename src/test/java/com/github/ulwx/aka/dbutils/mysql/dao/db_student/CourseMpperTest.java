@@ -420,8 +420,7 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).updateMyCourse();
 
-        Assert.equal(sql.toString(), "select *  from `course`  where `class_hours`=11 and `name`='course1'  ;" +
-                "UPDATE `course` SET `name` = 'course1', `class_hours` = 11, `creatime` = null WHERE `id` = 1");
+        Assert.equal(sql.toString(), "select * from `course`  where `class_hours`=11 and `name`='course1';UPDATE `course` SET `name` = 'course1', `class_hours` = 11, `creatime` = null WHERE `id` = 1");
         DbContext.removeDebugSQLListener();
     }
 
@@ -436,8 +435,7 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).updateMyCourseIntrans();
 
-        Assert.equal(sql.toString(), "select *  from `course`  where `class_hours`=11 and `name`='course1'  ;" +
-                "UPDATE `course` SET `name` = 'course1', `class_hours` = 11, `creatime` = null WHERE `id` = 1");
+        Assert.equal(sql.toString(), "select * from `course`  where `class_hours`=11 and `name`='course1';UPDATE `course` SET `name` = 'course1', `class_hours` = 11, `creatime` = null WHERE `id` = 1");
         Course queryCourse = new Course();
         queryCourse.setId(1);
         Course course = MDbUtils.queryOneBy(DbPoolName, queryCourse);

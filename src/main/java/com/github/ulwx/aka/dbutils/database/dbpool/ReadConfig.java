@@ -2,7 +2,6 @@
 package com.github.ulwx.aka.dbutils.database.dbpool;
 
 import com.github.ulwx.aka.dbutils.database.DbException;
-import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import com.github.ulwx.aka.dbutils.tool.support.Path;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
@@ -16,7 +15,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ReadConfig {
@@ -79,11 +81,15 @@ public class ReadConfig {
     private static volatile Map<String, Resource[]> dbpoolFileNameResourceCache = new ConcurrentHashMap<>();
 
     /**
-     * 根据指定的路径找到资源，如：<blockquote><p>file:/dbpool.xml，classpath:mysql/dbpool.xml，classpath*:mysql/dbpool.xml
-     * </p></blockquote>如果以/开始的路径，例如/mysql/dbpool.xml，则默认为file:/mysql/dbpool.xml；如果为mysql/dbpool.xml，则默认
-     * 为 classpath*:mysql/dbpool.xml。
+     * 根据指定的路径找到资源，可以指定如：<code><file:/dbpool.xml，classpath:mysql/dbpool.xml，classpath*:mysql/dbpool.xml</code>的路径。
+     * </code><br/>
      *
      * @param dbpoolFileName
+     * 可以指定如：<code><file:/dbpool.xml，classpath:mysql/dbpool.xml，classpath*:mysql/dbpool.xml</code>的路径
+     * 如果没有指定<code>"file:"， "classpath:"，"classpath*:"</code> 前缀，则系统会默认添加classpath*:前缀。
+     * 例如<code>/mysql/dbpool.xml</code>，则为<code>classpath*:/mysql/dbpool.xml</code>；
+     * 如果为<code>mysql/dbpool.xml</code>，则为<code>classpath*:mysql/dbpool.xml</code>。
+     * <br/>注意：<code>/mysql/dbpool.xml</code>和 <code>mysql/dbpool.xml </code>效果相同。
      * @return
      * @throws Exception
      */
@@ -98,9 +104,7 @@ public class ReadConfig {
                         dbpoolFileName.startsWith("classpath*:")) {
                     resources = Path.getResourcesLikeAntPathMatch(dbpoolFileName);
 
-                } else if (dbpoolFileName.startsWith("/")) {
-                    resources = Path.getResourcesLikeAntPathMatch("file:" + dbpoolFileName);
-                } else {
+                }  else {
                     resources = Path.getResourcesLikeAntPathMatch("classpath*:" + dbpoolFileName);
                 }
                 if (resources != null) {
@@ -117,7 +121,11 @@ public class ReadConfig {
         try {
             if (resources == null || resources.length == 0) {
                 throw new DbException("错误！没有找到" + dbpoolFileName + "配置文件!");
-            } else if (resources.length != 1) {
+            } else if(resources.length == 1){
+                if(!resources[0].exists()){
+                    throw new DbException("错误！没有找到" + dbpoolFileName + "配置文件!");
+                }
+            }else if (resources.length >1) {
                 String str = "";
                 for (Resource resource : resources) {
                     if (str.isEmpty()) {
@@ -292,13 +300,15 @@ public class ReadConfig {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args)throws Exception {
         // ReadConfig.parse();
         //
         // System.out.println(CollectionUtils.toString(ReadConfig.properties));
         // System.out.println(CollectionUtils.toString(ReadConfig.trans));
-        ReadConfig rf = new ReadConfig("mysql/dbpool.xml");
-        System.out.println(ObjectUtils.toString(rf.properties));
-        System.out.println(ObjectUtils.toString(rf.slaveProperites));
+        // ReadConfig rf = new ReadConfig("mysql/dbpool.xml");
+        // System.out.println(ObjectUtils.toString(rf.properties));
+        // System.out.println(ObjectUtils.toString(rf.slaveProperites));
+        Resource[] rs= Path.getResourcesLikeAntPathMatch("classpath:mysql/dbpool.xml");
+        int i=0;
     }
 }

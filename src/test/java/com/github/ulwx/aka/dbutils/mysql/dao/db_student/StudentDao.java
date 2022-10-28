@@ -60,7 +60,7 @@ public class StudentDao {
                 MD.md(), args, one2OneMapNestOptions);
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
-                "select stu.*,c.* from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3') order by stu.id");
+                "select stu.id as `stu.id`, stu.name as `stu.name`, stu.age as `stu.age`, stu.birth_day as `stu.birth_day`, c.id as `c.id`, c.name as `c.name`, c.class_hours as `c.class_hours`, c.teacher_id as `c.teacher_id`, c.creatime as `c.creatime` from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3') order by stu.id");
 
         One2OneStudent compared = null;
         List<One2OneStudent> comparedList = new ArrayList<>();
@@ -130,8 +130,7 @@ public class StudentDao {
                         "testQueryListOne2OnePageCount"));
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
-                "select count(1) from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3','student4','student5','student6','student7','student8','student9') ;" +
-                        "select stu.*,c.* from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3','student4','student5','student6','student7','student8','student9') order by stu.id limit 3, 3");
+                "select count(1) from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3','student4','student5','student6','student7','student8','student9');select stu.id as `stu.id`, stu.name as `stu.name`, stu.age as `stu.age`, stu.birth_day as `stu.birth_day`, c.id as `c.id`, c.name as `c.name`, c.class_hours as `c.class_hours`, c.teacher_id as `c.teacher_id`, c.creatime as `c.creatime` from student stu,student_course sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student2','student3','student4','student5','student6','student7','student8','student9') order by stu.id limit 3, 3");
 
         One2OneStudent compared = null;
         List<One2OneStudent> comparedList = new ArrayList<>();
@@ -203,7 +202,7 @@ public class StudentDao {
                 one2ManyMapNestOptions);
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
-                "select stu.*, c.* from student stu,student_many_courses sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student4') order by stu.id,c.id");
+                "select stu.id as `stu.id`, stu.name as `stu.name`, stu.age as `stu.age`, stu.birth_day as `stu.birth_day`, c.id as `c.id`, c.name as `c.name`, c.class_hours as `c.class_hours`, c.teacher_id as `c.teacher_id`, c.creatime as `c.creatime` from student stu,student_many_courses sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student4') order by stu.id,c.id");
 
         One2ManyStudent compared = null;
         Course course = null;
@@ -305,7 +304,7 @@ public class StudentDao {
 
         DbContext.removeDebugSQLListener();
         Assert.equal(sql.toString(),
-                "select stu.*, c.* from student stu,student_many_courses sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student4','student6','student7','student9','student10') and stu.id in (7,9,10) order by stu.id,c.id");
+                "select stu.id as `stu.id`, stu.name as `stu.name`, stu.age as `stu.age`, stu.birth_day as `stu.birth_day`, c.id as `c.id`, c.name as `c.name`, c.class_hours as `c.class_hours`, c.teacher_id as `c.teacher_id`, c.creatime as `c.creatime` from student stu,student_many_courses sc,course c where stu.id=sc.student_id and c.id=sc.course_id and stu.name in ('student1','student4','student6','student7','student9','student10') and stu.id in (7,9,10) order by stu.id,c.id");
 
         One2ManyStudent compared = null;
         Course course = null;
@@ -414,12 +413,12 @@ public class StudentDao {
 
         MDbUtils.updateBy(DbPoolName, myStudent, MD.of(MyStudent::getName));
 
-        Assert.equal(sql.toString(), "update `student`  set `age`=12,`birth_day`='2021-03-15' where name='xyz'");
+        Assert.equal(sql.toString(), "update `student`  set `age`=12,`birth_day`='2021-03-15' where `name`='xyz'");
         sql.setLength(0);
         DbContext.setReflectClass(Student.class);
         MyStudent student = MDbUtils.queryOneBy(DbPoolName, myStudent);
 
-        Assert.equal(sql.toString(), "select *  from `student`  where `age`=12 and `birth_day`='2021-03-15' and `name`='xyz' limit 1");
+        Assert.equal(sql.toString(), "select * from `student`  where `age`=12 and `birth_day`='2021-03-15' and `name`='xyz'");
         sql.setLength(0);
         DbContext.setReflectClass(Student.class);
         MDbUtils.delBy(DbPoolName, myStudent,

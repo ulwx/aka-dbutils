@@ -6,6 +6,8 @@ import com.github.ulwx.aka.dbutils.database.sql.SqlUtils;
 import com.github.ulwx.aka.dbutils.tool.support.Assert;
 import com.github.ulwx.aka.dbutils.tool.support.CTime;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
+import com.github.ulwx.aka.dbutils.tool.support.type.TInteger;
+import com.github.ulwx.aka.dbutils.tool.support.type.TString;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -83,6 +85,7 @@ public enum DBMS {
     PostgreSQL94Dialect,//
     PostgreSQL95Dialect,//
     PostgreSQL9Dialect,//
+    PostgreSQL10Dialect,
     PostgreSQLDialect,//
     ProgressDialect,//
     RDMSOS2200Dialect,//
@@ -346,7 +349,7 @@ public enum DBMS {
      * @return true if is Postgres family
      */
     public boolean isPostgresFamily() {
-        return this.toString().startsWith("Postgres");
+        return this.toString().startsWith("Postgre");
     }
 
     /**
@@ -378,6 +381,9 @@ public enum DBMS {
         return this.toString().startsWith("HSQL");
     }
 
+    public String topN(String sql,int topN){
+        return this.pageSQL(sql,1,topN);
+    }
     public String pageSQL(String sql, int pageNumber, int pageSize) {// NOSONAR
         String result = null;
         Assert.hasText(sql, "sql string can not be empty");
@@ -431,7 +437,7 @@ public enum DBMS {
         return result;
     }
 
-    public String tableCommentSql(String dbName){
+    public String queryTableCommentSql(String dbName){
         String sql="";
         if (this.isMySqlFamily()) {
             sql = "SELECT TABLE_COMMENT FROM INFORMATION_SCHEMA.TABLES "
@@ -442,13 +448,47 @@ public enum DBMS {
                     "from sys.objects c left join sys.extended_properties f on f.major_id=c.object_id " +
                     "and f.minor_id=0 and f.class=1 where c.type='u' and c.name=?";
 
-        }else{
-
+        }else if(this.isPostgresFamily()){
+            sql="SELECT relname as TABLE_NAME,obj_description(oid) as TABLE_COMMENT" +
+                    " FROM pg_class " +
+                    "WHERE relkind = 'r'  and relname not like 'pg_%' " +
+                    "and relname not like 'sql_%'" +
+                    " and relname=?";
+        }else if(this.isOracleFamily()){
+            sql="select TABLE_NAME as TABLE_NAME, COMMENTS as TABLE_COMMENT " +
+                    "from user_tab_comments where Table_Name=? and TABLE_TYPE='TABLE'";
         }
         return sql;
     }
 
-    public String colCommentSql(){
+    public String escapeLeft(){
+        if (this.isMySqlFamily()) {
+            return "`";
+        }else if (this.isSQLServerFamily()) {
+            return "[";
+        }else if (this.isOracleFamily()) {
+            return "\"";
+        }else if(this.isPostgresFamily()){
+            return "\"";
+        }else{
+            return "";
+        }
+    }
+    public String escapeRight(){
+        if (this.isMySqlFamily()) {
+            return "`";
+        }else if (this.isSQLServerFamily()) {
+            return "]";
+        }else if (this.isOracleFamily()) {
+            return "\"";
+        } else if(this.isPostgresFamily()){
+            return "\"";
+        }else{
+            return "";
+        }
+    }
+
+    public String queryColCommentSql(){
         String sql="";
         if (this.isMySqlFamily()) {
 
@@ -462,14 +502,105 @@ public enum DBMS {
                     "　LEFT JOIN sys.extended_properties C ON C.major_id = B.object_id AND C.minor_id = B.column_id" +
                     "　WHERE A.name = ?";
 
-        }else{
-
+        }else if(this.isOracleFamily()){
+            sql="select TABLE_NAME as TABLE_NAME, " +
+                    "COLUMN_NAME, " +
+                    "COMMENTS as COLUMN_DESCRIPTION " +
+                    "from user_col_comments " +
+                    "where Table_Name=?";
         }
         return sql;
     }
 
-    public static void main(String[] args) {
+    public static String trimTailOrderBy(String sql, TString orderStr) {
+        sql = sql.trim();
+        String newSql = "";
+        String reg = "order\\s+by\\s+\\S+(\\s+(asc|desc))?";
+        TInteger startPos = new TInteger();
+        boolean isEnd = StringUtils.endsWith(sql, reg, true, startPos);
+        if (isEnd) {
+            if (orderStr != null) {
+                orderStr.setValue(sql.substring(startPos.getValue()));
+            }
+            newSql = sql.substring(0, startPos.getValue());
+        } else {
+            if (orderStr != null) {
+                orderStr.setValue("");
+            }
+            newSql = sql;
+        }
+        return newSql.trim();
+    }
+    public String CountSql(String sqlQuery){
+        if (sqlQuery == null)
+            return null;
+        String sql = sqlQuery.trim();
 
+        String countSql = "";
+        sqlQuery = sqlQuery.trim();
+        sqlQuery = trimTailOrderBy(sqlQuery, new TString());
+        StringBuilder sb = new StringBuilder(sqlQuery);
+        if (!StringUtils.startsWithIgnoreCase(sqlQuery, "select")) {
+            throw new IllegalArgumentException("语句不是select查询语句！");
+        }
+        if (this.isSQLServerFamily()) {
+
+            countSql = "select count(1) from (" + sb.toString() + ") t";
+        } else if (this.isMySqlFamily()) {
+            countSql = "select count(1) from (" + sb.toString() + ") t";
+        } else {
+            countSql = "select count(1) from (" + sb.toString() + ") t";
+        }
+
+        return countSql.trim();
+
+    }
+
+    /**
+     * 获取sequence SQL
+     * @param sequeceName: 序列的名称，如果以"sql:"前缀开始，则直接返回"sql:"的sql语句
+     * @param next：true：表明获取下一个值；false：获取当前值
+     * @return
+     */
+    public String getSequenceSql(String sequeceName,boolean next){
+        String sequenceSql="";
+        if(sequeceName.startsWith("sql:")){
+            sequenceSql=sequeceName.substring(4);
+            return sequenceSql;
+        }
+        if(this.isPostgresFamily()){
+            if(next) {
+                sequenceSql = "select nextval('" +
+                        sequeceName +
+                        "')";
+            }else{
+                sequenceSql = "select currval('" +
+                        sequeceName +
+                        "')";
+            }
+        }else if(this.isOracleFamily()){
+            if(next) {
+                sequenceSql = "select \"" +
+                        sequeceName +
+                        "\".nextval from dual";
+            }else{
+                sequenceSql = "select \"" +
+                        sequeceName +
+                        "\".currval from dual";
+            }
+        }
+        return sequenceSql;
+    }
+    public static void main(String[] args) {
+        //PostgresPlusDialect.delimiterLine("RETURNS \"pg_catalog\".\"int4\" AS $BODY$",new TString());
+        String str=
+        "abc $BODY$ \n LANGUAGE plpgsql VOLATILE\n COST 100;mmmm";
+        TInteger tInteger = new TInteger();
+       int i= StringUtils.indexOf(str,"abc",true,tInteger);
+       int i1=10;//\\$\\$
+        String ss="\\$\\$";
+
+        int f=-1;
     }
 
 }

@@ -5,7 +5,7 @@ public class TChar implements TType {
     private Character value;
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Character.class;
     }
 

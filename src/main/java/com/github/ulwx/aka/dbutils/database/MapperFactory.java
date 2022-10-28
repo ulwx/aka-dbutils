@@ -323,7 +323,7 @@ public class MapperFactory {
 
         private static Object returnValueFromTSimpleType(Class returnClass, Object ret) {
             if (ret instanceof TType) {
-                if (((TType) ret).getWrappedClass() == returnClass) {
+                if (((TType) ret).wrappedClass() == returnClass) {
                     return ((TType) ret).getValue();
                 }
             } else if (ret instanceof TResult) {
@@ -420,7 +420,13 @@ public class MapperFactory {
                 Method method) {
             String methodName = method.getName();
             String mdMethodName = MD.md(method.getDeclaringClass(), methodName);
+            boolean permitDebutLog=DbContext.permitDebugLog();
+            DbContext.permitDebugLog(false);
+            if (insertOptions != null && insertOptions.getIdGeneratorParmeter()!=null){
+                args.put(insertOptions.getIdGeneratorParmeter().getName(),insertOptions.getIdGeneratorParmeter());
+            }
             NSQL nsql = NSQL.getNSQL(mdMethodName, args);
+            DbContext.permitDebugLog(permitDebutLog);
             SQLType sqlType = nsql.getSqlType();
             if (sqlType == SQLType.SELECT) {
                 String errMsg = methodInfo(method) + "为查询方法，其定义的返回类型不支持！" +
@@ -489,9 +495,9 @@ public class MapperFactory {
                     if (t == int.class || t == Integer.class || t == long.class || t == Long.class
                             || t == void.class) {
                         if (sqlType == SQLType.INSERT) {
-                            if (insertOptions != null && insertOptions.getReturnFlag() == ReturnFlag.AutoKey) {
+                            if (insertOptions != null && insertOptions.getReturnFlag() == ReturnFlag.AutoID) {
                                 ret = mdataBase.insertReturnKey(mdMethodName, args);
-                            } else {
+                            } else {//返回更新的条数
                                 ret = mdataBase.insert(mdMethodName, args);
                             }
 

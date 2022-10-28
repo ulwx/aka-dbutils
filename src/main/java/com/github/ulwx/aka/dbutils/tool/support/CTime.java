@@ -10,6 +10,7 @@ package com.github.ulwx.aka.dbutils.tool.support;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -1003,6 +1004,41 @@ public class CTime {
         return date;
     }
 
+    public static Date sqlTimestampTojavaDate(java.sql.Timestamp value) {
+        Timestamp time = value;
+        Date dateTime = new Date();
+        dateTime.setTime(time.getTime());
+        return dateTime;
+
+    }
+
+    public static Date sqlDateTojavaDate(java.sql.Date value) {
+        Date dateTime = new Date();
+        dateTime.setTime(value.getTime());
+        return dateTime;
+
+    }
+
+    public static LocalDate sqlDateToLocalDate(java.sql.Date value) {
+        Instant instant = value.toInstant();
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalDate localDate = instant.atZone(zoneId).toLocalDate();
+        return localDate;
+    }
+
+    public static LocalDateTime sqlTimestampToLocalDateTime(java.sql.Timestamp value) {
+        Instant instant = value.toInstant();
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalDateTime localDateTime = instant.atZone(zoneId).toLocalDateTime();
+        return localDateTime;
+    }
+
+    public static LocalTime sqlTimeToLocalTime(java.sql.Time value) {
+        Instant instant = value.toInstant();
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalTime localTime = instant.atZone(zoneId).toLocalTime();
+        return localTime;
+    }
     public static void main(String[] args) throws Exception {
 
         // System.out.println(getCurrentDate());

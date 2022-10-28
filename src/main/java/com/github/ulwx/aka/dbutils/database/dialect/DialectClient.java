@@ -75,9 +75,10 @@ public class DialectClient implements Serializable {
                     return DBMS.PostgreSQL92Dialect;
                 }
                 return DBMS.PostgreSQL9Dialect;
-            }
-            if (majorVersion == 8 && minorVersion >= 2) {
+            }else if (majorVersion == 8 && minorVersion >= 2) {
                 return DBMS.PostgreSQL82Dialect;
+            }else if(majorVersion>=10){
+                return DBMS.PostgreSQL10Dialect;
             }
             return DBMS.PostgreSQL81Dialect;
         }

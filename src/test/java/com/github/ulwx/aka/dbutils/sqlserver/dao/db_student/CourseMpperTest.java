@@ -162,8 +162,7 @@ public class CourseMpperTest {
                 getCouseListPage("course",
                         MD.ofPage(2, 3, null));
         Assert.equal(sql.toString(),
-                "select count(1) from (select * from course where 1=1 and name like 'course%') t;" +
-                        "select * from course where 1=1 and name like 'course%' order by id limit 3, 3");
+                "select count(1) from (select * from course where 1=1 and name like 'course%') t;select * from course where 1=1 and name like 'course%' order by id offset 3 rows fetch next 3 rows only");
 
         StringBuffer sql2 = new StringBuffer();
         DbContext.setDebugSQLListener(sqltxt -> {
@@ -178,8 +177,7 @@ public class CourseMpperTest {
                         MD.ofPage(2, 3, MD.md(CourseMpper.class,
                                 "getCouseListPageCount"), null));
         Assert.equal(sql2.toString(),
-                "select count(1) from course where 1=1 and name like 'course%';" +
-                        "select * from course where 1=1 and name like 'course%' order by id limit 3, 3");
+                "select count(1) from course where 1=1 and name like 'course%';select * from course where 1=1 and name like 'course%' order by id offset 3 rows fetch next 3 rows only");
 
         DbContext.removeDebugSQLListener();
     }
@@ -249,8 +247,7 @@ public class CourseMpperTest {
         DbContext.removeDebugSQLListener();
         //select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19) order by id limit 3, 3
         Assert.equal(sql.toString(),
-                "select count(1) from (select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19)) t;" +
-                        "select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19) order by id limit 3, 3");
+                "select count(1) from (select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19)) t;select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19) order by id offset 3 rows fetch next 3 rows only");
         List<Course> courseList = new ArrayList();
         while (rs.next()) {
             String name = rs.getString("name");
@@ -307,8 +304,7 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).addCourse(course);
         DbContext.removeDebugSQLListener();
-        Assert.equal(sql.toString(), "INSERT INTO `course` ( `name`, `class_hours`, `creatime` ) " +
-                "VALUES ( 'abcdefg', 45, '2021-03-15 22:31:48' )");
+        Assert.equal(sql.toString(), "INSERT INTO [course] ( [name], [class_hours], [creatime] ) VALUES ( 'abcdefg', 45, CONVERT(datetime,'2021-03-15 22:31:48',20) )");
         Course queryCourse = new Course();
         queryCourse.setName("abcdefg");
         queryCourse.setClassHours(45);
@@ -335,8 +331,7 @@ public class CourseMpperTest {
         int key = MDbUtils.getMapper(DbPoolName, CourseMpper.class).addCourseReturnKey(course
                 , MD.ofInsert(true));
         DbContext.removeDebugSQLListener();
-        Assert.equal(sql.toString(), "INSERT INTO `course` ( `name`, `class_hours`, `creatime` ) " +
-                "VALUES ( 'abcdefg', 45, '2021-03-15 22:31:48' )");
+        Assert.equal(sql.toString(), "INSERT INTO [course] ( [name], [class_hours], [creatime] ) VALUES ( 'abcdefg', 45, CONVERT(datetime,'2021-03-15 22:31:48',20) )");
         Course queryCourse = new Course();
         queryCourse.setName("abcdefg");
         queryCourse.setClassHours(45);
@@ -361,12 +356,12 @@ public class CourseMpperTest {
         CourseMpper courseMpper = MDbUtils.getMapper(DbPoolName, CourseMpper.class);
         //courseMpper 返回的mapper对象不是线程安全的
         courseMpper.updateCourse(course);
-        Assert.equal(sql.toString(), "UPDATE `course` SET `name` = 'abcdefg', `class_hours` = 45, `creatime` = '2021-03-15 22:31:48' WHERE `id` = 3");
+        Assert.equal(sql.toString(), "UPDATE [course] SET [name] = 'abcdefg', [class_hours] = 45, [creatime] = CONVERT(datetime,'2021-03-15 22:31:48',20) WHERE [id] = 3");
         courseMpper.updateCourse(course);
-        Assert.equal(sql.toString(), "UPDATE `course` SET `name` = 'abcdefg', `class_hours` = 45, `creatime` = '2021-03-15 22:31:48' WHERE `id` = 3");
+        Assert.equal(sql.toString(), "UPDATE [course] SET [name] = 'abcdefg', [class_hours] = 45, [creatime] = CONVERT(datetime,'2021-03-15 22:31:48',20) WHERE [id] = 3");
         courseMpper = MDbUtils.getMapper(DbPoolName, CourseMpper.class);
         courseMpper.updateCourse(course);
-        Assert.equal(sql.toString(), "UPDATE `course` SET `name` = 'abcdefg', `class_hours` = 45, `creatime` = '2021-03-15 22:31:48' WHERE `id` = 3");
+        Assert.equal(sql.toString(), "UPDATE [course] SET [name] = 'abcdefg', [class_hours] = 45, [creatime] = CONVERT(datetime,'2021-03-15 22:31:48',20) WHERE [id] = 3");
 
         DbContext.removeDebugSQLListener();
     }
@@ -380,7 +375,7 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).dropCourse();
 
-        Assert.equal(sql.toString(), "drop table `course`");
+        Assert.equal(sql.toString(), "drop table [course]");
 
         DbContext.removeDebugSQLListener();
     }
@@ -420,8 +415,7 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).updateMyCourse();
 
-        Assert.equal(sql.toString(), "select *  from `course`  where `class_hours`=11 and `name`='course1'  ;" +
-                "UPDATE `course` SET `name` = 'course1', `class_hours` = 11, `creatime` = null WHERE `id` = 1");
+        Assert.equal(sql.toString(), "select * from [course]  where [class_hours]=11 and [name]='course1';UPDATE [course] SET [name] = 'course1', [class_hours] = 11, [creatime] = null WHERE [id] = 1");
         DbContext.removeDebugSQLListener();
     }
 
@@ -436,8 +430,7 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).updateMyCourseIntrans();
 
-        Assert.equal(sql.toString(), "select *  from `course`  where `class_hours`=11 and `name`='course1'  ;" +
-                "UPDATE `course` SET `name` = 'course1', `class_hours` = 11, `creatime` = null WHERE `id` = 1");
+        Assert.equal(sql.toString(), "select * from [course]  where [class_hours]=11 and [name]='course1';UPDATE [course] SET [name] = 'course1', [class_hours] = 11, [creatime] = null WHERE [id] = 1");
         Course queryCourse = new Course();
         queryCourse.setId(1);
         Course course = MDbUtils.queryOneBy(DbPoolName, queryCourse);

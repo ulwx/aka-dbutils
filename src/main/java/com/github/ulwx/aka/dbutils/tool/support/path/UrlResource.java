@@ -5,12 +5,7 @@ import com.github.ulwx.aka.dbutils.tool.support.Assert;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 
 
 class UrlResource extends AbstractFileResolvingResource {

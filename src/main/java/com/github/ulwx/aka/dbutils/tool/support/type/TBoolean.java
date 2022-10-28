@@ -26,7 +26,7 @@ public class TBoolean implements TType {
     }
 
     @Override
-    public Class getWrappedClass() {
+    public Class wrappedClass() {
         return Boolean.class;
     }
 }

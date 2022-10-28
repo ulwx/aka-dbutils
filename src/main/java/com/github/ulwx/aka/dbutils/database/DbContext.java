@@ -22,18 +22,18 @@ public class DbContext implements Serializable {
         }
     };
 
+    private static String key_query_hint = "key_query_hint";
     private static String key_reflectclazz = "key_reflectclazz";
     private static String key_transaction_context_stack = "key_transaction_context_stack";
     private static String key_db_trans_info = "key_db_trans_info";
     public static String main_slave_mode_connectmode = "main_slave_mode_connectmode";
     public static String key_debug_log = "key_debug_log";
     public static String key_debug_sql_listener = "key_debug_sql_listener";
+
+    public static String key_insert_generate_id = "key_insert_generate_id";
     public static String key_db_interceptor = "key_db_interceptor";
     public static String key_db_interceptor_data_info = "key_db_interceptor_data_info";
 
-    public static Class<?>[] getReflectClass() {
-        return (Class<?>[]) localDbContext.get().contextMap.get(key_reflectclazz);
-    }
 
     /**
      * 同一线程的维度里是否允许打印debug日志，如果设置为true，则允许打印debug日志，否则不打印debug日志，注意：需要考虑到
@@ -86,6 +86,41 @@ public class DbContext implements Serializable {
         localDbContext.get().contextMap.remove(key_db_interceptor);
     }
 
+
+
+    /**
+     *
+     * @param idName   属性名称
+     * @param sequenceName 序列名称和数据库里定义的序列名称一致，会根据指定的序列名称生成SQL语句。如果以"sql:"前缀开始，则直接执行"sql:"的sql语句，不会根据sequenceName自动
+     *                     生成SQL语句。
+     * @param  callBeforeInsert  <br/>true：表明在插入操作前执行查询序列值（查询序列下一个值），查询的序列值会塞进后续的插入语句里，整个操作返回时
+     *                           会把序列值存入到对象里idName指定的属性里，如果是执行的XXReturnKey方法，则同时会把序列值返回。
+     *                           <br/>false：表明在插入操作之后才会执行查询序列（即查询序列当前值），查询的序列值存入对象里idName指定的属性里，
+     *                           如果是执行的XXReturnKey方法，则在会把序列值返回。注意当为false时，不能用于多对象插入操作方法。
+     */
+    public static void setGenerateIDForInsert(String idName, String sequenceName,boolean callBeforeInsert) {
+        SequenceInfo sequenceInfo=new SequenceInfo();
+        sequenceInfo.setIdName(idName);
+        sequenceInfo.setSequenceName(sequenceName);
+        sequenceInfo.setCallBeforeInsert(callBeforeInsert);
+        localDbContext.get().contextMap.put(key_insert_generate_id, sequenceInfo);
+    }
+
+
+
+    /**
+     * 获取设置的调试SQL监听器，回调事件在数据库操作真正执行前发生
+     *
+     * @return
+     */
+    public static  SequenceInfo getGenerateIDForInsert() {
+        SequenceInfo  ret = ( SequenceInfo ) localDbContext.get().contextMap.get(key_insert_generate_id);
+        return ret;
+
+    }
+    public static  SequenceInfo removeGenerateIDForInsert() {
+        return  (SequenceInfo) localDbContext.get().contextMap.remove(key_insert_generate_id);
+    }
     /**
      * 设置监听调试sql的监听器，回调事件在数据库操作真正执行前发生
      *
@@ -134,12 +169,28 @@ public class DbContext implements Serializable {
      *
      * @param clzz 指定哪个继承层级的类，利用指定类的类名转换成表名
      */
-    public static void setReflectClass(Class<?>... clzz) {
+    public static void setReflectClass(Class<?> clzz) {
         localDbContext.get().contextMap.put(key_reflectclazz, clzz);
     }
-
+    public static Class<?> getReflectClass() {
+        return (Class<?>) localDbContext.get().contextMap.get(key_reflectclazz);
+    }
     public static void clearReflectClass() {
         localDbContext.get().contextMap.remove(key_reflectclazz);
+    }
+
+    /**
+     * QueryHint只能用于对象查询函数上
+     * @param hint
+     */
+    public static void setQueryHint(QueryHint hint) {
+        localDbContext.get().contextMap.put(key_query_hint, hint);
+    }
+    public static QueryHint getQueryHint() {
+        return (QueryHint) localDbContext.get().contextMap.get(key_query_hint);
+    }
+    public static void clearQueryHint() {
+        localDbContext.get().contextMap.remove(key_query_hint);
     }
 
     public static void setDbTransInfo(DBTransInfo dbt) {

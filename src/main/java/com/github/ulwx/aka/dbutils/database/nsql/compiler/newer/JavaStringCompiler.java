@@ -37,6 +37,7 @@ public class JavaStringCompiler {
     public Map<String, byte[]> compile(String fileName, String source, String classpath) throws IOException {
         try (MemoryJavaFileManager manager = new MemoryJavaFileManager(stdManager)) {
             JavaFileObject javaFileObject = manager.makeStringSource(fileName, source);
+            System.setProperty("useJavaUtilZip", "true");
             List<String> options = new ArrayList<String>();
             options.add("-target");
             options.add("1.8");
@@ -45,6 +46,9 @@ public class JavaStringCompiler {
             options.add("-Xlint:unchecked");
             options.add("-encoding");
             options.add("UTF-8");
+            //不使用SharedNameTable （jdk1.7自带的软引用，会影响GC的回收，jdk1.9已经解决）
+            options.add("-XDuseUnsharedTable");
+            options.add("-XDuseJavaUtilZip");
             if (classpath != null && !classpath.isEmpty()) {
                 options.add("-classpath");
                 options.add(classpath);

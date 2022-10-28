@@ -27,7 +27,7 @@ public final class NSQL {
     private Map<Integer, Object> args = new HashMap<Integer, Object>();// 存放索引到值的关系
     private Map<Integer, String> argsToKey = new HashMap<Integer, String>(); // 存放索引到key的关系
     private static Logger log = LoggerFactory.getLogger(NSQL.class);
-    private static String $javaNameReg = "[A-Za-z_$][A-Za-z_$\\d]+";
+    private static String $javaNameReg = "[A-Za-z_$@\\d]+";
 
     public Map<Integer, Object> getArgs() {
         return args;
@@ -84,16 +84,16 @@ public final class NSQL {
     /**
      * 根据md文件里的方法名和参数，获取NSQL对象
      *
-     * @param mdPathMethodName 定位到md文件里的方法字符串，格式为：
-     *                         com.github.ulwx.database.test.SysRightDao.md:getDataCount,
-     *                         表示在com/ulwx/database/test/SysRightDao.md文件里查找getDataCount的方法
+     * @param mdPathMethodName 分如下两种情况：<ul>
+     *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
+     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         </ul>
      * @param args             存放参数的map或JavaBean
      * @return 返回NSQL对象
      * @throws DbException 异常
      */
     public static NSQL getNSQL(String mdPathMethodName, Object args) throws DbException {
         String[] strs = mdPathMethodName.split(":");
-
         try {
             return NSQL.getNSQL(strs[0], strs[1], args);
         } catch (Exception e) {
@@ -105,8 +105,9 @@ public final class NSQL {
     /**
      * 根据md文件里的方法名和参数，获取NSQL对象
      *
-     * @param mdPath     ：md文件的包路径全名称，例如，格式为： com.github.ulwx.database.test.SysRightDao.md
-     * @param methodName ：md里对应的方法名，例如 getDataCount
+     * @param mdPath     ：md文件的包路径全名称，如com.github.ulwx.database.test.SysRightDao.md；
+     *                   或固定值"sql"指示methodName为SQL语句内容。
+     * @param methodName ：（1）md里对应的方法名例如 getDataCount ；（2）或为SQL语句（如果mdPath="sql"）
      * @param args       ：存放参数的map或JavaBean
      * @return 返回NSQL对象
      * @throws Exception 异常
@@ -117,7 +118,10 @@ public final class NSQL {
         if (args instanceof Map) {
             map = (Map) args;
         } else {
-            map = ObjectUtils.fromJavaBeanToMap(args);
+            map = ObjectUtils.fromJavaBeanToMap2(args);
+        }
+        if (mdPath.equalsIgnoreCase("sql")) {
+            return getNSQL(methodName, "sql", map);
         }
         String sql = MDTemplate.getResultString(mdPath, methodName, map);
         return getNSQL(sql, mdPath + ":" + methodName, map);
@@ -232,10 +236,8 @@ public final class NSQL {
                                 key = key.substring(0, key.length() - 1);
                             }
                             if (!args.containsKey(key)) {
-                                log.error("sql=" + sql);
-                                log.error("arg map=" + ObjectUtils.toString(args));
-                                throw new DbException("解析sql失败![" + sql + "][" + nsql.getMethodFullName() + "]"
-                                        + "，参数[" + key + "]在md文件里没有定义");
+                                throw  new DbException("解析sql失败![" + nsql.getMethodFullName() + "]"+"[" + sql + "]"
+                                        + "里的参数"+key+ "在参数数Map里没有指定!");
                             }
                             val = args.get(key);
                             if (val != null) {
@@ -322,6 +324,7 @@ public final class NSQL {
                             }
                             indexToValue.put(i.getValue(), val);
                             IndexToKey.put(i.getValue(), key);
+
                             i.setValue(i.getValue() + 1);
                         }
 

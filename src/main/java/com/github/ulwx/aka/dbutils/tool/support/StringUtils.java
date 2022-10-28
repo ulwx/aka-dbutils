@@ -1670,6 +1670,7 @@ public abstract class StringUtils {
             break;
             // System.out.println(value);
         }
+
         return value;
     }
 

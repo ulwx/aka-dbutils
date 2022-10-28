@@ -51,7 +51,7 @@ public class TeacherDao {
         });
 
         MDbUtils.insertBy(DbPoolName, teacher);//更新方法会在主库上执行
-        Assert.equal(sql.toString(), "insert into `teacher` (`name`) values('new teacher')");
+        Assert.equal(sql.toString(), "insert into [teacher] ([name]) values('new teacher')");
 
 
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_SlaveServer);
@@ -65,7 +65,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
 
@@ -76,7 +76,7 @@ public class TeacherDao {
         DbContext.removeDBInterceptor();
         DbContext.removeMainSlaveModeConnectMode();
 
-        Assert.equal(sql.toString(), "insert into `teacher` (`name`) values('new teacher')");
+        Assert.equal(sql.toString(), "insert into [teacher] ([name]) values('new teacher')");
     }
 
     @Test
@@ -96,7 +96,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
 
@@ -111,7 +111,7 @@ public class TeacherDao {
         DbContext.removeDebugSQLListener();
         DbContext.removeDBInterceptor();
         DbContext.removeMainSlaveModeConnectMode();
-        Assert.equal(sql.toString(), "update `teacher`  set `name`='xyz' where id=1");
+        Assert.equal(sql.toString(), "update [teacher]  set [name]='xyz' where [id]=1");
 
 
     }
@@ -124,7 +124,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_MainServer);
                 Assert.state(dataBase.connectedToMaster());
 
@@ -140,14 +140,14 @@ public class TeacherDao {
 
         List<Teacher> list = MDbUtils.queryList(DbPoolName, Teacher.class,
                 MD.md(), args);
-        Assert.equal(sql.toString(), "SELECT `id`, `name` FROM `teacher` where name like 'abc%'");
+        Assert.equal(sql.toString(), "SELECT [id], [name] FROM [teacher] where name like 'abc%'");
         //通过DbContext设置Connect_Auto主从连接模式，即自动识别是否连接主库还是从库，自动识别规则是
         // 如果SQL语句为更新语句或者SQL语句在事务里，则会在主库上执行；否则在从库上执行。
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_Auto);
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(!dataBase.connectedToMaster());
 
@@ -160,7 +160,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_MainServer);
                 Assert.state(dataBase.connectedToMaster());
 
@@ -175,7 +175,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_SlaveServer);
                 Assert.state(!dataBase.connectedToMaster());
 
@@ -197,7 +197,7 @@ public class TeacherDao {
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
             public void postDbOperationExeute(DataBase dataBase, Method interceptedMethod,
-                                              Object result, Exception exception, String debugSql) {
+                                              Object result, Exception exception, String debugSql,long exeTime) {
                 Assert.state(dataBase.getMainSlaveModeConnectMode() == MainSlaveModeConnectMode.Connect_Auto);
                 Assert.state(dataBase.connectedToMaster());
             }

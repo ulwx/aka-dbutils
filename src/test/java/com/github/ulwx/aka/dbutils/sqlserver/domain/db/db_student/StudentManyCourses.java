@@ -1,14 +1,12 @@
 package com.github.ulwx.aka.dbutils.sqlserver.domain.db.db_student;
-import java.util.*;
-import java.sql.*;
-import java.time.*;
-import com.github.ulwx.aka.dbutils.database.MdbOptions;
+
+import com.github.ulwx.aka.dbutils.database.annotation.AkaColumn;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 
 /*********************************************
 
 ***********************************************/
-public class StudentManyCourses extends MdbOptions implements java.io.Serializable {
+public class StudentManyCourses implements java.io.Serializable {
 
 	private Integer id;/*;len:10*/
 	private Integer studentId;/*学生id;len:10*/
@@ -17,18 +15,21 @@ public class StudentManyCourses extends MdbOptions implements java.io.Serializab
 	public void setId(Integer id){
 		this.id = id;
 	}
+	@AkaColumn(isAutoincrement=true,isNullable=false)
 	public Integer getId(){
 		return id;
 	}
 	public void setStudentId(Integer studentId){
 		this.studentId = studentId;
 	}
+	
 	public Integer getStudentId(){
 		return studentId;
 	}
 	public void setCourseId(Integer courseId){
 		this.courseId = courseId;
 	}
+	
 	public Integer getCourseId(){
 		return courseId;
 	}
