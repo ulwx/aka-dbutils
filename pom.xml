@@ -45,6 +45,7 @@
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-jdbc</artifactId>
 			<version>9.0.45</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>cglib</groupId>
@@ -76,6 +77,13 @@
 			<groupId>com.oracle.database.jdbc</groupId>
 			<artifactId>ojdbc6</artifactId>
 			<version>11.2.0.4</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.39.3.0</version>
+			<optional>true</optional>
 		</dependency>
 
 	</dependencies>
