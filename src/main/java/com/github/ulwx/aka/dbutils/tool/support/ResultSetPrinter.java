@@ -6,6 +6,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class ResultSetPrinter {
     public static void printResultSet(ResultSet rs) {
@@ -17,6 +18,7 @@ public class ResultSetPrinter {
             ResultSetMetaData resultSetMetaData = rs.getMetaData();
             // 获取列数
             int ColumnCount = resultSetMetaData.getColumnCount();
+            List<String> columNames=fetchColumnNames(resultSetMetaData);
             // 保存当前列最大长度的数组
             int[] columnMaxLengths = new int[ColumnCount];
             // 缓存结果集,结果集可能有序,所以用ArrayList保存变得打乱顺序.
@@ -35,7 +37,7 @@ public class ResultSetPrinter {
                 // 缓存这一行.
                 results.add(columnStr);
             }
-            printColumnName(resultSetMetaData, columnMaxLengths, writer);
+            printColumnName(columNames,columnMaxLengths, writer);
             printSeparator(columnMaxLengths, writer);
             // 遍历集合输出结果
             Iterator<String[]> iterator = results.iterator();
@@ -65,19 +67,29 @@ public class ResultSetPrinter {
         } catch (SQLException exception) {
         }
     }
+    private static List<String> fetchColumnNames(ResultSetMetaData resultSetMetaData) throws SQLException {
+        ArrayList list = new ArrayList<>();
+         int columnCount = resultSetMetaData.getColumnCount();
+        for (int i = 0; i < columnCount; i++) {
+            String colName = resultSetMetaData.getColumnName(i + 1);
+            list.add(colName);
+
+        }
+        return list;
+    }
 
     /**
      * 输出列名.
      *
-     * @param resultSetMetaData 结果集的元数据对象.
+     * @param columNames 存放的为列名.
      * @param columnMaxLengths  每一列最大长度的字符串的长度.
      * @throws SQLException
      */
-    private static void printColumnName(ResultSetMetaData resultSetMetaData,
+    private static void printColumnName(List<String> columNames,
                                         int[] columnMaxLengths, PrintWriter writer) throws SQLException {
-        int columnCount = resultSetMetaData.getColumnCount();
-        for (int i = 0; i < columnCount; i++) {
-            String colName = resultSetMetaData.getColumnName(i + 1);
+       // int columnCount = resultSetMetaData.getColumnCount();
+        for (int i = 0; i < columNames.size(); i++) {
+            String colName = columNames.get(i);
             columnMaxLengths[i] = Math.max(columnMaxLengths[i], colName.length());
             if (writer == null) {
                 System.out.printf("|%-" + columnMaxLengths[i] + "s", colName);

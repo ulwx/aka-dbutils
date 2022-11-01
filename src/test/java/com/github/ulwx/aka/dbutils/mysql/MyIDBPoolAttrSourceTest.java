@@ -17,7 +17,7 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
         MDbUtils.queryOneBy("mysql/dbpool.xml#db_teacher",new Teacher());
 
         masterProperties.put("driverClassName","com.mysql.cj.jdbc.Driver");
-        masterProperties.put("url","jdbc:mysql://localhost:3306/db_teacher?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
+        masterProperties.put("url","jdbc:mysql://192.168.137.200:3306/db_teacher?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
         masterProperties.put("username","root");
         masterProperties.put("password","123456");
         masterProperties.put("encrypt","0");
@@ -29,7 +29,7 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
 
         Map<String, String> slave1=new HashMap<>();
         slave1.put("driverClassName","com.mysql.cj.jdbc.Driver");
-        slave1.put("url","jdbc:mysql://localhost:3306/db_teacher_slave1?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
+        slave1.put("url","jdbc:mysql://192.168.137.200:3306/db_teacher_slave1?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
         slave1.put("username","root");
         slave1.put("password","123456");
         slave1.put("encrypt","0");
@@ -41,7 +41,7 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
         slaveServerProperties.put("external_slave_1",slave1);
         Map<String, String> slave2=new HashMap<>();
         slave2.put("driverClassName","com.mysql.cj.jdbc.Driver");
-        slave2.put("url","jdbc:mysql://localhost:3306/db_teacher_slave2?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
+        slave2.put("url","jdbc:mysql://192.168.137.200:3306/db_teacher_slave2?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true");
         slave2.put("username","root");
         slave2.put("password","123456");
         slave2.put("encrypt","0");

@@ -38,8 +38,8 @@
 
     <dbpool name="db_student" type="tomcatdbpool" table-name-rule="underline_to_camel"
             table-colum-rule="underline_to_camel">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3306/db_student?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+        <property name="driverClassName">org.sqlite.JDBC</property>
+        <property name="url">jdbc:sqlite:D:/suncj/sqllite/db_student.db</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
@@ -52,8 +52,8 @@
     </dbpool>
 
     <dbpool name="db_teacher_slave1" type="tomcatdbpool">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+        <property name="driverClassName">org.sqlite.JDBC</property>
+        <property name="url">jdbc:sqlite:D:/suncj/sqllite/db_teacher_slave1.db</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="checkoutTimeout">60000</property>
@@ -64,8 +64,8 @@
         <property name="maxStatements">20</property>
     </dbpool>
     <dbpool name="db_teacher_slave2" type="tomcatdbpool">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+        <property name="driverClassName">org.sqlite.JDBC</property>
+        <property name="url">jdbc:sqlite:D:/suncj/sqllite/db_teacher_slave2.db</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="checkoutTimeout">60000</property>
@@ -76,8 +76,8 @@
         <property name="maxStatements">20</property>
     </dbpool>
     <dbpool name="db_teacher" type="tomcatdbpool">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+        <property name="driverClassName">org.sqlite.JDBC</property>
+        <property name="url">jdbc:sqlite:D:/suncj/sqllite/db_teacher.db</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
@@ -89,8 +89,8 @@
         <property name="maxStatements">20</property>
         <slaves>
             <server name="db_teacher_slave1">
-                <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-                <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+                <property name="driverClassName">org.sqlite.JDBC</property>
+                <property name="url">jdbc:sqlite:D:/suncj/sqllite/db_teacher_slave1.db</property>
                 <property name="username">root</property>
                 <property name="password">123456</property>
                 <property name="checkoutTimeout">60000</property>
@@ -101,8 +101,8 @@
                 <property name="maxStatements">20</property>
             </server>
             <server name="db_teacher_slave2">
-                <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-                <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+                <property name="driverClassName">org.sqlite.JDBC</property>
+                <property name="url">jdbc:sqlite:D:/suncj/sqllite/db_teacher_slave2.db</property>
                 <property name="username">root</property>
                 <property name="password">123456</property>
                 <property name="checkoutTimeout">60000</property>
@@ -128,7 +128,7 @@
     check-time属性：如果是数字(单位秒），则表示间隔的秒数执行一次ref-class指定的插件方法，获取最新的数据库连接池属性和现有的属性做
     比较，如果不相同则替换并重新用新的属性构造连接池。。
     -->
-    <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.mysql.MyIDBPoolAttrSourceTest"
+    <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.sqlite3.MyIDBPoolAttrSourceTest"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
             check-time="0"/>
 </dbpool-config>

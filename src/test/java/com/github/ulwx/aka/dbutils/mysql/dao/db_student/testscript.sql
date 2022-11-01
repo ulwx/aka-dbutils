@@ -71,7 +71,7 @@ from t2 t;
 DELIMITER $$
 
 /*!50003 CREATE
-    DEFINER = `root`@`localhost` PROCEDURE `testproc`()
+    DEFINER = `root`@`%` PROCEDURE `testproc`()
 BEGIN
     set @i = 1;
     select 1 into @i from t1;

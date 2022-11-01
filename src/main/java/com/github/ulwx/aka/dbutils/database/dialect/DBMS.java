@@ -462,7 +462,7 @@ public enum DBMS {
     }
 
     public String escapeLeft(){
-        if (this.isMySqlFamily()) {
+        if (this.isMySqlFamily() || this.isSQLiteFamily()) {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "[";
@@ -475,7 +475,7 @@ public enum DBMS {
         }
     }
     public String escapeRight(){
-        if (this.isMySqlFamily()) {
+        if (this.isMySqlFamily() || this.isSQLiteFamily()) {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "]";

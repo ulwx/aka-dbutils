@@ -6,6 +6,8 @@ import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 
 public class Utils {
     public static void main(String[] args) {
+        importDbStudent();
+        inportDbTeacher();
         SqlUtils.exportTables("postgres/dbpool.xml#db_student", "public",
                 "c:/dbutils_demo/db_student",
                 "com.github.ulwx.aka.dbutils.postgres.domain.db.db_student",
@@ -15,8 +17,7 @@ public class Utils {
                 "com.github.ulwx.aka.dbutils.postgres.domain.db.db_teacher",
                 "utf-8",true);
 
-        importDbStudent();
-        inportDbTeacher();
+
         System.out.println("ok!");
 
     }

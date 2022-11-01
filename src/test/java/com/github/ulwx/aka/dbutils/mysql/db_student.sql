@@ -31,7 +31,7 @@ CREATE TABLE `course` (
 
 /*Data for the table `course` */
 
-insert  into `course`(`id`,`name`,`class_hours`,`teacher_id`,`creatime`) values 
+insert  into `course`(`id`,`name`,`class_hours`,`teacher_id`,`creatime`) values
 (1,'course1',11,1,'2021-03-15 22:31:48'),
 (2,'course2',12,2,'2021-03-15 22:31:48'),
 (3,'course3',13,3,'2021-03-15 22:31:48'),
@@ -68,7 +68,7 @@ CREATE TABLE `student` (
 
 /*Data for the table `student` */
 
-insert  into `student`(`id`,`name`,`age`,`birth_day`) values 
+insert  into `student`(`id`,`name`,`age`,`birth_day`) values
 (1,'student1',40,'1980-10-08'),
 (2,'student2',39,'1981-11-01'),
 (3,'student3',38,'1982-10-08'),
@@ -96,7 +96,7 @@ CREATE TABLE `student_course` (
 
 /*Data for the table `student_course` */
 
-insert  into `student_course`(`id`,`student_id`,`course_id`) values 
+insert  into `student_course`(`id`,`student_id`,`course_id`) values
 (1,1,10),
 (2,2,13),
 (3,3,14),
@@ -122,7 +122,7 @@ CREATE TABLE `student_many_courses` (
 
 /*Data for the table `student_many_courses` */
 
-insert  into `student_many_courses`(`id`,`student_id`,`course_id`) values 
+insert  into `student_many_courses`(`id`,`student_id`,`course_id`) values
 (1,1,10),
 (2,1,13),
 (3,1,13),
@@ -169,7 +169,7 @@ CREATE TABLE `t2` (
 /*!50003 DROP FUNCTION IF EXISTS `query_course_cnt_func` */;
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`root`@`localhost` FUNCTION `query_course_cnt_func`( v_name varchar(40)) RETURNS int(11)
+/*!50003 CREATE DEFINER=`root`@`%` FUNCTION `query_course_cnt_func`( v_name varchar(40)) RETURNS int(11)
 DETERMINISTIC
 BEGIN
 	declare v_ret int;
@@ -184,9 +184,9 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `query_course_proc`(IN v_cname VARCHAR(45) , OUT v_cnt INT)
+/*!50003 CREATE DEFINER=`root`@`%` PROCEDURE `query_course_proc`(IN v_cname VARCHAR(45) , OUT v_cnt INT)
 BEGIN
-    SELECT count(1) into v_cnt  FROM `course` ;    
+    SELECT count(1) into v_cnt  FROM `course` ;
     SELECT * FROM `course` WHERE `name` = v_cname;
 END */$$
 DELIMITER ;
@@ -197,7 +197,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-/*!50003 CREATE DEFINER=`root`@`localhost` PROCEDURE `testproc`()
+/*!50003 CREATE DEFINER=`root`@`%` PROCEDURE `testproc`()
 BEGIN
 	   set @i=1;
 	   select 1 into @i from t1;
