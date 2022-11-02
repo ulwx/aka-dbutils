@@ -148,15 +148,15 @@ public enum DBMS {
             dbType = DBType.SYBASE;
         } else if (isDB2Family()) {
             dbType = DBType.DB2;
-            this.checkSql = "select 1 from sysibm.sysdummy1";
+            this.checkSql = "select count(1) from sysibm.sysdummy1";
         } else if (isDerbyFamily()) {
             dbType = DBType.DERBY;
-            this.checkSql = "select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
+            this.checkSql = "VALUES (1)";
         } else if (isSQLiteFamily()) {
             dbType = DBType.SQLITE;
         } else if (isHSQLFamily()) {
             dbType = DBType.HSQL;
-            this.checkSql = "select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
+            this.checkSql = "select count(1) from INFORMATION_SCHEMA.SYSTEM_USERS";
         } else {
             dbType = DBType.OTHER;
         }
@@ -466,9 +466,8 @@ public enum DBMS {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "[";
-        }else if (this.isOracleFamily()) {
-            return "\"";
-        }else if(this.isPostgresFamily()){
+        }else if (this.isOracleFamily()||this.isPostgresFamily()
+                ||this.isDerbyFamily()) {
             return "\"";
         }else{
             return "";
@@ -479,9 +478,9 @@ public enum DBMS {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "]";
-        }else if (this.isOracleFamily()) {
-            return "\"";
-        } else if(this.isPostgresFamily()){
+        }else if (this.isOracleFamily()||
+                this.isPostgresFamily()||
+                this.isDerbyFamily() ) {
             return "\"";
         }else{
             return "";
@@ -588,6 +587,16 @@ public enum DBMS {
                         sequeceName +
                         "\".currval from dual";
             }
+        }else if(this.isDerbyFamily()){
+            if(next) {
+                sequenceSql = "SELECT NEXT VALUE FOR \"" +
+                        sequeceName +
+                        "\"";
+            }else{
+                throw new DbException("Derby不具有获取当前sequece值的方法，无法生成查询当前sequence值的请求！");
+            }
+        }else{
+            throw new DbException(this.toString()+"不支持通过sequence生成ID！");
         }
         return sequenceSql;
     }

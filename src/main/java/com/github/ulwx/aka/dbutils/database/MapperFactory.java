@@ -428,7 +428,41 @@ public class MapperFactory {
             NSQL nsql = NSQL.getNSQL(mdMethodName, args);
             DbContext.permitDebugLog(permitDebutLog);
             SQLType sqlType = nsql.getSqlType();
-            if (sqlType == SQLType.SELECT) {
+            if (sqlType == SQLType.INSERT || sqlType == SQLType.UPDATE ||
+                    sqlType == SQLType.DELETE) {
+                if (pageOptions != null || mapNestOptions != null) {
+                    throw new DbException(methodInfo(method) + "方法对应的SQL语句为更新操作，所以方法定义的形参类型不能有PageOptions和MapNestOptions类型！");
+                }
+                if (returnType instanceof Class) {
+                    Class t = (Class) returnType;
+                    Object ret = null;
+                    if (t == int.class || t == Integer.class || t == long.class || t == Long.class
+                            || t == void.class) {
+                        if (sqlType == SQLType.INSERT) {
+                            if (insertOptions != null && insertOptions.getReturnFlag() == ReturnFlag.AutoID) {
+                                ret = mdataBase.insertReturnKey(mdMethodName, args);
+                            } else {//返回更新的条数
+                                ret = mdataBase.insert(mdMethodName, args);
+                            }
+
+                        } else if (sqlType == SQLType.UPDATE) {
+                            ret = mdataBase.update(mdMethodName, args);
+                        } else if (sqlType == SQLType.DELETE) {
+                            ret = mdataBase.del(mdMethodName, args);
+
+                        } else {
+                            ////
+                        }
+                        if (t == void.class) {
+                            return null;
+                        } else {
+                            ret = NumberUtils.convertNumberToTargetClass((Number) ret, t);
+                            return ret;
+                        }
+                    }
+                }
+                throw new DbException(methodInfo(method) + "为更新方法，则返回类型只能为int/Integer,long/Long,void类型");
+            } else { //if (sqlType == SQLType.SELECT)
                 String errMsg = methodInfo(method) + "为查询方法，其定义的返回类型不支持！" +
                         "返回类型只能定义为DataBaseSet或List<X>,其中X为Map<String,Object>类型或自定义JavaBean" +
                         "或Integer等原始类型的封装类型，如：List<Map<String,Object>>,List<User>,List<String>,List<Integer>。";
@@ -484,42 +518,6 @@ public class MapperFactory {
                     }
                 }//
                 throw new DbException(errMsg);
-            } else if (sqlType == SQLType.INSERT || sqlType == SQLType.UPDATE ||
-                    sqlType == SQLType.DELETE) {
-                if (pageOptions != null || mapNestOptions != null) {
-                    throw new DbException(methodInfo(method) + "方法对应的SQL语句为更新操作，所以方法定义的形参类型不能有PageOptions和MapNestOptions类型！");
-                }
-                if (returnType instanceof Class) {
-                    Class t = (Class) returnType;
-                    Object ret = null;
-                    if (t == int.class || t == Integer.class || t == long.class || t == Long.class
-                            || t == void.class) {
-                        if (sqlType == SQLType.INSERT) {
-                            if (insertOptions != null && insertOptions.getReturnFlag() == ReturnFlag.AutoID) {
-                                ret = mdataBase.insertReturnKey(mdMethodName, args);
-                            } else {//返回更新的条数
-                                ret = mdataBase.insert(mdMethodName, args);
-                            }
-
-                        } else if (sqlType == SQLType.UPDATE) {
-                            ret = mdataBase.update(mdMethodName, args);
-                        } else if (sqlType == SQLType.DELETE) {
-                            ret = mdataBase.del(mdMethodName, args);
-
-                        } else {
-                            ////
-                        }
-                        if (t == void.class) {
-                            return null;
-                        } else {
-                            ret = NumberUtils.convertNumberToTargetClass((Number) ret, t);
-                            return ret;
-                        }
-                    }
-                }
-                throw new DbException(methodInfo(method) + "为更新方法，则返回类型只能为int/Integer,long/Long,void类型");
-            } else {
-                throw new DbException(methodInfo(method) + "方法对应的语句类型" + sqlType + "不支持!");
             }
 
         }

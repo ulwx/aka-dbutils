@@ -85,7 +85,12 @@
 			<version>3.39.3.0</version>
 			<optional>true</optional>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+			<version>10.14.2.0</version>
+			<optional>true</optional>
+		</dependency>
 	</dependencies>
 	<scm>
 		<connection>https://github.com/ulwx/aka-dbutils.git</connection>

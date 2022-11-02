@@ -449,8 +449,10 @@ public class DBPoolFactory {
         Object p = Class.forName("org.apache.tomcat.jdbc.pool.PoolProperties").getDeclaredConstructor().newInstance();
         ReflectionUtil.invoke(p, "setUrl", String.class, url);
         ReflectionUtil.invoke(p, "setDriverClassName", String.class, driverClassName);
-        ReflectionUtil.invoke(p, "setUsername", String.class, user);
-        ReflectionUtil.invoke(p, "setPassword", String.class, password);
+        if(StringUtils.hasText(user)) {
+            ReflectionUtil.invoke(p, "setUsername", String.class, user);
+            ReflectionUtil.invoke(p, "setPassword", String.class, password);
+        }
         ReflectionUtil.invoke(p, "setJmxEnabled", boolean.class, true);
         ReflectionUtil.invoke(p, "setTestWhileIdle", boolean.class, true);
         ReflectionUtil.invoke(p, "setTestOnBorrow", boolean.class, false);

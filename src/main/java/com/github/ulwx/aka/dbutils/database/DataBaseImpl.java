@@ -3132,12 +3132,12 @@ public class DataBaseImpl implements DataBase {
                 ps = conn.prepareStatement(sqltxt);
 
             } else {
-                throw new DbException("不能决定sql语句的类型！");
+                throw new DbException("不能决定sql语句的类型！"+sqltxt);
             }
 
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
-            throw new DbException(e);
+            throw new DbException(""+sqltxt,e);
         }
         return ps;
     }

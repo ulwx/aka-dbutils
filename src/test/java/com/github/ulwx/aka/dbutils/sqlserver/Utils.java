@@ -6,6 +6,9 @@ import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 
 public class Utils {
     public static void main(String[] args) {
+        inportDbTeacher();
+        importDbStudent();
+
         SqlUtils.exportTables("sqlserver/dbpool.xml#db_student", "dbo",
                 "c:/dbutils_demo/db_student",
                 "com.github.ulwx.aka.dbutils.sqlserver.domain.db.db_student",
@@ -14,8 +17,7 @@ public class Utils {
                 "c:/dbutils_demo/db_teacher",
                 "com.github.ulwx.aka.dbutils.sqlserver.domain.db.db_teacher",
                 "utf-8",true);
-        importDbStudent();
-        inportDbTeacher();
+
         System.out.println("ok!");
 
     }

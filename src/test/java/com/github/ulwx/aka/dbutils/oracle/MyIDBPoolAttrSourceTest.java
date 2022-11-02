@@ -3,18 +3,25 @@ package com.github.ulwx.aka.dbutils.oracle;
 import com.github.ulwx.aka.dbutils.database.IDBPoolAttrSource;
 import com.github.ulwx.aka.dbutils.oracle.domain.db.db_teacher.Teacher;
 import com.github.ulwx.aka.dbutils.tool.MDbUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
 public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
+    private final static Logger log = LoggerFactory.getLogger(MyIDBPoolAttrSourceTest.class);
     @Override
     public void configProperties(Map<String, String> masterProperties,
                                  Map<String, Map<String, String>> slaveServerProperties) {
 
 
-        MDbUtils.queryOneBy("oracle/dbpool.xml#db_teacher",new Teacher());
+        try {
+            MDbUtils.queryOneBy("oracle/dbpool.xml#db_teacher", new Teacher());
+        }catch (Exception e){
+            log.error("",e);
+        }
 
         masterProperties.put("driverClassName","oracle.jdbc.driver.OracleDriver");
         masterProperties.put("url","jdbc:oracle:thin:@//192.168.137.200:1521/ORCL");

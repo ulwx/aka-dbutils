@@ -6,8 +6,8 @@ import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 
 public class Utils {
     public static void main(String[] args) {
-        importDbStudent();
         inportDbTeacher();
+        importDbStudent();
         SqlUtils.exportTables("oracle/dbpool.xml#db_student", "DB_STUDENT",
                 "c:/dbutils_demo/db_student",
                 "com.github.ulwx.aka.dbutils.oracle.domain.db.db_student",
