@@ -1,4 +1,4 @@
-package com.github.ulwx.aka.dbutils.H2.domain.db.db_student;
+package com.github.ulwx.aka.dbutils.hsql.domain.db.db_student;
 import java.util.*;
 import java.sql.*;
 import java.time.*;
@@ -10,10 +10,10 @@ import com.github.ulwx.aka.dbutils.database.annotation.AkaColumn;
 ***********************************************/
 public class T2 implements java.io.Serializable {
 
-	private Integer id;/*;len:10*/
-	private Integer a;/*;len:10*/
-	private Integer keyA;/*;len:10*/
-	private Integer keyB;/*;len:10*/
+	private Integer id;/*null;len:32*/
+	private Integer a;/*null;len:32*/
+	private Integer keyA;/*null;len:32*/
+	private Integer keyB;/*null;len:32*/
 
 	public void setId(Integer id){
 		this.id = id;
@@ -48,6 +48,6 @@ public class T2 implements java.io.Serializable {
 		return  ObjectUtils.toString(this);
 	}
 
-	private static final long serialVersionUID =2045079470L;
+	private static final long serialVersionUID =941063264L;
 
 }

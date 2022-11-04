@@ -1,19 +1,17 @@
-package com.github.ulwx.aka.dbutils.H2.domain.db.db_student;
-import java.util.*;
-import java.sql.*;
-import java.time.*;
-import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
+package com.github.ulwx.aka.dbutils.hsql.domain.db.db_student;
+
 import com.github.ulwx.aka.dbutils.database.annotation.AkaColumn;
+import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 
 /*********************************************
 
 ***********************************************/
 public class T1 implements java.io.Serializable {
 
-	private Integer id;/*;len:10*/
-	private Integer a;/*;len:10*/
-	private String keyB;/*;len:20*/
-	private String keyC;/*;len:30*/
+	private Integer id;/*null;len:32*/
+	private Integer a;/*null;len:32*/
+	private String keyB;/*null;len:20*/
+	private String keyC;/*null;len:30*/
 
 	public void setId(Integer id){
 		this.id = id;
@@ -48,6 +46,6 @@ public class T1 implements java.io.Serializable {
 		return  ObjectUtils.toString(this);
 	}
 
-	private static final long serialVersionUID =1351686765L;
+	private static final long serialVersionUID =503053761L;
 
 }

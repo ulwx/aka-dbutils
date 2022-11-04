@@ -45,8 +45,8 @@ public class CourseDao {
         course.setName("course1");
         course.setClassHours(11);
         //MD.ofPool()方法会根据系统变量（优先级比环境变量高）和环境变量，来决定调用的真实文件
-        //例如h2/dbpool.xml#db_student_product，因为系统变量设置的为"product"，
-        //真实为查找h2/dbpool-product.xml#db_student_product
+        //例如h2/dbpool.xml#db_student，因为系统变量设置的为"product"，
+        //真实为查找h2/dbpool-product.xml#db_student
         List<Course> list = MDbUtils.queryListBy(MD.ofPool(DbPoolName_product), course);
         Assert.notEmpty(list);
         Course compareTo = new Course();
