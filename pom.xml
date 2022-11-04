@@ -91,6 +91,14 @@
 			<version>10.14.2.0</version>
 			<optional>true</optional>
 		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>2.1.214</version>
+			<optional>true</optional>
+		</dependency>
+
 	</dependencies>
 	<scm>
 		<connection>https://github.com/ulwx/aka-dbutils.git</connection>

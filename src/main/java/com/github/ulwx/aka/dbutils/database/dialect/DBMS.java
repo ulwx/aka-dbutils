@@ -254,16 +254,16 @@ public enum DBMS {
             case H2:
                 if (dateObj instanceof Date) {
                     String str = "'" + CTime.formatWholeDate((Date) dateObj) + "'";
-                    return "parsedatetime(" + str + ",'dd-MM-yyyy hh:mm:ss')";
+                    return "parsedatetime(" + str + ",'yyyy-MM-dd HH:mm:ss')";
                 } else if (dateObj instanceof LocalDate) {
                     String str = "'" + CTime.formatLocalDate((LocalDate) dateObj) + "'";
-                    return "parsedatetime(" + str + ",'dd-MM-yyyy')";
+                    return "parsedatetime(" + str + ",'yyyy-MM-dd')";
                 } else if (dateObj instanceof LocalDateTime) {
                     String str = "'" + ((LocalDateTime) dateObj).format(CTime.DTF_YMD_HH_MM_SS) + "'";
-                    return "parsedatetime(" + str + ",'dd-MM-yyyy hh:mm:ss')";
+                    return "parsedatetime(" + str + ",'yyyy-MM-dd HH:mm:ss')";
                 } else if (dateObj instanceof LocalTime) {
                     String str = "'" + ((LocalTime) dateObj).format(CTime.DTF_HH_MM_SS) + "'";
-                    return "parsedatetime(" + str + ",'hh:mm:ss')";
+                    return "parsedatetime(" + str + ",'HH:mm:ss')";
                 } else {
                 }
                 break;
@@ -466,11 +466,8 @@ public enum DBMS {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "[";
-        }else if (this.isOracleFamily()||this.isPostgresFamily()
-                ||this.isDerbyFamily()) {
-            return "\"";
         }else{
-            return "";
+            return "\"";
         }
     }
     public String escapeRight(){
@@ -478,12 +475,8 @@ public enum DBMS {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "]";
-        }else if (this.isOracleFamily()||
-                this.isPostgresFamily()||
-                this.isDerbyFamily() ) {
-            return "\"";
         }else{
-            return "";
+            return "\"";
         }
     }
 
