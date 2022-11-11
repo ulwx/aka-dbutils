@@ -128,7 +128,7 @@
     check-time属性：如果是数字(单位秒），则表示间隔的秒数执行一次ref-class指定的插件方法，获取最新的数据库连接池属性和现有的属性做
     比较，如果不相同则替换并重新用新的属性构造连接池。。
     -->
-    <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.H2.MyIDBPoolAttrSourceTest"
+    <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.h2.MyIDBPoolAttrSourceTest"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
             check-time="0"/>
 </dbpool-config>

@@ -682,7 +682,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
 
 
     /**
-     * 执行脚本
+     * 执行脚本，整个脚本会在一个事务里执行，如果执行过程中出错则全部回滚。
      *
      * @param reader       sql脚本输入reader
      * @param throwWarning 脚本执行时如果出现warning，是否退出并回滚
@@ -692,7 +692,23 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      * @return 返回执行成功的结果，出错返回异常
      * @throws DbException
      */
-    String exeScript(Reader reader, boolean throwWarning,String delimiters, Map<String, Object> args) throws DbException;
+    String exeScript(Reader reader, boolean throwWarning,
+                     String delimiters, Map<String, Object> args) throws DbException;
+    /**
+     * 执行脚本，整个脚本会在一个事务里执行，如果执行出错则会根据continueIfError决定是否全部回滚。
+     *
+     * @param reader       sql脚本输入reader
+     * @param throwWarning 脚本执行时如果出现warning，是否退出并回滚
+     * @param continueIfError  执行过程中出现错误是否继续执行。true:如果出现错误会继续后面语句的执行； false:如果出现错误，则抛出异常并全部回滚。
+     * @param delimiters 脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
+     * @param args         参数，以命名参数表示，例如假如脚本里有语句
+     *                     select * from course where name=#{name1} and age=#{age1}，则args里的key为name1和age1
+     * @return 返回执行成功的结果，出错返回异常
+     * @throws DbException
+     */
+    String exeScript(Reader reader, boolean throwWarning,
+                     boolean continueIfError,
+                     String delimiters, Map<String, Object> args) throws DbException;
 
 
     /**

@@ -21,13 +21,6 @@ public class Utils {
         System.out.println("ok!");
     }
 
-    public static void importDbStudentFromFile(){
-        DbContext.permitDebugLog(false);
-        MDbUtils.exeScriptInDir("mysql/dbpool.xml#db_student",
-                "D:\\suncj\\jydsource\\common\\common\\aka-dbutils\\src\\test\\java\\com\\github\\ulwx\\aka\\dbutils\\mysql",
-                "db_student.sql", false,null,"utf-8");
-        DbContext.permitDebugLog(true);
-    }
     public static void importDbStudent(){
         DbContext.permitDebugLog(false);
         MDbUtils.exeScript("mysql/dbpool.xml#db_student",

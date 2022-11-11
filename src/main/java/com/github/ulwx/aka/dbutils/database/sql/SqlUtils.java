@@ -190,7 +190,7 @@ public class SqlUtils {
                 if (StringUtils.isEmpty(tableComment)) {
                     String sql = db.getDataBaseType().queryTableCommentSql(schema);
 
-                    String sqlColum = db.getDataBaseType().queryColCommentSql();
+                    String sqlColum = db.getDataBaseType().queryColCommentSql(schema);
                     try {
                         Map<Integer, Object> args = new HashMap<Integer, Object>();
                         args.put(1, tableName);
@@ -199,13 +199,14 @@ public class SqlUtils {
                             dbrs = db.queryForResultSet(sql, args);
                             if (dbrs.next()) {
                                 tableComment = dbrs.getString("TABLE_COMMENT");
+                                colCommentMap = null;
                             }
                         }
                         if (!sqlColum.isEmpty()) {
-                            colCommentMap = new HashMap<String, String>();
                             dbrs = db.queryForResultSet(sqlColum, args);
                             if (dbrs != null) {
                                 while (dbrs.next()) {
+                                    colCommentMap=new HashMap<>();
                                     String colName = dbrs.getString("COLUMN_NAME");
                                     String colComment = dbrs.getString("COLUMN_DESCRIPTION");
                                     colCommentMap.put(colName, colComment);
@@ -217,9 +218,7 @@ public class SqlUtils {
                     }
                 }
                 tableCommentList.add(tableComment);
-                if (colCommentMap != null) {
-                    tableColumCommentList.add(colCommentMap);
-                }
+                tableColumCommentList.add(colCommentMap);
             }
 
             rs.close();
@@ -239,7 +238,8 @@ public class SqlUtils {
                     co.setColumn_size(rs.getInt("COLUMN_SIZE"));
                     co.setData_type(rs.getInt("DATA_TYPE"));
                     co.setIs_nullable(rs.getString("IS_NULLABLE"));
-                    if (tableColumCommentList.size() > 0) {
+
+                    if(tableColumCommentList.get(i)!=null){
                         co.setRemarks(tableColumCommentList.get(i).get(co.getColumn_name()));
                     } else {
                         String remark = rs.getString("REMARKS");

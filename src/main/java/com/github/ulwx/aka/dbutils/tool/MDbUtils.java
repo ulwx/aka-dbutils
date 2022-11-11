@@ -43,21 +43,22 @@ public class MDbUtils extends BaseDao {
      * @param dirFilePath  :sql  脚本所在的目录，例如 D:/mysql/a.sql ; /user/mysql/a.sql
      * @param sqlFileName  ：sql脚本的文件名，例如 db.sql
      * @param throwWarning 脚本执行时如果出现warning，是否退出并回滚
+     * @param continueIfError  执行过程中出现错误是否继续执行。true:如果出现错误会继续后面语句的执行； false:如果出现错误，则抛出异常并全部回滚。
      * @param delimiters   脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
      * @param encoding     脚本文件的encoding
      * @return 执行成功的结果 ，否则抛出异常
      * @throws DbException
      */
     public static String exeScriptInDir(String dbPoolName, String dirFilePath, String sqlFileName,
-                                        boolean throwWarning, String delimiters, String encoding) throws DbException {
+                                        boolean throwWarning, boolean continueIfError,String delimiters, String encoding) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.exeScriptInDir(dirFilePath, sqlFileName, throwWarning, delimiters, encoding);
+            return mdb.exeScriptInDir(dirFilePath, sqlFileName, throwWarning,continueIfError, delimiters, encoding);
         }, dbPoolName);
     }
 
     /**
      * 执行sql脚本，packageFullName指定SQL脚本所在的包（全路径），sqlFileName为脚本文件的名称，脚本文件里存放的是SQL脚本，
-     * 整个脚本的执行在一个事务里，如果执行过程中出错则抛出异常并回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
+     * 整个脚本的执行在一个事务里，如果执行过程中出错则抛出异常并全部回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
      * 脚本是按每个语句依次执行，脚本里每个语句的结束边界是根据delimiters和换行共同决定。
      *
      * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。
@@ -71,9 +72,8 @@ public class MDbUtils extends BaseDao {
      *                         <li>如：classpath*:/mydbpool.xml#sysdb 或 classpath:/mydbpool.xml#sysdb，若为"classpath*:"前缀则表明在所有root类路径（含jar）下查找。</li>
      *                         </ul>
      *                          </code></blockquote>
-     * @param mdFullMethodName 分如下两种情况：<ul>
-     *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     * @param packageFullName <ul>
+     *                         <li>如com.hithub.ulwx.demo.dao.CourseDao</li>
      *                         </ul>
      * @param sqlFileName      为脚本文件的名称，脚本文件里存放的是SQL脚本
      * @param throwWarning     脚本执行时如果出现warning时是否抛出异常并回滚
@@ -84,7 +84,41 @@ public class MDbUtils extends BaseDao {
     public static String exeScript(String dbPoolName, String packageFullName, String sqlFileName,
                                    boolean throwWarning, String delimiters) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.exeScript(packageFullName, sqlFileName, throwWarning,
+            return mdb.exeScript(packageFullName, sqlFileName, throwWarning,false,
+                    delimiters,
+                    "utf-8");
+        }, dbPoolName);
+    }
+    /**
+     * 执行sql脚本，packageFullName指定SQL脚本所在的包（全路径），sqlFileName为脚本文件的名称，脚本文件里存放的是SQL脚本，
+     * 整个脚本的执行在一个事务里，如果执行过程中出错根据continueIfError参数决定是否则抛出异常并回滚。
+     * 可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，脚本是按每个语句依次执行，脚本里每个语句的结束边界是根据delimiters和换行共同决定。
+     *
+     * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。
+     *                         <blockquote><code>
+     *                         dbPoolName参数的格式如下：
+     *                         格式为：[配置xml文件的路径文件名称]#[连接池名称]
+     *                         <ul>
+     *                         <li>如：mydbpool.xml#sysdb，则在所有root类路径（包含jar）下查找mydbpool.xml文件并指向sysdb连接池。等效于classpath*:/mydbpool.xml#sysdb。</li>
+     *                         <li>如：mysql/mydbpool.xml#sysdb，则在/mysql类路径下查找mydbpool.xml文件并指向sysdb连接池。等效于classpath*:/mysql/mydbpool.xml#sysdb。</li>
+     *                         <li>如：file:/D:/config/mydbpool.xml#sysdb，则查找file:/D:/config/mydbpool.xml文件并指向sysdb连接池。</li>
+     *                         <li>如：classpath*:/mydbpool.xml#sysdb 或 classpath:/mydbpool.xml#sysdb，若为"classpath*:"前缀则表明在所有root类路径（含jar）下查找。</li>
+     *                         </ul>
+     *                          </code></blockquote>
+     * @param packageFullName <ul>
+     *                         <li>如com.hithub.ulwx.demo.dao.CourseDao</li>
+     *                         </ul>
+     * @param sqlFileName      为脚本文件的名称，脚本文件里存放的是SQL脚本
+     * @param throwWarning     脚本执行时如果出现warning时是否抛出异常并回滚
+     * @param continueIfError  执行过程中出现错误是否继续执行。true:如果出现错误会继续后面语句的执行； false:如果出现错误，则抛出异常并全部回滚。
+     * @param delimiters       脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后必须为换行符。
+     * @return 返回执行脚本的结果
+     * @throws DbException
+     */
+    public static String exeScript(String dbPoolName, String packageFullName, String sqlFileName,
+                                   boolean throwWarning, boolean continueIfError,String delimiters) throws DbException {
+        return mdbExecute(mdb -> {
+            return mdb.exeScript(packageFullName, sqlFileName, throwWarning,continueIfError,
                     delimiters,
                     "utf-8");
         }, dbPoolName);
@@ -92,7 +126,7 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 执行sql脚本，packageFullName指定SQL脚本所在的包（全路径），sqlFileName为脚本文件的名称，脚本文件里存放的是SQL脚本，
-     * 整个脚本的执行在一个事务里，如果执行过程中出错则抛出异常并回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
+     * 整个脚本的执行在一个事务里，如果执行过程中出错则抛出异常并全部回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
      * 脚本是按每个语句依次执行，脚本里每个语句的结束边界是根据delimiters和换行共同决定。
      *
      * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。
@@ -106,9 +140,8 @@ public class MDbUtils extends BaseDao {
      *                         <li>如：classpath*:/mydbpool.xml#sysdb 或 classpath:/mydbpool.xml#sysdb，若为"classpath*:"前缀则表明在所有root类路径（含jar）下查找。</li>
      *                         </ul>
      *                          </code></blockquote>
-     * @param mdFullMethodName 分如下两种情况：<ul>
-     *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     * @param packageFullName <ul>
+     *                         <li>如com.hithub.ulwx.demo.dao.CourseDao</li>
      *                         </ul>
      * @param sqlFileName      为脚本文件的名称，脚本文件里存放的是SQL脚本
      * @param throwWarning     脚本执行时如果出现warning时是否抛出异常并回滚
@@ -120,12 +153,13 @@ public class MDbUtils extends BaseDao {
     public static String exeScript(String dbPoolName, String packageFullName, String sqlFileName,
                                    boolean throwWarning, String delimiters, String encoding) throws DbException {
         return mdbExecute(mdb -> {
-            return mdb.exeScript(packageFullName, sqlFileName, throwWarning, delimiters, encoding);
+            return mdb.exeScript(packageFullName, sqlFileName, throwWarning,false, delimiters, encoding);
         }, dbPoolName);
     }
 
     /**
-     * 执行md方法地址指定的脚本，并且可以传入参数,脚本里执行时按每个SQL语句执行，执行的时候利用的是jdbc的PrepareStatement，能有效防止注入式攻击
+     * 执行md方法地址指定的脚本，并且可以传入参数,脚本里执行时按每个SQL语句执行，执行的时候利用的是jdbc的PrepareStatement，能有效防止注入式攻击。
+     * 整个脚本的执行都在一个事务里，出现错误则全部回滚。
      *
      * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。
      *                         <blockquote><code>

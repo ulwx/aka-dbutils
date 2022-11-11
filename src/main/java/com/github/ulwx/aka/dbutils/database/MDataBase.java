@@ -15,32 +15,36 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
     DataBase getDataBase();
 
     /**
+     * 执行某个文件夹下的某个脚本文件。
+     * 整个脚本的执行在一个事务里，如果执行过程中出错根据continueIfError参数决定是否抛出异常并回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
      * @param dirPath      :sql  脚本所在的目录，例如 D:/mysql/a.sql ; /user/mysql/a.sql
      * @param sqlFileName  ：sql脚本的文件名，例如 db.sql
      * @param throwWarning 脚本执行时如果出现warning，是否退出并回滚
+     * @param continueIfError  执行过程中出现错误是否继续执行。true:如果出现错误会继续后面语句的执行； false:如果出现错误，则抛出异常并全部回滚。
      * @param delimiters   脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
      * @param encoding     脚本文件的encoding
      * @return 执行成功的结果 ，否则抛出异常
      * @throws DbException
      */
     public String exeScriptInDir(String dirPath, String sqlFileName,
-                                 boolean throwWarning, String delimiters, String encoding) throws DbException;
+                                 boolean throwWarning, boolean continueIfError,String delimiters, String encoding) throws DbException;
 
     /**
      * 执行sql脚本，packageFullName指定SQL脚本所在的包（全路径），如com.xx.yy，sqlFileName为脚本文件的名称，脚本文件里存放的是SQL脚本，
-     * 整个脚本的执行在一个事务里，如果执行过程中出错则抛出异常并回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
+     * 整个脚本的执行在一个事务里，如果执行过程中出错根据continueIfError参数决定是否抛出异常并回滚。可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，
      * 脚本是按每个语句依次执行，脚本里每个语句的分界是根据英文分号和换行共同判定，即 ";\n" 或 ";\r\n"。
      *
      * @param packageFullName :sql脚本所在的包，例如com.xx.yy
      * @param sqlFileName     为脚本文件的名称，脚本文件里存放的是SQL脚本
      * @param throwWarning    脚本执行时如果出现warning时是否抛出异常并回滚
+     * @param continueIfError  执行过程中出现错误是否继续执行。true:如果出现错误会继续后面语句的执行； false:如果出现错误，则抛出异常并全部回滚。
      * @param delimiters      脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符(\n或\r\n)
      * @param encoding        脚本文件的encoding
      * @return 返回执行脚本的结果
      * @throws DbException
      */
     String exeScript(String packageFullName, String sqlFileName,
-                     boolean throwWarning, String delimiters, String encoding) throws DbException;
+                     boolean throwWarning,boolean continueIfError, String delimiters, String encoding) throws DbException;
 
     /**
      * 执行md方法地址指定的脚本，并且可以传入参数,脚本里执行时按每个SQL语句执行，执行的时候利用的是jdbc的PrepareStatement，能有效防止注入式攻击

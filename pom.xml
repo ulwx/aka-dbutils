@@ -3,6 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>aka-dbutils</artifactId>
 	<groupId>com.github.ulwx</groupId>
+	<version>1.0.3.3-SNAPSHOT</version>
 	<parent>
 		<groupId>com.github.ulwx</groupId>
 		<artifactId>aka-dbutils-parent</artifactId>
@@ -16,11 +17,6 @@
 			<version>2.9.9</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.github.ulwx</groupId>
-			<artifactId>aka-dbutils-fortest</artifactId>
-			<version>1.0.3.3-SNAPSHOT</version>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -103,6 +99,14 @@
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>2.7.1</version>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.ibm.db2/jcc -->
+		<dependency>
+			<groupId>com.ibm.db2</groupId>
+			<artifactId>jcc</artifactId>
+			<version>11.5.8.0</version>
 			<optional>true</optional>
 		</dependency>
 

@@ -3860,7 +3860,9 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public String exeScript(Reader reader, boolean throwWarning, String delimiters, Map<String, Object> args) throws DbException {
+    public String exeScript(Reader reader,
+                            boolean throwWarning,boolean continueIfError,
+                            String delimiters, Map<String, Object> args) throws DbException {
 
         Method enclosingMethod = new Object() {
         }.getClass().getEnclosingMethod();
@@ -3875,6 +3877,7 @@ public class DataBaseImpl implements DataBase {
                     scriptRunner.setThrowWarning(throwWarning);
                     scriptRunner.setRemoveCRs(true);
                     scriptRunner.setArgs(args);
+                    scriptRunner.setContinueIfError(continueIfError);
                     scriptRunner.setDelimiter(delimiters);
                     return scriptRunner.runScriptByLine(reader);
                 } catch (Exception e) {
@@ -3900,6 +3903,13 @@ public class DataBaseImpl implements DataBase {
 
     }
 
+    @Override
+    public String exeScript(Reader reader,
+                            boolean throwWarning,
+                            String delimiters, Map<String, Object> args) throws DbException {
+        return this.exeScript(reader,throwWarning,false,delimiters,args);
+    }
+
     private <R> R exeBatchSQLTemplate(Supplier<R> function) {
         Boolean backAutoCommit = null;
         boolean error = true;
@@ -3910,14 +3920,8 @@ public class DataBaseImpl implements DataBase {
                 this.setAutoCommit(false);//暂时设置为false，使之成为事务性操作
             }
             ret = function.get();
-            error = false;
             if (backAutoCommit) {
-                if (error) {
-                    this.rollback();
-                    throw new DbException("执行错误!");
-                } else {
-                    this.commit();
-                }
+                this.commit();
             }
 
         } catch (Exception e) {
@@ -3951,13 +3955,21 @@ public class DataBaseImpl implements DataBase {
         private boolean throwWarning = true;
         private boolean removeCRs = true;
         private boolean escapeProcessing = true;
-
+        private boolean continueIfError=false;
         private StringWriter resultWriter = new StringWriter();
         private PrintWriter resultPrintWriter = new PrintWriter(resultWriter);
         private String transactionId = "";
         private Map<String, Object> args = null;
         private String delimiter;
         private String usingDelimiter;
+
+        public boolean isContinueIfError() {
+            return continueIfError;
+        }
+
+        public void setContinueIfError(boolean continueIfError) {
+            this.continueIfError = continueIfError;
+        }
 
         public ScriptRunner(Connection connection) {
             this.connection = connection;
@@ -3998,18 +4010,32 @@ public class DataBaseImpl implements DataBase {
         }
 
         private final Pattern MYSQL_DELIMITER_PATTERN = Pattern.compile("^\\s*((--)|(//))?\\s*(//)?\\s*@DELIMITER\\s+([^\\s]+)", Pattern.CASE_INSENSITIVE);
+        //  --#SET TERMINATOR @
+        private final Pattern DB2_DELIMITER_PATTERN = Pattern.compile("^\\s*((--)|(//))?\\s*(#)\\s*SET\\s+TERMINATOR\\s+([^\\s]+)",
+                Pattern.CASE_INSENSITIVE);
 
-        public Pattern DelimitersPattern() {
+        public String    DelimitersPattern(String trimmedLine) {
+            Pattern pattern=null;
+            int group=5;
             if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
-                return MYSQL_DELIMITER_PATTERN;
-            } else if (DataBaseImpl.this.getDataBaseType().isSQLServerFamily()) {
-                return null;
+                pattern= MYSQL_DELIMITER_PATTERN;
+                group=5;
+            } else if (DataBaseImpl.this.getDataBaseType().isDB2Family()) {
+                pattern= DB2_DELIMITER_PATTERN;
+                group=5;
             } else {
-                return null;
+                pattern= null;
             }
+            if (pattern != null) {
+                Matcher matcher = pattern.matcher(trimmedLine);
+                if (matcher.find()) {
+                    return  matcher.group(group);
+                }
+            }
+            return null;
         }
 
-        ;
+
 
         public String defaultScriptDelimiters() {
             if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
@@ -4050,7 +4076,6 @@ public class DataBaseImpl implements DataBase {
                     return false;
                 }
             }
-
             return false;
 
         }
@@ -4074,8 +4099,12 @@ public class DataBaseImpl implements DataBase {
                 BufferedReader lineReader = new BufferedReader(reader);
                 String line;
                 while ((line = lineReader.readLine()) != null) {
-                    if (!handleLine(command, line)) {
-                        return null;
+                    try {
+                        if (!handleLine(command, line)) {
+                            return "";
+                        }
+                    }catch (Exception e1){
+                        throw e1;
                     }
 
                 }
@@ -4099,13 +4128,10 @@ public class DataBaseImpl implements DataBase {
             TInteger delimterStartPos = new TInteger(-1);
             TInteger delimterEndPos = new TInteger(-1);
             if (lineIsComment(trimmedLine)) {
-                Pattern pattern = this.DelimitersPattern();
-                if (pattern != null) {
-                    Matcher matcher = pattern.matcher(trimmedLine);
-                    if (matcher.find()) {
-                        this.usingDelimiter = matcher.group(5);
-                    }
-                }
+               String delimitersStr = this.DelimitersPattern(trimmedLine);
+               if(delimitersStr!=null){
+                   this.usingDelimiter = delimitersStr;
+               }
             } else if (delimiterLine(trimmedLine, tDelimter,command)) {
                 this.usingDelimiter = tDelimter.getValue();
 
@@ -4116,9 +4142,25 @@ public class DataBaseImpl implements DataBase {
                 command.append(LINE_SEPARATOR);
                 if (StringUtils.hasText(command.toString())) {
                     try {
+                        if (DbContext.permitDebugLog())
+                            log.debug("run sql- "+command.toString()+"");
                         executePreparedStatement(command.toString());
+                        if (DbContext.permitDebugLog())
+                            log.debug("run sql- Succeeded  ");
+
                     } catch (Exception e) {
-                        throw new DbException("["+command.toString()+"]",e);
+                        if(continueIfError){
+                            if(e instanceof SQLException){
+                                log.error(""+e,e);
+
+                            }else if(e instanceof DbException){
+                                if(((DbException) e).getSQLException()!=null){
+                                    log.error(""+e,e);
+                                }
+                            }
+                        }else {
+                            throw new DbException("[" + command.toString() + "]", e);
+                        }
                     }
                 }
                 command.setLength(0);

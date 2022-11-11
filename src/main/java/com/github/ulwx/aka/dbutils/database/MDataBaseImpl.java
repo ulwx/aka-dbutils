@@ -48,13 +48,13 @@ public class MDataBaseImpl implements MDataBase {
 
     @Override
     public String exeScriptInDir(String dirFilePath, String sqlFileName,
-                            boolean throwWarning,String delimiters,String encoding) throws DbException {
+                            boolean throwWarning, boolean continueIfError,String delimiters,String encoding) throws DbException {
 
         try {
             File f = new File(dirFilePath,sqlFileName);
             String source = f.toURI().toURL().toString();
             Resource resource=getResource(source);
-            return exeScript(resource.getInputStream(),source,throwWarning,delimiters,encoding);
+            return exeScript(resource.getInputStream(),source,throwWarning,continueIfError,delimiters,encoding);
         } catch (Exception e) {
             if (e instanceof DbException) {
                 throw (DbException) e;
@@ -88,12 +88,13 @@ public class MDataBaseImpl implements MDataBase {
 
     @Override
     public String exeScript(String packageFullName, String sqlFileName,
-                            boolean throwWarning,String delimiters,String encoding) throws DbException {
+                            boolean throwWarning,boolean continueIfError,
+                            String delimiters,String encoding) throws DbException {
         try {
             packageFullName = packageFullName.replace(".", "/");
             String source = "classpath*:" + packageFullName + "/" + sqlFileName;
             Resource resource=this.getResource(source);
-            return exeScript(resource.getInputStream(),source,throwWarning,delimiters,encoding);
+            return exeScript(resource.getInputStream(),source,throwWarning,continueIfError,delimiters,encoding);
         } catch (Exception e) {
             if (e instanceof DbException) {
                 throw (DbException) e;
@@ -103,7 +104,9 @@ public class MDataBaseImpl implements MDataBase {
 
     }
 
-   private String exeScript(InputStream in,String source, boolean throwWarning,String delimiters,String encoding){
+   private String exeScript(InputStream in,String source,
+                            boolean throwWarning,boolean continueIfError,
+                            String delimiters,String encoding){
        BufferedReader bufReader = null;
        try {
            if(encoding==null || encoding.isEmpty()){
@@ -115,7 +118,7 @@ public class MDataBaseImpl implements MDataBase {
            scriptOption.setSource(source);
            scriptOption.setFromMDMethod(false);
            args.put(ScriptOption.class.getName(), scriptOption);
-           return this.dataBase.exeScript(bufReader, throwWarning, delimiters,args);
+           return this.dataBase.exeScript(bufReader, throwWarning,continueIfError, delimiters,args);
        } catch (Exception e) {
            if (e instanceof DbException) {
                throw (DbException) e;
@@ -142,7 +145,7 @@ public class MDataBaseImpl implements MDataBase {
         scriptOption.setSource(mdFullMethodName);
         scriptOption.setFromMDMethod(true);
         args.put(ScriptOption.class.getName(), scriptOption);
-        return this.dataBase.exeScript(sr, throwWarning,delimiters, args);
+        return this.dataBase.exeScript(sr, throwWarning,false,delimiters, args);
 
     }
 

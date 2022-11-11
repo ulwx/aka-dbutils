@@ -23,13 +23,7 @@ public class Utils {
 
     }
 
-    public static void testImportDbStudentFromFile(){
-        DbContext.permitDebugLog(false);
-        MDbUtils.exeScriptInDir("postgres/dbpool.xml#db_student",
-                "D:\\suncj\\jydsource\\common\\common\\aka-dbutils\\src\\test\\java\\com\\github\\ulwx\\aka\\dbutils\\postgres",
-                "db_student.sql", false,null,"utf-8");
-        DbContext.permitDebugLog(true);
-    }
+
     public static void importDbStudent(){
         DbContext.permitDebugLog(false);
         MDbUtils.exeScript("postgres/dbpool.xml#db_student",

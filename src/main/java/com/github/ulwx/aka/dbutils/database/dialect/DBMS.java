@@ -148,7 +148,7 @@ public enum DBMS {
             dbType = DBType.SYBASE;
         } else if (isDB2Family()) {
             dbType = DBType.DB2;
-            this.checkSql = "select count(1) from sysibm.sysdummy1";
+            this.checkSql = "select 1 from sysibm.sysdummy1";
         } else if (isDerbyFamily()) {
             dbType = DBType.DERBY;
             this.checkSql = "VALUES (1)";
@@ -156,7 +156,7 @@ public enum DBMS {
             dbType = DBType.SQLITE;
         } else if (isHSQLFamily()) {
             dbType = DBType.HSQL;
-            this.checkSql = "select count(1) from INFORMATION_SCHEMA.SYSTEM_USERS";
+            this.checkSql = "VALUES (1)";
         } else {
             dbType = DBType.OTHER;
         }
@@ -437,11 +437,16 @@ public enum DBMS {
         return result;
     }
 
-    public String queryTableCommentSql(String dbName){
+    /**
+     * 查询表的注释
+     * @param schema
+     * @return
+     */
+    public String queryTableCommentSql(String schema){
         String sql="";
         if (this.isMySqlFamily()) {
             sql = "SELECT TABLE_COMMENT FROM INFORMATION_SCHEMA.TABLES "
-                    + "WHERE TABLE_NAME=? AND TABLE_SCHEMA='"+dbName+"'";
+                    + "WHERE TABLE_NAME=? AND TABLE_SCHEMA='"+schema+"'";
 
         }else if (this.isSQLServerFamily()) {
             sql="select c.name,cast(isnull(f.[value], '') as nvarchar(100)) as TABLE_COMMENT " +
@@ -457,6 +462,13 @@ public enum DBMS {
         }else if(this.isOracleFamily()){
             sql="select TABLE_NAME as TABLE_NAME, COMMENTS as TABLE_COMMENT " +
                     "from user_tab_comments where Table_Name=? and TABLE_TYPE='TABLE'";
+        }else if(this.isDB2Family()){
+            sql="SELECT " +
+                    "VARCHAR(TABNAME,50) AS TABLE_NAME," +
+                    "REMARKS as TABLE_COMMENT FROM " +
+                    "SYSCAT.TABLES WHERE " +
+                    "TABNAME = ?" +
+                    " AND TABSCHEMA = '"+schema+"'";
         }
         return sql;
     }
@@ -480,7 +492,12 @@ public enum DBMS {
         }
     }
 
-    public String queryColCommentSql(){
+    /**
+     * 查询列的注释
+     * @param schema 数据库的schema
+     * @return
+     */
+    public String queryColCommentSql(String schema){
         String sql="";
         if (this.isMySqlFamily()) {
 
@@ -500,6 +517,11 @@ public enum DBMS {
                     "COMMENTS as COLUMN_DESCRIPTION " +
                     "from user_col_comments " +
                     "where Table_Name=?";
+        }else if(this.isDB2Family()){
+            sql="SELECT T.TABNAME as TABLE_NAME,T.REMARKS as COLUMN_DESCRIPTION,T.COLNAME as COLUMN_NAME " +
+                    "FROM SYSCAT.COLUMNS T " +
+                    "WHERE T.TABSCHEMA = '"+schema+"'" +
+                    "AND T.TABNAME = ?";
         }
         return sql;
     }
@@ -588,7 +610,26 @@ public enum DBMS {
             }else{
                 throw new DbException("Derby不具有获取当前sequece值的方法，无法生成查询当前sequence值的请求！");
             }
-        }else{
+        }else if(this.isDB2Family()){
+            if(next){
+                sequenceSql="values nextval for \"" + sequeceName + "\"";
+            }else{
+                sequenceSql="values prevval for \"" + sequeceName + "\"";
+            }
+        }else if(this.isHSQLFamily()){
+            if(next){
+                sequenceSql="values NEXT VALUE for \"" + sequeceName + "\"";
+            }else{
+                throw new DbException("HSQL不具有获取当前sequece值的方法，无法生成查询当前sequence值的请求！");
+            }
+        }else if(this.isH2Family()){
+            if(next){
+                sequenceSql="values NEXT VALUE for \"" + sequeceName + "\"";
+            }else{
+                sequenceSql="values CURRENT VALUE for \"" + sequeceName + "\"";
+            }
+        }
+        else{
             throw new DbException(this.toString()+"不支持通过sequence生成ID！");
         }
         return sequenceSql;
