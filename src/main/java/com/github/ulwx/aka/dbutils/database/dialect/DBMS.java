@@ -102,6 +102,7 @@ public enum DBMS {
     Teradata14Dialect,//
     TeradataDialect,//
     TimesTenDialect,//
+    ClickHouseDialect,
     UnsupportDialect;
 
 
@@ -146,6 +147,8 @@ public enum DBMS {
             dbType = DBType.POSTGRE;
         } else if (isSybaseFamily()) {
             dbType = DBType.SYBASE;
+        } else if(isClickHouseFamily()){
+            dbType=DBType.ClickHouse;
         } else if (isDB2Family()) {
             dbType = DBType.DB2;
             this.checkSql = "select 1 from sysibm.sysdummy1";
@@ -358,7 +361,20 @@ public enum DBMS {
     public boolean isSybaseFamily() {
         return this.toString().startsWith("Sybase");
     }
+    public boolean isClickHouseFamily() {
+        return this.toString().startsWith("ClickHouse");
+    }
 
+    public boolean supportGeneratedKeysForInsert(){
+        if(this.isClickHouseFamily() || this.isOracleFamily())
+            return false;
+        return true;
+    }
+    public boolean supportTransaction(){
+        if(this.isClickHouseFamily())
+            return false;
+        return true;
+    }
     /**
      * @return true if is DB2 family
      */
@@ -444,15 +460,17 @@ public enum DBMS {
      */
     public String queryTableCommentSql(String schema){
         String sql="";
-        if (this.isMySqlFamily()) {
+        if (this.isMySqlFamily() ) {
             sql = "SELECT TABLE_COMMENT FROM INFORMATION_SCHEMA.TABLES "
                     + "WHERE TABLE_NAME=? AND TABLE_SCHEMA='"+schema+"'";
-
-        }else if (this.isSQLServerFamily()) {
+        }else if(this.isClickHouseFamily()){
+            sql="SELECT t.comment as TABLE_COMMENT FROM system.tables t where name=? " +
+                    "and database='"+schema+"'";
+        }
+        else if (this.isSQLServerFamily()) {
             sql="select c.name,cast(isnull(f.[value], '') as nvarchar(100)) as TABLE_COMMENT " +
                     "from sys.objects c left join sys.extended_properties f on f.major_id=c.object_id " +
                     "and f.minor_id=0 and f.class=1 where c.type='u' and c.name=?";
-
         }else if(this.isPostgresFamily()){
             sql="SELECT relname as TABLE_NAME,obj_description(oid) as TABLE_COMMENT" +
                     " FROM pg_class " +
@@ -474,7 +492,7 @@ public enum DBMS {
     }
 
     public String escapeLeft(){
-        if (this.isMySqlFamily() || this.isSQLiteFamily()) {
+        if (this.isMySqlFamily() || this.isSQLiteFamily() || this.isClickHouseFamily()) {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "[";
@@ -483,7 +501,7 @@ public enum DBMS {
         }
     }
     public String escapeRight(){
-        if (this.isMySqlFamily() || this.isSQLiteFamily()) {
+        if (this.isMySqlFamily() || this.isSQLiteFamily()|| this.isClickHouseFamily()) {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "]";
@@ -499,8 +517,12 @@ public enum DBMS {
      */
     public String queryColCommentSql(String schema){
         String sql="";
-        if (this.isMySqlFamily()) {
-
+        if (this.isClickHouseFamily()) {
+            sql="select table as TABLE_NAME, " +
+                    "name COLUMN_NAME, " +
+                    "comment as COLUMN_DESCRIPTION " +
+                    "from system.columns " +
+                    "where table=? and database='"+schema+"'";
         }else if (this.isSQLServerFamily()) {
             sql="SELECT " +
                     "A.name AS TABLE_NAME," +

@@ -36,9 +36,12 @@ public class DialectClient implements Serializable {
                                      Integer majorVersion, int minorVersion) {
         if ("CUBRID".equalsIgnoreCase(databaseName))
             return DBMS.CUBRIDDialect;
-        if ("HSQL Database Engine".equals(databaseName))
+        else if("ClickHouse".equalsIgnoreCase(databaseName)){
+            return DBMS.ClickHouseDialect;
+        }
+        else if ("HSQL Database Engine".equals(databaseName))
             return DBMS.HSQLDialect;
-        if ("H2".equals(databaseName))
+        else if ("H2".equals(databaseName))
             return DBMS.H2Dialect;
         if ("MySQL".equals(databaseName)) {
             if (majorVersion < 5)

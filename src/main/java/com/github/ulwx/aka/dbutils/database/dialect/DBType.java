@@ -12,6 +12,7 @@ public enum DBType {
     SQLITE,
     INFOMIX,
     DERBY,
+    ClickHouse,
     OTHER
 
 }

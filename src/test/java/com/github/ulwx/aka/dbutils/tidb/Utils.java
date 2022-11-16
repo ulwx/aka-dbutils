@@ -6,6 +6,9 @@ import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 
 public class Utils {
     public static void main(String[] args) {
+        //1.首先在linux下载tidb后，运行tiup playground --host  192.168.137.211 --tag akadb
+        //2.再手动新建db_student,db_teacher,db_teacher_slave1,db_teacher_slave2数据库
+        //3.执行下面语句
         inportDbTeacher();
         importDbStudent();
 

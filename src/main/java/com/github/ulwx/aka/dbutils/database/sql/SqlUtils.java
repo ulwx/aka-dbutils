@@ -200,13 +200,17 @@ public class SqlUtils {
                             if (dbrs.next()) {
                                 tableComment = dbrs.getString("TABLE_COMMENT");
                                 colCommentMap = null;
+
+
                             }
                         }
                         if (!sqlColum.isEmpty()) {
                             dbrs = db.queryForResultSet(sqlColum, args);
                             if (dbrs != null) {
                                 while (dbrs.next()) {
-                                    colCommentMap=new HashMap<>();
+                                    if(colCommentMap==null) {
+                                        colCommentMap = new HashMap<>();
+                                    }
                                     String colName = dbrs.getString("COLUMN_NAME");
                                     String colComment = dbrs.getString("COLUMN_DESCRIPTION");
                                     colCommentMap.put(colName, colComment);
@@ -243,6 +247,7 @@ public class SqlUtils {
                         co.setRemarks(tableColumCommentList.get(i).get(co.getColumn_name()));
                     } else {
                         String remark = rs.getString("REMARKS");
+                        if(remark==null) remark="";
                         co.setRemarks(remark);
                     }
 
@@ -768,6 +773,11 @@ public class SqlUtils {
                                                    Map<Integer, Object> returnvParameters,
                                                    UpdateOptions options, DBMS dataBaseType) throws Exception {
 
+        if(dataBaseType.isClickHouseFamily()){
+            throw new DbException(dataBaseType+"不支持对象删除操作，因为这些生成标准的update语句ClickHouse不支持，" +
+                    "请在md文件里或在\"sql:\"前缀后填写ClickHouse特定的删除语句，语法如：" +
+                    "ALTER TABLE [db.]table [ON CLUSTER cluster] DELETE WHERE filter_expr");
+        }
         List<String> whereProperteis = new ArrayList<>();
 
         Map<String, TResult2<Method, Object>> map = PropertyUtil.describeForTypes(deleteObject, reflectClass);
@@ -837,6 +847,11 @@ public class SqlUtils {
                                            String[] whereProperteis, Map<Integer, Object> returnvParameters,
                                            UpdateOptions options, DBMS dataBaseType) throws Exception {
 
+        if(dataBaseType.isClickHouseFamily()){
+            throw new DbException(dataBaseType+"不支持对象删除操作，因为这些生成标准的update语句ClickHouse不支持，" +
+                    "请在md文件里或在\"sql:\"前缀后填写ClickHouse特定的删除语句，语法如：" +
+                    "ALTER TABLE [db.]table [ON CLUSTER cluster] DELETE WHERE filter_expr");
+        }
         String sql = "";
         String className = reflectClass.getSimpleName();
 
@@ -893,9 +908,13 @@ public class SqlUtils {
             throws Exception {
 
         if (whereProperteis == null || whereProperteis.length == 0) {
-            throw new RuntimeException("whereProperteis为空");
+            throw new DbException("whereProperteis为空");
         }
-
+        if(dataBaseType.isClickHouseFamily()){
+            throw new DbException(dataBaseType+"不支持对象更新操作，因为这些生成标准的update语句ClickHouse不支持，" +
+                    "请在md文件里或在\"sql:\"前缀后填写ClickHouse特定的更新语句，语法如：" +
+                    "ALTER TABLE [db.]table [ON CLUSTER cluster] UPDATE column1 = expr1 [, ...] WHERE filter_expr");
+        }
         String sql = "";
         String className = reflectClass.getSimpleName();
         sql = "update " + dbEscapeLef(dataBaseType) + getTableName(dbpoolName, className) + dbEscapeRight(dataBaseType) + " ";

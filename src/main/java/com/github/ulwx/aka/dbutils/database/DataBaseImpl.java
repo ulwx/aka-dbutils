@@ -215,8 +215,9 @@ public class DataBaseImpl implements DataBase {
 
     private void setInternalConnectionAutoCommit(boolean autoCommit) throws DbException {
         try {
-
-            this.conn.setAutoCommit(autoCommit);
+            if(this.getDataBaseType().supportTransaction()) {
+                this.conn.setAutoCommit(autoCommit);
+            }
         } catch (Exception ex) {
             if (ex instanceof DbException) throw (DbException) ex;
             throw new DbException(ex);
@@ -229,29 +230,22 @@ public class DataBaseImpl implements DataBase {
     }
 
     private void setDataBaseType(Connection conn) throws DbException {
-
+        String databaseName;
+        String driverName;
+        int majorVersion;
+        int minorVersion;
         try {
-            String databaseName;
-            String driverName;
-            int majorVersion;
-            int minorVersion;
-            try {
-                DatabaseMetaData meta = conn.getMetaData();
-                driverName = meta.getDriverName();
-                databaseName = meta.getDatabaseProductName();
-                majorVersion = meta.getDatabaseMajorVersion();
-                minorVersion = meta.getDatabaseMinorVersion();
-                this.dataBaseMajorVersion = majorVersion;
-                this.dataBaseMiniVersion = minorVersion;
-            } catch (Exception e) {
-                if (e instanceof DbException) throw (DbException) e;
-                throw new DbException(e);
-            }
+            DatabaseMetaData meta = conn.getMetaData();
+            driverName = meta.getDriverName();
+            databaseName = meta.getDatabaseProductName();
+            majorVersion = meta.getDatabaseMajorVersion();
+            minorVersion = meta.getDatabaseMinorVersion();
+            this.dataBaseMajorVersion = majorVersion;
+            this.dataBaseMiniVersion = minorVersion;
             this.dataBaseType = DialectClient.decideDialect(driverName, databaseName, majorVersion, minorVersion);
-
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
-            throw new DbException("get pool connection error!", e);
+            throw new DbException(e);
         }
     }
 
@@ -356,7 +350,7 @@ public class DataBaseImpl implements DataBase {
                                     this.dataSource = ds;
                                     ///
                                 }
-                            } else { //update、delete、存储过程,脚本在主库上执行
+                            } else { //update、delete、存储过程,脚本等都在主库上执行
                                 msg = "获取主库链接";
                                 this.connectedToMaster = true;
                                 DataSource ds = this.getDataSourceFromPool(dbPoolName);
@@ -388,8 +382,9 @@ public class DataBaseImpl implements DataBase {
                 } else {
                     throw new DbException("不支持的连接方式！" + this.connectType);
                 }
-                this.setInternalConnectionAutoCommit(this.getAutoCommit());
                 this.setDataBaseType(conn);
+                this.setInternalConnectionAutoCommit(this.getAutoCommit());
+
                 if (DbContext.permitDebugLog()) {
                     log.debug("fetch a new connection from [" + this.getConnectInfo() + "]" + msg + ",connect time:" + (System.currentTimeMillis() - start0) + " 毫秒");
                 }
@@ -1806,7 +1801,7 @@ public class DataBaseImpl implements DataBase {
             twoInt[0] = count;
             try {
                 if (this.sqlType == SQLType.INSERT) {
-                    if(!this.getDataBaseType().isOracleFamily()){//oracle不支持getGeneratedKeys操作
+                    if(this.getDataBaseType().supportGeneratedKeysForInsert()){//oracle不支持getGeneratedKeys操作
                         ResultSet keys = preStmt.getGeneratedKeys();
                         if (keys.next()) {
                             twoInt[1] = keys.getLong(1);
@@ -2625,9 +2620,15 @@ public class DataBaseImpl implements DataBase {
     public void rollback() throws DbException {
         try {
             if (conn != null) {
-                conn.rollback();
-                clearSavePoint();
-                if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ":rollbacked done!");
+                if(this.getDataBaseType().supportTransaction()) {
+                    conn.rollback();
+                    clearSavePoint();
+                    if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ":rollback done!");
+                }else{
+                    if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ": transaction not supported," +
+                            "rollback not done!");
+                }
+
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -2697,10 +2698,16 @@ public class DataBaseImpl implements DataBase {
         } else {
             try {
                 if (!this.isColsed()) {
-                    conn.rollback(savePointMap.get(savepointName));
-                    savePointMap.remove(savepointName);
-                    if (DbContext.permitDebugLog())
-                        log.debug("[" + this.getConnectInfo() + "]:rollbacked..to savepoint done!" + savepointName);
+                    if(this.getDataBaseType().supportTransaction()) {
+                        conn.rollback(savePointMap.get(savepointName));
+                        savePointMap.remove(savepointName);
+                        if (DbContext.permitDebugLog())
+                            log.debug("[" + this.getConnectInfo() + "]:rollback..to savepoint done!" + savepointName);
+                    } else{
+                        if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ": transaction not supported," +
+                                "rollback..to savepoint not done!!");
+                    }
+
                 }
             } catch (Exception e) {
                 if (e instanceof DbException) throw (DbException) e;
@@ -2733,9 +2740,14 @@ public class DataBaseImpl implements DataBase {
     public void commit() throws DbException {
         try {
             if (conn != null) {
-                conn.commit();
-                clearSavePoint();
-                if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commited done!");
+                if(this.getDataBaseType().supportTransaction()) {
+                    conn.commit();
+                    clearSavePoint();
+                    if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commit done!");
+                }else{
+                    if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commit not done!");
+                }
+
             }
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
@@ -3113,10 +3125,10 @@ public class DataBaseImpl implements DataBase {
             } else if (this.sqlType == SQLType.INSERT) {
                 this.fetchConnection();
                 Method method = DbContext.getDBInterceptorInfo().getInterceptedMethod();
-                if(this.getDataBaseType().isOracleFamily()){
-                    ps = conn.prepareStatement(sqltxt);
-                }else {
+                if(this.getDataBaseType().supportGeneratedKeysForInsert()){
                     ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
+                }else {
+                    ps = conn.prepareStatement(sqltxt);
                 }
             } else if (this.sqlType == SQLType.UPDATE) {
                 this.fetchConnection();
@@ -3149,7 +3161,12 @@ public class DataBaseImpl implements DataBase {
 
             if (this.sqlType == SQLType.SELECT) {
                 this.fetchConnection();
-                statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                statement = conn.createStatement();
+                // if(this.getDataBaseType().isClickHouseFamily()){
+                //     statement = conn.createStatement();
+                // }else {
+                //     statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                // }
             } else if (this.sqlType == SQLType.INSERT) {
                 this.fetchConnection();
                 statement = conn.createStatement();
@@ -3926,7 +3943,11 @@ public class DataBaseImpl implements DataBase {
 
         } catch (Exception e) {
             if (backAutoCommit) {
-                this.rollback();
+                try {
+                    this.rollback();
+                }catch (Exception e2){
+                    log.error(""+e2,e2);
+                }
             }
             throw e;
 

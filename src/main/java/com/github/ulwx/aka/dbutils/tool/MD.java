@@ -181,10 +181,10 @@ public class MD {
     }
 
     /**
-     * 生成InsertOptions对象的工具类方法，用于Mapper接口里定义的插入方法，用于指定插入方法是否返回主键id，
-     * 否则返回为插入的条数
+     * 生成InsertOptions对象的工具类方法，一般用于Mapper接口里定义的插入方法传入InsertOptions参数时。InsertOptions对象
+     * 指定插入方法是否返回主键id，否则插入方法返回的是插入的条数。
      *
-     * @param needReturnKey true：返回主键id，false：返回插入的条数
+     * @param needReturnKey 指定Mapper的insert方法是否返回主键。true：返回主键id，false：返回插入的条数
      * @return
      */
     public static InsertOptions ofInsert(boolean needReturnKey) {

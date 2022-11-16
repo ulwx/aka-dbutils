@@ -1,7 +1,7 @@
-package com.github.ulwx.aka.dbutils.mysql;
+package com.github.ulwx.aka.dbutils.clickhouse;
 
+import com.github.ulwx.aka.dbutils.clickhouse.domain.db.db_teacher.Teacher;
 import com.github.ulwx.aka.dbutils.database.IDBPoolAttrSource;
-import com.github.ulwx.aka.dbutils.mysql.domain.db.db_teacher.Teacher;
 import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,15 +17,15 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
                                  Map<String, Map<String, String>> slaveServerProperties) {
 
         try {
-            MDbUtils.queryOneBy("mysql/dbpool.xml#db_teacher", new Teacher());
+            MDbUtils.queryOneBy("clickhouse/dbpool.xml#db_teacher", new Teacher());
         }catch (Exception e){
             log.error("",e);
         }
 
-        masterProperties.put("driverClassName","com.mysql.cj.jdbc.Driver");
-        masterProperties.put("url","jdbc:mysql://192.168.137.200:3306/db_teacher?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true");
-        masterProperties.put("username","root");
-        masterProperties.put("password","123456");
+        masterProperties.put("driverClassName","ru.yandex.clickhouse.ClickHouseDriver");
+        masterProperties.put("url","jdbc:clickhouse://192.168.137.211:8123/db_teacher");
+        masterProperties.put("username","default");
+        masterProperties.put("password","");
         masterProperties.put("encrypt","0");
         masterProperties.put("checkoutTimeout","6000");
         masterProperties.put("idleConnectionTestPeriod",""+new Random().nextInt(10));
@@ -34,10 +34,10 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
         masterProperties.put("maxStatements","20");
 
         Map<String, String> slave1=new HashMap<>();
-        slave1.put("driverClassName","com.mysql.cj.jdbc.Driver");
-        slave1.put("url","jdbc:mysql://192.168.137.200:3306/db_teacher_slave1?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true");
-        slave1.put("username","root");
-        slave1.put("password","123456");
+        slave1.put("driverClassName","ru.yandex.clickhouse.ClickHouseDriver");
+        slave1.put("url","jdbc:clickhouse://192.168.137.211:8123/db_teacher_slave1");
+        slave1.put("username","default");
+        slave1.put("password","");
         slave1.put("encrypt","0");
         slave1.put("checkoutTimeout","6000");
         slave1.put("idleConnectionTestPeriod","30");
@@ -46,10 +46,10 @@ public class MyIDBPoolAttrSourceTest implements IDBPoolAttrSource {
         slave1.put("maxStatements","20");
         slaveServerProperties.put("external_slave_1",slave1);
         Map<String, String> slave2=new HashMap<>();
-        slave2.put("driverClassName","com.mysql.cj.jdbc.Driver");
-        slave2.put("url","jdbc:mysql://192.168.137.200:3306/db_teacher_slave2?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true");
-        slave2.put("username","root");
-        slave2.put("password","123456");
+        slave2.put("driverClassName","ru.yandex.clickhouse.ClickHouseDriver");
+        slave2.put("url","jdbc:clickhouse://192.168.137.211:8123/db_teacher_slave2");
+        slave2.put("username","default");
+        slave2.put("password","");
         slave2.put("encrypt","0");
         slave2.put("checkoutTimeout","6000");
         slave2.put("idleConnectionTestPeriod","30");

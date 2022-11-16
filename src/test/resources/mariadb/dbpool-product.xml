@@ -37,7 +37,7 @@
     <dbpool name="db_student_product" type="tomcatdbpool" table-name-rule="underline_to_camel"
             table-colum-rule="underline_to_camel">
         <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3307/db_student?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true</property>
+        <property name="url">jdbc:mysql://192.168.137.200:3307/db_student?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->

@@ -123,7 +123,7 @@ public class CompilerTask {
                     String source = MDTemplate.parseFromMdFileToJavaSource(packageName, className);
                     if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                         log.debug("to compile java class source:" + classFullName
-                                // +" ;source="+source
+                                 +" ;source="+source
                         );
                         log.debug("build classpath=" + classpath);
                     }

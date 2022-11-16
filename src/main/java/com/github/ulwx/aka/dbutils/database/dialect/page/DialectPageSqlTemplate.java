@@ -75,6 +75,7 @@ public class DialectPageSqlTemplate {
             case MySQLInnoDBDialect:
             case MySQLMyISAMDialect:
             case ParadoxDialect:
+            case ClickHouseDialect:
             case TextDialect:
             case XMLDialect:
                 return "select $BODY limit $SKIP_ROWS, $PAGESIZE";
@@ -187,6 +188,7 @@ public class DialectPageSqlTemplate {
             case PostgresPlusDialect:
             case SQLiteDialect:
             case TextDialect:
+            case ClickHouseDialect:
             case XMLDialect:
                 return "select $BODY limit $PAGESIZE";
             case SQLServer2012Dialect:
