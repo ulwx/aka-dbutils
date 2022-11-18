@@ -1,11 +1,12 @@
-package com.github.ulwx.aka.dbutils.clickhouse.dao.db_student;
+package com.github.ulwx.aka.dbutils.greenplum.dao.db_student;
 
-import com.github.ulwx.aka.dbutils.clickhouse.Utils;
-import com.github.ulwx.aka.dbutils.clickhouse.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.database.DataBaseSet;
 import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
+import com.github.ulwx.aka.dbutils.database.MDbTransactionManager;
 import com.github.ulwx.aka.dbutils.database.nsql.CompilerTask;
+import com.github.ulwx.aka.dbutils.greenplum.Utils;
+import com.github.ulwx.aka.dbutils.greenplum.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.tool.MD;
 import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 import com.github.ulwx.aka.dbutils.tool.support.Assert;
@@ -19,17 +20,14 @@ import org.junit.runners.MethodSorters;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 测试Mapper映射器的用法
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CourseMpperTest {
-    public static String DbPoolName = "clickhouse/dbpool.xml#db_student";
+    public static String DbPoolName = "greenplum/dbpool.xml#db_student";
     static LocalDateTime createTime =
             LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS);
 
@@ -56,7 +54,7 @@ public class CourseMpperTest {
                 // 同时cs里的teacherId属性覆盖了arg里的teacherId参数的值，所以md文件里tearcherId参数的引用的值也为null
                 cs);
         DbContext.removeDebugSQLListener();
-        Assert.equal(sql.toString(), "SELECT name, class_hours FROM course WHERE 1 = 1");
+        Assert.equal(sql.toString(), "SELECT NAME, class_hours FROM course WHERE 1 = 1");
 
         String source = CompilerTask.getSource(CourseMpper.class.getName() + "Md");
         System.out.println(source);
@@ -133,7 +131,9 @@ public class CourseMpperTest {
 
         List<BigInteger> ret5 = MDbUtils.getMapper(DbPoolName,
                 CourseMpper.class).getOneBigIntegerList("abc");
-        Assert.equal(ret5.size(),3);
+        List<BigInteger> comparedList = Arrays.asList(new BigInteger("1"), new BigInteger("2"),
+                new BigInteger("3"));
+        Assert.equal(ret5, comparedList);
 
         LocalDateTime ret6 = MDbUtils.getMapper(DbPoolName,
                 CourseMpper.class).getOneLocalDateTime();
@@ -162,8 +162,7 @@ public class CourseMpperTest {
                 getCouseListPage("course",
                         MD.ofPage(2, 3, null));
         Assert.equal(sql.toString(),
-                "select count(1) from (select * from course where 1=1 and name like 'course%') t;" +
-                        "select * from course where 1=1 and name like 'course%' order by id limit 3, 3");
+                "select count(1) from (select * from course where 1=1 and name like 'course%') t;select * from course where 1=1 and name like 'course%' order by id limit 3 offset 3");
 
         StringBuffer sql2 = new StringBuffer();
         DbContext.setDebugSQLListener(sqltxt -> {
@@ -178,8 +177,7 @@ public class CourseMpperTest {
                         MD.ofPage(2, 3, MD.md(CourseMpper.class,
                                 "getCouseListPageCount"), null));
         Assert.equal(sql2.toString(),
-                "select count(1) from course where 1=1 and name like 'course%';" +
-                        "select * from course where 1=1 and name like 'course%' order by id limit 3, 3");
+                "select count(1) from course where 1=1 and name like 'course%';select * from course where 1=1 and name like 'course%' order by id limit 3 offset 3");
 
         DbContext.removeDebugSQLListener();
     }
@@ -249,8 +247,7 @@ public class CourseMpperTest {
         DbContext.removeDebugSQLListener();
         //select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19) order by id limit 3, 3
         Assert.equal(sql.toString(),
-                "select count(1) from (select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19)) t;" +
-                        "select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19) order by id limit 3, 3");
+                "select count(1) from (select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19)) t;select * from course where 1=1 and name like 'course%' and class_hours in(10,11,12,13,14,15,16,17,18,19) order by id limit 3 offset 3");
         List<Course> courseList = new ArrayList();
         while (rs.next()) {
             String name = rs.getString("name");
@@ -307,8 +304,7 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).addCourse(course);
         DbContext.removeDebugSQLListener();
-        Assert.equal(sql.toString(), "INSERT INTO `course` ( `name`, `class_hours`, `creatime` ) " +
-                "VALUES ( 'abcdefg', 45, '2021-03-15 22:31:48' )");
+        Assert.equal(sql.toString(), "INSERT INTO course ( name, class_hours, creatime ) VALUES ( 'abcdefg', 45, to_date('2021-03-15 22:31:48','yyyy-mm-dd hh24:mi:ss') )");
         Course queryCourse = new Course();
         queryCourse.setName("abcdefg");
         queryCourse.setClassHours(45);
@@ -335,8 +331,7 @@ public class CourseMpperTest {
         int key = MDbUtils.getMapper(DbPoolName, CourseMpper.class).addCourseReturnKey(course
                 , MD.ofInsert(true));
         DbContext.removeDebugSQLListener();
-        Assert.equal(sql.toString(), "INSERT INTO `course` ( `name`, `class_hours`, `creatime` ) " +
-                "VALUES ( 'abcdefg', 45, '2021-03-15 22:31:48' )");
+        Assert.equal(sql.toString(), "INSERT INTO course ( name, class_hours, creatime ) VALUES ( 'abcdefg', 45, to_date('2021-03-15 22:31:48','yyyy-mm-dd hh24:mi:ss') )");
         Course queryCourse = new Course();
         queryCourse.setName("abcdefg");
         queryCourse.setClassHours(45);
@@ -361,12 +356,12 @@ public class CourseMpperTest {
         CourseMpper courseMpper = MDbUtils.getMapper(DbPoolName, CourseMpper.class);
         //courseMpper 返回的mapper对象不是线程安全的
         courseMpper.updateCourse(course);
-        Assert.equal(sql.toString(), "alter table `course` update `name` = 'abcdefg', `class_hours` = 45, `creatime` = '2021-03-15 22:31:48' WHERE `id` = 3");
+        Assert.equal(sql.toString(), "UPDATE course SET name = 'abcdefg', class_hours = 45, creatime = to_date('2021-03-15 22:31:48','yyyy-mm-dd hh24:mi:ss') WHERE id = 3");
         courseMpper.updateCourse(course);
-        Assert.equal(sql.toString(), "alter table `course` update `name` = 'abcdefg', `class_hours` = 45, `creatime` = '2021-03-15 22:31:48' WHERE `id` = 3");
+        Assert.equal(sql.toString(), "UPDATE course SET name = 'abcdefg', class_hours = 45, creatime = to_date('2021-03-15 22:31:48','yyyy-mm-dd hh24:mi:ss') WHERE id = 3");
         courseMpper = MDbUtils.getMapper(DbPoolName, CourseMpper.class);
         courseMpper.updateCourse(course);
-        Assert.equal(sql.toString(), "alter table `course` update `name` = 'abcdefg', `class_hours` = 45, `creatime` = '2021-03-15 22:31:48' WHERE `id` = 3");
+        Assert.equal(sql.toString(), "UPDATE course SET name = 'abcdefg', class_hours = 45, creatime = to_date('2021-03-15 22:31:48','yyyy-mm-dd hh24:mi:ss') WHERE id = 3");
 
         DbContext.removeDebugSQLListener();
     }
@@ -380,12 +375,34 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).dropCourse();
 
-        Assert.equal(sql.toString(), "drop table `course`");
+        Assert.equal(sql.toString(), "drop table course");
 
         DbContext.removeDebugSQLListener();
     }
 
+    @Test
+    public void testNestTransaction() {
+        MDbTransactionManager.execute(() -> {
+            testAddCourseAndReturnKey();
+            testUpdateCourse();
+        });
+        LocalDateTime localDateTime = LocalDateTime.parse("2021-03-15 22:31:48", CTime.DTF_YMD_HH_MM_SS);
+        Course queryCourse = new Course();
+        queryCourse.setName("abcdefg");
+        queryCourse.setClassHours(45);
+        queryCourse.setCreatime(localDateTime);
+        List<Course> list = MDbUtils.queryListBy(DbPoolName, queryCourse);
+        Assert.isTrue(list.size() == 2);
+    }
 
+    //@Test
+    public void testTransaction() {
+        MDbTransactionManager.execute(() -> {
+            testUpdateCourseManual();
+            testNestTransaction();
+            testUpdateCourseManual();
+        });
+    }
 
     @Test
     public void testUpdateCourseManual() {
@@ -398,12 +415,12 @@ public class CourseMpperTest {
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).updateMyCourse();
 
-        Assert.equal(sql.toString(), "select * from `course`  where `class_hours`=11 and `name`='course1';alter table `course` update `name` = 'course1', `class_hours` = 11, `creatime` = null WHERE `id` = 1");
+        Assert.equal(sql.toString(), "select * from \"course\"  where \"class_hours\"=11 and \"name\"='course1';UPDATE course SET name = 'course1', class_hours = 11, creatime = null WHERE id = 1");
         DbContext.removeDebugSQLListener();
     }
 
     @Test
-    public void testUpdateCourseManualIntrans() throws Exception{
+    public void testUpdateCourseManualIntrans() {
         StringBuffer sql = new StringBuffer();
         DbContext.setDebugSQLListener(sqltxt -> {
             if (sql.length() > 0) {
@@ -412,8 +429,8 @@ public class CourseMpperTest {
             sql.append(sqltxt);
         });
         MDbUtils.getMapper(DbPoolName, CourseMpper.class).updateMyCourseIntrans();
-        Thread.sleep(2000);//由于clickhouse更新是异步的，所以使其等待一会儿让下面的查询可以查询结果
-        Assert.equal(sql.toString(), "select * from `course`  where `class_hours`=11 and `name`='course1';alter table `course` update `name` = 'course1', `class_hours` = 11, `creatime` = null WHERE `id` = 1");
+
+        Assert.equal(sql.toString(), "select * from \"course\"  where \"class_hours\"=11 and \"name\"='course1';UPDATE course SET name = 'course1', class_hours = 11, creatime = null WHERE id = 1");
         Course queryCourse = new Course();
         queryCourse.setId(1);
         Course course = MDbUtils.queryOneBy(DbPoolName, queryCourse);

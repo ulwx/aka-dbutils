@@ -1152,7 +1152,6 @@ public class SqlUtils {
         Collections.sort(keyList);// 排序
         if (vParameters != null && vParameters.size() > 0) {
             for (Integer key : keyList) {
-
                 Object obj = vParameters.get(key);
                 if (obj instanceof Character) {
                     preStmt.setString(key, (String) obj);

@@ -487,10 +487,10 @@ public class DBPoolFactory {
     private static boolean startDataSource(DataSource ds) {
         Connection con = null;
         try {
-            ds.setLoginTimeout(20);
+            ds.setLoginTimeout(30);
             con = ds.getConnection();
         } catch (Exception e) {
-            log.error("" + e, e);
+            log.error("" + e+",ds="+ds, e);
             return false;
         } finally {
             if (con != null) {

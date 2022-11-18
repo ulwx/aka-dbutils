@@ -35,81 +35,79 @@
     encrypt : password属性是否加密，0：不加密 1：加密（采用的是aes加密，通过DBPoolFactory.aesEncrypt(dbpassword)加密)
     -->
 
-
     <dbpool name="db_student" type="tomcatdbpool" table-name-rule="underline_to_camel"
             table-colum-rule="underline_to_camel">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3307/db_student?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
-        <property name="username">root</property>
-        <property name="password">123456</property>
+        <property name="driverClassName">org.postgresql.Driver</property>
+        <property name="url">jdbc:postgresql://192.168.137.211:5432/db_student?connectTimeout=15</property>
+        <property name="username">gpadmin</property>
+        <property name="password">gpadmin</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
         <property name="checkoutTimeout">60000</property>
         <property name="idleConnectionTestPeriod">30</property>
         <property name="maxIdleTime">60</property>
         <property name="maxPoolSize">10</property>
-        <property name="minPoolSize">2</property>
+        <property name="minPoolSize">1</property>
         <property name="maxStatements">20</property>
     </dbpool>
-
     <dbpool name="db_teacher_slave1" type="tomcatdbpool">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3307/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
-        <property name="username">root</property>
-        <property name="password">123456</property>
+        <property name="driverClassName">org.postgresql.Driver</property>
+        <property name="url">jdbc:postgresql://192.168.137.211:5432/db_teacher_slave1?connectTimeout=15</property>
+        <property name="username">gpadmin</property>
+        <property name="password">gpadmin</property>
         <property name="checkoutTimeout">60000</property>
         <property name="idleConnectionTestPeriod">60</property>
         <property name="maxIdleTime">60</property>
         <property name="maxPoolSize">10</property>
-        <property name="minPoolSize">2</property>
+        <property name="minPoolSize">1</property>
         <property name="maxStatements">20</property>
     </dbpool>
     <dbpool name="db_teacher_slave2" type="tomcatdbpool">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3307/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
-        <property name="username">root</property>
-        <property name="password">123456</property>
+        <property name="driverClassName">org.postgresql.Driver</property>
+        <property name="url">jdbc:postgresql://192.168.137.211:5432/db_teacher_slave2?connectTimeout=15</property>
+        <property name="username">gpadmin</property>
+        <property name="password">gpadmin</property>
         <property name="checkoutTimeout">60000</property>
         <property name="idleConnectionTestPeriod">60</property>
         <property name="maxIdleTime">60</property>
         <property name="maxPoolSize">10</property>
-        <property name="minPoolSize">2</property>
+        <property name="minPoolSize">1</property>
         <property name="maxStatements">20</property>
     </dbpool>
     <dbpool name="db_teacher" type="tomcatdbpool">
-        <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3307/db_teacher?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
-        <property name="username">root</property>
-        <property name="password">123456</property>
+        <property name="driverClassName">org.postgresql.Driver</property>
+        <property name="url">jdbc:postgresql://192.168.137.211:5432/db_teacher?connectTimeout=15</property>
+        <property name="username">gpadmin</property>
+        <property name="password">gpadmin</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
         <property name="checkoutTimeout">60000</property>
         <property name="idleConnectionTestPeriod">30</property>
         <property name="maxIdleTime">60</property>
         <property name="maxPoolSize">10</property>
-        <property name="minPoolSize">2</property>
+        <property name="minPoolSize">1</property>
         <property name="maxStatements">20</property>
         <slaves>
             <server name="db_teacher_slave1">
-                <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-                <property name="url">jdbc:mysql://192.168.137.200:3307/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
-                <property name="username">root</property>
-                <property name="password">123456</property>
+                <property name="driverClassName">org.postgresql.Driver</property>
+                <property name="url">jdbc:postgresql://192.168.137.211:5432/db_teacher_slave1?connectTimeout=15</property>
+                <property name="username">gpadmin</property>
+                <property name="password">gpadmin</property>
                 <property name="checkoutTimeout">60000</property>
                 <property name="idleConnectionTestPeriod">60</property>
                 <property name="maxIdleTime">60</property>
                 <property name="maxPoolSize">10</property>
-                <property name="minPoolSize">2</property>
+                <property name="minPoolSize">1</property>
                 <property name="maxStatements">20</property>
             </server>
             <server name="db_teacher_slave2">
-                <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-                <property name="url">jdbc:mysql://192.168.137.200:3307/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
-                <property name="username">root</property>
-                <property name="password">123456</property>
+                <property name="driverClassName">org.postgresql.Driver</property>
+                <property name="url">jdbc:postgresql://192.168.137.211:5432/db_teacher_slave2?connectTimeout=15</property>
+                <property name="username">gpadmin</property>
+                <property name="password">gpadmin</property>
                 <property name="checkoutTimeout">60000</property>
                 <property name="idleConnectionTestPeriod">60</property>
                 <property name="maxIdleTime">60</property>
                 <property name="maxPoolSize">10</property>
-                <property name="minPoolSize">2</property>
+                <property name="minPoolSize">1</property>
                 <property name="maxStatements">20</property>
             </server>
         </slaves>
@@ -128,7 +126,7 @@
     check-time属性：如果是数字(单位秒），则表示间隔的秒数执行一次ref-class指定的插件方法，获取最新的数据库连接池属性和现有的属性做
     比较，如果不相同则替换并重新用新的属性构造连接池。。
     -->
-    <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.mariadb.MyIDBPoolAttrSourceTest"
+    <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.greenplum.MyIDBPoolAttrSourceTest"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
             check-time="0"/>
 </dbpool-config>

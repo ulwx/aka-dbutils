@@ -6,6 +6,7 @@ import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.database.nsql.MDTemplate;
 import com.github.ulwx.aka.dbutils.database.nsql.NSQL;
 import com.github.ulwx.aka.dbutils.tool.PageBean;
+import com.github.ulwx.aka.dbutils.tool.support.Assert;
 import com.github.ulwx.aka.dbutils.tool.support.Path;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
@@ -348,27 +349,35 @@ public class MDataBaseImpl implements MDataBase {
         }
         return this.dataBase.insert(sqlList.toArray(new String[0]),
                 varList.toArray(new HashMap[0]));
+
     }
 
+
+    private boolean convertArgument(String mdFullMethodName, List<Map<String, Object>> vParametersList,
+                                    ArrayList<String> sqlList,ArrayList<Map<Integer, Object>> varList ) {
+        boolean same = true;
+        String preSql = "";
+        for (int i = 0; i < vParametersList.size(); i++) {
+            Map<String, Object> arg = vParametersList.get(i);
+            NSQL nsql = NSQL.getNSQL(mdFullMethodName, arg);
+            if (i > 0 && !preSql.equals(nsql.getExeSql())) {
+                same = false;
+            }
+            sqlList.add(nsql.getExeSql());
+            varList.add(nsql.getArgs());
+            preSql = nsql.getExeSql();
+        }
+        return same;
+    }
 
     @Override
     public int[] update(String mdFullMethodName, List<Map<String, Object>> vParametersList) throws DbException {
         ArrayList<String> sqlList = new ArrayList<String>();
         ArrayList<Map<Integer, Object>> varList = new ArrayList<Map<Integer, Object>>();
-        boolean same=true;
-        String preSql="";
-        for(int i=0; i<vParametersList.size(); i++){
-            Map<String, Object> arg=vParametersList.get(i);
-            NSQL nsql = NSQL.getNSQL(mdFullMethodName, arg);
-            if(i>0 && same && !preSql.equals(nsql.getExeSql())){
-                same=false;
-            }
-            sqlList.add(nsql.getExeSql());
-            varList.add(nsql.getArgs());
-            preSql=nsql.getExeSql();
-        }
+        boolean same=this.convertArgument(mdFullMethodName,vParametersList,sqlList,varList);
+        Assert.notEmpty(sqlList);
         if(same){
-            return this.dataBase.update(preSql,varList);
+            return this.dataBase.update(sqlList.get(0),varList);
         }else {
             return this.dataBase.update(sqlList.toArray(new String[0]),
                     varList.toArray(new HashMap[0]));
@@ -380,13 +389,15 @@ public class MDataBaseImpl implements MDataBase {
     public int[] insert(String mdFullMethodName, List<Map<String, Object>> vParametersList) throws DbException {
         ArrayList<String> sqlList = new ArrayList<String>();
         ArrayList<Map<Integer, Object>> varList = new ArrayList<Map<Integer, Object>>();
-        for (Map<String, Object> arg : vParametersList) {
-            NSQL nsql = NSQL.getNSQL(mdFullMethodName, arg);
-            sqlList.add(nsql.getExeSql());
-            varList.add(nsql.getArgs());
+        boolean same=this.convertArgument(mdFullMethodName,vParametersList,sqlList,varList);
+        Assert.notEmpty(sqlList);
+        if(same){
+            return this.dataBase.insert(sqlList.get(0),varList);
+        }else {
+            return this.dataBase.insert(sqlList.toArray(new String[0]),
+                    varList.toArray(new HashMap[0]));
         }
-        return this.dataBase.insert(sqlList.toArray(new String[0]),
-                varList.toArray(new HashMap[0]));
+
     }
 
 

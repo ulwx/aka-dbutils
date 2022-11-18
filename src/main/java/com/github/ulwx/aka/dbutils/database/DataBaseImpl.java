@@ -127,11 +127,11 @@ public class DataBaseImpl implements DataBase {
         String str = "";
         if (stack.length > fromLevel) {
             for (int i = fromLevel; i < stack.length; i++) {
-                if (stack[i].getClassName().startsWith(DataBase.class.getPackage().getName()) || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
-
+                if (stack[i].getClassName().startsWith(DataBase.class.getPackage().getName())
+                        || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
                     continue;
-                } else if (stack[i].getClassName().startsWith("jdk.internal.") || stack[i].getClassName().startsWith("java.lang.") || stack[i].getClassName().contains("CGLIB$$") || stack[i].getClassName().startsWith("org.springframework")) {
-
+                } else if (stack[i].getClassName().startsWith("jdk.internal.") || stack[i].getClassName().startsWith("java.lang.") || stack[i].getClassName().contains("CGLIB$$")
+                        || stack[i].getClassName().startsWith("org.springframework")) {
                     continue;
                 }
 
@@ -215,9 +215,18 @@ public class DataBaseImpl implements DataBase {
 
     private void setInternalConnectionAutoCommit(boolean autoCommit) throws DbException {
         try {
-            if(this.getDataBaseType().supportTransaction()) {
-                this.conn.setAutoCommit(autoCommit);
+            if(autoCommit){
+                this.conn.setAutoCommit(true);
+            }else{
+                if(!this.getDataBaseType().supportTransaction()){
+                    this.conn.setAutoCommit(true);
+                    log.warn(this.getDataBaseType()+"不支持数据库连接设置AutoCommit=false," +
+                            "已重新设置为true!");
+                }else {
+                    this.conn.setAutoCommit(false);
+                }
             }
+
         } catch (Exception ex) {
             if (ex instanceof DbException) throw (DbException) ex;
             throw new DbException(ex);
@@ -519,8 +528,8 @@ public class DataBaseImpl implements DataBase {
 
     private List<Map<String, Object>> doPageQueryMap(String sqlQuery, Map<Integer, Object> args, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
         List<Map<String, Object>> list = doPageQueryObject(sqlQuery, args, page, perPage, pageBean,
-                (rs)->{
-                    return ObjectUtils.getMapFromResultSet(rs.getResultSet(),this.getDataBaseType());
+                (rs) -> {
+                    return ObjectUtils.getMapFromResultSet(rs.getResultSet(), this.getDataBaseType());
                 }, countSql);
         return list;
 
@@ -713,7 +722,7 @@ public class DataBaseImpl implements DataBase {
         try {
             Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = selectObject.getClass();
-            if (handClass != null ) {
+            if (handClass != null) {
                 reflectClass = handClass;
             }
             this.sqlType = SQLType.SELECT;
@@ -743,9 +752,9 @@ public class DataBaseImpl implements DataBase {
                 Method method = DbContext.getDBInterceptorInfo().getInterceptedMethod();
                 Method f = DBObjectOperation.class.getMethod(method.getName(), method.getParameterTypes());
                 if (method.getName().startsWith("query")) {
-                    if(options.getQueryHint()!=null &&
-                            options.getQueryHint().limit()!=null){
-                        if(ArrayUtils.contains(method.getParameterTypes(),PageBean.class)){
+                    if (options.getQueryHint() != null &&
+                            options.getQueryHint().limit() != null) {
+                        if (ArrayUtils.contains(method.getParameterTypes(), PageBean.class)) {
                             throw new IllegalArgumentException("QueryHint不能设置到对象分页查询操作！");
                         }
                     }
@@ -768,8 +777,8 @@ public class DataBaseImpl implements DataBase {
         try {
             Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = selectObject.getClass();
-            if (handClass != null ) {
-                reflectClass =handClass;
+            if (handClass != null) {
+                reflectClass = handClass;
             }
             this.sqlType = SQLType.SELECT;
             this.fetchConnection();
@@ -1088,7 +1097,9 @@ public class DataBaseImpl implements DataBase {
 
     private List<Map<String, Object>> doQueryMap(String sqlQuery, Map<Integer, Object> args) throws DbException {
         List<Map<String, Object>> list = doQueryObject(sqlQuery, args,
-                (rs)->{return ObjectUtils.getMapFromResultSet(rs.getResultSet(),this.getDataBaseType());});
+                (rs) -> {
+                    return ObjectUtils.getMapFromResultSet(rs.getResultSet(), this.getDataBaseType());
+                });
 
         return list;
 
@@ -1410,8 +1421,9 @@ public class DataBaseImpl implements DataBase {
     private DataBaseSet getResultSet(String sqlQuery, Collection<Object> vParameters) throws Exception {
 
         PreparedStatement preStmt = this.getPreparedStatement(sqlQuery);
-        String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
-        String debugSql = SqlUtils.generateDebugSql(sqlQuery, vParameters, this.getDataBaseType());
+        List<Object> vParametersList = this.handerParameters(vParameters, null);
+        String paramStr = SqlUtils.setToPreStatment(vParametersList, preStmt);
+        String debugSql = SqlUtils.generateDebugSql(sqlQuery, vParametersList, this.getDataBaseType());
         if (DbContext.getDebugSQLListener() != null) {
             DbContext.getDebugSQLListener().accept(debugSql);
         }
@@ -1619,10 +1631,11 @@ public class DataBaseImpl implements DataBase {
 
             CallableStatement cs = (CallableStatement) this.getPreparedStatement(sqltext);
             // 设置输入参数
+            inParms = this.handerParameters(inParms);
             String inParamStr = SqlUtils.setToPreStatment(inParms, cs);
 
             // 注册输出参数
-            String outParamStr = SqlUtils.registForStoredProc(outParms, cs,this.dataBaseType);
+            String outParamStr = SqlUtils.registForStoredProc(outParms, cs, this.dataBaseType);
 
             Map<Integer, Object> inOutParms = new HashMap<Integer, Object>();
             inOutParms.putAll(inParms);
@@ -1719,36 +1732,59 @@ public class DataBaseImpl implements DataBase {
     }
 
     /**
-     *
      * @param sqltext
      * @param vParameters
-     * @return  返回两个元素的数组，0位置的元素为更新的个数，1位置的元素为主键值（如果存在，否则为-1）
+     * @return 返回两个元素的数组，0位置的元素为更新的个数，1位置的元素为主键值（如果存在，否则为-1）
      * @throws DbException
      */
     private long[] executeBindUpdate(String sqltext, Collection<Object> vParameters) throws DbException {
         return this.executeBindUpdate(sqltext, vParameters, false, null);
     }
 
-    private List<Object>  handerParameters(Collection<Object> vParameters,TResult<GenerateID> result){
-        List<Object> vParametersList=new ArrayList<>();
-        if(vParameters==null){
-            return vParametersList;
+    private Map<Integer, Object> handerParameters(Map<Integer, Object> vParametersMap) {
+        if (vParametersMap == null) {
+            return vParametersMap;
         }
-        vParametersList.addAll(vParameters);
-        for(int k=0; k<vParametersList.size(); k++){
-            Object obj=vParametersList.get(k);
-            if(obj instanceof AkaParamter){
+        for (Integer key : vParametersMap.keySet()) {
+            Object obj = vParametersMap.get(key);
+            if (obj instanceof AkaParamter) {
                 if (obj instanceof IDGeneratorParmeter) {
                     IDGeneratorParmeter idGeneratorParmeter = (IDGeneratorParmeter) obj;
-                    String sequenceName=idGeneratorParmeter.getSequenceName();
-                    SequenceInfo sequenceInfo=new SequenceInfo();
+                    String sequenceName = idGeneratorParmeter.getSequenceName();
+                    SequenceInfo sequenceInfo = new SequenceInfo();
                     sequenceInfo.setSequenceName(sequenceName);
                     sequenceInfo.setIdName(idGeneratorParmeter.getName());
                     sequenceInfo.setCallBeforeInsert(true);
-                    this.handSequenceForQueryID(sequenceInfo,true);
-                    GenerateID generateID= sequenceInfo.getGenerateID();
-                    vParametersList.set(k,generateID.getIdValue());
-                    if(result!=null){
+                    this.handSequenceForQueryID(sequenceInfo, true);
+                    GenerateID generateID = sequenceInfo.getGenerateID();
+                    vParametersMap.put(key, generateID.getIdValue());
+
+                }
+            }
+        }
+        return vParametersMap;
+    }
+
+    private List<Object> handerParameters(Collection<Object> vParameters, TResult<GenerateID> result) {
+        List<Object> vParametersList = new ArrayList<>();
+        if (vParameters == null) {
+            return vParametersList;
+        }
+        vParametersList.addAll(vParameters);
+        for (int k = 0; k < vParametersList.size(); k++) {
+            Object obj = vParametersList.get(k);
+            if (obj instanceof AkaParamter) {
+                if (obj instanceof IDGeneratorParmeter) {
+                    IDGeneratorParmeter idGeneratorParmeter = (IDGeneratorParmeter) obj;
+                    String sequenceName = idGeneratorParmeter.getSequenceName();
+                    SequenceInfo sequenceInfo = new SequenceInfo();
+                    sequenceInfo.setSequenceName(sequenceName);
+                    sequenceInfo.setIdName(idGeneratorParmeter.getName());
+                    sequenceInfo.setCallBeforeInsert(true);
+                    this.handSequenceForQueryID(sequenceInfo, true);
+                    GenerateID generateID = sequenceInfo.getGenerateID();
+                    vParametersList.set(k, generateID.getIdValue());
+                    if (result != null) {
                         result.setValue(generateID);
                     }
 
@@ -1757,6 +1793,7 @@ public class DataBaseImpl implements DataBase {
         }
         return vParametersList;
     }
+
     /**
      * 执行更新操作
      *
@@ -1773,8 +1810,8 @@ public class DataBaseImpl implements DataBase {
         try {
             sqltext = sqltext.trim();
             PreparedStatement preStmt = this.getPreparedStatement(sqltext);
-            TResult<GenerateID> result=new TResult<>();
-            List<Object> vParametersList=this.handerParameters(vParameters,result);
+            TResult<GenerateID> result = new TResult<>();
+            List<Object> vParametersList = this.handerParameters(vParameters, result);
             String paramStr = SqlUtils.setToPreStatment(vParametersList, preStmt);
             String debugSql = SqlUtils.generateDebugSql(sqltext, vParametersList, this.getDataBaseType());
             if (DbContext.getDebugSQLListener() != null) {
@@ -1801,7 +1838,7 @@ public class DataBaseImpl implements DataBase {
             twoInt[0] = count;
             try {
                 if (this.sqlType == SQLType.INSERT) {
-                    if(this.getDataBaseType().supportGeneratedKeysForInsert()){//oracle不支持getGeneratedKeys操作
+                    if (this.getDataBaseType().supportGeneratedKeysForInsert()) {//oracle不支持getGeneratedKeys操作
                         ResultSet keys = preStmt.getGeneratedKeys();
                         if (keys.next()) {
                             twoInt[1] = keys.getLong(1);
@@ -1810,10 +1847,10 @@ public class DataBaseImpl implements DataBase {
                         }
                         keys.close();
                     }
-                    if(twoInt[1]==-1){
-                       if(result.getValue()!=null){
-                           twoInt[1]=(long) result.getValue().getIdValue();
-                       }
+                    if (twoInt[1] == -1) {
+                        if (result.getValue() != null) {
+                            twoInt[1] = (long) result.getValue().getIdValue();
+                        }
                     }
                 } else {
                     twoInt[1] = -1;
@@ -1823,7 +1860,7 @@ public class DataBaseImpl implements DataBase {
                 twoInt[1] = -1;
                 log.error(
                         "您的驱动程序不支持生成主键的操作（PreparedStatement.getGeneratedKeys()），" +
-                                "建议更换您的数据库驱动程序版本使之支持jdbc4.0标准！",e);
+                                "建议更换您的数据库驱动程序版本使之支持jdbc4.0标准！", e);
             }
 
         } catch (Exception e) {
@@ -1924,7 +1961,7 @@ public class DataBaseImpl implements DataBase {
             Class<?> handClass = DbContext.getReflectClass();
 
             Class<?> reflectClass = insertObject.getClass();
-            if (handClass != null ) {
+            if (handClass != null) {
                 reflectClass = handClass;
             }
 
@@ -1932,9 +1969,9 @@ public class DataBaseImpl implements DataBase {
             this.fetchConnection();
             //查询sequence
             SequenceInfo sequeceInfo = DbContext.getGenerateIDForInsert();
-            handSequenceForQueryID(sequeceInfo,true);
-            GenerateID generateID =(sequeceInfo!=null?sequeceInfo.getGenerateID():null);
-            UpdateOptions updateOptions=new UpdateOptions();
+            handSequenceForQueryID(sequeceInfo, true);
+            GenerateID generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
+            UpdateOptions updateOptions = new UpdateOptions();
             updateOptions.setGenerateID(generateID);
             String sqltext = SqlUtils.generateInsertSql(this.dbPoolName, properties, insertObject, reflectClass, vParameters,
                     updateOptions, ignoreNull, this.getDataBaseType());
@@ -1942,7 +1979,7 @@ public class DataBaseImpl implements DataBase {
             int ret = this.executeBindInsert(sqltext, vParameters);
 
             handSequenceForQueryID(sequeceInfo, false);
-            generateID = (sequeceInfo!=null?sequeceInfo.getGenerateID():null);;
+            generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
             if (generateID != null && generateID.getIdName() != null) {
                 PropertyUtil.setProperty(insertObject, generateID.getIdName(), generateID.getIdValue());
             }
@@ -1957,18 +1994,18 @@ public class DataBaseImpl implements DataBase {
 
     }
 
-    private void handSequenceForQueryID( SequenceInfo sequeceInfo,
-                                              boolean beforeOrAfter) {
-        if (sequeceInfo != null ) {
-            boolean callBeforeInsert =  sequeceInfo.getCallBeforeInsert();
+    private void handSequenceForQueryID(SequenceInfo sequeceInfo,
+                                        boolean beforeOrAfter) {
+        if (sequeceInfo != null) {
+            boolean callBeforeInsert = sequeceInfo.getCallBeforeInsert();
             if (callBeforeInsert == beforeOrAfter) {
                 String sequenceSql = this.getDataBaseType().
                         getSequenceSql((String) sequeceInfo.getSequenceName(), callBeforeInsert);
-                SQLType oldSqlType=this.sqlType;
+                SQLType oldSqlType = this.sqlType;
                 DataBaseSet rs = this.doQuery(sequenceSql, (Map<Integer, Object>) null);
-                this.sqlType=oldSqlType;
+                this.sqlType = oldSqlType;
                 if (rs.next()) {
-                    GenerateID generateID=new GenerateID();
+                    GenerateID generateID = new GenerateID();
                     generateID.setSequenceInfo(sequeceInfo);
                     sequeceInfo.setGenerateID(generateID);
                     generateID.setIdName((String) sequeceInfo.getIdName());
@@ -1999,7 +2036,7 @@ public class DataBaseImpl implements DataBase {
 
             Class<?> reflectClass = insertObject.getClass();
             Class<?> handClass = DbContext.getReflectClass();
-            if (handClass != null ) {
+            if (handClass != null) {
                 reflectClass = handClass;
             }
             this.sqlType = SQLType.INSERT;
@@ -2007,8 +2044,8 @@ public class DataBaseImpl implements DataBase {
             //查询sequence
             SequenceInfo sequeceInfo = DbContext.getGenerateIDForInsert();
             handSequenceForQueryID(sequeceInfo, true);
-            GenerateID generateID = (sequeceInfo!=null?sequeceInfo.getGenerateID():null);
-            UpdateOptions updateOptions=new UpdateOptions();
+            GenerateID generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
+            UpdateOptions updateOptions = new UpdateOptions();
             updateOptions.setGenerateID(generateID);
             String sqltext = SqlUtils.generateInsertSql(this.dbPoolName, properties,
                     insertObject, reflectClass, vParameters, updateOptions, ignoreNull, this.getDataBaseType());
@@ -2017,14 +2054,14 @@ public class DataBaseImpl implements DataBase {
             long ret = this.executeBindInsertReturnKey(sqltext, vParameters);
 
             handSequenceForQueryID(sequeceInfo, false);
-            generateID = (sequeceInfo!=null?sequeceInfo.getGenerateID():null);
+            generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
 
             if (generateID != null && generateID.getIdName() != null) {
                 PropertyUtil.setProperty(insertObject, generateID.getIdName(), generateID.getIdValue());
                 ret = (long) generateID.getIdValue();
-            }else{
-                if(ret!=-1 && updateOptions.getGenerateID()!=null){
-                    if(StringUtils.hasText(updateOptions.getGenerateID().getIdName()) ){
+            } else {
+                if (ret != -1 && updateOptions.getGenerateID() != null) {
+                    if (StringUtils.hasText(updateOptions.getGenerateID().getIdName())) {
                         PropertyUtil.setProperty(insertObject, updateOptions.getGenerateID().getIdName(),
                                 ret);
                     }
@@ -2085,8 +2122,8 @@ public class DataBaseImpl implements DataBase {
                         reflectClass = handClass;
                     }
                     handSequenceForQueryID(sequeceInfo, true);
-                    GenerateID generateID = (sequeceInfo!=null?sequeceInfo.getGenerateID():null);
-                    UpdateOptions updateOptions=new UpdateOptions();
+                    GenerateID generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
+                    UpdateOptions updateOptions = new UpdateOptions();
                     updateOptions.setGenerateID(generateID);
                     String sql = SqlUtils.generateInsertSql(this.dbPoolName, pros, obj, reflectClass, vParameters,
                             updateOptions, ignoreNull, this.getDataBaseType());
@@ -2095,7 +2132,7 @@ public class DataBaseImpl implements DataBase {
                     sqltexts[i] = sql;
 
                 }
-            }finally {
+            } finally {
                 DbContext.removeGenerateIDForInsert();
                 DbContext.clearReflectClass();
             }
@@ -2152,7 +2189,7 @@ public class DataBaseImpl implements DataBase {
         try {
             Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = updateObject.getClass();
-            if (handClass != null ) {
+            if (handClass != null) {
                 reflectClass = handClass;
             }
             this.sqlType = SQLType.UPDATE;
@@ -2187,7 +2224,7 @@ public class DataBaseImpl implements DataBase {
 
             Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = updateObject.getClass();
-            if (handClass != null ) {
+            if (handClass != null) {
                 reflectClass = handClass;
             }
             this.sqlType = SQLType.UPDATE;
@@ -2237,7 +2274,7 @@ public class DataBaseImpl implements DataBase {
         try {
             Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = deleteObject.getClass();
-            if (handClass != null ) {
+            if (handClass != null) {
                 reflectClass = handClass;
             }
             this.sqlType = SQLType.DELETE;
@@ -2267,7 +2304,7 @@ public class DataBaseImpl implements DataBase {
             Class<?> handClass = DbContext.getReflectClass();
             Class<?> reflectClass = deleteObject.getClass();
             if (handClass != null) {
-                reflectClass =handClass;
+                reflectClass = handClass;
             }
             this.sqlType = SQLType.DELETE;
             this.fetchConnection();
@@ -2435,10 +2472,11 @@ public class DataBaseImpl implements DataBase {
                 if (updateProperties != null) pros = updateProperties[i];
 
                 Class reflectClass = obj.getClass();
-                if (handClass != null ) {
+                if (handClass != null) {
                     reflectClass = handClass;
                 }
-                String sql = SqlUtils.generateUpdateSql(this.dbPoolName, pros, obj, reflectClass, whereps, vParameters, null, ignoreNull, this.getDataBaseType());
+                String sql = SqlUtils.generateUpdateSql(this.dbPoolName, pros, obj, reflectClass,
+                        whereps, vParameters, null, ignoreNull, this.getDataBaseType());
                 DbContext.clearReflectClass();
                 maps[i] = vParameters;
                 sqltexts[i] = sql;
@@ -2458,7 +2496,7 @@ public class DataBaseImpl implements DataBase {
                 int[] res = this.executeBindBatch(sqltexts[0], list);
                 return res;
             } else {
-                int[] res = this.executeBindBatch(sqltexts, maps);
+                int[] res = this.executeBindManySql(sqltexts, maps);
 
                 return res;
             }
@@ -2493,7 +2531,7 @@ public class DataBaseImpl implements DataBase {
                 Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
 
                 Class reflectClass = obj.getClass();
-                if (handClass != null ) {
+                if (handClass != null) {
                     reflectClass = handClass;
                 }
                 String sql = SqlUtils.generateDeleteSql(this.dbPoolName, obj, reflectClass, oneWhereProperties, vParameters, null, this.getDataBaseType());
@@ -2514,7 +2552,7 @@ public class DataBaseImpl implements DataBase {
                 int[] res = this.executeBindBatch(sqltexts[0], list);
                 return res;
             } else {
-                int[] res = this.executeBindBatch(sqltexts, maps);
+                int[] res = this.executeBindManySql(sqltexts, maps);
                 return res;
             }
 
@@ -2599,11 +2637,12 @@ public class DataBaseImpl implements DataBase {
      */
     @Override
     public void setAutoCommit(boolean b) throws DbException {
-        this.isAutoCommit = b;
         try {
+            this.isAutoCommit = b;
             if (this.conn != null && !this.conn.isClosed()) {
                 this.setInternalConnectionAutoCommit(b);
             }
+
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
@@ -2620,11 +2659,11 @@ public class DataBaseImpl implements DataBase {
     public void rollback() throws DbException {
         try {
             if (conn != null) {
-                if(this.getDataBaseType().supportTransaction()) {
+                if (this.getDataBaseType().supportTransaction()) {
                     conn.rollback();
                     clearSavePoint();
                     if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ":rollback done!");
-                }else{
+                } else {
                     if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ": transaction not supported," +
                             "rollback not done!");
                 }
@@ -2668,14 +2707,16 @@ public class DataBaseImpl implements DataBase {
 
         }
     }
-    private final  static String SavepointReg="[a-zA-Z][a-zA-Z01-9_]*";
+
+    private final static String SavepointReg = "[a-zA-Z][a-zA-Z01-9_]*";
+
     private void setRealSavepoint(String savepointName) throws DbException {
         try {
             if (savepointName != null && !savepointName.isEmpty() && !this.isColsed()) {
-                if(!savepointName.matches(SavepointReg)){
-                    throw new DbException("保存点名称"+savepointName+"不符合要求。必须是字母开头后面接数字字母组合！");
+                if (!savepointName.matches(SavepointReg)) {
+                    throw new DbException("保存点名称" + savepointName + "不符合要求。必须是字母开头后面接数字字母组合！");
                 }
-                Savepoint savepoint=null;
+                Savepoint savepoint = null;
                 if (!savePointMap.containsKey(savepointName)) {
                     savepoint = conn.setSavepoint(savepointName);
                     if (DbContext.permitDebugLog()) {
@@ -2698,14 +2739,15 @@ public class DataBaseImpl implements DataBase {
         } else {
             try {
                 if (!this.isColsed()) {
-                    if(this.getDataBaseType().supportTransaction()) {
+                    if (this.getDataBaseType().supportTransaction()) {
                         conn.rollback(savePointMap.get(savepointName));
                         savePointMap.remove(savepointName);
                         if (DbContext.permitDebugLog())
                             log.debug("[" + this.getConnectInfo() + "]:rollback..to savepoint done!" + savepointName);
-                    } else{
-                        if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ": transaction not supported," +
-                                "rollback..to savepoint not done!!");
+                    } else {
+                        if (DbContext.permitDebugLog())
+                            log.debug(this.getConnectInfo() + ": transaction not supported," +
+                                    "rollback..to savepoint not done!!");
                     }
 
                 }
@@ -2740,11 +2782,11 @@ public class DataBaseImpl implements DataBase {
     public void commit() throws DbException {
         try {
             if (conn != null) {
-                if(this.getDataBaseType().supportTransaction()) {
+                if (this.getDataBaseType().supportTransaction()) {
                     conn.commit();
                     clearSavePoint();
                     if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commit done!");
-                }else{
+                } else {
                     if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commit not done!");
                 }
 
@@ -2776,7 +2818,8 @@ public class DataBaseImpl implements DataBase {
             for (int m = 0; m < vParametersArray.size(); m++) {
 
                 Collection<Object> vParameters = vParametersArray.get(m);
-                String debugSql = SqlUtils.generateDebugSql(sqltext, vParameters, this.getDataBaseType());
+                List<Object> vParametersList = this.handerParameters(vParameters, null);
+                String debugSql = SqlUtils.generateDebugSql(sqltext, vParametersList, this.getDataBaseType());
                 if (DbContext.getDebugSQLListener() != null) {
                     DbContext.getDebugSQLListener().accept(debugSql);
                 }
@@ -2788,33 +2831,34 @@ public class DataBaseImpl implements DataBase {
                     }
                 }
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                    if(m==0) {
+                    if (m == 0) {
                         log.debug("[" + this.getConnectInfo() + "][" + callInfo + "]");
                     }
                     log.debug("" + m + ".debugSql[" + debugSql + "]");
                 }
-                String paramStr = SqlUtils.setToPreStatment(vParameters, preStmt);
+
+                String paramStr = SqlUtils.setToPreStatment(vParametersList, preStmt);
                 preStmt.addBatch();
             } // for
 
             boolean error = false;
             count = preStmt.executeBatch();
             int i = 0;
-            String updateInfo="更新条数:";
+            String updateInfo = "更新条数:";
             for (i = 0; i < count.length; i++) {
                 if (count[i] < 0) {
-                    if(count[i]==Statement.SUCCESS_NO_INFO){
-                        error=false;
+                    if (count[i] == Statement.SUCCESS_NO_INFO) {
+                        error = false;
                         if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                             log.debug("" + i + "-更新条数:未知");
                         }
-                    }else if(count[i]==Statement.EXECUTE_FAILED){
+                    } else if (count[i] == Statement.EXECUTE_FAILED) {
                         error = true;
                         break;
                     }
-                }else{
+                } else {
                     if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                        log.debug("" + i + ".更新条数:"+count[i]);
+                        log.debug("" + i + ".更新条数:" + count[i]);
                     }
                 }
 
@@ -2834,8 +2878,8 @@ public class DataBaseImpl implements DataBase {
             if (backAutoCommit) {
                 try {
                     this.rollback();
-                }catch (Exception e2){
-                    log.error("",e2);
+                } catch (Exception e2) {
+                    log.error("", e2);
                 }
             }
             if (e instanceof DbException) throw (DbException) e;
@@ -2868,7 +2912,7 @@ public class DataBaseImpl implements DataBase {
      * @return 如果为null表明执行失败
      * @throws DbException
      */
-    private int[] executeBindBatch(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
+    private int[] executeBindManySql(String[] sqltxts, Map<Integer, Object>[] vParametersArray) throws DbException {
 
         int[] res = null;
         if (ArrayUtils.isNotEmpty(vParametersArray)) {
@@ -2944,7 +2988,7 @@ public class DataBaseImpl implements DataBase {
         }.getClass().getEnclosingMethod();
         this.configInterceptorForMehtod(enclosingMethod);
         try {
-            return ret = this.executeBindBatch(sqltxts, vParametersArray);
+            return ret = this.executeBindManySql(sqltxts, vParametersArray);
         } catch (Exception e) {
             this.configInterceptorForException(e);
             if (e instanceof DbException) throw e;
@@ -2962,7 +3006,7 @@ public class DataBaseImpl implements DataBase {
         this.configInterceptorForMehtod(enclosingMethod);
         int[] ret = null;
         try {
-            return ret = this.executeBindBatch(sqltxts, vParametersArray);
+            return ret = this.executeBindManySql(sqltxts, vParametersArray);
         } catch (Exception e) {
             this.configInterceptorForException(e);
             if (e instanceof DbException) throw e;
@@ -3112,7 +3156,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     private int[] updateBatch(ArrayList<String> sqltxt) throws DbException {
-        return this.executeBindBatch(sqltxt.toArray(new String[0]), null);
+        return this.executeBindManySql(sqltxt.toArray(new String[0]), null);
     }
 
     private PreparedStatement getPreparedStatement(String sqltxt) throws DbException {
@@ -3125,9 +3169,9 @@ public class DataBaseImpl implements DataBase {
             } else if (this.sqlType == SQLType.INSERT) {
                 this.fetchConnection();
                 Method method = DbContext.getDBInterceptorInfo().getInterceptedMethod();
-                if(this.getDataBaseType().supportGeneratedKeysForInsert()){
+                if (this.getDataBaseType().supportGeneratedKeysForInsert()) {
                     ps = conn.prepareStatement(sqltxt, Statement.RETURN_GENERATED_KEYS);
-                }else {
+                } else {
                     ps = conn.prepareStatement(sqltxt);
                 }
             } else if (this.sqlType == SQLType.UPDATE) {
@@ -3144,12 +3188,12 @@ public class DataBaseImpl implements DataBase {
                 ps = conn.prepareStatement(sqltxt);
 
             } else {
-                throw new DbException("不能决定sql语句的类型！"+sqltxt);
+                throw new DbException("不能决定sql语句的类型！" + sqltxt);
             }
 
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
-            throw new DbException(""+sqltxt,e);
+            throw new DbException("" + sqltxt, e);
         }
         return ps;
     }
@@ -3162,11 +3206,6 @@ public class DataBaseImpl implements DataBase {
             if (this.sqlType == SQLType.SELECT) {
                 this.fetchConnection();
                 statement = conn.createStatement();
-                // if(this.getDataBaseType().isClickHouseFamily()){
-                //     statement = conn.createStatement();
-                // }else {
-                //     statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                // }
             } else if (this.sqlType == SQLType.INSERT) {
                 this.fetchConnection();
                 statement = conn.createStatement();
@@ -3703,7 +3742,7 @@ public class DataBaseImpl implements DataBase {
             try {
                 Class<?> handClass = DbContext.getReflectClass();
                 Class<?> reflectClass = selectObject.getClass();
-                if (handClass != null ) {
+                if (handClass != null) {
                     reflectClass = handClass;
                 }
                 this.sqlType = SQLType.SELECT;
@@ -3745,7 +3784,7 @@ public class DataBaseImpl implements DataBase {
             try {
                 Class<?> handClass = DbContext.getReflectClass();
                 Class<?> reflectClass = selectObject.getClass();
-                if (handClass != null ) {
+                if (handClass != null) {
                     reflectClass = handClass;
                 }
                 this.sqlType = SQLType.SELECT;
@@ -3878,7 +3917,7 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public String exeScript(Reader reader,
-                            boolean throwWarning,boolean continueIfError,
+                            boolean throwWarning, boolean continueIfError,
                             String delimiters, Map<String, Object> args) throws DbException {
 
         Method enclosingMethod = new Object() {
@@ -3924,7 +3963,7 @@ public class DataBaseImpl implements DataBase {
     public String exeScript(Reader reader,
                             boolean throwWarning,
                             String delimiters, Map<String, Object> args) throws DbException {
-        return this.exeScript(reader,throwWarning,false,delimiters,args);
+        return this.exeScript(reader, throwWarning, false, delimiters, args);
     }
 
     private <R> R exeBatchSQLTemplate(Supplier<R> function) {
@@ -3945,8 +3984,8 @@ public class DataBaseImpl implements DataBase {
             if (backAutoCommit) {
                 try {
                     this.rollback();
-                }catch (Exception e2){
-                    log.error(""+e2,e2);
+                } catch (Exception e2) {
+                    log.error("" + e2, e2);
                 }
             }
             throw e;
@@ -3976,7 +4015,7 @@ public class DataBaseImpl implements DataBase {
         private boolean throwWarning = true;
         private boolean removeCRs = true;
         private boolean escapeProcessing = true;
-        private boolean continueIfError=false;
+        private boolean continueIfError = false;
         private StringWriter resultWriter = new StringWriter();
         private PrintWriter resultPrintWriter = new PrintWriter(resultWriter);
         private String transactionId = "";
@@ -4035,27 +4074,26 @@ public class DataBaseImpl implements DataBase {
         private final Pattern DB2_DELIMITER_PATTERN = Pattern.compile("^\\s*((--)|(//))?\\s*(#)\\s*SET\\s+TERMINATOR\\s+([^\\s]+)",
                 Pattern.CASE_INSENSITIVE);
 
-        public String    DelimitersPattern(String trimmedLine) {
-            Pattern pattern=null;
-            int group=5;
+        public String DelimitersPattern(String trimmedLine) {
+            Pattern pattern = null;
+            int group = 5;
             if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
-                pattern= MYSQL_DELIMITER_PATTERN;
-                group=5;
+                pattern = MYSQL_DELIMITER_PATTERN;
+                group = 5;
             } else if (DataBaseImpl.this.getDataBaseType().isDB2Family()) {
-                pattern= DB2_DELIMITER_PATTERN;
-                group=5;
+                pattern = DB2_DELIMITER_PATTERN;
+                group = 5;
             } else {
-                pattern= null;
+                pattern = null;
             }
             if (pattern != null) {
                 Matcher matcher = pattern.matcher(trimmedLine);
                 if (matcher.find()) {
-                    return  matcher.group(group);
+                    return matcher.group(group);
                 }
             }
             return null;
         }
-
 
 
         public String defaultScriptDelimiters() {
@@ -4069,7 +4107,7 @@ public class DataBaseImpl implements DataBase {
         }
 
 
-        public boolean ScriptDelimiterLine(String trimmedLine, TString tlimiterStr,StringBuilder command) {
+        public boolean ScriptDelimiterLine(String trimmedLine, TString tlimiterStr, StringBuilder command) {
             if (DataBaseImpl.this.getDataBaseType().isMySqlFamily()) {
                 if (StringUtils.startsWithIgnoreCase(trimmedLine, "DELIMITER ")) {
                     String delimiterStr = StringUtils.substring(trimmedLine, "DELIMITER ".length()).trim();
@@ -4086,9 +4124,9 @@ public class DataBaseImpl implements DataBase {
                 } else {
                     return false;
                 }
-            } else if(DataBaseImpl.this.getDataBaseType().isOracleFamily()){
-                int  ret = StringUtils.indexOf(trimmedLine, "\\s*(BEGIN|FUNCTION|PROCEDURE)\\s*", true);
-                if (ret>=0) {
+            } else if (DataBaseImpl.this.getDataBaseType().isOracleFamily()) {
+                int ret = StringUtils.indexOf(trimmedLine, "\\s*(BEGIN|FUNCTION|PROCEDURE)\\s*", true);
+                if (ret >= 0) {
                     tlimiterStr.setValue("/");
                     command.append(trimmedLine);
                     command.append(LINE_SEPARATOR);
@@ -4124,7 +4162,7 @@ public class DataBaseImpl implements DataBase {
                         if (!handleLine(command, line)) {
                             return "";
                         }
-                    }catch (Exception e1){
+                    } catch (Exception e1) {
                         throw e1;
                     }
 
@@ -4149,11 +4187,11 @@ public class DataBaseImpl implements DataBase {
             TInteger delimterStartPos = new TInteger(-1);
             TInteger delimterEndPos = new TInteger(-1);
             if (lineIsComment(trimmedLine)) {
-               String delimitersStr = this.DelimitersPattern(trimmedLine);
-               if(delimitersStr!=null){
-                   this.usingDelimiter = delimitersStr;
-               }
-            } else if (delimiterLine(trimmedLine, tDelimter,command)) {
+                String delimitersStr = this.DelimitersPattern(trimmedLine);
+                if (delimitersStr != null) {
+                    this.usingDelimiter = delimitersStr;
+                }
+            } else if (delimiterLine(trimmedLine, tDelimter, command)) {
                 this.usingDelimiter = tDelimter.getValue();
 
             } else if (commandReadyToExecute(trimmedLine, delimterStartPos, delimterEndPos)) {
@@ -4164,22 +4202,22 @@ public class DataBaseImpl implements DataBase {
                 if (StringUtils.hasText(command.toString())) {
                     try {
                         if (DbContext.permitDebugLog())
-                            log.debug("run sql- "+command.toString()+"");
+                            log.debug("run sql- " + command.toString() + "");
                         executePreparedStatement(command.toString());
                         if (DbContext.permitDebugLog())
                             log.debug("run sql- Succeeded  ");
 
                     } catch (Exception e) {
-                        if(continueIfError){
-                            if(e instanceof SQLException){
-                                log.error(""+e,e);
+                        if (continueIfError) {
+                            if (e instanceof SQLException) {
+                                log.error("" + e, e);
 
-                            }else if(e instanceof DbException){
-                                if(((DbException) e).getSQLException()!=null){
-                                    log.error(""+e,e);
+                            } else if (e instanceof DbException) {
+                                if (((DbException) e).getSQLException() != null) {
+                                    log.error("" + e, e);
                                 }
                             }
-                        }else {
+                        } else {
                             throw new DbException("[" + command.toString() + "]", e);
                         }
                     }
@@ -4198,8 +4236,8 @@ public class DataBaseImpl implements DataBase {
             return trimmedLine.startsWith("//") || trimmedLine.startsWith("--");
         }
 
-        private boolean delimiterLine(String trimmedLine, TString tstr,StringBuilder command) {
-            return this.ScriptDelimiterLine(trimmedLine, tstr,command);
+        private boolean delimiterLine(String trimmedLine, TString tstr, StringBuilder command) {
+            return this.ScriptDelimiterLine(trimmedLine, tstr, command);
 
         }
 
@@ -4252,7 +4290,8 @@ public class DataBaseImpl implements DataBase {
 
                 if (handArgs) {
                     statement = DataBaseImpl.this.getPreparedStatement(preparedSql);
-                    String paramStr = SqlUtils.setToPreStatment(nsql.getArgs(), (PreparedStatement) statement);
+                    Map<Integer, Object> inParms = DataBaseImpl.this.handerParameters(nsql.getArgs());
+                    String paramStr = SqlUtils.setToPreStatment(inParms, (PreparedStatement) statement);
                 } else {
                     statement = DataBaseImpl.this.getStatement(preparedSql);
                 }
