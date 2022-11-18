@@ -376,7 +376,7 @@ public class MDataBaseImpl implements MDataBase {
         ArrayList<Map<Integer, Object>> varList = new ArrayList<Map<Integer, Object>>();
         boolean same=this.convertArgument(mdFullMethodName,vParametersList,sqlList,varList);
         Assert.notEmpty(sqlList);
-        if(same){
+        if(same){//如果相同，则优化为批处理
             return this.dataBase.update(sqlList.get(0),varList);
         }else {
             return this.dataBase.update(sqlList.toArray(new String[0]),

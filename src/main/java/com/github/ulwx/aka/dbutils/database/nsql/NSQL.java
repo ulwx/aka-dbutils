@@ -105,9 +105,13 @@ public final class NSQL {
     /**
      * 根据md文件里的方法名和参数，获取NSQL对象
      *
-     * @param mdPath     ：md文件的包路径全名称，如com.github.ulwx.database.test.SysRightDao.md；
-     *                   或固定值"sql"指示methodName为SQL语句内容。
-     * @param methodName ：（1）md里对应的方法名例如 getDataCount ；（2）或为SQL语句（如果mdPath="sql"）
+     * @param mdPath     ：有两种表含义。<ul>
+     *                   <li>md文件的包路径全名称，如com.github.ulwx.database.test.SysRightDao.md。</li>
+     *                  <li>固定值sql : 表示methodName参数的内容其实为SQL语句（语句里可以带#{sname}参数占位符）。</li>
+     *                   </ul>
+     * @param methodName ：methodName根据mdPath具体内容分别为两种含义。
+     *                   （1）md里对应的方法名例如 getDataCount ；
+     *                   （2）为SQL语句（如果mdPath="sql"）
      * @param args       ：存放参数的map或JavaBean
      * @return 返回NSQL对象
      * @throws Exception 异常
