@@ -21,27 +21,13 @@ import java.util.Vector;
 
 public class JdbcRowSetImpl extends BaseRowSet implements JdbcRowSet, Joinable {
 
-
     private Connection conn;
-
-
     private PreparedStatement ps;
-
-
     private ResultSet rs;
-
-
     private RowSetMetaDataImpl rowsMD;
-
-
     private ResultSetMetaData resMD;
-
-
     private Vector<Integer> iMatchColumns;
-
-
     private Vector<String> strMatchColumns;
-
 
     protected transient JdbcRowSetResourceBundle resBundle;
 

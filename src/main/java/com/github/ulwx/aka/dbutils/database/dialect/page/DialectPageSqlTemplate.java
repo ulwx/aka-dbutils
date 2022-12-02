@@ -74,6 +74,7 @@ public class DialectPageSqlTemplate {
             case MySQLDialect:
             case MySQLInnoDBDialect:
             case MySQLMyISAMDialect:
+            case HiveDialect:
             case ParadoxDialect:
             case ClickHouseDialect:
             case TextDialect:
@@ -172,6 +173,7 @@ public class DialectPageSqlTemplate {
             case MySQL5InnoDBDialect:
             case MySQL8Dialect:
             case MySQLDialect:
+            case HiveDialect:
             case MySQLInnoDBDialect:
             case MySQLMyISAMDialect:
             case ParadoxDialect:

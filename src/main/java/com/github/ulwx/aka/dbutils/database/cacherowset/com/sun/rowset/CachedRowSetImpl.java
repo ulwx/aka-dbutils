@@ -28,135 +28,50 @@ import java.util.*;
 
 
 public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetInternal, Serializable, Cloneable, CachedRowSet {
-
-
     private SyncProvider provider;
-
-
     private RowSetReader rowSetReader;
-
-
     private RowSetWriter rowSetWriter;
-
-
     private transient Connection conn;
-
-
     private transient ResultSetMetaData RSMD;
-
-
     private RowSetMetaDataImpl RowSetMD;
-
     // Properties of this RowSet
-
-
     private int keyCols[];
-
-
     private String tableName;
-
-
     private Vector<Object> rvh;
-
-
     private int cursorPos;
-
-
     private int absolutePos;
-
-
     private int numDeleted;
-
-
     private int numRows;
-
-
     private InsertRow insertRow;
-
-
     private boolean onInsertRow;
-
-
     private int currentRow;
-
-
     private boolean lastValueNull;
-
-
     private SQLWarning sqlwarn;
-
-
     private String strMatchColumn = "";
-
-
     private int iMatchColumn = -1;
-
-
     private RowSetWarning rowsetWarning;
-
-
     private String DEFAULT_SYNC_PROVIDER = RIOptimisticProvider.class.getName();
-
-
     private boolean dbmslocatorsUpdateCopy;
-
-
     private transient ResultSet resultSet;
-
-
     private int endPos;
-
-
     private int prevEndPos;
-
-
     private int startPos;
-
-
     private int startPrev;
-
-
     private int pageSize;
-
-
     private int maxRowsreached;
-
     private boolean pagenotend = true;
-
-
     private boolean onFirstPage;
-
-
     private boolean onLastPage;
-
-
     private int populatecallcount;
-
-
     private int totalRows;
-
-
     private boolean callWithCon;
-
-
     private CachedRowSetReader crsReader;
-
-
     private Vector<Integer> iMatchColumns;
-
-
     private Vector<String> strMatchColumns;
-
-
     private boolean tXWriter = false;
-
-
     private TransactionalWriter tWriter = null;
-
     protected transient JdbcRowSetResourceBundle resBundle;
-
     private boolean updateOnInsert;
-
 
     public CachedRowSetImpl() throws SQLException {
 
@@ -195,16 +110,13 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
 
     }
 
-
     public CachedRowSetImpl(@SuppressWarnings("rawtypes") Hashtable env) throws SQLException {
-
 
         try {
             resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
-
         if (env == null) {
             throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.nullhash").toString());
         }
@@ -407,10 +319,16 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 updateOnInsert = true;
             md.setCaseSensitive(col, rsmd.isCaseSensitive(col));
             md.setCurrency(col, rsmd.isCurrency(col));
-            md.setNullable(col, rsmd.isNullable(col));
-            md.setSigned(col, rsmd.isSigned(col));
-            md.setSearchable(col, rsmd.isSearchable(col));
 
+            md.setNullable(col, rsmd.isNullable(col));
+            try {
+                md.setSigned(col, rsmd.isSigned(col));
+            }catch (Exception e){
+            }
+            try {
+                md.setSearchable(col, rsmd.isSearchable(col));
+            }catch (Exception e){
+            }
             int size = rsmd.getColumnDisplaySize(col);
             if (size < 0) {
                 size = 0;
@@ -418,24 +336,34 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
             md.setColumnDisplaySize(col, size);
             md.setColumnLabel(col, rsmd.getColumnLabel(col));
             md.setColumnName(col, rsmd.getColumnName(col));
-            md.setSchemaName(col, rsmd.getSchemaName(col));
+            try {
+                md.setSchemaName(col, rsmd.getSchemaName(col));
+            }catch (Exception e){
+
+            }
 
             int precision = rsmd.getPrecision(col);
             if (precision < 0) {
                 precision = 0;
             }
             md.setPrecision(col, precision);
-
-
             int scale = rsmd.getScale(col);
             if (scale < 0) {
                 scale = 0;
             }
             md.setScale(col, scale);
-            md.setTableName(col, rsmd.getTableName(col));
-            md.setCatalogName(col, rsmd.getCatalogName(col));
-            md.setColumnType(col, rsmd.getColumnType(col));
-            md.setColumnTypeName(col, rsmd.getColumnTypeName(col));
+            try {
+                md.setTableName(col, rsmd.getTableName(col));
+            }catch (Exception e){}
+            try {
+                md.setCatalogName(col, rsmd.getCatalogName(col));
+            }catch (Exception e){};
+            try {
+                md.setColumnType(col, rsmd.getColumnType(col));
+            }catch (Exception e){};
+            try {
+                md.setColumnTypeName(col, rsmd.getColumnTypeName(col));
+            }catch (Exception e){};
         }
 
         if (conn != null) {
@@ -890,7 +818,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, RowSetIntern
                 else
                     continue;
         }
-        throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalcolnm").toString());
+        throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalcolnm").toString()+"["+name+"]");
 
     }
 

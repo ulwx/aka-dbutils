@@ -103,7 +103,8 @@ public enum DBMS {
     TeradataDialect,//
     TimesTenDialect,//
     ClickHouseDialect,
-    UnsupportDialect;
+    HiveDialect,
+    UnknownDialect;
 
 
     private static final String SKIP_ROWS = "$SKIP_ROWS";
@@ -160,7 +161,9 @@ public enum DBMS {
         } else if (isHSQLFamily()) {
             dbType = DBType.HSQL;
             this.checkSql = "VALUES (1)";
-        } else {
+        } else if (isHiveFamily()) {
+            dbType = DBType.HIVE;
+        }else {
             dbType = DBType.OTHER;
         }
     }
@@ -364,14 +367,23 @@ public enum DBMS {
     public boolean isClickHouseFamily() {
         return this.toString().startsWith("ClickHouse");
     }
-
+    public boolean isHiveFamily() {
+        return this.toString().startsWith("Hive");
+    }
     public boolean supportGeneratedKeysForInsert(){
-        if(this.isClickHouseFamily() || this.isOracleFamily())
+        if(this.isClickHouseFamily()
+                || this.isOracleFamily()
+                || this.isHiveFamily())
             return false;
         return true;
     }
+
+    /**
+     * 数据库是否支持 commit 和 rollback
+     * @return
+     */
     public boolean supportTransaction(){
-        if(this.isClickHouseFamily())
+        if(this.isClickHouseFamily() || this.isHiveFamily())
             return false;
         return true;
     }
@@ -492,7 +504,8 @@ public enum DBMS {
     }
 
     public String escapeLeft(){
-        if (this.isMySqlFamily() || this.isSQLiteFamily() || this.isClickHouseFamily()) {
+        if (this.isMySqlFamily() || this.isSQLiteFamily() || this.isClickHouseFamily()
+        || this.isHiveFamily()) {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "[";
@@ -501,7 +514,9 @@ public enum DBMS {
         }
     }
     public String escapeRight(){
-        if (this.isMySqlFamily() || this.isSQLiteFamily()|| this.isClickHouseFamily()) {
+
+        if (this.isMySqlFamily() || this.isSQLiteFamily()|| this.isClickHouseFamily()
+                || this.isHiveFamily()) {
             return "`";
         }else if (this.isSQLServerFamily()) {
             return "]";

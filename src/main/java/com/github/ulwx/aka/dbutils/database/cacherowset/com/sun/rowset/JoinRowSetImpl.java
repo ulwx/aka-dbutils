@@ -15,33 +15,15 @@ import java.util.*;
 
 
 public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
-
     private Vector<CachedRowSetImpl> vecRowSetsInJOIN;
-
-
     private CachedRowSetImpl crsInternal;
-
-
     private Vector<Integer> vecJoinType;
-
-
     private Vector<String> vecTableNames;
-
-
     private int iMatchKey;
-
-
     private String strMatchKey;
-
-
     boolean[] supportedJOINs;
-
-
     private WebRowSet wrs;
-
-
     public JoinRowSetImpl() throws SQLException {
-
         vecRowSetsInJOIN = new Vector<CachedRowSetImpl>();
         crsInternal = new CachedRowSetImpl();
         vecJoinType = new Vector<Integer>();
@@ -57,7 +39,6 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
         }
 
     }
-
 
     public void addRowSet(Joinable rowset) throws SQLException {
         boolean boolColId, boolColName;
@@ -166,15 +147,11 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
 
         addRowSet((Joinable) rowset);
     }
-
-
     public void addRowSet(RowSet rowset, String columnName) throws SQLException {
         //passing the rowset as well as the columnIdx to form the joinrowset.
         ((CachedRowSetImpl) rowset).setMatchColumn(columnName);
         addRowSet((Joinable) rowset);
     }
-
-
     public void addRowSet(RowSet[] rowset,
                           int[] columnIdx) throws SQLException {
         //validate if length of rowset array is same as length of int array.
@@ -189,8 +166,6 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
         } //end if
 
     }
-
-
     public void addRowSet(RowSet[] rowset,
                           String[] columnName) throws SQLException {
         //validate if length of rowset array is same as length of int array.
@@ -206,14 +181,10 @@ public class JoinRowSetImpl extends WebRowSetImpl implements JoinRowSet {
         } //end if
 
     }
-
-
     @SuppressWarnings("rawtypes")
     public Collection getRowSets() throws SQLException {
         return vecRowSetsInJOIN;
     }
-
-
     public String[] getRowSetNames() throws SQLException {
         Object[] arr = vecTableNames.toArray();
         String[] strArr = new String[arr.length];

@@ -246,24 +246,40 @@ public class SqlUtils {
                     if(tableColumCommentList.get(i)!=null){
                         co.setRemarks(tableColumCommentList.get(i).get(co.getColumn_name()));
                     } else {
-                        String remark = rs.getString("REMARKS");
-                        if(remark==null) remark="";
-                        co.setRemarks(remark);
+                        try {
+                            String remark = rs.getString("REMARKS");
+                            if(remark==null) remark="";
+                            co.setRemarks(remark);
+                        }catch (Exception ex) {
+                        }
                     }
 
                     co.setTable_cat(rs.getString("TABLE_CAT"));
                     co.setTable_name(rs.getString("TABLE_NAME"));
                     co.setTable_schem(rs.getString("TABLE_SCHEM"));
                     co.setType_name(rs.getString("TYPE_NAME"));
-                    co.setIs_autoincrement(rs.getString("IS_AUTOINCREMENT"));
+                    try {
+                        co.setIs_autoincrement(rs.getString("IS_AUTOINCREMENT"));
+                    }catch (Exception ex) {
+                    }
                     co.setColumn_def(rs.getString("COLUMN_DEF"));
                     try {
                         co.setIs_generatedcolumn(rs.getString("IS_GENERATEDCOLUMN"));
                     } catch (Exception ex) {
                     }
-                    co.setSource_data_type(rs.getShort("SOURCE_DATA_TYPE"));
-                    co.setDecimal_digits(rs.getInt("DECIMAL_DIGITS"));
-                    columMap.put(rs.getString("COLUMN_NAME"), co);
+                    try {
+                        co.setSource_data_type(rs.getShort("SOURCE_DATA_TYPE"));
+                    }catch (Exception ex) {
+                    }
+                    try {
+                        co.setDecimal_digits(rs.getInt("DECIMAL_DIGITS"));
+                    }catch (Exception ex) {
+                    }
+                    try {
+                        columMap.put(rs.getString("COLUMN_NAME"), co);
+                    }catch (Exception ex) {
+                    }
+
 
 
                 }

@@ -13,6 +13,7 @@ public enum DBType {
     INFOMIX,
     DERBY,
     ClickHouse,
+    HIVE,
     OTHER
 
 }

@@ -131,14 +131,14 @@ public class Column {
     private String table_name = "";
     private String column_name = "";
     private int data_type;// SQL type from java.sql.Types
-    private String type_name;
+    private String type_name="";
     private int column_size;
-    private String remarks;
-    private String is_nullable;// "YES","NO" or ""
-    private String is_autoincrement;// "YES","NO" or ""
+    private String remarks="";
+    private String is_nullable="";// "YES","NO" or ""
+    private String is_autoincrement="";// "YES","NO" or ""
     private int decimal_digits;
-    private String column_def;
-    private String is_generatedcolumn;// "YES" "NO" or ""
+    private String column_def="";
+    private String is_generatedcolumn="";// "YES" "NO" or ""
     private short source_data_type;
 
 

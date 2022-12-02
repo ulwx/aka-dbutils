@@ -36,12 +36,12 @@ public class DialectClient implements Serializable {
                                      Integer majorVersion, int minorVersion) {
         if ("CUBRID".equalsIgnoreCase(databaseName))
             return DBMS.CUBRIDDialect;
-        else if("ClickHouse".equalsIgnoreCase(databaseName)){
+        if ("ClickHouse".equalsIgnoreCase(databaseName)) {
             return DBMS.ClickHouseDialect;
         }
-        else if ("HSQL Database Engine".equals(databaseName))
+        if ("HSQL Database Engine".equals(databaseName))
             return DBMS.HSQLDialect;
-        else if ("H2".equals(databaseName))
+        if ("H2".equals(databaseName))
             return DBMS.H2Dialect;
         if ("MySQL".equals(databaseName)) {
             if (majorVersion < 5)
@@ -78,9 +78,9 @@ public class DialectClient implements Serializable {
                     return DBMS.PostgreSQL92Dialect;
                 }
                 return DBMS.PostgreSQL9Dialect;
-            }else if (majorVersion == 8 && minorVersion >= 2) {
+            } else if (majorVersion == 8 && minorVersion >= 2) {
                 return DBMS.PostgreSQL82Dialect;
-            }else if(majorVersion>=10){
+            } else if (majorVersion >= 10) {
                 return DBMS.PostgreSQL10Dialect;
             }
             return DBMS.PostgreSQL81Dialect;
@@ -109,6 +109,9 @@ public class DialectClient implements Serializable {
                 default:
             }
             return DBMS.IngresDialect;
+        }
+        if(databaseName.startsWith("Apache Hive")){
+            return DBMS.HiveDialect;
         }
         if (databaseName.startsWith("Microsoft SQL Server")) {
             switch (majorVersion) {
@@ -160,7 +163,7 @@ public class DialectClient implements Serializable {
             return DBMS.FirebirdDialect;
         if (StringUtils.containsIgnoreCase(databaseName, "sqlite"))
             return DBMS.SQLiteDialect;
-        return null;
+        return DBMS.UnknownDialect;
     }
 
 

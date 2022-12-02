@@ -91,7 +91,7 @@ public class MDbUtils extends BaseDao {
     }
     /**
      * 执行sql脚本，packageFullName指定SQL脚本所在的包（全路径），sqlFileName为脚本文件的名称，脚本文件里存放的是SQL脚本，
-     * 整个脚本的执行在一个事务里，如果执行过程中出错根据continueIfError参数决定是否则抛出异常并回滚。
+     * 整个脚本的执行在一个事务里，如果执行过程中出错会根据continueIfError参数决定是否抛出异常并回滚。
      * 可以指定脚本在执行过程中如果出现警告是否抛出异常并回滚，脚本是按每个语句依次执行，脚本里每个语句的结束边界是根据delimiters和换行共同决定。
      *
      * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。

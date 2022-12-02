@@ -220,7 +220,7 @@ public class DataBaseImpl implements DataBase {
             }else{
                 if(!this.getDataBaseType().supportTransaction()){
                     this.conn.setAutoCommit(true);
-                    log.warn(this.getDataBaseType()+"不支持数据库连接设置AutoCommit=false," +
+                    log.warn(this.getDataBaseType()+"不支持数据库连接设置为AutoCommit=false," +
                             "已重新设置为true!");
                 }else {
                     this.conn.setAutoCommit(false);
@@ -1867,7 +1867,7 @@ public class DataBaseImpl implements DataBase {
             twoInt[0] = -1;
             twoInt[1] = -1;
             if (e instanceof DbException) throw (DbException) e;
-            throw new DbException(e);
+            throw new DbException(sqltext,e);
 
         } finally {
             try {
@@ -4199,11 +4199,11 @@ public class DataBaseImpl implements DataBase {
 
                 command.append(str);
                 command.append(LINE_SEPARATOR);
-                if (StringUtils.hasText(command.toString())) {
+                if (StringUtils.hasText(command.toString().trim())) {
                     try {
                         if (DbContext.permitDebugLog())
-                            log.debug("run sql- " + command.toString() + "");
-                        executePreparedStatement(command.toString());
+                            log.debug("run sql- " + command.toString().trim() + "");
+                        executePreparedStatement(command.toString().trim());
                         if (DbContext.permitDebugLog())
                             log.debug("run sql- Succeeded  ");
 
@@ -4218,7 +4218,7 @@ public class DataBaseImpl implements DataBase {
                                 }
                             }
                         } else {
-                            throw new DbException("[" + command.toString() + "]", e);
+                            throw new DbException("[" + command.toString().trim() + "]", e);
                         }
                     }
                 }
@@ -4295,7 +4295,9 @@ public class DataBaseImpl implements DataBase {
                 } else {
                     statement = DataBaseImpl.this.getStatement(preparedSql);
                 }
-                statement.setEscapeProcessing(escapeProcessing);
+                try {
+                    statement.setEscapeProcessing(escapeProcessing);
+                }catch (Exception es){}
                 String debugSql = "";
                 if (handArgs) {
                     Collection<Object> vParameters = CollectionUtils.getSortedValues(nsql.getArgs());

@@ -11,32 +11,14 @@ import java.util.ResourceBundle;
 
 
 public class JdbcRowSetResourceBundle implements Serializable {
-
-
     private static String fileName;
-
-
     private transient PropertyResourceBundle propResBundle;
-
-
     private static volatile JdbcRowSetResourceBundle jpResBundle;
-
-
     private static final String PROPERTIES = "properties";
-
-
     private static final String UNDERSCORE = "_";
-
-
     private static final String DOT = ".";
-
-
     private static final String SLASH = "/";
-
-
     private static final String PATH = JdbcRowSetResourceBundle.class.getPackage().getName() + "/RowSetResourceBundle";
-
-
     private JdbcRowSetResourceBundle() throws IOException {
         // Try to load the resource bundle according
         // to the locale. Else if no bundle found according
@@ -53,8 +35,6 @@ public class JdbcRowSetResourceBundle implements Serializable {
                 locale, Thread.currentThread().getContextClassLoader());
 
     }
-
-
     public static JdbcRowSetResourceBundle getJdbcRowSetResourceBundle()
             throws IOException {
 
@@ -68,13 +48,10 @@ public class JdbcRowSetResourceBundle implements Serializable {
         return jpResBundle;
     }
 
-
     @SuppressWarnings("rawtypes")
     public Enumeration getKeys() {
         return propResBundle.getKeys();
     }
-
-
     public Object handleGetObject(String key) {
         return propResBundle.handleGetObject(key);
     }

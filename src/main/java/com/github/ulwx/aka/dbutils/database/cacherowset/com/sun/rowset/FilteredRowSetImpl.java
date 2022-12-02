@@ -16,31 +16,20 @@ import java.util.Hashtable;
 public class FilteredRowSetImpl extends WebRowSetImpl implements Serializable, Cloneable, FilteredRowSet {
 
     private Predicate p;
-
     private boolean onInsertRow = false;
-
-
     public FilteredRowSetImpl() throws SQLException {
         super();
     }
-
-
     @SuppressWarnings("rawtypes")
     public FilteredRowSetImpl(Hashtable env) throws SQLException {
         super(env);
     }
-
-
     public void setFilter(Predicate p) throws SQLException {
         this.p = p;
     }
-
-
     public Predicate getFilter() {
         return this.p;
     }
-
-
     protected boolean internalNext() throws SQLException {
         // CachedRowSetImpl.next() internally calls
         // this(crs).internalNext() NOTE: this holds crs object

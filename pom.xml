@@ -127,6 +127,22 @@
 			<classifier>all</classifier>
 			<scope>true</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.hive</groupId>
+			<artifactId>hive-jdbc</artifactId>
+			<version>3.1.3</version>
+			<scope>true</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-log4j12</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>log4j-slf4j-impl</artifactId>
+					<groupId>org.apache.logging.log4j</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
 	<scm>
 		<connection>https://github.com/ulwx/aka-dbutils.git</connection>

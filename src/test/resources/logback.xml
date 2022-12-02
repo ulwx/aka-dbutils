@@ -41,7 +41,7 @@
     <logger name="org.apache.commons" additivity="false" level="ERROR">
         <appender-ref  ref="stdout"/>
     </logger>
-    <logger name="org.apache.struts2" additivity="false" level="ERROR">
+    <logger name="org.apache" additivity="false" level="ERROR">
         <appender-ref  ref="stdout"/>
     </logger>
     <logger name="com.opensymphony" additivity="false" level="ERROR">
