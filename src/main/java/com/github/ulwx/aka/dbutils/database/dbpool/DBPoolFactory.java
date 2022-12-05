@@ -58,6 +58,17 @@ public class DBPoolFactory {
 
     static class PoolType {
         public final static String TOMCAT_DB_POOL = "tomcatdbpool";
+        public final static String ALiBABA_DRUID="druid";
+        public final static String HikariCP="HikariCP";
+        public final static Map<String,DBPool> map = new HashMap<>();
+        static{
+            map.put(TOMCAT_DB_POOL,TomcatDBPoolImpl.instance);
+            map.put(ALiBABA_DRUID,DruidDBPoolImpl.instance);
+            map.put(HikariCP,HikariDBPoolImpl.instance);
+        }
+       public static DBPool getDBPool(String PoolType){
+           return map.get(PoolType);
+       }
     }
 
     public ReadConfig getReadConfig() {
@@ -178,21 +189,23 @@ public class DBPoolFactory {
             String maxPoolSize = StringUtils.trim(map.get("maxPoolSize"), "30");// 默认30个
             String minPoolSize = StringUtils.trim(map.get("minPoolSize"), "10");// 默认20个
 
+            String removeAbandoned = StringUtils.trim(map.get("removeAbandoned"), "false");
+            String removeAbandonedTimeout = StringUtils.trim(map.get("removeAbandonedTimeout"), "1800");
 
             ConcurrentHashMap<String, DataSource> slaveDataSources = new ConcurrentHashMap<String, DataSource>();
             DataSource ds = null;
-            if (type.equals(PoolType.TOMCAT_DB_POOL)) {
-                log.debug("driverClassName=" + driverClassName);
-                ds = getNewDataSourceFromTomcatDb(url, user, password, checkoutTimeout, maxPoolSize, minPoolSize,
-                        maxStatements, maxIdleTime, idleConnectionTestPeriod, driverClassName);
-                //判断ds是否可以获得连接
-                boolean res = DBPoolFactory.startDataSource(ds);
-                if (!res) {
-                    close(ds, PoolType.TOMCAT_DB_POOL);
-                    return;
-                }
-                slaveDataSources = getSlaveServerConfig(slaveServer, PoolType.TOMCAT_DB_POOL, driverClassName);
+            log.debug("driverClassName=" + driverClassName);
+
+            DBPool dbPool=PoolType.getDBPool(type);
+            ds = dbPool.getNewDataSource(url, user, password, checkoutTimeout, maxPoolSize, minPoolSize,
+                    maxStatements, maxIdleTime, idleConnectionTestPeriod, driverClassName,removeAbandoned,removeAbandonedTimeout);
+            //判断ds是否可以获得连接
+            boolean res = DBPoolFactory.startDataSource(ds);
+            if (!res) {
+                dbPool.close(ds);
+                return;
             }
+            slaveDataSources = getSlaveServerConfig(slaveServer, PoolType.TOMCAT_DB_POOL, driverClassName);
 
             masterDataSoruce.setValue(ds);
             slaverDataSourceMap.setValue(slaveDataSources);
@@ -375,14 +388,14 @@ public class DBPoolFactory {
                 String s_maxIdleTime = StringUtils.trim(slaveConfig.get("maxIdleTime"), "600");// 以秒为单位，默认空隙600秒后回收
                 String s_maxPoolSize = StringUtils.trim(slaveConfig.get("maxPoolSize"), "30");// 默认30个
                 String s_minPoolSize = StringUtils.trim(slaveConfig.get("minPoolSize"), "10");// 默认20个
+                String s_removeAbandoned = StringUtils.trim(slaveConfig.get("removeAbandoned"), "false");
+                String s_removeAbandonedTimeout = StringUtils.trim(slaveConfig.get("removeAbandonedTimeout"), "1800");
 
                 DataSource s_ds = null;
-                if (poolType.equals(PoolType.TOMCAT_DB_POOL)) {
-                    s_ds = getNewDataSourceFromTomcatDb(s_url, s_user, s_password, s_checkoutTimeout, s_maxPoolSize,
-                            s_minPoolSize, s_maxStatements, s_maxIdleTime, s_idleConnectionTestPeriod, driverClassName);
-                } else {
-                    continue;
-                }
+                DBPool dbPool=PoolType.getDBPool(poolType);
+                s_ds = dbPool.getNewDataSource(s_url, s_user, s_password, s_checkoutTimeout, s_maxPoolSize,
+                        s_minPoolSize, s_maxStatements, s_maxIdleTime, s_idleConnectionTestPeriod, driverClassName,s_removeAbandoned,s_removeAbandonedTimeout);
+
                 if (s_ds == null) {
                     log.error("无法从库连接池" + slaveServerName + "获取连接！数据源返回为空,忽略...");
                     continue;
@@ -391,11 +404,7 @@ public class DBPoolFactory {
                 boolean res = DBPoolFactory.startDataSource(s_ds);
                 if (!res) {// 不能获得连接
                     log.error("无法从库连接池" + slaveServerName + "获取连接！忽略....");
-                    if (poolType.equals(PoolType.TOMCAT_DB_POOL)) {
-                        close(s_ds, PoolType.TOMCAT_DB_POOL);
-                    } else {
-                        continue;
-                    }
+                    dbPool.close(s_ds);
                 } else {
                     slaveDataSources.put(slaveServerName, s_ds);
                 }
@@ -405,84 +414,6 @@ public class DBPoolFactory {
         return slaveDataSources;
     }
 
-    private static DataSource getNewDataSourceFromTomcatDb(
-            String url,
-            String user,
-            String password,
-            String checkoutTimeout,
-            String maxPoolSize,
-            String minPoolSize,
-            String maxStatements,
-            String maxIdleTime,
-            String idleConnectionTestPeriod,
-            String driverClassName) throws Exception {
-
-        Object poolProperties = configTomcatJdbcPoolProperties(url, user, password, checkoutTimeout,
-                maxPoolSize, minPoolSize, maxStatements,
-                maxIdleTime, idleConnectionTestPeriod, driverClassName);
-        DataSource datasource = (DataSource) Class.forName("org.apache.tomcat.jdbc.pool.DataSource")
-                .getDeclaredConstructor().newInstance();
-
-        ReflectionUtil.invoke(datasource, "setPoolProperties",
-                "org.apache.tomcat.jdbc.pool.PoolConfiguration"
-                , poolProperties);
-        DataSource ds = datasource;
-        return ds;
-
-        // 从库的设置
-
-    }
-
-
-    private static Object configTomcatJdbcPoolProperties(String url,
-                                                         String user,
-                                                         String password,
-                                                         String checkoutTimeout,
-                                                         String maxPoolSize,
-                                                         String minPoolSize,
-                                                         String maxStatements,
-                                                         String maxIdleTime,
-                                                         String idleConnectionTestPeriod,
-                                                         String driverClassName) throws Exception {
-
-        //PoolProperties p1=new PoolProperties();
-        Object p = Class.forName("org.apache.tomcat.jdbc.pool.PoolProperties").getDeclaredConstructor().newInstance();
-        ReflectionUtil.invoke(p, "setUrl", String.class, url);
-        ReflectionUtil.invoke(p, "setDriverClassName", String.class, driverClassName);
-        if(StringUtils.hasText(user)) {
-            ReflectionUtil.invoke(p, "setUsername", String.class, user);
-            ReflectionUtil.invoke(p, "setPassword", String.class, password);
-        }
-        ReflectionUtil.invoke(p, "setJmxEnabled", boolean.class, true);
-        ReflectionUtil.invoke(p, "setTestWhileIdle", boolean.class, true);
-        ReflectionUtil.invoke(p, "setTestOnBorrow", boolean.class, false);
-        ReflectionUtil.invoke(p, "setTestOnReturn", boolean.class, false);
-        if (StringUtils.containsIgnoreCase(driverClassName, "oracle")) {
-            ReflectionUtil.invoke(p, "setValidationQuery", String.class, "select 1 from dual");
-        } else {
-            ReflectionUtil.invoke(p, "setValidationQuery", String.class, "SELECT 1");
-        }
-
-        int test = Integer.valueOf(idleConnectionTestPeriod);// 秒
-
-        ReflectionUtil.invoke(p, "setValidationInterval", long.class, test * 1000);
-        ReflectionUtil.invoke(p, "setTimeBetweenEvictionRunsMillis", int.class, 30000);
-
-        ReflectionUtil.invoke(p, "setMaxActive", int.class, Integer.valueOf(maxPoolSize));
-        ReflectionUtil.invoke(p, "setInitialSize", int.class, Integer.valueOf(minPoolSize));
-        ReflectionUtil.invoke(p, "setMaxWait", int.class, Integer.valueOf(checkoutTimeout));
-
-        ReflectionUtil.invoke(p, "setMinEvictableIdleTimeMillis", int.class,
-                Integer.valueOf(maxIdleTime) * 1000);
-        ReflectionUtil.invoke(p, "setMinIdle", int.class, Integer.valueOf(minPoolSize));
-        ReflectionUtil.invoke(p, "setMaxIdle", int.class, Integer.valueOf(maxPoolSize));
-        ReflectionUtil.invoke(p, "setLogAbandoned", boolean.class, true);
-        ReflectionUtil.invoke(p, "setRemoveAbandonedTimeout", int.class, 300 * 10);
-        ReflectionUtil.invoke(p, "setRemoveAbandoned", boolean.class, true);
-        ReflectionUtil.invoke(p, "setJdbcInterceptors", String.class, "org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
-        return p;
-
-    }
 
     private static boolean startDataSource(DataSource ds) {
         Connection con = null;
@@ -750,14 +681,7 @@ public class DBPoolFactory {
     }
 
     private static void close(DataSource dataSource, String poolType) throws Exception {
-
-        Assert.notNull(dataSource);
-        if (poolType.equals(PoolType.TOMCAT_DB_POOL)) {
-            ReflectionUtil.invoke(dataSource, "close");
-        } else {
-
-        }
-
+        PoolType.getDBPool(poolType).close(dataSource);
     }
 
     public static void close(String xmlFileName, String poolName, String poolType) {

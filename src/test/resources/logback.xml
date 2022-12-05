@@ -50,9 +50,9 @@
     <logger name="ru.yandex.clickhouse" additivity="false" level="ERROR">
         <appender-ref  ref="stdout"/>
     </logger>
-<!--    <logger name="com.github.ulwx.aka.dbutils.database.nsql" additivity="false" level="INFO">-->
-<!--        <appender-ref  ref="stdout"/>-->
-<!--    </logger>-->
+    <logger name="com.github.ulwx.aka.dbutils.database.nsql" additivity="false" level="INFO">
+        <appender-ref  ref="stdout"/>
+    </logger>
     <root level="DEBUG">
         <appender-ref ref="stdout"/>
 <!--        <appender-ref ref="logFile"/>-->

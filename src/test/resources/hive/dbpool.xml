@@ -18,7 +18,7 @@
     </setting>
     <!--
     每个<dbpool>元素配置对应一个数据库连接池
-    type属性：现在只能指定tomcatdbpool，表示是使用的tomcat jdbc数据库连接池
+     type属性：指定数据库连接池,可以使用tomcatdbpool,druid,HikariCP
     table-name-rule属性：指定本数据源对应数据库的表名到javaBean类名的转换规则，覆盖setting里的全局规则
     table-colum-rule属性：指定本数据源对应数据库里表字段与javaBean属性名的转换规则，覆盖setting里的全局规则
     driverClassName：数据库的驱动名称
@@ -33,6 +33,8 @@
     会保留到minPoolSize指定的数量。此参数以秒为单位。
     maxStatements：缓存的statement数
     encrypt : password属性是否加密，0：不加密 1：加密（采用的是aes加密，通过DBPoolFactory.aesEncrypt(dbpassword)加密)
+     removeAbandoned : 默认false，表示当连接超过removeAbandonedTimeout时仍没有被关闭强制回收。
+    removeAbandonedTimeout: 单位秒，即连接超过设置的秒后没有关闭会被强制回收。removeAbandoned为true时才有意义，如果不设置默认，默认1800秒，即30分钟
     -->
 
 

@@ -44,6 +44,18 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid</artifactId>
+			<version>1.2.14</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>5.0.1</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib-nodep</artifactId>
 			<version>3.3.0</version>
@@ -140,6 +152,10 @@
 				<exclusion>
 					<artifactId>log4j-slf4j-impl</artifactId>
 					<groupId>org.apache.logging.log4j</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jdk.tools</artifactId>
+					<groupId>jdk.tools</groupId>
 				</exclusion>
 			</exclusions>
 		</dependency>
