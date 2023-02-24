@@ -88,7 +88,7 @@
         <property name="minPoolSize">2</property>
         <property name="maxStatements">20</property>
         <slaves>
-            <server name="db_teacher_slave1">
+            <server name="slave1">
                 <property name="driverClassName">org.postgresql.Driver</property>
                 <property name="url">jdbc:postgresql://192.168.137.200:5432/db_teacher_slave1</property>
                 <property name="username">postgres</property>
@@ -100,7 +100,7 @@
                 <property name="minPoolSize">2</property>
                 <property name="maxStatements">20</property>
             </server>
-            <server name="db_teacher_slave2">
+            <server name="slave2">
                 <property name="driverClassName">org.postgresql.Driver</property>
                 <property name="url">jdbc:postgresql://192.168.137.200:5432/db_teacher_slave2</property>
                 <property name="username">postgres</property>

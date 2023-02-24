@@ -90,7 +90,7 @@
         <property name="minPoolSize">2</property>
         <property name="maxStatements">20</property>
         <slaves>
-            <server name="db_teacher_slave1">
+            <server name="slave1">
                 <property name="driverClassName">org.h2.Driver</property>
                 <property name="url">jdbc:h2:file:D:/suncj/h2/dbdata/db_teacher_slave1;AUTO_SERVER=TRUE</property>
                 <property name="username">root</property>
@@ -102,7 +102,7 @@
                 <property name="minPoolSize">2</property>
                 <property name="maxStatements">20</property>
             </server>
-            <server name="db_teacher_slave2">
+            <server name="slave2">
                 <property name="driverClassName">org.h2.Driver</property>
                 <property name="url">jdbc:h2:file:D:/suncj/h2/dbdata/db_teacher_slave2;AUTO_SERVER=TRUE</property>
                 <property name="username">root</property>

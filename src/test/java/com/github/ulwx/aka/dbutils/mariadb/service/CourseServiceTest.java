@@ -1,7 +1,8 @@
 package com.github.ulwx.aka.dbutils.mariadb.service;
 
 import com.github.ulwx.aka.dbutils.database.*;
-import com.github.ulwx.aka.dbutils.database.MDbTransactionManager.PROPAGATION;
+import com.github.ulwx.aka.dbutils.database.transaction.AkaPropagationType;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionTemplate;
 import com.github.ulwx.aka.dbutils.mariadb.Utils;
 import com.github.ulwx.aka.dbutils.mariadb.dao.db_student.CourseDao;
 import com.github.ulwx.aka.dbutils.mariadb.dao.db_teacher.TeacherDao;
@@ -144,7 +145,7 @@ public class CourseServiceTest {
                 tDataBase.setValue(dataBase);
             }
         });
-        MDbTransactionManager.execute(()->{
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,()->{
             courseDao.testInsertWithMd();
             courseDao.testUpdate();
         });
@@ -156,7 +157,7 @@ public class CourseServiceTest {
 
     public void testTransactionManagerInner(){
 
-        MDbTransactionManager.execute(()->{
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,()->{
             courseDao.testUpdateInManager("update...1");
         });
     }
@@ -173,7 +174,7 @@ public class CourseServiceTest {
                 tDataBase.setValue(dataBase);
             }
         });
-        MDbTransactionManager.execute(()->{ //默认事务传播级别为PROPAGATION.REQUIRED
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,()->{ //默认事务传播级别为PROPAGATION.REQUIRED
             this.testTransactionManagerInner();
             courseDao.testUpdateInManager("update...2");
         });
@@ -187,8 +188,8 @@ public class CourseServiceTest {
     }
 
 
-    public void executeThrowException(PROPAGATION propagation){ //抛出异常
-        MDbTransactionManager.execute(propagation,()->{
+    public void executeThrowException(AkaPropagationType propagation){ //抛出异常
+        TransactionTemplate.execute(propagation,()->{
             courseDao.testUpdateInManager("update.exception");
             int i=1/0;
         });
@@ -207,10 +208,10 @@ public class CourseServiceTest {
         });
         Exception saveException=null;
         try {
-            MDbTransactionManager.execute(() -> { //① 默认事务传播级别为PROPAGATION.REQUIRED
+            TransactionTemplate.execute(AkaPropagationType.REQUIRED,() -> { //① 默认事务传播级别为PROPAGATION.REQUIRED
                 Exception throwException=null;
                 try {
-                    this.executeThrowException(PROPAGATION.REQUIRED);//抛出的异常虽然被捕获，但仍然会导致②的回滚
+                    this.executeThrowException(AkaPropagationType.REQUIRED);//抛出的异常虽然被捕获，但仍然会导致②的回滚
                 } catch (Exception e) {
                     throwException=e;
                 }
@@ -243,10 +244,10 @@ public class CourseServiceTest {
         });
         Exception saveException=null;
         try {
-            MDbTransactionManager.execute(() -> { //① 默认事务传播级别为PROPAGATION.REQUIRED
+            TransactionTemplate.execute(AkaPropagationType.REQUIRED,() -> { //① 默认事务传播级别为PROPAGATION.REQUIRED
                 Exception throwException=null;
                 try {
-                    this.executeThrowException(PROPAGATION.NESTED);//抛出的异常虽然被捕获，但仍然会导致②的回滚
+                    this.executeThrowException(AkaPropagationType.NESTED);//抛出的异常虽然被捕获，但仍然会导致②的回滚
                 } catch (Exception e) {
                     throwException=e;
                 }
@@ -281,10 +282,10 @@ public class CourseServiceTest {
         });
         Exception saveException=null;
         try {
-            MDbTransactionManager.execute(() -> { //① 默认事务传播级别为PROPAGATION.REQUIRED
+            TransactionTemplate.execute(AkaPropagationType.REQUIRED,() -> { //① 默认事务传播级别为PROPAGATION.REQUIRED
                 Exception throwException=null;
                 try {
-                    this.executeThrowException(PROPAGATION.REQUIRES_NEW);//抛出的异常虽然被捕获，但仍然会导致②的回滚
+                    this.executeThrowException(AkaPropagationType.REQUIRES_NEW);//抛出的异常虽然被捕获，但仍然会导致②的回滚
                 } catch (Exception e) {
                     throwException=e;
                 }
@@ -318,7 +319,7 @@ public class CourseServiceTest {
                 tDataBases.getValue().put(dataBase.getDbPoolName(),dataBase);
             }
         });
-        MDbTransactionManager.execute(()->{
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,()->{
             courseDao.testUpdateInManager("abcd1");
             teacherDao.testUpdateInManager("abcd2");
         });
@@ -336,7 +337,7 @@ public class CourseServiceTest {
     }
     public void testTransactionManagerForDiffDBInnner(){
 
-        MDbTransactionManager.execute(()->{
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,()->{
             courseDao.testUpdateInManager("abcd1");
             teacherDao.testUpdateInManager("abcd2");
         });
@@ -352,7 +353,7 @@ public class CourseServiceTest {
                 tDataBases.getValue().put(dataBase.getDbPoolName(),dataBase);
             }
         });
-        MDbTransactionManager.execute(()->{
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,()->{
             testTransactionManagerForDiffDBInnner();
             courseDao.testUpdateInManager("abcdx");
             teacherDao.testUpdateInManager("abcdy");
@@ -382,7 +383,7 @@ public class CourseServiceTest {
             }
         });
 
-        MDbTransactionManager.execute(()->{ //②
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,()->{ //②
             try {
                 testTransactionManagerException(); // 嵌套事务
             }catch (Exception e){ //嵌套事务抛出的异常被捕获不会引起外层事务的回滚，即不会引起②处整个方法事务的回滚，即③，④处不会被回滚
@@ -406,13 +407,13 @@ public class CourseServiceTest {
 
     }
     public void testTransactionManagerException(){
-        MDbTransactionManager.execute(PROPAGATION.NESTED,()->{ //①
+        TransactionTemplate.execute(AkaPropagationType.NESTED,()->{ //①
             courseDao.testUpdateInManager("87654321");
             testTransactionManagerExceptionMore();//会导致嵌套事务回滚，即①的执行全部回滚
         });
     }
     public void testTransactionManagerExceptionMore(){
-        MDbTransactionManager.execute(PROPAGATION.REQUIRED,()->{
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,()->{
             teacherDao.testUpdateInManager("12345678");
              int f= 1/0;
         });

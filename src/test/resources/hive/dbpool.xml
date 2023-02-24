@@ -90,7 +90,7 @@
         <property name="minPoolSize">2</property>
         <property name="maxStatements">20</property>
         <slaves>
-            <server name="db_teacher_slave1">
+            <server name="slave1">
                 <property name="driverClassName">org.apache.hive.jdbc.HiveDriver</property>
                 <property name="url">jdbc:hive2://192.168.137.199:10000/db_teacher_slave1?hive.stats.column.autogather=false</property>
                 <property name="username">root</property>
@@ -102,7 +102,7 @@
                 <property name="minPoolSize">2</property>
                 <property name="maxStatements">20</property>
             </server>
-            <server name="db_teacher_slave2">
+            <server name="slave2">
                 <property name="driverClassName">org.apache.hive.jdbc.HiveDriver</property>
                 <property name="url">jdbc:hive2://192.168.137.199:10000/db_teacher_slave2?hive.stats.column.autogather=false</property>
                 <property name="username">root</property>

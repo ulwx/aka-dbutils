@@ -3,8 +3,8 @@ package com.github.ulwx.aka.dbutils.tidb.dao.db_student;
 import com.github.ulwx.aka.dbutils.database.DataBaseSet;
 import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
-import com.github.ulwx.aka.dbutils.database.MDbTransactionManager;
 import com.github.ulwx.aka.dbutils.database.nsql.CompilerTask;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionTemplate;
 import com.github.ulwx.aka.dbutils.tidb.Utils;
 import com.github.ulwx.aka.dbutils.tidb.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.tool.MD;
@@ -20,7 +20,10 @@ import org.junit.runners.MethodSorters;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 测试Mapper映射器的用法
@@ -385,7 +388,7 @@ public class CourseMpperTest {
 
     @Test
     public void testNestTransaction() {
-        MDbTransactionManager.execute(() -> {
+        TransactionTemplate.execute(() -> {
             testAddCourseAndReturnKey();
             testUpdateCourse();
         });
@@ -400,7 +403,7 @@ public class CourseMpperTest {
 
     //@Test
     public void testTransaction() {
-        MDbTransactionManager.execute(() -> {
+        TransactionTemplate.execute(() -> {
             testUpdateCourseManual();
             testNestTransaction();
             testUpdateCourseManual();

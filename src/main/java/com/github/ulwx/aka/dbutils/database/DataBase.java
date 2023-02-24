@@ -26,9 +26,9 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     }
 
     public static enum MainSlaveModeConnectMode {
-        // 如果是主从模式，并且是非事务性操作,如果是这种模式，则只去获取主库连接
+        //主库模式，总是获取主库连接。这个是默认方式
         Connect_MainServer,
-        // 如果是主从模式，并且是非事务性操作，如果是这种模式，则只去获取从库连接
+        //从库模式，总是获取从库连接
         Connect_SlaveServer,
         // 根据语句或是否含有事务来判断自动获取主库连接还是从库连接。如果是执行语句包含在事务里或者是insert，update，delete语句，则获取主库连接;
         // 如果为查询语句，并且不包含在事务里，会在从库里获取连接
@@ -73,13 +73,17 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
     default void connectDb(Connection connection, boolean externalControlConClose) {
     }
 
+    /**
+     * 是否是外部控制连接关闭
+     * @return
+     */
     default boolean isExternalControlConClose() {
         return false;
     }
 
     /**
      *根据配置文件（如dbpool.xml）里设置的连接池名称来获得连接.
-     * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
+     * @param dbPoolXmlFileNameAndDbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
      * 格式为：[配置xml文件的路径文件名称]#[连接池名称]
@@ -92,7 +96,7 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      *  </code></blockquote>
      * @throws DbException 异常
      */
-    void connectDb(String dbPoolName) throws DbException;
+    void connectDb(String dbPoolXmlFileNameAndDbPoolName) throws DbException;
 
     /**
      * 根据SQL从数据库查询记录，aka-dbutils会在内部封装SQL从而形成分页查询的SQL，最终返回当前页的结果集。
@@ -799,4 +803,8 @@ public interface DataBase extends DBObjectOperation, AutoCloseable {
      * @return
      */
     Connection getConnection(boolean force);
+
+    default DataSource getDataSource(){
+        return null;
+    }
 }

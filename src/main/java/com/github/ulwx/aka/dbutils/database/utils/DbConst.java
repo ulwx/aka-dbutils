@@ -32,7 +32,7 @@ public class DbConst {
         if (StringUtils.hasText(poolname)) {
             String[] strs = DBPoolFactory.parseRefDbPoolName(poolname);
             try {
-                Map<String, Map<String, String>> maps = DBPoolFactory.getInstance(strs[0]).getReadConfig().getProperties();
+                Map<String, Map<String, String>> maps = DBPoolFactory.getInstance(strs[0]).getReadConfig().getDbpoolProperties();
                 return StringUtils.trim(maps.get(strs[1]).get(propertyName));
             } catch (Exception e) {
                 if (e instanceof DbException) throw (DbException) e;

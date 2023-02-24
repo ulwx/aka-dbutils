@@ -2,6 +2,9 @@ package com.github.ulwx.aka.dbutils.database;
 
 import com.github.ulwx.aka.dbutils.database.DataBase.MainSlaveModeConnectMode;
 import com.github.ulwx.aka.dbutils.database.spring.DBTransInfo;
+import com.github.ulwx.aka.dbutils.database.transaction.MDbTransactionManager;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionContextElem;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionContextInfo;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -250,7 +253,7 @@ public class DbContext implements Serializable {
     }
 
     public static Map<String, TransactionContextElem> getTransactionContextStackTopContext(Stack<Map<String, TransactionContextElem>> stack) {
-        ;
+
         try {
             return stack.peek();
         } catch (Exception e) {
@@ -290,12 +293,12 @@ public class DbContext implements Serializable {
 
     }
 
-    public static DataBaseDecorator findDataBaseInTransactionContextStack(String dbPoolName) {
+    public static DataBaseDecorator findDataBaseInTransactionContextStack(String dbPoolXmlFileNameAndDbPoolName) {
         Stack<Map<String, TransactionContextElem>> stack = DbContext.getTransactionContextStack();
 
         for (int i = stack.size() - 1; i >= 0; i--) {
             Map<String, TransactionContextElem> tempContext = stack.get(i);
-            DataBaseDecorator db = (DataBaseDecorator) tempContext.get(dbPoolName);
+            DataBaseDecorator db = (DataBaseDecorator) tempContext.get(dbPoolXmlFileNameAndDbPoolName);
             TransactionContextInfo transactionStart = (TransactionContextInfo) tempContext.get(MDbTransactionManager._transaction_start);
             if (transactionStart.getLevel() > 0) {//
                 if (db != null) {

@@ -1,7 +1,11 @@
 package com.github.ulwx.aka.dbutils.tidb.dao.db_teacher;
 
-import com.github.ulwx.aka.dbutils.database.*;
+import com.github.ulwx.aka.dbutils.database.DBInterceptor;
+import com.github.ulwx.aka.dbutils.database.DataBase;
 import com.github.ulwx.aka.dbutils.database.DataBase.MainSlaveModeConnectMode;
+import com.github.ulwx.aka.dbutils.database.DbContext;
+import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionTemplate;
 import com.github.ulwx.aka.dbutils.tidb.Utils;
 import com.github.ulwx.aka.dbutils.tidb.domain.db.db_teacher.Teacher;
 import com.github.ulwx.aka.dbutils.tool.MD;
@@ -203,7 +207,7 @@ public class TeacherDao {
                 Assert.state(dataBase.connectedToMaster());
             }
         });
-        MDbTransactionManager.execute(() -> {
+        TransactionTemplate.execute(() -> {
 
             testSelectIntrans(); //由于在事务里，查询操作会在主库执行
             testUpdateInTrans(); //由于在事务里，更新操作会在主库执行

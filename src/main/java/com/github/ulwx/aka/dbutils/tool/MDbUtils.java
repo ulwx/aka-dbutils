@@ -968,8 +968,8 @@ public class MDbUtils extends BaseDao {
     }
 
     /**
-     * 执行插入操作，一个md方法地址对应多个参数，同一个md方法会根据不同的参数多次执行，每次执行返回插入的记录数
-     *
+     * 执行批量插入操作，一个md方法地址对应多个参数，同一个md方法会根据不同的参数分别执行，每次执行返回插入的记录数存入到返回数组对应的位置。
+     *<p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。
      *                         <blockquote><code>
      *                         dbPoolName参数的格式如下：
@@ -986,7 +986,7 @@ public class MDbUtils extends BaseDao {
      *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             参数数组，会根据数组里的每个参数执行一次md方法，从而生成不同的insert语句
-     * @return 每此执行插入操作返回的记录条数存放于int数组相应位置
+     * @return 每次执行插入操作返回的记录条数存放于int数组相应位置
      * @throws DbException
      */
     public static int[] insert(String dbPoolName, String mdFullMethodName, List<Map<String, Object>> args) throws DbException {
@@ -1053,7 +1053,7 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 根据多个md方法地址指定的SQL执行插入数据库操作，返回每个md方法执行后插入的记录条数
-     *
+     *<p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。
      *                         <blockquote><code>
      *                         dbPoolName参数的格式如下：
@@ -1080,7 +1080,7 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 根据多个md方法地址指定的SQL执行插入数据库操作，返回每个md方法执行后插入的记录条数，每个md方法对应一个Map&lt;String, Object&gt;对象，用于传递参数。
-     *
+     *<p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。
      *                         <blockquote><code>
      *                         dbPoolName参数的格式如下：
@@ -1109,7 +1109,7 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 更新操作，一个md方法地址对应多个Map&lt;String, Object&gt;参数对象，从而同一个md方法可以执行多次，每次对应不同的Map&lt;String, Object&gt;对象（用于传达SQL使用的参数）。
-     *
+     * <p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName       对应于dbpool.xml里的元素dbpool的name属性值。
      *                         <blockquote><code>
      *                         dbPoolName参数的格式如下：
@@ -1137,7 +1137,7 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 更新操作，根据提供的多个md方法地址指定的SQL执行批量更新操作,每个md方法的SQL可以使用一个Map&lt;String, Object&gt;对象来传递参数
-     *
+     *<p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName        对应于dbpool.xml里的元素dbpool的name属性值。
      *                          <blockquote><code>
      *                          dbPoolName参数的格式如下：
@@ -1166,7 +1166,7 @@ public class MDbUtils extends BaseDao {
 
     /**
      * 更新操作，根据提供的多个md方法地址指定的SQL执行批量更新操作
-     *
+     *<p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName        对应于dbpool.xml里的元素dbpool的name属性值。
      *                          <blockquote><code>
      *                          dbPoolName参数的格式如下：

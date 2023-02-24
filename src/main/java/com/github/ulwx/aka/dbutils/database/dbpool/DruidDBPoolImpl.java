@@ -11,25 +11,20 @@ public class DruidDBPoolImpl implements DBPool{
 
 
     @Override
-    public DataSource getNewDataSource(String url, String user, String password, String checkoutTimeout,
-                                       String maxPoolSize, String minPoolSize,
-                                       String maxStatements, String maxIdleTime,
-                                       String idleConnectionTestPeriod, String driverClassName,
-                                       String removeAbandoned,
-                                       String removeAbandonedTimeout) throws Exception {
+    public DataSource getNewDataSource(DBPoolAttr dbPoolAttr) throws Exception {
 
       //  com.alibaba.druid.pool.DruidDataSource druidDataSource = new com.alibaba.druid.pool.DruidDataSource();
         Object p = Class.forName("com.alibaba.druid.pool.DruidDataSource").getDeclaredConstructor().newInstance();
-        ReflectionUtil.invoke(p, "setUrl", String.class, url);
-        ReflectionUtil.invoke(p, "setUsername", String.class, user);
-        ReflectionUtil.invoke(p, "setPassword", String.class, password);
-        ReflectionUtil.invoke(p, "setDriverClassName", String.class, driverClassName);
+        ReflectionUtil.invoke(p, "setUrl", String.class,dbPoolAttr.getUrl() );
+        ReflectionUtil.invoke(p, "setUsername", String.class,dbPoolAttr.getUser() );
+        ReflectionUtil.invoke(p, "setPassword", String.class, dbPoolAttr.getPassword());
+        ReflectionUtil.invoke(p, "setDriverClassName", String.class,dbPoolAttr.getDriverClassName() );
         //druidDataSource.setInitialSize(
-        ReflectionUtil.invoke(p, "setInitialSize", int.class, Integer.valueOf(minPoolSize));
-        ReflectionUtil.invoke(p, "setMaxActive", int.class, Integer.valueOf(maxPoolSize));
-        ReflectionUtil.invoke(p, "setMinIdle", int.class, Integer.valueOf(minPoolSize));
-        ReflectionUtil.invoke(p, "setMaxWait", long.class, Long.valueOf(checkoutTimeout));
-        if(StringUtils.containsIgnoreCase(url,"oracle")){
+        ReflectionUtil.invoke(p, "setInitialSize", int.class, Integer.valueOf(dbPoolAttr.getMinPoolSize()));
+        ReflectionUtil.invoke(p, "setMaxActive", int.class, Integer.valueOf(dbPoolAttr.getMaxPoolSize()));
+        ReflectionUtil.invoke(p, "setMinIdle", int.class, Integer.valueOf(dbPoolAttr.getMinPoolSize()));
+        ReflectionUtil.invoke(p, "setMaxWait", long.class, Long.valueOf(dbPoolAttr.getCheckoutTimeout()));
+        if(StringUtils.containsIgnoreCase(dbPoolAttr.getUrl(),"oracle")){
             ReflectionUtil.invoke(p, "setPoolPreparedStatements", boolean.class,true);
             ReflectionUtil.invoke(p, "setMaxPoolPreparedStatementPerConnectionSize", int.class,100);
             ReflectionUtil.invoke(p, "setValidationQuery", String.class,"select 1 from dual");
@@ -42,17 +37,18 @@ public class DruidDBPoolImpl implements DBPool{
         ReflectionUtil.invoke(p, "setTestOnReturn", boolean.class, true);
         ReflectionUtil.invoke(p, "setTestWhileIdle", boolean.class, true);
         ReflectionUtil.invoke(p, "setKeepAlive", boolean.class, true);
-        int test = Integer.valueOf(idleConnectionTestPeriod);// 秒
+        int test = Integer.valueOf(dbPoolAttr.getIdleConnectionTestPeriod());// 秒
         ReflectionUtil.invoke(p, "setTimeBetweenEvictionRunsMillis", long.class, test*1000l);//40秒
         ReflectionUtil.invoke(p, "setMinEvictableIdleTimeMillis", long.class,
-                Integer.valueOf(maxIdleTime) * 1000);
+                Integer.valueOf(dbPoolAttr.getMaxIdleTime()) * 1000);
         ReflectionUtil.invoke(p, "setFilters", String.class,"stat");
-        ReflectionUtil.invoke(p, "setRemoveAbandoned", boolean.class,Boolean.valueOf(removeAbandoned));
+        ReflectionUtil.invoke(p, "setRemoveAbandoned", boolean.class,Boolean.valueOf(dbPoolAttr.getRemoveAbandoned()));
         ReflectionUtil.invoke(p, "setRemoveAbandonedTimeout", int.class,
-                Integer.valueOf(removeAbandonedTimeout));
+                Integer.valueOf(dbPoolAttr.getRemoveAbandonedTimeout()));
         ReflectionUtil.invoke(p, "setLogAbandoned", boolean.class, true);
         ReflectionUtil.invoke(p, "setConnectionProperties", String.class, "druid.stat.slowSqlMillis=3000");
         //druid.stat.mergeSql=false;
+        ReflectionUtil.invoke(p, "setUseGlobalDataSourceStat", boolean.class, true);
         return (DataSource)p;
 
     }
@@ -60,5 +56,10 @@ public class DruidDBPoolImpl implements DBPool{
    public void close(DataSource dataSource) throws Exception {
        ReflectionUtil.invoke(dataSource, "close");
 
+    }
+
+    @Override
+    public String getType() {
+        return PoolType.ALiBABA_DRUID;
     }
 }

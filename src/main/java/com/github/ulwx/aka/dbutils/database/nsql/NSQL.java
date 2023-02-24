@@ -93,9 +93,13 @@ public final class NSQL {
      * @throws DbException 异常
      */
     public static NSQL getNSQL(String mdPathMethodName, Object args) throws DbException {
-        String[] strs = mdPathMethodName.split(":");
+        mdPathMethodName=mdPathMethodName.trim();
         try {
-            return NSQL.getNSQL(strs[0], strs[1], args);
+            int pos=mdPathMethodName.indexOf(":");
+            String mdPath=mdPathMethodName.substring(0,pos);
+            String mdMethodName=mdPathMethodName.substring(pos+1);
+            return NSQL.getNSQL(mdPath, mdMethodName, args);
+
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e.getMessage(), e);

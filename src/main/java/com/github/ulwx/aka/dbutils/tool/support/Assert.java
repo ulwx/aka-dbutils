@@ -549,7 +549,7 @@ public abstract class Assert {
 
     public static void equal(Object src, Object des) {
         if (!ObjectUtils.deepEquals(src, des)) {
-            throw new IllegalStateException("src[" + src + "] \n is not equal to des[" + des + "]");
+            throw new IllegalStateException("\nsrc[" + src + "] \n is not equal to  \ndes[" + des + "]");
         }
 
     }

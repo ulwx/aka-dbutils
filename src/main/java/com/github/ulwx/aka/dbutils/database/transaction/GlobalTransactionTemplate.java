@@ -1,0 +1,196 @@
+package com.github.ulwx.aka.dbutils.database.transaction;
+
+import com.github.ulwx.aka.dbutils.database.DbException;
+import io.seata.common.exception.ShouldNeverHappenException;
+import io.seata.core.event.EventBus;
+import io.seata.core.event.GuavaEventBus;
+import io.seata.spring.event.DegradeCheckEvent;
+import io.seata.tm.api.*;
+import io.seata.tm.api.transaction.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class GlobalTransactionTemplate {
+    private static final Logger log = LoggerFactory.getLogger(GlobalTransactionTemplate.class);
+    private static final TransactionalTemplate transactionalTemplate = new TransactionalTemplate();
+    private static final int DEFAULT_GLOBAL_TRANSACTION_TIMEOUT = 60000;
+    private static final FailureHandler failureHandler = new DefaultFailureHandlerImpl();
+    private static final EventBus EVENT_BUS = new GuavaEventBus("degradeCheckEventBus", true);
+    private static final AtomicBoolean ATOMIC_DEGRADE_CHECK = new AtomicBoolean(false);
+    public static void execute(String dbPoolXmlFileName,
+                                ServiceLogic serviceLogic){
+        execute(dbPoolXmlFileName,new ServiceLogicHasReturnValue(){
+            @Override
+            public Object call() throws Exception {
+                serviceLogic.call();
+                return null;
+            }
+        },AkaPropagationType.REQUIRED,true);
+    }
+
+    public static <R> R  executeTest(
+            String dbPoolXmlFileName,
+            ServiceLogicHasReturnValue<R> serviceLogic,
+            AkaPropagationType propagationType,boolean async)throws Throwable{
+        SeataAtAkaDistributedTransactionManager manager=
+                (SeataAtAkaDistributedTransactionManager)TransactionManagerFactory.getTransactionManager(dbPoolXmlFileName,
+                        AkaTransactionType.SEATA_AT);
+        try{
+            manager.begin(manager.getGlobalTXTimeout(),AkaPropagationType.REQUIRED);
+            R ret=serviceLogic.call();
+            manager.commit();
+            return ret;
+        }catch (Throwable e){
+            manager.rollback(e);
+            throw e;
+        }finally {
+            manager.end();
+        }
+    }
+    public static <R> R execute(String dbPoolXmlFileName,
+                                ServiceLogicHasReturnValue<R> serviceLogic){
+        return execute(dbPoolXmlFileName,serviceLogic,AkaPropagationType.REQUIRED,true);
+    }
+    public static <R> R execute(String dbPoolXmlFileName,
+                                ServiceLogicHasReturnValue<R> serviceLogic,
+                                AkaPropagationType propagationType,boolean async){
+        SeataAtAkaDistributedTransactionManager manager=
+                (SeataAtAkaDistributedTransactionManager)TransactionManagerFactory.getTransactionManager(dbPoolXmlFileName,
+                AkaTransactionType.SEATA_AT);
+        try {
+            AkaTransactionManagerHolder.set(manager);
+            return handleGlobalTransaction(serviceLogic,manager.getGlobalTXTimeout(),
+                    "default",propagationType);
+        }catch (Throwable e){
+            if (e instanceof DbException) throw (DbException) e;
+            throw new DbException(e);
+        } finally {
+            try {
+                if (!async) {
+                    manager.waitForFinished();
+                }
+            }finally {
+                AkaTransactionManagerHolder.clear();
+                AkaSeataTransactionHolder.clear();
+            }
+
+
+        }
+    }
+    private static final TransactionHook TRANSACTION_HOOK=new TransactionHook(){
+        @Override
+        public void beforeBegin() {
+
+        }
+
+        @Override
+        public void afterBegin() {
+            GlobalTransaction globalTransaction = GlobalTransactionContext.getCurrent();
+            AkaSeataTransactionHolder.set(globalTransaction);
+        }
+
+        @Override
+        public void beforeCommit() {
+
+        }
+
+        @Override
+        public void afterCommit() {
+
+        }
+
+        @Override
+        public void beforeRollback() {
+
+        }
+
+        @Override
+        public void afterRollback() {
+
+        }
+
+        @Override
+        public void afterCompletion() {
+
+        }
+    };
+    public static <R> R handleGlobalTransaction(ServiceLogicHasReturnValue<R> serviceLogic,
+                                                int globalTransactionTimeout,
+                                                String transactionName,
+                                                AkaPropagationType propagationType
+                                                )throws Throwable {
+        boolean succeed = true;
+        try {
+            TransactionHookManager.registerHook(TRANSACTION_HOOK);
+            return (R) transactionalTemplate.execute(new TransactionalExecutor() {
+                @Override
+                public Object execute() throws Throwable {
+                    return serviceLogic.call();
+                }
+
+                @Override
+                public TransactionInfo getTransactionInfo() {
+                    // reset the value of timeout
+                    int timeout = globalTransactionTimeout;
+                    if (timeout <= 0 || timeout == DEFAULT_GLOBAL_TRANSACTION_TIMEOUT) {
+                        timeout = DEFAULT_GLOBAL_TRANSACTION_TIMEOUT;
+                    }
+
+                    TransactionInfo transactionInfo = new TransactionInfo();
+                    transactionInfo.setTimeOut(timeout);
+                    transactionInfo.setName(transactionName);
+                    if(propagationType==AkaPropagationType.REQUIRED){
+                        transactionInfo.setPropagation(Propagation.REQUIRED);
+                    }else  if(propagationType==AkaPropagationType.REQUIRES_NEW){
+                        transactionInfo.setPropagation(Propagation.REQUIRES_NEW);
+                    } else{
+                        throw new DbException("事务传播类型："+propagationType+"暂时不支持！");
+                    }
+
+                    Set<RollbackRule> rollbackRules = new LinkedHashSet<>();
+                    rollbackRules.add(new RollbackRule(Throwable.class));
+
+                    transactionInfo.setRollbackRules(rollbackRules);
+                    return transactionInfo;
+                }
+
+
+            });
+        } catch (TransactionalExecutor.ExecutionException e) {
+            TransactionalExecutor.Code code = e.getCode();
+            switch (code) {
+                case RollbackDone:
+                    throw e.getOriginalException();
+                case BeginFailure:
+                    succeed = false;
+                    failureHandler.onBeginFailure(e.getTransaction(), e.getCause());
+                    throw e.getCause();
+                case CommitFailure:
+                    succeed = false;
+                    failureHandler.onCommitFailure(e.getTransaction(), e.getCause());
+                    throw e.getCause();
+                case RollbackFailure:
+                    failureHandler.onRollbackFailure(e.getTransaction(), e.getOriginalException());
+                    throw e.getOriginalException();
+                case RollbackRetrying:
+                    failureHandler.onRollbackRetrying(e.getTransaction(), e.getOriginalException());
+                    throw e.getOriginalException();
+                case TimeoutRollback:
+                    failureHandler.onTimeoutRollback(e.getTransaction(), e.getOriginalException());
+                    throw e.getCause();
+                default:
+                    throw new ShouldNeverHappenException(String.format("Unknown TransactionalExecutor.Code: %s", code));
+            }
+        } finally {
+            if (ATOMIC_DEGRADE_CHECK.get()) {
+                EVENT_BUS.post(new DegradeCheckEvent(succeed));
+            }
+        }
+    }
+
+
+}

@@ -5,10 +5,15 @@ import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.database.IDBPoolAttrSource;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
 import com.github.ulwx.aka.dbutils.database.dialect.DialectClient;
+import com.github.ulwx.aka.dbutils.database.transaction.AKaTransactionManager;
+import com.github.ulwx.aka.dbutils.database.transaction.AkaTransactionType;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionManagerFactory;
 import com.github.ulwx.aka.dbutils.tool.MD;
-import com.github.ulwx.aka.dbutils.tool.support.*;
+import com.github.ulwx.aka.dbutils.tool.support.EncryptUtil;
+import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
+import com.github.ulwx.aka.dbutils.tool.support.RandomUtils;
+import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
-import com.github.ulwx.aka.dbutils.tool.support.reflect.ReflectionUtil;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +43,6 @@ public class DBPoolFactory {
         public static int finished = 2;
 
     }
-
     private volatile int partUpdateStatus = PART_UPDATE_STATUS.uninit;
 
     static class PART_UPDATE_STATUS {
@@ -47,44 +51,28 @@ public class DBPoolFactory {
         public static int finished = 2;
 
     }
+    private volatile ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private volatile Map<String, DataSource> poollist = new ConcurrentHashMap<String, DataSource>();
+    private volatile Map<String, ConcurrentHashMap<String, DataSource>> poolSlaveList = new ConcurrentHashMap<String, ConcurrentHashMap<String, DataSource>>();
+    /**
+     * key为type:name
+     * */
+    private volatile Map<String, AKaTransactionManager> transactionManagerMap= new ConcurrentHashMap<>();
 
+    private static volatile Map<String, DBPoolFactory> dbpoolFactoryInstanceMap = new ConcurrentHashMap<>();
+
+    private DBPoolFactory(String dbPoolXmlFileName) {
+        this.dbPoolXmlFileName = dbPoolXmlFileName;
+    }
+    public ReadConfig getReadConfig() {
+        return readConfig;
+    }
     private static volatile ThreadLocal<Boolean> DO_INI_SAME_THREAD = new ThreadLocal<Boolean>() {
         @Override
         protected Boolean initialValue() {
             return false;
         }
     };
-    private volatile ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-    static class PoolType {
-        public final static String TOMCAT_DB_POOL = "tomcatdbpool";
-        public final static String ALiBABA_DRUID="druid";
-        public final static String HikariCP="HikariCP";
-        public final static Map<String,DBPool> map = new HashMap<>();
-        static{
-            map.put(TOMCAT_DB_POOL,TomcatDBPoolImpl.instance);
-            map.put(ALiBABA_DRUID,DruidDBPoolImpl.instance);
-            map.put(HikariCP,HikariDBPoolImpl.instance);
-        }
-       public static DBPool getDBPool(String PoolType){
-           return map.get(PoolType);
-       }
-    }
-
-    public ReadConfig getReadConfig() {
-        return readConfig;
-    }
-
-    private volatile Map<String, DataSource> poollist = new ConcurrentHashMap<String, DataSource>();
-    private volatile Map<String, ConcurrentHashMap<String, DataSource>> poolSlaveList = new ConcurrentHashMap<String, ConcurrentHashMap<String, DataSource>>();
-
-    private static volatile Map<String, DBPoolFactory> dbpoolFactoryMap = new ConcurrentHashMap<>();
-
-    private DBPoolFactory(String dbPoolXmlFileName) {
-        this.dbPoolXmlFileName = dbPoolXmlFileName;
-    }
-
-
     public String getDbPoolXmlFileName() {
         return dbPoolXmlFileName;
     }
@@ -105,15 +93,15 @@ public class DBPoolFactory {
 
     public static DBPoolFactory getInstance(String dbPoolXmlFileName) {
         try {
-            DBPoolFactory dbPoolFactory = dbpoolFactoryMap.get(dbPoolXmlFileName);
+            DBPoolFactory dbPoolFactory = dbpoolFactoryInstanceMap.get(dbPoolXmlFileName);
             if (dbPoolFactory == null) {
                 synchronized (DBPoolFactory.class) {
-                    dbPoolFactory = dbpoolFactoryMap.get(dbPoolXmlFileName);
+                    dbPoolFactory = dbpoolFactoryInstanceMap.get(dbPoolXmlFileName);
                     if (dbPoolFactory == null) {
                         Resource[] resources = ReadConfig.getResource(dbPoolXmlFileName);
                         ReadConfig.checkResource(resources, dbPoolXmlFileName);
                         dbPoolFactory = new DBPoolFactory(dbPoolXmlFileName);
-                        dbpoolFactoryMap.put(dbPoolXmlFileName, dbPoolFactory);
+                        dbpoolFactoryInstanceMap.put(dbPoolXmlFileName, dbPoolFactory);
                         DO_INI_SAME_THREAD.set(true);
                         dbPoolFactory.initDbPoolFactory();
                         DO_INI_SAME_THREAD.set(false);
@@ -151,8 +139,8 @@ public class DBPoolFactory {
         try {
 
             ReadConfig readConfig = ReadConfig.getInstance(dbPoolXmlFileName);
-            ConcurrentHashMap<String, Map<String, String>> maps = readConfig.getProperties();
-            ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveProperites = readConfig.getSlaveProperites();
+            ConcurrentHashMap<String, Map<String, String>> maps = readConfig.getDbpoolProperties();
+            ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveProperites = readConfig.getDbpoolSlaveProperites();
 
             Map<String, String> masterMap = maps.get(poolName);
             Map<String, Map<String, String>> slaveServersMap = slaveProperites.get(poolName);
@@ -170,45 +158,73 @@ public class DBPoolFactory {
                                     TResult<ConcurrentHashMap<String, DataSource>> slaverDataSourceMap) {
         try {
 
+
             Map<String, String> map = masterMap;
-            Map<String, Map<String, String>> slaveServer = slaveServersMap;
-            String driverClassName = map.get("driverClassName");
-            String url = StringUtils.trim(map.get("url"));
-            String user = StringUtils.trim(map.get("username"));
-            String password = StringUtils.trim(map.get("password"));
-            String encrypt = StringUtils.trim(map.get("encrypt"));
-
-            if (encrypt.equals("1")) {
-                password = EncryptUtil.aesUnEncrypt(password, KEY);
-            }
-            String maxStatements = StringUtils.trim(map.get("maxStatements"), "30");
-            String checkoutTimeout = StringUtils.trim(map.get("checkoutTimeout"), "60000");// 60000毫秒
-            String idleConnectionTestPeriod = StringUtils.trim(map.get("idleConnectionTestPeriod"), "60");// 40秒
             String type = StringUtils.trim(map.get("type"), PoolType.TOMCAT_DB_POOL);
-            String maxIdleTime = StringUtils.trim(map.get("maxIdleTime"), "600");// 以秒为单位，默认空隙600秒后回收
-            String maxPoolSize = StringUtils.trim(map.get("maxPoolSize"), "30");// 默认30个
-            String minPoolSize = StringUtils.trim(map.get("minPoolSize"), "10");// 默认20个
-
-            String removeAbandoned = StringUtils.trim(map.get("removeAbandoned"), "false");
-            String removeAbandonedTimeout = StringUtils.trim(map.get("removeAbandonedTimeout"), "1800");
-
-            ConcurrentHashMap<String, DataSource> slaveDataSources = new ConcurrentHashMap<String, DataSource>();
             DataSource ds = null;
-            log.debug("driverClassName=" + driverClassName);
+            if(type.equals(PoolType.ShardingJDBC)){
+                //
+                DBPool dbPool = PoolType.getDBPool(type);
+                DBPoolAttr dbPoolAttr = new DBPoolAttr();
+                dbPoolAttr.setAttributes(map);
+                ds = dbPool.getNewDataSource(dbPoolAttr);
+                masterDataSoruce.setValue(ds);
+                slaverDataSourceMap.setValue(new ConcurrentHashMap<String, DataSource>());
+            }else {
+                Map<String, Map<String, String>> slaveServer = slaveServersMap;
+                String driverClassName = map.get("driverClassName");
+                String url = StringUtils.trim(map.get("url"));
+                String user = StringUtils.trim(map.get("username"));
+                String password = StringUtils.trim(map.get("password"));
+                String encrypt = StringUtils.trim(map.get("encrypt"));
 
-            DBPool dbPool=PoolType.getDBPool(type);
-            ds = dbPool.getNewDataSource(url, user, password, checkoutTimeout, maxPoolSize, minPoolSize,
-                    maxStatements, maxIdleTime, idleConnectionTestPeriod, driverClassName,removeAbandoned,removeAbandonedTimeout);
-            //判断ds是否可以获得连接
-            boolean res = DBPoolFactory.startDataSource(ds);
-            if (!res) {
-                dbPool.close(ds);
-                return;
+                if (encrypt.equals("1")) {
+                    password = EncryptUtil.aesUnEncrypt(password, KEY);
+                }
+                String maxStatements = StringUtils.trim(map.get("maxStatements"), "30");
+                String checkoutTimeout = StringUtils.trim(map.get("checkoutTimeout"), "60000");// 60000毫秒
+                String idleConnectionTestPeriod = StringUtils.trim(map.get("idleConnectionTestPeriod"), "60");// 40秒
+
+                String maxIdleTime = StringUtils.trim(map.get("maxIdleTime"), "600");// 以秒为单位，默认空隙600秒后回收
+                String maxPoolSize = StringUtils.trim(map.get("maxPoolSize"), "30");// 默认30个
+                String minPoolSize = StringUtils.trim(map.get("minPoolSize"), "10");// 默认20个
+
+                String removeAbandoned = StringUtils.trim(map.get("removeAbandoned"), "false");
+                String removeAbandonedTimeout = StringUtils.trim(map.get("removeAbandonedTimeout"), "1800");
+
+                ConcurrentHashMap<String, DataSource> slaveDataSources = new ConcurrentHashMap<String, DataSource>();
+
+                log.debug("driverClassName=" + driverClassName);
+
+                DBPool dbPool = PoolType.getDBPool(type);
+                DBPoolAttr dbPoolAttr = new DBPoolAttr();
+                dbPoolAttr.setUrl(url);
+                dbPoolAttr.setUser(user);
+                dbPoolAttr.setPassword(password);
+                dbPoolAttr.setCheckoutTimeout(checkoutTimeout);
+                dbPoolAttr.setMaxPoolSize(maxPoolSize);
+                dbPoolAttr.setMinPoolSize(minPoolSize);
+                dbPoolAttr.setMaxStatements(maxStatements);
+                dbPoolAttr.setMaxIdleTime(maxIdleTime);
+                dbPoolAttr.setIdleConnectionTestPeriod(idleConnectionTestPeriod);
+                dbPoolAttr.setDriverClassName(driverClassName);
+                dbPoolAttr.setRemoveAbandoned(removeAbandoned);
+                dbPoolAttr.setRemoveAbandonedTimeout(removeAbandonedTimeout);
+                dbPoolAttr.setAttributes(map);
+
+                ds = dbPool.getNewDataSource(dbPoolAttr);
+                //判断ds是否可以获得连接
+                boolean res = DBPoolFactory.startDataSource(ds);
+                if (!res) {
+                    dbPool.close(ds);
+                    return;
+                }
+                slaveDataSources = getSlaveServerConfig(slaveServer, PoolType.TOMCAT_DB_POOL, driverClassName);
+
+                masterDataSoruce.setValue(ds);
+                slaverDataSourceMap.setValue(slaveDataSources);
             }
-            slaveDataSources = getSlaveServerConfig(slaveServer, PoolType.TOMCAT_DB_POOL, driverClassName);
 
-            masterDataSoruce.setValue(ds);
-            slaverDataSourceMap.setValue(slaveDataSources);
         } catch (Exception ex) {
             if (ex instanceof DbException) throw (DbException) ex;
             throw new DbException(ex);
@@ -227,8 +243,11 @@ public class DBPoolFactory {
             close(dbPoolXmlFileName);
             ReadConfig readConfig = ReadConfig.getInstance(dbPoolXmlFileName);
             this.readConfig = readConfig;
-            ConcurrentHashMap<String, Map<String, String>> poolNameMasterMap = readConfig.getProperties();
-            ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveNameMap = readConfig.getSlaveProperites();
+            //初始化事务管理器
+            initTransactionManagers(readConfig);
+
+            ConcurrentHashMap<String, Map<String, String>> poolNameMasterMap = readConfig.getDbpoolProperties();
+            ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveNameMap = readConfig.getDbpoolSlaveProperites();
             Iterator<String> iter = poolNameMasterMap.keySet().iterator();
             Map<String, String> refMap = new TreeMap<>();
             Map<String, Class> refClassMap = new TreeMap<>();
@@ -328,9 +347,9 @@ public class DBPoolFactory {
             throw new DbException("获取数据源信息异常！",e);
         }
         DbContext.permitDebugLog(debug);
-        ConcurrentHashMap<String, Map<String, String>> poolNameMasterMap = readConfig.getProperties();
+        ConcurrentHashMap<String, Map<String, String>> poolNameMasterMap = readConfig.getDbpoolProperties();
         Map<String, String> masterMap = poolNameMasterMap.get(poolName);
-        ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveNameMap = readConfig.getSlaveProperites();
+        ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveNameMap = readConfig.getDbpoolSlaveProperites();
         Map<String, Map<String, String>> slaveProperties = slaveNameMap.get(poolName);
         HashMap<String, String> newMasterMap = new HashMap<>();
         newMasterMap.put("name", masterMap.get("name"));
@@ -393,8 +412,21 @@ public class DBPoolFactory {
 
                 DataSource s_ds = null;
                 DBPool dbPool=PoolType.getDBPool(poolType);
-                s_ds = dbPool.getNewDataSource(s_url, s_user, s_password, s_checkoutTimeout, s_maxPoolSize,
-                        s_minPoolSize, s_maxStatements, s_maxIdleTime, s_idleConnectionTestPeriod, driverClassName,s_removeAbandoned,s_removeAbandonedTimeout);
+                DBPoolAttr dbPoolAttr=new DBPoolAttr();
+                dbPoolAttr.setUrl(s_url);
+                dbPoolAttr.setUser(s_user);
+                dbPoolAttr.setPassword(s_password);
+                dbPoolAttr.setCheckoutTimeout(s_checkoutTimeout);
+                dbPoolAttr.setMaxPoolSize(s_maxPoolSize);
+                dbPoolAttr.setMinPoolSize(s_minPoolSize);
+                dbPoolAttr.setMaxStatements(s_maxStatements);
+                dbPoolAttr.setMaxIdleTime(s_maxIdleTime);
+                dbPoolAttr.setIdleConnectionTestPeriod(s_idleConnectionTestPeriod);
+                dbPoolAttr.setDriverClassName(driverClassName);
+                dbPoolAttr.setRemoveAbandoned(s_removeAbandoned);
+                dbPoolAttr.setRemoveAbandonedTimeout(s_removeAbandonedTimeout);
+                dbPoolAttr.setAttributes(slaveConfig);
+                s_ds = dbPool.getNewDataSource(dbPoolAttr);
 
                 if (s_ds == null) {
                     log.error("无法从库连接池" + slaveServerName + "获取连接！数据源返回为空,忽略...");
@@ -435,9 +467,24 @@ public class DBPoolFactory {
         return true;
     }
 
+    private void initTransactionManagers(ReadConfig readConfig){
+        Map<String, Map<String, String>> map = readConfig.getTransactionManagersProperties();
+        for(String type: map.keySet()){
+            Map<String, String> transactionProperties=map.get(type);
+            AKaTransactionManager manager=TransactionManagerFactory.instance.build(readConfig.getDbpoolFileName(),type,transactionProperties);
+            this.transactionManagerMap.put(type,manager);
+        }
+        if(map.get(AkaTransactionType.LOCAL.name())==null){
+            String dbpoolFileName=readConfig.getDbpoolFileName();
+            AKaTransactionManager manager=TransactionManagerFactory.instance.build(readConfig.getDbpoolFileName(),AkaTransactionType.LOCAL.name(),
+                    null);
+            this.transactionManagerMap.put(AkaTransactionType.LOCAL.name(),manager);
+        }
 
+    }
     private void initDbPoolFactory() {
         synchronized (this) {
+
             this.initAllPool();
             this.notifyAll();
         }
@@ -448,24 +495,35 @@ public class DBPoolFactory {
         return getDBPool(dbpoolName, null);
     }
 
+    /**
+     *
+     * @param type  ：为type。对应dbpool.xml里&lt;transaction-manager&gt;元素的type属性。
+     * @return
+     */
+    public AKaTransactionManager getTransactionManager(String type){
+        return this.transactionManagerMap.get(type);
+    }
 
     /**
-     * @param dbpoolName dbpoolxml里的连接池名
+     * @param dbpoolName dbpool.xml里的连接池名
      * @param pros       存放返回的属性
      * @return 返回DataSource对象
      * @throws DbException 异常
      */
     public DataSource getDBPool(String dbpoolName, Map<String, String> pros) throws DbException {
 
-        //checkInitIsFinished();
         try {
             rwLock.readLock().lock();
             if (dbpoolName == null)
                 throw new DbException("DBPool 'key' CANNOT be null");
 
             if (pros != null) {
-                ConcurrentHashMap<String, Map<String, String>> maps = this.readConfig.getProperties();
-                pros.putAll(maps.get(dbpoolName));
+                ConcurrentHashMap<String, Map<String, String>> maps = this.readConfig.getDbpoolProperties();
+                Map<String, String> dbpoolNameProperties = maps.get(dbpoolName);
+                if(dbpoolNameProperties==null){
+                    throw new DbException(dbpoolName+"连接池没有定义！");
+                };
+                pros.putAll(dbpoolNameProperties);
             }
 
             DataSource ds = (DataSource) poollist.get(dbpoolName);
@@ -482,14 +540,14 @@ public class DBPoolFactory {
         try {
             if (this.status != INIT_STATUS.finished) {
                 while (true) {
-                    if (this.status != INIT_STATUS.finished
-                            && !DO_INI_SAME_THREAD.get().booleanValue()) {
-                        synchronized (this) {
-                            this.wait();
-                        }
-
-                    } else {
+                    if (this.status == INIT_STATUS.finished){
                         return;
+                    }
+                    if(DO_INI_SAME_THREAD.get().booleanValue()){
+                        return;
+                    }
+                    synchronized (this) {
+                        this.wait();
                     }
                 }
 
@@ -669,7 +727,7 @@ public class DBPoolFactory {
         synchronized (DBPoolFactory.class) {
             try {
                 // 清空常规连接池
-                Set<String> dbpoolFactoryMapKeys = dbpoolFactoryMap.keySet();
+                Set<String> dbpoolFactoryMapKeys = dbpoolFactoryInstanceMap.keySet();
                 for (String xmlFileName : dbpoolFactoryMapKeys) {
                     close(xmlFileName);
                 }
@@ -688,7 +746,7 @@ public class DBPoolFactory {
         synchronized (DBPoolFactory.class) {
             try {
                 // 关闭主库连接池
-                DBPoolFactory dbPoolFactory = dbpoolFactoryMap.get(xmlFileName);
+                DBPoolFactory dbPoolFactory = dbpoolFactoryInstanceMap.get(xmlFileName);
                 if (dbPoolFactory == null) return;
                 try {
                     DataSource ds = dbPoolFactory.poollist.get(poolName);
@@ -719,14 +777,14 @@ public class DBPoolFactory {
         synchronized (DBPoolFactory.class) {
             try {
                 // 清空常规连接池
-                DBPoolFactory dbPoolFactory = dbpoolFactoryMap.get(xmlFileName);
+                DBPoolFactory dbPoolFactory = dbpoolFactoryInstanceMap.get(xmlFileName);
                 if (dbPoolFactory == null) return;
                 Set<String> sets = dbPoolFactory.poollist.keySet();
                 Iterator<String> iter = sets.iterator();
                 while (iter.hasNext()) {
                     try {
                         String poolName = iter.next();
-                        ConcurrentHashMap<String, Map<String, String>> maps = dbPoolFactory.readConfig.getProperties();
+                        ConcurrentHashMap<String, Map<String, String>> maps = dbPoolFactory.readConfig.getDbpoolProperties();
                         Map<String, String> masterMap = maps.get(poolName);
                         close(xmlFileName, poolName, masterMap.get("type"));
                     } catch (Exception e) {

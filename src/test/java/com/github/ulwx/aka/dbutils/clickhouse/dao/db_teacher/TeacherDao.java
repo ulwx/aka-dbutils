@@ -50,13 +50,15 @@ public class TeacherDao {
             sql.append(sqltxt);
         });
 
+        //默认为MainSlaveModeConnectMode.Connect_MainServer方式
         MDbUtils.insertBy(DbPoolName, teacher);//更新方法会在主库上执行
         Assert.equal(sql.toString(), "insert into `teacher` (`name`) values('new teacher')");
 
 
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_SlaveServer);
         try {
-            MDbUtils.insertBy(DbPoolName, teacher);//更新方法会在主库上执行
+            //Connect_SlaveServer模式下，会限制更新方法不能在从库上执行
+            MDbUtils.insertBy(DbPoolName, teacher);
         } catch (Exception e) {
             Assert.state(e instanceof DbException && e.getMessage().equals("从库只能执行select语句执行！"));
         }

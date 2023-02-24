@@ -1,0 +1,112 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+databaseName: db_student
+dataSources:
+  ds_0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/db_student_0?serverTimezone=GMT%2B8&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: 123456
+  ds_1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/db_student_1?serverTimezone=GMT%2B8&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: 123456
+rules:
+- !SHARDING
+  tables:
+    student:
+      actualDataNodes: ds_${0..1}.student_${0..1}
+      tableStrategy:
+        standard:
+          shardingColumn: id
+          shardingAlgorithmName: student-inline
+      databaseStrategy:
+        standard:
+          shardingColumn: id
+          shardingAlgorithmName: database-student-inline
+      keyGenerateStrategy:
+        column: id
+        keyGeneratorName: snowflake
+    student_course:
+      actualDataNodes: ds_${0..1}.student_course_${0..1}
+      tableStrategy:
+        standard:
+          shardingColumn: student_id
+          shardingAlgorithmName: student_course-inline
+      keyGenerateStrategy:
+        column: id
+        keyGeneratorName: snowflake
+    student_many_courses:
+      actualDataNodes: ds_${0..1}.student_many_courses_${0..1}
+      tableStrategy:
+        standard:
+          shardingColumn: student_id
+          shardingAlgorithmName: student_many_courses-inline
+      keyGenerateStrategy:
+        column: id
+        keyGeneratorName: snowflake
+  bindingTables:
+    - student,student_course,student_many_courses
+  broadcastTables:
+    - course
+  defaultDatabaseStrategy:
+    standard:
+      shardingColumn: student_id
+      shardingAlgorithmName: database-inline
+  defaultTableStrategy:
+    none:
+  
+  shardingAlgorithms:
+    database-inline:
+      type: INLINE
+      props:
+        algorithm-expression: ds_${student_id % 2}
+        allow-range-query-with-inline-sharding: true
+    database-student-inline:
+      type: INLINE
+      props:
+        algorithm-expression: ds_${id % 2}
+        allow-range-query-with-inline-sharding: true
+    student-inline:
+      type: INLINE
+      props:
+        algorithm-expression: student_${id % 2}
+        allow-range-query-with-inline-sharding: true
+    student_course-inline:
+      type: INLINE
+      props:
+        algorithm-expression: student_course_${student_id % 2}
+        allow-range-query-with-inline-sharding: true
+    student_many_courses-inline:
+      type: INLINE
+      props:
+        algorithm-expression: student_many_courses_${student_id % 2}
+        allow-range-query-with-inline-sharding: true
+  
+  keyGenerators:
+    snowflake:
+      type: SNOWFLAKE
+      props:
+        max-vibration-offset: 5
+        worker-id: 3
+
+
+props:
+  sql-show: true

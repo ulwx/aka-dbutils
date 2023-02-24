@@ -26,16 +26,22 @@ public class ReadConfig {
     private static final Logger log = LoggerFactory.getLogger(ReadConfig.class);
 
     /*连接池名称->属性Map*/
-    private volatile ConcurrentHashMap<String, Map<String, String>> properties = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<String, Map<String, String>> dbpoolProperties = new ConcurrentHashMap<>();
     /*连接池名称->SlaveMap,slaveMap的key为<server>的name属性，value为属性Map*/
-    private volatile ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveProperites = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<String, Map<String, Map<String, String>>> dbpoolSlaveProperites = new ConcurrentHashMap<>();
+    /*事务管理器配置，key为type, value为属性Map*/
+    private volatile ConcurrentHashMap<String, Map<String, String>> transactionManagersProperties=new ConcurrentHashMap<>();
     //为<setting>元素配置
     private volatile ConcurrentHashMap<String, String> glsettings = new ConcurrentHashMap<>();
     private volatile String dbpoolFileName;
     private volatile Resource resource;
     public static final String DEFAULT = "dbpool.xml";
-    //dbpool.xml文件名ReadCon->ReadConfig对象的Map
+    //dbpool.xml文件名->ReadConfig对象的Map
     public volatile static ConcurrentHashMap<String, ReadConfig> map = new ConcurrentHashMap<String, ReadConfig>();
+
+    public String getDbpoolFileName() {
+        return dbpoolFileName;
+    }
 
     private ReadConfig(String dbpoolFileName) {
         this.dbpoolFileName = dbpoolFileName;
@@ -74,9 +80,6 @@ public class ReadConfig {
         }
     }
 
-    public static boolean isWindows() {
-        return System.getProperty("os.name").toUpperCase().indexOf("WINDOWS") >= 0 ? true : false;
-    }
 
     private static volatile Map<String, Resource[]> dbpoolFileNameResourceCache = new ConcurrentHashMap<>();
 
@@ -85,11 +88,16 @@ public class ReadConfig {
      * </code><br/>
      *
      * @param dbpoolFileName
-     * 可以指定如：<code><file:/dbpool.xml，classpath:mysql/dbpool.xml，classpath*:mysql/dbpool.xml</code>的路径
-     * 如果没有指定<code>"file:"， "classpath:"，"classpath*:"</code> 前缀，则系统会默认添加classpath*:前缀。
-     * 例如<code>/mysql/dbpool.xml</code>，则为<code>classpath*:/mysql/dbpool.xml</code>；
-     * 如果为<code>mysql/dbpool.xml</code>，则为<code>classpath*:mysql/dbpool.xml</code>。
-     * <br/>注意：<code>/mysql/dbpool.xml</code>和 <code>mysql/dbpool.xml </code>效果相同。
+     * <p>可以指定如：<code><file:/dbpool.xml，classpath:mysql/dbpool.xml，classpath*:mysql/dbpool.xml</code>等样式的路径。</p>
+     * <p>如果没有指定<code>"file:"， "classpath:"，"classpath*:"</code> 前缀，则系统会默认添加classpath*:前缀。</p>
+     * <p>
+     * 例如：
+     * <ul><li><code>/mysql/dbpool.xml</code>，则为<code>classpath*:/mysql/dbpool.xml</code>；</li>
+     * <li>如果为<code>mysql/dbpool.xml</code>，则为<code>classpath*:mysql/dbpool.xml</code>。
+     * <br/>注意：<code>/mysql/dbpool.xml</code>和 <code>mysql/dbpool.xml </code>效果相同。</li>
+     *
+     *</ul>
+     * </p>
      * @return
      * @throws Exception
      */
@@ -99,14 +107,7 @@ public class ReadConfig {
         synchronized (ReadConfig.class) {
             resources = dbpoolFileNameResourceCache.get(dbpoolFileName);
             if (resources == null) {
-                if (dbpoolFileName.startsWith("file:") ||
-                        dbpoolFileName.startsWith("classpath:") ||
-                        dbpoolFileName.startsWith("classpath*:")) {
-                    resources = Path.getResourcesLikeAntPathMatch(dbpoolFileName);
-
-                }  else {
-                    resources = Path.getResourcesLikeAntPathMatch("classpath*:" + dbpoolFileName);
-                }
+                resources=Path.getResources(dbpoolFileName);
                 if (resources != null) {
                     dbpoolFileNameResourceCache.put(dbpoolFileName, resources);
                 } else {
@@ -119,23 +120,7 @@ public class ReadConfig {
 
     public static void checkResource(Resource[] resources, String dbpoolFileName)  {
         try {
-            if (resources == null || resources.length == 0) {
-                throw new DbException("错误！没有找到" + dbpoolFileName + "配置文件!");
-            } else if(resources.length == 1){
-                if(!resources[0].exists()){
-                    throw new DbException("错误！没有找到" + dbpoolFileName + "配置文件!");
-                }
-            }else if (resources.length >1) {
-                String str = "";
-                for (Resource resource : resources) {
-                    if (str.isEmpty()) {
-                        str = resource.getURL().toString();
-                    } else {
-                        str = str + " ; " + resource.getURL().toString();
-                    }
-                }
-                throw new DbException("错误！根据" + dbpoolFileName + "找到多个文件![" + str + "]");
-            }
+            Path.checkResource(resources,dbpoolFileName);
         } catch (Exception ex) {
             if (ex instanceof DbException) throw (DbException) ex;
             throw new DbException(ex);
@@ -158,13 +143,16 @@ public class ReadConfig {
 
     }
 
-    public ConcurrentHashMap<String, Map<String, Map<String, String>>> getSlaveProperites() {
-        return slaveProperites;
+    public ConcurrentHashMap<String, Map<String, Map<String, String>>> getDbpoolSlaveProperites() {
+        return dbpoolSlaveProperites;
     }
 
+    public ConcurrentHashMap<String, Map<String, String>> getTransactionManagersProperties() {
+        return transactionManagersProperties;
+    }
 
-    public ConcurrentHashMap<String, Map<String, String>> getProperties() {
-        return properties;
+    public ConcurrentHashMap<String, Map<String, String>> getDbpoolProperties() {
+        return dbpoolProperties;
     }
 
     public Map<String, String> getGlSettings() {
@@ -182,6 +170,7 @@ public class ReadConfig {
         ConcurrentHashMap<String, Map<String, String>> maps = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, Map<String, Map<String, String>>> slaveMaps = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, String> settings = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, Map<String, String>> transactionManagersMap= new ConcurrentHashMap<>();
         SAXReader reader = null;
         InputStream inputStream = null;
         try {
@@ -199,6 +188,28 @@ public class ReadConfig {
             List<Node> tableColumRule = root.selectNodes("./setting/table-colum-rule");
             if (tableColumRule != null && tableColumRule.size() > 0) {
                 settings.put("table-colum-rule", ((Element) tableColumRule.get(0)).getTextTrim());
+            }
+
+            List<Node> transactionManagerNodes = root.selectNodes("./transaction-managers/transaction-manager");
+            for(int i = 0; i<transactionManagerNodes.size(); i++){
+                Element element = (Element) transactionManagerNodes.get(i);
+                Map map =  new HashMap<String, String>();
+                String name = element.attributeValue("name");
+                map.put("name",name);
+                String type = element.attributeValue("type");
+                map.put("type",type);
+                String enable = element.attributeValue("enable");
+                map.put("enable",enable);
+                @SuppressWarnings("unchecked")
+                Iterator<Element> nList = element.elementIterator("property");
+                while (nList.hasNext()) {
+                    Element propertye_nn = nList.next();
+                    String _name = ((Element) propertye_nn).attributeValue("name");
+                    String _value = ((Element) propertye_nn).getTextTrim();
+                    map.put(_name, _value);
+
+                }
+                transactionManagersMap.put(type,map);
             }
 
             @SuppressWarnings("unchecked")
@@ -288,17 +299,13 @@ public class ReadConfig {
                 }
             }
         }
-        properties = maps;
-        slaveProperites = slaveMaps;
-        glsettings = settings;
+        this.dbpoolProperties = maps;
+        this.dbpoolSlaveProperites = slaveMaps;
+        this.glsettings = settings;
+        this.transactionManagersProperties=transactionManagersMap;
     }
 
-    /**
-     * 测试配置文件
-     */
-    public void testReadCfg() {
 
-    }
 
     public static void main(String[] args)throws Exception {
         // ReadConfig.parse();

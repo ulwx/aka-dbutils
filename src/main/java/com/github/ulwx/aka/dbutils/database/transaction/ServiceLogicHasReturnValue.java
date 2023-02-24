@@ -1,4 +1,4 @@
-package com.github.ulwx.aka.dbutils.database;
+package com.github.ulwx.aka.dbutils.database.transaction;
 
 @FunctionalInterface
 public interface ServiceLogicHasReturnValue<R> {

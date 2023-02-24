@@ -89,7 +89,7 @@
         <property name="minPoolSize">2</property>
         <property name="maxStatements">20</property>
         <slaves>
-            <server name="db_teacher_slave1">
+            <server name="slave1">
                 <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
                 <property name="url">jdbc:mysql://192.168.137.200:3307/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
                 <property name="username">root</property>
@@ -101,7 +101,7 @@
                 <property name="minPoolSize">2</property>
                 <property name="maxStatements">20</property>
             </server>
-            <server name="db_teacher_slave2">
+            <server name="slave2">
                 <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
                 <property name="url">jdbc:mysql://192.168.137.200:3307/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
                 <property name="username">root</property>

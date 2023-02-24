@@ -20,7 +20,7 @@ public abstract class DataBaseDecorator implements DBObjectOperation, AutoClosea
         this.db = db;
     }
 
-    public DataBase getContentDataBase() {
+    public DataBase getContainedDataBase() {
         return this.db;
     }
 
@@ -53,7 +53,10 @@ public abstract class DataBaseDecorator implements DBObjectOperation, AutoClosea
     public boolean isMainSlaveMode() {
         return db.isMainSlaveMode();
     }
-
+    @Override
+    public DataSource getDataSource() {
+        return db.getDataSource();
+    }
     @Override
     public void setMainSlaveMode(boolean mainSlaveMode) {
         db.setMainSlaveMode(mainSlaveMode);

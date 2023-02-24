@@ -2,11 +2,8 @@ package com.github.ulwx.aka.dbutils.database.sql;
 
 import com.github.ulwx.aka.dbutils.database.*;
 import com.github.ulwx.aka.dbutils.database.annotation.AkaColumn;
-import com.github.ulwx.aka.dbutils.database.annotation.AkaParam;
 import com.github.ulwx.aka.dbutils.database.cacherowset.com.sun.rowset.CachedRowSetImpl;
 import com.github.ulwx.aka.dbutils.database.dialect.DBMS;
-import com.github.ulwx.aka.dbutils.database.parameter.AkaParamter;
-import com.github.ulwx.aka.dbutils.database.parameter.IDGeneratorParmeter;
 import com.github.ulwx.aka.dbutils.database.utils.DbConst;
 import com.github.ulwx.aka.dbutils.database.utils.Table2JavaNameUtils;
 import com.github.ulwx.aka.dbutils.tool.support.*;
@@ -1434,7 +1431,9 @@ public class SqlUtils {
         } else if (StringUtils.startsWithIgnoreCase(sqltxt, "update")
                 || StringUtils.startsWithIgnoreCase(sqltxt, "create")
                 || StringUtils.startsWithIgnoreCase(sqltxt, "drop")
-                || StringUtils.startsWithIgnoreCase(sqltxt, "alter")) {
+                || StringUtils.startsWithIgnoreCase(sqltxt, "alter")
+                || StringUtils.startsWithIgnoreCase(sqltxt, "truncate")
+        ) {
             return DataBase.SQLType.UPDATE;
         } else if (StringUtils.startsWithIgnoreCase(sqltxt, "delete")) {
             return DataBase.SQLType.DELETE;

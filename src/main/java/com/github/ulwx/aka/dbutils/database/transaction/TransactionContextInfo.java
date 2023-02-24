@@ -1,10 +1,10 @@
-package com.github.ulwx.aka.dbutils.database;
+package com.github.ulwx.aka.dbutils.database.transaction;
 
 public class TransactionContextInfo implements TransactionContextElem {
 
     private StackTraceElement stackTraceElement;
-    private int level = 0;
-    private Exception needRollBackForException = null;
+    private int level = 0;//处于事务栈的第几层
+    private Throwable needRollBackForException = null;
     private boolean needRollBack = false;//是否整个事务回滚
     private boolean nestedStart = false;//是否是嵌套事务开始，如果是，则nestedLevel=0
     private String nestedStartSavepointName = null;
@@ -14,11 +14,11 @@ public class TransactionContextInfo implements TransactionContextElem {
         return needRollBack;
     }
 
-    public Exception getNeedRollBackForException() {
+    public Throwable getNeedRollBackForException() {
         return needRollBackForException;
     }
 
-    public void setNeedRollBackForException(Exception needRollBackForException) {
+    public void setNeedRollBackForException(Throwable needRollBackForException) {
         this.needRollBackForException = needRollBackForException;
     }
 

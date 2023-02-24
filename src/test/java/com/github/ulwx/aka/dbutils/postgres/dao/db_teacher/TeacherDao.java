@@ -1,7 +1,11 @@
 package com.github.ulwx.aka.dbutils.postgres.dao.db_teacher;
 
-import com.github.ulwx.aka.dbutils.database.*;
+import com.github.ulwx.aka.dbutils.database.DBInterceptor;
+import com.github.ulwx.aka.dbutils.database.DataBase;
 import com.github.ulwx.aka.dbutils.database.DataBase.MainSlaveModeConnectMode;
+import com.github.ulwx.aka.dbutils.database.DbContext;
+import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionTemplate;
 import com.github.ulwx.aka.dbutils.postgres.Utils;
 import com.github.ulwx.aka.dbutils.postgres.domain.db.db_teacher.Teacher;
 import com.github.ulwx.aka.dbutils.tool.MD;
@@ -49,14 +53,16 @@ public class TeacherDao {
             }
             sql.append(sqltxt);
         });
-
+        //默认为MainSlaveModeConnectMode.Connect_MainServer方式
         MDbUtils.insertBy(DbPoolName, teacher);//更新方法会在主库上执行
         Assert.equal(sql.toString(), "insert into \"teacher\" (\"name\") values('new teacher')");
 
 
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_SlaveServer);
         try {
-            MDbUtils.insertBy(DbPoolName, teacher);//更新方法会在主库上执行
+            //Connect_SlaveServer模式下，会限制更新方法不能在从库上执行
+            MDbUtils.insertBy(DbPoolName, teacher);
+
         } catch (Exception e) {
             Assert.state(e instanceof DbException && e.getMessage().equals("从库只能执行select语句执行！"));
         }
@@ -207,7 +213,7 @@ public class TeacherDao {
                 Assert.state(dataBase.connectedToMaster());
             }
         });
-        MDbTransactionManager.execute(() -> {
+        TransactionTemplate.execute(() -> {
 
             testSelectIntrans(); //由于在事务里，查询操作会在主库执行
             testUpdateInTrans(); //由于在事务里，更新操作会在主库执行

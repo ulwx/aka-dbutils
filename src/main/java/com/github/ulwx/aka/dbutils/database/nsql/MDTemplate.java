@@ -334,7 +334,12 @@ public final class MDTemplate {
     }
 
     public static void main(String[] args) throws Exception {
-
+        String commentReg = "(?s)\\/\\*.*?\\*\\/";
+        String mdContent="ac a\\/**** abc *\\/b abc";
+        mdContent = mdContent.replaceAll(commentReg, " ");
+        System.out.println(mdContent);
+        mdContent= mdContent.replace("\\/*","/*");
+        System.out.println(mdContent);
     }
 
 }

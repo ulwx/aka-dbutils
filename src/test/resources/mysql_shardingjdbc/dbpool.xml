@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbpool-config>
+
+    <setting>
+        <!--
+         全局设置的数据库表名与javaBean类名的转换规则，有三种转换规则，分别如下：
+         underline_to_camel：  表示下划线转驼峰，
+         normal：  为数据库表名和javaBean类名一致
+         first_letter_upcase： 为数据库表名转为javaBean类名时第一个字母大写
+        -->
+        <table-name-rule>underline_to_camel</table-name-rule>
+        <!--
+        全局设置的表字段与javaBean属性名的转换规则，有两种转换规则，分别如下：
+         underline_to_camel：  下划线转驼峰
+         normal：   为数据库表名和javabean属性一致
+        -->
+        <table-colum-rule>underline_to_camel</table-colum-rule>
+    </setting>
+
+
+    <!--
+    每个<dbpool>元素配置对应一个数据库连接池
+    type属性：指定数据库连接池类型,这里为ShardingJDBC
+    table-name-rule属性：指定本数据源对应数据库的表名到javaBean类名的转换规则，覆盖setting里的全局规则
+    table-colum-rule属性：指定本数据源对应数据库里表字段与javaBean属性名的转换规则，覆盖setting里的全局规则
+    config-file属性：指定Sharding-jdbc的配置文件，只有在type属性为ShardingJDBC时才有效，格式可为如下几种情况：
+      （1）sharding-databases.yaml ：与 classpath*:/sharding-databases.yaml 等效。
+      （2）sharding_jdbc/sharding-databases.yaml ：与 classpath*:/sharding_jdbc/sharding-databases.yaml等效。
+      （3）file:/D:/config/sharding-databases.yaml。
+      （4）classpath*:/sharding-databases.yaml ：java classpath类路径下（包含从jar包里搜索）
+      （5）classpath:/sharding-databases.yaml：java classpath类路径下（不搜索jar包里的内容）
+
+    注意：当dbpool元素的type=ShardingJDBC时，只能包含property的name="config-file"的元素
+    -->
+
+    <dbpool name="db_student" type="ShardingJDBC" table-name-rule="underline_to_camel"
+            table-colum-rule="underline_to_camel">
+        <property name="config-file">mysql_shardingjdbc/sharding-databases-tables.yaml</property>
+    </dbpool>
+
+</dbpool-config>

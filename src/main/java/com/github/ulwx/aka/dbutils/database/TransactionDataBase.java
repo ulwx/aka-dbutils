@@ -1,9 +1,13 @@
 package com.github.ulwx.aka.dbutils.database;
 
+import com.github.ulwx.aka.dbutils.database.dbpool.DBPoolFactory;
+import com.github.ulwx.aka.dbutils.database.transaction.*;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.Map;
 import java.util.Stack;
 
@@ -11,8 +15,41 @@ import java.util.Stack;
 public class TransactionDataBase extends DataBaseDecorator implements TransactionContextElem {
     private static Logger log = LoggerFactory.getLogger(TransactionDataBase.class);
 
+
     public TransactionDataBase() {
-        super(new DataBaseImpl());
+
+        super(new DataBaseImpl(){
+            @Override
+            protected Connection fetchConnection(DataSource dataSource) {
+                AKaTransactionManager akaTransactionManager= AkaTransactionManagerHolder.get();
+                if(akaTransactionManager instanceof  AKaDistributedTransactionManager){
+                    AKaDistributedTransactionManager setaManager=
+                            (AKaDistributedTransactionManager)akaTransactionManager;
+                    if(this.getConnectionType()== ConnectType.POOL
+                        || this.getConnectionType()== ConnectType.DATASOURCE){
+                         String dbPoolXmlFileName=DBPoolFactory.parseRefDbPoolName(this.getDbPoolName())[0];
+                          if(!setaManager.getDbPoolXmlFileName().equals(dbPoolXmlFileName)){
+                              throw new DbException("["+dbPoolXmlFileName+"]中的事务管理器与Database对象里"+dbPoolXmlFileName+"不一致！");
+                          }
+                        try {
+                            if(setaManager.isInDistributedTransaction()) {
+                                return setaManager.getConnection(dataSource);
+                            }else{
+                                return super.fetchConnection(dataSource);
+                            }
+                        }catch (Exception ex){
+                            if (ex instanceof DbException) throw (DbException) ex;
+                            throw new DbException(ex);
+                        }
+                    }else{
+                        throw new DbException("获取连接类型为"+ConnectType.CONNECTION+"，不能使用分布式事务！");
+                    }
+
+                }else {
+                    return super.fetchConnection(dataSource);
+                }
+            }
+        });
     }
 
     public TransactionDataBase(DataBase db) {
@@ -20,7 +57,7 @@ public class TransactionDataBase extends DataBaseDecorator implements Transactio
     }
     /**
      *根据dbpool.xml里设置的连接池名称来获得连接。
-     * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
+     * @param dbPoolXmlFileNameAndDbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
      * 格式为：[配置xml文件的路径文件名称]#[连接池名称]
@@ -34,21 +71,21 @@ public class TransactionDataBase extends DataBaseDecorator implements Transactio
      * @throws DbException 异常
      */
     @Override
-    public void connectDb(String dbPoolName) throws DbException {
+    public void connectDb(String dbPoolXmlFileNameAndDbPoolName) throws DbException {
 
         Stack<Map<String, TransactionContextElem>> stack = DbContext.getTransactionContextStack();
         if (stack != null) {
             Map<String, TransactionContextElem> context = DbContext.getTransactionContextStackTopContext(stack);
             if (context != null) {// 如果存在在事务上下文,则新建的数据库实例放入当前上下文中
-                DataBaseDecorator contextDb =
-                        DbContext.findDataBaseInTransactionContextStack(dbPoolName);
+                DataBaseDecorator  contextDb =
+                        DbContext.findDataBaseInTransactionContextStack(dbPoolXmlFileNameAndDbPoolName);
                 if (contextDb != null) {
                     this.db = contextDb.db;//使用老连接
-                    log.debug("fetch a [" + dbPoolName + "]db from context stack!");
+                    log.debug("fetch a [" + dbPoolXmlFileNameAndDbPoolName + "]db from context stack!");
                 } else {
-                    this.db.connectDb(dbPoolName);//获取新连接，会延迟获取
+                    this.db.connectDb(dbPoolXmlFileNameAndDbPoolName);//获取新连接，会延迟获取
                     this.db.setAutoCommit(false);
-                    log.debug("create a [" + dbPoolName + "]db and put it into context stack!");
+                    log.debug("create a [" + dbPoolXmlFileNameAndDbPoolName + "]db and put it into context stack!");
                 }
                 TransactionContextInfo start = DbContext.getTransactionStart(context);
                 if (start.getNestedLevel() >= 0) {//说明有嵌套事务
@@ -57,14 +94,14 @@ public class TransactionDataBase extends DataBaseDecorator implements Transactio
                             DbContext.findNestStartInTransactionContextStack();
                     this.db.setSavepoint(nestStart.getNestedStartSavepointName());
                 }
-                context.put(dbPoolName, this);
+                context.put(dbPoolXmlFileNameAndDbPoolName, this);
                 int level = DbContext.getTransactionLevel(context);
                 log.debug("current context："
                         + ObjectUtils.toJsonString(context.keySet()) + ":level=" + level);
                 return;
             }
         }
-        db.connectDb(dbPoolName);
+        db.connectDb(dbPoolXmlFileNameAndDbPoolName);
     }
 
     @Override

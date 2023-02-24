@@ -10,6 +10,7 @@ package com.github.ulwx.aka.dbutils.tool.support;
  * @version 1.0
  */
 
+import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.tool.support.path.ClassPathRootResource;
 import com.github.ulwx.aka.dbutils.tool.support.path.PathResourceUtils;
 import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
@@ -21,7 +22,6 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 
@@ -167,17 +167,70 @@ public class Path {
         return Path.class.getResourceAsStream(relaPathFile);
     }
 
-    public static List<InputStream> getResources(String relaPathFile) throws Exception {
-        List<InputStream> list = new ArrayList<>();
-        Enumeration<URL> urls = Path.class.getClassLoader().getResources(relaPathFile);
-        while (urls.hasMoreElements()) {
-            URL url = urls.nextElement();
-            list.add(url.openStream());
-        }
-        return list;
 
+    /**
+     * <p>可以指定如：<code><file:/dbpool.xml，classpath:mysql/dbpool.xml，classpath*:mysql/dbpool.xml</code>等样式的路径。</p>
+     * <p>如果没有指定<code>"file:"， "classpath:"，"classpath*:"</code> 前缀，则系统会默认添加classpath*:前缀。</p>
+     * <p>
+     * 例如：
+     * <ul><li><code>/mysql/dbpool.xml</code>，则为<code>classpath*:/mysql/dbpool.xml</code>；</li>
+     * <li>如果为<code>mysql/dbpool.xml</code>，则为<code>classpath*:mysql/dbpool.xml</code>。
+     * <br/>注意：<code>/mysql/dbpool.xml</code>和 <code>mysql/dbpool.xml </code>效果相同。</li>
+     *
+     *</ul>
+     * </p>
+     * @param pathName
+     * @return
+     * @throws IOException
+     */
+    public static Resource[] getResources(String pathName)throws IOException {
+        Resource[] resources=null;
+        if (pathName.startsWith("file:") ||
+                pathName.startsWith("classpath:") ||
+                pathName.startsWith("classpath*:")) {
+            resources = Path.getResourcesLikeAntPathMatch(pathName);
+
+        }  else {
+            resources = Path.getResourcesLikeAntPathMatch("classpath*:" + pathName);
+        }
+        return resources;
     }
 
+    /**
+     * 打印Resource[]数组
+     * @param resources
+     * @return
+     * @throws Exception
+     */
+    public static String printResources(Resource[] resources) throws Exception{
+        String str="";
+        for (Resource resource : resources) {
+            if (str.isEmpty()) {
+                str = resource.getURL().toString();
+            } else {
+                str = str + " ; " + resource.getURL().toString();
+            }
+        }
+        return str;
+    }
+
+    /**
+     * 根据location查找的资源文件是否只能有一个存在，如果存在多个会报异常
+     * @param resources
+     * @param location
+     */
+    public static void checkResource(Resource[] resources, String location)  throws Exception{
+        if (resources == null || resources.length == 0) {
+            throw new DbException("错误！没有找到" + location + "配置文件!");
+        } else if(resources.length == 1){
+            if(!resources[0].exists()){
+                throw new Exception("错误！" + location + "配置文件不存在!");
+            }
+        }else if (resources.length >1) {
+            String str = Path.printResources(resources);
+            throw new Exception("错误！根据" + location + "找到多个文件![" + str + "]");
+        }
+    }
     /**
      * 类 似于Spring的PathMatchingResourcePatternResolver用法
      *

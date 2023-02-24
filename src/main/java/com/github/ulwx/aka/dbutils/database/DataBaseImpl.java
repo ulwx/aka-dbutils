@@ -130,27 +130,27 @@ public class DataBaseImpl implements DataBase {
                 if (stack[i].getClassName().startsWith(DataBase.class.getPackage().getName())
                         || stack[i].getClassName().startsWith(BaseDao.class.getPackage().getName())) {
                     continue;
-                } else if (stack[i].getClassName().startsWith("jdk.internal.") || stack[i].getClassName().startsWith("java.lang.") || stack[i].getClassName().contains("CGLIB$$")
+                } else if (stack[i].getClassName().startsWith("jdk.internal.") || stack[i].getClassName().startsWith("java.lang.")
+                        || stack[i].getClassName().contains("CGLIB$$")
                         || stack[i].getClassName().startsWith("org.springframework")) {
                     continue;
                 }
 
                 if (upLevelNum == 0) {
 
-                    String tempInfo = " at " + stack[i].getClassName() + "." + stack[i].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
+                    String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
                     upLevelNum++;
                     str = tempInfo;
                     if (i - 1 >= 0) {
-                        tempInfo = " at " + stack[i - 1].getClassName() + "." + stack[i - 1].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
-
-                        str = tempInfo + "=>" + str;
+                        tempInfo = "" + getLastTwoClassName(stack[i - 1].getClassName() )+ "." + stack[i - 1].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
+                        str =tempInfo   + "=>" + str;
                         upLevelNum++;
                     }
 
                 } else {
                     String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
                     if (upLevelNum < 3) {
-                        str = tempInfo + "=>" + str;
+                        str =str  + "=>" + tempInfo;
                         upLevelNum++;
                     } else {
                         break;
@@ -203,6 +203,13 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
+    public DataSource getDataSource() {
+        DataSource ds = this.fetchDataSource();
+        return ds;
+
+    }
+
+    @Override
     public boolean getInternalConnectionAutoCommit() throws DbException {
         try {
 
@@ -215,15 +222,14 @@ public class DataBaseImpl implements DataBase {
 
     private void setInternalConnectionAutoCommit(boolean autoCommit) throws DbException {
         try {
-            if(autoCommit){
-                this.conn.setAutoCommit(true);
-            }else{
-                if(!this.getDataBaseType().supportTransaction()){
-                    this.conn.setAutoCommit(true);
-                    log.warn(this.getDataBaseType()+"不支持数据库连接设置为AutoCommit=false," +
+            if(!this.getDataBaseType().supportTransaction()){
+                if(!autoCommit) {
+                    log.warn(this.getDataBaseType() + "不支持数据库连接设置为AutoCommit=false," +
                             "已重新设置为true!");
-                }else {
-                    this.conn.setAutoCommit(false);
+                }
+            }else{
+                if(this.conn.getAutoCommit()!=autoCommit){
+                    this.conn.setAutoCommit(autoCommit);
                 }
             }
 
@@ -258,20 +264,30 @@ public class DataBaseImpl implements DataBase {
         }
     }
 
-    public DataSource getDataSourceFromPool(String dbPoolName) throws DbException {
+    public static DataSource getDataSourceFromPool(String dbPoolName) throws DbException {
 
         Map<String, String> map = new HashMap<String, String>();
         String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
         try {
             DataSource datasource = DBPoolFactory.getInstance(strs[0]).getDBPool(strs[1], map);
-
             return datasource;
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
     }
+    public static DataSource getDataSourceFromSlavePool(String dbPoolName, TResult<String> tslaveName) throws DbException {
 
+        Map<String, String> map = new HashMap<String, String>();
+        String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
+        try {
+            DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName);
+            return ds;
+        } catch (Exception e) {
+            if (e instanceof DbException) throw (DbException) e;
+            throw new DbException(e);
+        }
+    }
     @Override
     public void connectDb(Connection connection, boolean externalControlConClose) {
         this.connectType = ConnectType.CONNECTION;
@@ -290,6 +306,7 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public boolean isExternalControlConClose() {
+
         return this.externalControlConClose;
     }
 
@@ -314,6 +331,78 @@ public class DataBaseImpl implements DataBase {
         return this.connectType;
     }
 
+    protected DataSource fetchDataSource(){
+        DataSource dataSource=null;
+        if (this.connectType == ConnectType.POOL) {
+            String msg="";
+            if (this.mainSlaveMode) {
+                if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是从模式，将连接从库
+                    if (!this.getAutoCommit()) {//事务性操作
+                        throw new DbException("当前操作为事务性，不能在从库上执行!!");
+                    }
+                    if (this.sqlType != SQLType.SELECT) {
+                        throw new DbException("从库只能执行select语句！");
+                    }
+                    this.connectedToMaster = false;
+                    TResult<String> tslaveName = new TResult<>();
+                    DataSource ds = getDataSourceFromSlavePool(dbPoolName,tslaveName);
+                    msg="dataSource:"+tslaveName.getValue();
+                    dataSource = ds;
+
+                } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
+                    this.connectedToMaster = true;
+                    DataSource ds = this.getDataSourceFromPool(dbPoolName);
+                    msg="dataSource:"+dbPoolName;
+                    dataSource = ds;
+                } else { //Connect_Auto
+                    if (this.sqlType == SQLType.SELECT) {
+                        if (!this.getAutoCommit()) {//事务性操作
+                            this.connectedToMaster = true;
+                            DataSource ds = this.getDataSourceFromPool(dbPoolName);
+                            msg="dataSource:"+dbPoolName;
+                            dataSource = ds;
+                        } else {
+                            this.connectedToMaster = false;
+                            TResult<String> tslaveName = new TResult<>();
+                            DataSource ds = this.getDataSourceFromSlavePool(dbPoolName,tslaveName);
+                            msg="dataSource:"+tslaveName.getValue();
+                            dataSource = ds;
+                        }
+                    } else { //update、delete、存储过程,脚本等都在主库上执行
+                        this.connectedToMaster = true;
+                        DataSource ds = this.getDataSourceFromPool(dbPoolName);
+                        msg="dataSource:"+dbPoolName;
+                        dataSource = ds;
+                    }
+
+                }
+            } else { //非主从库方式
+                this.connectedToMaster = true;
+                DataSource ds = this.getDataSourceFromPool(dbPoolName);
+                msg="dataSource:"+dbPoolName;
+                dataSource = ds;
+            }
+
+            if (DbContext.permitDebugLog()) {
+                log.debug("fetch a datasource from [" + msg + "]");
+            }
+
+
+        }else if(this.connectType == ConnectType.DATASOURCE){
+            dataSource =this.dataSource;
+        }
+        else if(this.connectType == ConnectType.CONNECTION){
+            dataSource =null;
+        }
+        return dataSource;
+    }
+    protected Connection  fetchConnection(DataSource dataSource){
+        try {
+            return dataSource.getConnection();
+        }catch (Exception e){
+            throw  new DbException(e);
+        }
+    }
     private void fetchConnection() throws DbException {
         long start0 = System.currentTimeMillis();
         String msg = "";
@@ -321,75 +410,13 @@ public class DataBaseImpl implements DataBase {
         try {
             if (this.isColsed()) {
                 conn = null;
-                if (this.connectType == ConnectType.POOL) {
-                    if (this.mainSlaveMode) {
-                        if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是主从模式，并将是连接从库
-                            if (!this.getAutoCommit()) {//事务性操作
-                                throw new DbException("当前操作为事务性，不能在从库上执行!!");
-                            }
-                            if (this.sqlType != SQLType.SELECT) {
-                                throw new DbException("从库只能执行select语句执行！");
-                            }
-                            msg = "获取从库链接";
-                            this.connectedToMaster = false;
-                            TResult<String> tslaveName = new TResult<>();
-                            String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
-                            DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName);
-                            this.dataSource = ds;
-
-                        } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
-                            msg = "获取主库链接";
-                            this.connectedToMaster = true;
-                            DataSource datasource = this.getDataSourceFromPool(dbPoolName);
-                            this.dataSource = datasource;
-                        } else { //Connect_Auto
-                            if (this.sqlType == SQLType.SELECT) {
-                                if (!this.getAutoCommit()) {//事务性操作
-                                    msg = "获取主库链接";
-                                    this.connectedToMaster = true;
-                                    DataSource ds = this.getDataSourceFromPool(dbPoolName);
-                                    this.dataSource = ds;
-                                } else {
-                                    msg = "获取从库链接";
-                                    this.connectedToMaster = false;
-
-                                    String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
-                                    TResult<String> tslaveName = new TResult<>();
-                                    DataSource ds = DBPoolFactory.getInstance(strs[0]).selectSlaveDbPool(strs[1], tslaveName);
-                                    this.dataSource = ds;
-                                    ///
-                                }
-                            } else { //update、delete、存储过程,脚本等都在主库上执行
-                                msg = "获取主库链接";
-                                this.connectedToMaster = true;
-                                DataSource ds = this.getDataSourceFromPool(dbPoolName);
-                                this.dataSource = ds;
-                            }
-
-                        }
-                    } else { //非主从库方式
-                        msg = "获取主库链接";
-                        this.connectedToMaster = true;
-                        DataSource datasource = this.getDataSourceFromPool(dbPoolName);
-                        this.dataSource = datasource;
-                    }
-                    if (this.isColsed()) {
-                        conn = this.dataSource.getConnection();
-                    }
-
-                } else if (this.connectType == ConnectType.CONNECTION) {
-                    this.connectedToMaster = null;
-                    if (this.isColsed()) {
-                        msg = "数据库连接为空或已经关闭！";
-                    } else {
-                        msg = "获取数据库链接前面已获取";
-                    }
-                } else if (this.connectType == ConnectType.DATASOURCE) {
-                    this.connectedToMaster = null;
-                    msg = "获取数据库库链接";
-                    conn = dataSource.getConnection();
-                } else {
-                    throw new DbException("不支持的连接方式！" + this.connectType);
+                DataSource ds=this.fetchDataSource();
+                this.dataSource=ds;
+                if (this.connectType == ConnectType.POOL
+                        || this.connectType==ConnectType.DATASOURCE){
+                    this.conn = fetchConnection(this.dataSource);
+                }else{ //ConnectType.CONNECTION
+                    //已经存在连接
                 }
                 this.setDataBaseType(conn);
                 this.setInternalConnectionAutoCommit(this.getAutoCommit());
@@ -409,14 +436,14 @@ public class DataBaseImpl implements DataBase {
 
 
     @Override
-    public void connectDb(String dbPoolName) throws DbException {
+    public void connectDb(String dbPoolXmlFileNameAndDbPoolName) throws DbException {
 
         this.connectType = ConnectType.POOL;
-        this.dbPoolName = dbPoolName;
+        this.dbPoolName = dbPoolXmlFileNameAndDbPoolName;
         try {
             if (conn != null) return;
             // 设置是否是主从模式
-            String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolName);
+            String[] strs = DBPoolFactory.parseRefDbPoolName(dbPoolXmlFileNameAndDbPoolName);
             DBPoolFactory dbPoolFactory = DBPoolFactory.getInstance(strs[0]);
             this.setMainSlaveMode(dbPoolFactory.isMainSlaveMode(strs[1]));
             this.mainSlaveModeConnectMode = DbContext.getMainSlaveModeConnectMode();
@@ -3272,7 +3299,6 @@ public class DataBaseImpl implements DataBase {
     private void forceClose() {
 
         try {
-
             if (rs != null) {
                 rs.close();
                 rs = null;
@@ -4201,11 +4227,13 @@ public class DataBaseImpl implements DataBase {
                 command.append(LINE_SEPARATOR);
                 if (StringUtils.hasText(command.toString().trim())) {
                     try {
-                        if (DbContext.permitDebugLog())
+                        if (DbContext.permitDebugLog()) {
                             log.debug("run sql- " + command.toString().trim() + "");
+                        }
                         executePreparedStatement(command.toString().trim());
-                        if (DbContext.permitDebugLog())
-                            log.debug("run sql- Succeeded  ");
+                        if (DbContext.permitDebugLog()) {
+                            log.debug("run sql- " + command.toString().trim() + " Succeeded");
+                        }
 
                     } catch (Exception e) {
                         if (continueIfError) {

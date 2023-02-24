@@ -1,7 +1,12 @@
 package com.github.ulwx.aka.dbutils.mariadb.dao.db_teacher;
 
-import com.github.ulwx.aka.dbutils.database.*;
+import com.github.ulwx.aka.dbutils.database.DBInterceptor;
+import com.github.ulwx.aka.dbutils.database.DataBase;
 import com.github.ulwx.aka.dbutils.database.DataBase.MainSlaveModeConnectMode;
+import com.github.ulwx.aka.dbutils.database.DbContext;
+import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.transaction.AkaPropagationType;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionTemplate;
 import com.github.ulwx.aka.dbutils.mariadb.Utils;
 import com.github.ulwx.aka.dbutils.mariadb.domain.db.db_teacher.Teacher;
 import com.github.ulwx.aka.dbutils.tool.MD;
@@ -49,18 +54,20 @@ public class TeacherDao {
             }
             sql.append(sqltxt);
         });
-
+        //默认为MainSlaveModeConnectMode.Connect_MainServer方式
         MDbUtils.insertBy(DbPoolName, teacher);//更新方法会在主库上执行
         Assert.equal(sql.toString(), "insert into `teacher` (`name`) values('new teacher')");
 
 
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_SlaveServer);
         try {
-            MDbUtils.insertBy(DbPoolName, teacher);//更新方法会在主库上执行
+            //会限制从库只能执行select语句
+            MDbUtils.insertBy(DbPoolName, teacher);
         } catch (Exception e) {
             Assert.state(e instanceof DbException && e.getMessage().equals("从库只能执行select语句执行！"));
         }
         sql.setLength(0);
+
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_Auto);
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
@@ -203,7 +210,7 @@ public class TeacherDao {
                 Assert.state(dataBase.connectedToMaster());
             }
         });
-        MDbTransactionManager.execute(() -> {
+        TransactionTemplate.execute(AkaPropagationType.REQUIRED,() -> {
 
             testSelectIntrans(); //由于在事务里，查询操作会在主库执行
             testUpdateInTrans(); //由于在事务里，更新操作会在主库执行

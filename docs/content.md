@@ -3139,17 +3139,22 @@ public class CourseService {
 
 ```java
 package com.github.ulwx.aka.dbutils.database;
-......
-public  class MDbTransactionManager {
+
+import com.github.ulwx.aka.dbutils.database.transaction.ServiceLogic;
+import com.github.ulwx.aka.dbutils.database.transaction.ServiceLogicHasReturnValue;......
+
+public class MDbTransactionManager {
     ......
-   /**
+
+    /**
      * 总是新开启一个事务执行ServiceLogicHasReturnValue#call()的逻辑。如果当前上下文里存在事务则挂起，
      * 执行当前新建事务完成以后，上下文事务恢复再执行。如果运行新建事务时抛出异常，新建的事务会回滚，并且会再次
      * 抛出异常，此异常如果在外部不被捕获并处理的话，会引发外部的事务回滚。
      * @param serviceLogic  带有返回值的业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
      */
     public static <R> R executeNew(ServiceLogicHasReturnValue<R> serviceLogic)
-            throws DbException 
+            throws DbException
+
     /**
      * 总是新开启一个事务执行ServiceLogic#call()的逻辑。如果当前上下文里存在事务则挂起， 执行当前新建事务完成以后，上下文
      * 事务恢复再执行。如果运行新建事务时抛出异常，新建的事务会回滚，并且会再次抛出异常， 此异常如果在外部不被捕获并处理的话，
@@ -3157,14 +3162,16 @@ public  class MDbTransactionManager {
      * @param serviceLogic  业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
      */
     public static void executeNew(ServiceLogic serviceLogic)
-            throws DbException 
+            throws DbException
+
     /**
      * 如果当前上下文没有事务，则新开启一个事务执行ServiceLogicHasReturnValue#call()逻辑， 否则把 ServiceLogicHasReturnValue#call()
      * 执行加入到当前上下文事务里执行。
      * @param serviceLogic  带有返回值的业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码
      */
     public static <R> R execute(ServiceLogicHasReturnValue<R> serviceLogic)
-            throws DbException 
+            throws DbException
+
     /**
      * 如果当前上下文没有事务，则新开启一个事务执行serviceLogic#call()逻辑，否则把serviceLogic#call()执行加入到当前上下文事务里执行。
      * @param serviceLogic  业务逻辑接口，外部调用通过lambda表达式传入执行数据库操作代码

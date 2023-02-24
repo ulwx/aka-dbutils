@@ -56,15 +56,20 @@ public class TomcatDBPoolImpl implements DBPool{
     }
 
     @Override
-    public DataSource getNewDataSource(String url, String user, String password, String checkoutTimeout,
-                                       String maxPoolSize, String minPoolSize, String maxStatements,
-                                       String maxIdleTime, String idleConnectionTestPeriod,
-                                       String driverClassName,
-                                       String removeAbandoned,
-                                       String removeAbandonedTimeout) throws Exception {
-        Object poolProperties = configJdbcPoolProperties(url, user, password, checkoutTimeout,
-                maxPoolSize, minPoolSize, maxStatements,
-                maxIdleTime, idleConnectionTestPeriod, driverClassName,removeAbandoned,removeAbandonedTimeout);
+    public DataSource getNewDataSource(DBPoolAttr dbPoolAttr) throws Exception {
+        Object poolProperties = configJdbcPoolProperties(
+                dbPoolAttr.getUrl() ,
+                dbPoolAttr.getUser(),
+                dbPoolAttr.getPassword(),
+                dbPoolAttr.getCheckoutTimeout(),
+                dbPoolAttr.getMaxPoolSize(),
+                dbPoolAttr.getMinPoolSize(),
+                dbPoolAttr.getMaxStatements(),
+                dbPoolAttr.getMaxIdleTime(),
+                dbPoolAttr.getIdleConnectionTestPeriod(),
+                dbPoolAttr.getDriverClassName() ,
+                dbPoolAttr.getRemoveAbandoned(),
+                dbPoolAttr.getRemoveAbandonedTimeout());
         DataSource datasource = (DataSource) Class.forName("org.apache.tomcat.jdbc.pool.DataSource")
                 .getDeclaredConstructor().newInstance();
 
@@ -79,5 +84,10 @@ public class TomcatDBPoolImpl implements DBPool{
 
        ReflectionUtil.invoke(dataSource, "close");
 
+    }
+
+    @Override
+    public String getType() {
+        return PoolType.TOMCAT_DB_POOL;
     }
 }

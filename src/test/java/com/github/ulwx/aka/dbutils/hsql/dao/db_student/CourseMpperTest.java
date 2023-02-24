@@ -3,8 +3,9 @@ package com.github.ulwx.aka.dbutils.hsql.dao.db_student;
 import com.github.ulwx.aka.dbutils.database.DataBaseSet;
 import com.github.ulwx.aka.dbutils.database.DbContext;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
-import com.github.ulwx.aka.dbutils.database.MDbTransactionManager;
+import com.github.ulwx.aka.dbutils.database.transaction.MDbTransactionManager;
 import com.github.ulwx.aka.dbutils.database.nsql.CompilerTask;
+import com.github.ulwx.aka.dbutils.database.transaction.TransactionTemplate;
 import com.github.ulwx.aka.dbutils.hsql.Utils;
 import com.github.ulwx.aka.dbutils.hsql.domain.db.db_student.Course;
 import com.github.ulwx.aka.dbutils.tool.MD;
@@ -377,7 +378,7 @@ public class CourseMpperTest {
 
     @Test
     public void testNestTransaction() {
-        MDbTransactionManager.execute(() -> {
+        TransactionTemplate.execute(() -> {
             testAddCourseAndReturnKey();
             testUpdateCourse();
         });
@@ -392,7 +393,7 @@ public class CourseMpperTest {
 
     //@Test
     public void testTransaction() {
-        MDbTransactionManager.execute(() -> {
+        TransactionTemplate.execute(() -> {
             testUpdateCourseManual();
             testNestTransaction();
             testUpdateCourseManual();

@@ -160,7 +160,7 @@ public class BaseDao {
     }
 
     /**
-     * 插入对象指定属性到数据库，根据此对象里的属性、insertProperties、includeNull三者反射生成insert语句
+     * 插入对象指定属性到数据库，根据此对象里的属性、insertProperties、includeNull三者反射生成insert语句。
      *
      * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
@@ -189,7 +189,7 @@ public class BaseDao {
 
     /**
      * 批量插入多个相同类型对象到数据库，aka-dbutils根据此对象里的非null值的属性反射生成insert语句
-     *
+     * <p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
@@ -215,7 +215,7 @@ public class BaseDao {
     /**
      * 批量插入多个相同类型对象到数据库，aka-dbutils根据此对象里包含insertProperties里指定的属性反射生成insert语句，如果insertProperties
      * 里包含值为null的属性，也会插入数据库。
-     *
+     * <p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
@@ -349,7 +349,8 @@ public class BaseDao {
 
 
     /**
-     * 批量插入对象里的属性到数据库，includeNull决定是否插入null值的属性到数据库
+     * 批量插入对象里的属性到数据库，includeNull决定是否插入null值的属性到数据库。
+     * <p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
@@ -374,7 +375,8 @@ public class BaseDao {
     }
 
     /**
-     * 批量插入对象里insertProperties指定属性到数据库，includeNull决定insertProperties里为null值的属性是否插入到数据库
+     * 批量插入对象里insertProperties指定属性到数据库，includeNull决定insertProperties里为null值的属性是否插入到数据库。
+     * <p><b>注意：整个操作在一个事务里。</b></p>
      * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
@@ -726,7 +728,6 @@ public class BaseDao {
      * 根据指定对象数组批量更新对应的表记录，aka-dbutils会根据对象数组生成批量更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分，对象里除了whereProperties里属性之外的其它属性会生成update语句里的set语句部分，
      * 但会忽略存在值为null的属性。批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
-     *
      * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
@@ -754,7 +755,6 @@ public class BaseDao {
      * 根据指定对象数组更新对应的表记录，aka-dbutils会根据对象数组生成批量更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），通过updateProperties指定对象里哪些属性生成update语句里的set语句部分，但会忽略存在值为null的属性。
      * 注意：批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
-     *
      * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
@@ -786,7 +786,6 @@ public class BaseDao {
      * 根据指定对象数组更新对应的表记录，aka-dbutils会根据对象数组生成批量的更新语句，需要通过whereProperties指定对象里哪些
      * 属性来生成where条件部分（不会忽略whereProperties里值为null的属性），除whereProperties里属性的其它属性会生成set子句部分，但会根据includeNull决定是否包含null值的属性。
      * 注意：批量更新操作本身在一个事务里，只要一个对象更新失败，整个事务会回滚。
-     *
      * @param dbPoolName   对应于dbpool.xml里的元素dbpool的name属性值。
      * <blockquote><code>
      * dbPoolName参数的格式如下：
