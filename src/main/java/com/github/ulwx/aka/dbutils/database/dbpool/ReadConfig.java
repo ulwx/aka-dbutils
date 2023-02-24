@@ -33,20 +33,29 @@ public class ReadConfig {
     private volatile ConcurrentHashMap<String, Map<String, String>> transactionManagersProperties=new ConcurrentHashMap<>();
     //为<setting>元素配置
     private volatile ConcurrentHashMap<String, String> glsettings = new ConcurrentHashMap<>();
+    private volatile String poolXmlFilePathName;
     private volatile String dbpoolFileName;
     private volatile Resource resource;
     public static final String DEFAULT = "dbpool.xml";
     //dbpool.xml文件名->ReadConfig对象的Map
     public volatile static ConcurrentHashMap<String, ReadConfig> map = new ConcurrentHashMap<String, ReadConfig>();
 
+    public String getPoolXmlFilePathName() {
+        return poolXmlFilePathName;
+    }
+
     public String getDbpoolFileName() {
         return dbpoolFileName;
     }
 
-    private ReadConfig(String dbpoolFileName) {
+    public void setDbpoolFileName(String dbpoolFileName) {
         this.dbpoolFileName = dbpoolFileName;
+    }
+
+    private ReadConfig(String poolXmlFilePathName) {
+        this.poolXmlFilePathName = poolXmlFilePathName;
         try {
-            this.resource = UrlResourceUtils.newURLResource(dbpoolFileName);
+            this.resource = UrlResourceUtils.newURLResource(poolXmlFilePathName);
         } catch (Exception e) {
             throw new DbException(e);
         }
@@ -131,9 +140,10 @@ public class ReadConfig {
         try {
             Resource[] resources = getResource(dbpoolFileName);
             checkResource(resources, dbpoolFileName);
-            String poolXmlFileName = resources[0].getURL().toString();
-            ReadConfig readConfig = new ReadConfig(poolXmlFileName);
+            String poolXmlFilePathName = resources[0].getURL().toString();
+            ReadConfig readConfig = new ReadConfig(poolXmlFilePathName);
             readConfig.parse();
+            readConfig.setDbpoolFileName(dbpoolFileName);
             map.put(dbpoolFileName, readConfig);
             return map;
         } catch (Exception ex) {
