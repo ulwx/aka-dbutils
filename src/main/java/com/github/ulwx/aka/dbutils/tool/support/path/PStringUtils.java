@@ -6,7 +6,7 @@ import com.github.ulwx.aka.dbutils.tool.support.CollectionUtils;
 
 import java.util.*;
 
-abstract class StringUtils {
+abstract class PStringUtils {
 
     private static final String[] EMPTY_STRING_ARRAY = {};
 
@@ -40,7 +40,7 @@ abstract class StringUtils {
      * @param str the candidate object (possibly a {@code String})
      * @since 3.2.1
      * @deprecated as of 5.3, in favor of {@link #hasLength(String)} and
-     * {@link #hasText(String)} (or {@link ObjectUtils#isEmpty(Object)})
+     * {@link #hasText(String)} (or {@link PObjectUtils#isEmpty(Object)})
      */
     @Deprecated
     public static boolean isEmpty(Object str) {
@@ -877,7 +877,7 @@ abstract class StringUtils {
      * @return the new array (never {@code null})
      */
     public static String[] addStringToArray(String[] array, String str) {
-        if (ObjectUtils.isEmpty(array)) {
+        if (PObjectUtils.isEmpty(array)) {
             return new String[]{str};
         }
 
@@ -898,10 +898,10 @@ abstract class StringUtils {
      */
 
     public static String[] concatenateStringArrays(String[] array1, String[] array2) {
-        if (ObjectUtils.isEmpty(array1)) {
+        if (PObjectUtils.isEmpty(array1)) {
             return array2;
         }
-        if (ObjectUtils.isEmpty(array2)) {
+        if (PObjectUtils.isEmpty(array2)) {
             return array1;
         }
 
@@ -927,10 +927,10 @@ abstract class StringUtils {
     @Deprecated
 
     public static String[] mergeStringArrays(String[] array1, String[] array2) {
-        if (ObjectUtils.isEmpty(array1)) {
+        if (PObjectUtils.isEmpty(array1)) {
             return array2;
         }
-        if (ObjectUtils.isEmpty(array2)) {
+        if (PObjectUtils.isEmpty(array2)) {
             return array1;
         }
 
@@ -950,7 +950,7 @@ abstract class StringUtils {
      * @return the array in sorted form (never {@code null})
      */
     public static String[] sortStringArray(String[] array) {
-        if (ObjectUtils.isEmpty(array)) {
+        if (PObjectUtils.isEmpty(array)) {
             return array;
         }
 
@@ -966,7 +966,7 @@ abstract class StringUtils {
      * @return the resulting array (of the same size) with trimmed elements
      */
     public static String[] trimArrayElements(String[] array) {
-        if (ObjectUtils.isEmpty(array)) {
+        if (PObjectUtils.isEmpty(array)) {
             return array;
         }
 
@@ -986,7 +986,7 @@ abstract class StringUtils {
      * @return an array without duplicates, in natural sort order
      */
     public static String[] removeDuplicateStrings(String[] array) {
-        if (ObjectUtils.isEmpty(array)) {
+        if (PObjectUtils.isEmpty(array)) {
             return array;
         }
 
@@ -1054,7 +1054,7 @@ abstract class StringUtils {
     public static Properties splitArrayElementsIntoProperties(
             String[] array, String delimiter, String charsToDelete) {
 
-        if (ObjectUtils.isEmpty(array)) {
+        if (PObjectUtils.isEmpty(array)) {
             return null;
         }
 
@@ -1283,11 +1283,11 @@ abstract class StringUtils {
      * @return the delimited {@code String}
      */
     public static String arrayToDelimitedString(Object[] arr, String delim) {
-        if (ObjectUtils.isEmpty(arr)) {
+        if (PObjectUtils.isEmpty(arr)) {
             return "";
         }
         if (arr.length == 1) {
-            return ObjectUtils.nullSafeToString(arr[0]);
+            return PObjectUtils.nullSafeToString(arr[0]);
         }
 
         StringJoiner sj = new StringJoiner(delim);

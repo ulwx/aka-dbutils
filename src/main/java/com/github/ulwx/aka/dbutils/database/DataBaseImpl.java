@@ -23,6 +23,7 @@ import com.github.ulwx.aka.dbutils.tool.support.type.TInteger;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
 import com.github.ulwx.aka.dbutils.tool.support.type.TString;
+import org.codehaus.groovy.transform.ThreadInterruptibleASTTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -222,11 +223,13 @@ public class DataBaseImpl implements DataBase {
 
     private void setInternalConnectionAutoCommit(boolean autoCommit) throws DbException {
         try {
-            if(!this.getDataBaseType().supportTransaction()){
+            if(!this.getDataBaseType().supportTransaction()
+               || !conn.getMetaData().supportsTransactions()){
                 if(!autoCommit) {
                     log.warn(this.getDataBaseType() + "不支持数据库连接设置为AutoCommit=false," +
                             "已重新设置为true!");
                 }
+
             }else{
                 if(this.conn.getAutoCommit()!=autoCommit){
                     this.conn.setAutoCommit(autoCommit);
@@ -1865,7 +1868,8 @@ public class DataBaseImpl implements DataBase {
             twoInt[0] = count;
             try {
                 if (this.sqlType == SQLType.INSERT) {
-                    if (this.getDataBaseType().supportGeneratedKeysForInsert()) {//oracle不支持getGeneratedKeys操作
+                    if (this.getDataBaseType().supportGeneratedKeysForInsert()
+                           ||this.conn.getMetaData().supportsGetGeneratedKeys() ) {//oracle不支持getGeneratedKeys操作
                         ResultSet keys = preStmt.getGeneratedKeys();
                         if (keys.next()) {
                             twoInt[1] = keys.getLong(1);
@@ -2686,7 +2690,8 @@ public class DataBaseImpl implements DataBase {
     public void rollback() throws DbException {
         try {
             if (conn != null) {
-                if (this.getDataBaseType().supportTransaction()) {
+                if (this.getDataBaseType().supportTransaction()
+                    || conn.getMetaData().supportsTransactions()) {
                     conn.rollback();
                     clearSavePoint();
                     if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ":rollback done!");
@@ -2745,6 +2750,9 @@ public class DataBaseImpl implements DataBase {
                 }
                 Savepoint savepoint = null;
                 if (!savePointMap.containsKey(savepointName)) {
+                    if(!conn.getMetaData().supportsSavepoints()){
+                        throw  new DbException("数据库不支持Savepoint()操作！");
+                    }
                     savepoint = conn.setSavepoint(savepointName);
                     if (DbContext.permitDebugLog()) {
                         log.debug(this.getConnectInfo() + ": Savepoint:" + savepointName + "  ok!");
@@ -2766,7 +2774,11 @@ public class DataBaseImpl implements DataBase {
         } else {
             try {
                 if (!this.isColsed()) {
-                    if (this.getDataBaseType().supportTransaction()) {
+                    if (this.getDataBaseType().supportTransaction()
+                        || conn.getMetaData().supportsTransactions()) {
+                        if(!conn.getMetaData().supportsSavepoints()){
+                            throw  new DbException("数据库不支持Savepoint回滚操作！");
+                        }
                         conn.rollback(savePointMap.get(savepointName));
                         savePointMap.remove(savepointName);
                         if (DbContext.permitDebugLog())
@@ -2809,7 +2821,8 @@ public class DataBaseImpl implements DataBase {
     public void commit() throws DbException {
         try {
             if (conn != null) {
-                if (this.getDataBaseType().supportTransaction()) {
+                if (this.getDataBaseType().supportTransaction()
+                   || conn.getMetaData().supportsTransactions()) {
                     conn.commit();
                     clearSavePoint();
                     if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commit done!");

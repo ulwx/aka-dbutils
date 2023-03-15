@@ -10,9 +10,8 @@ package com.github.ulwx.aka.dbutils.tool.support;
  * @version 1.0
  */
 
-import com.github.ulwx.aka.dbutils.database.DbException;
 import com.github.ulwx.aka.dbutils.tool.support.path.ClassPathRootResource;
-import com.github.ulwx.aka.dbutils.tool.support.path.PathResourceUtils;
+import com.github.ulwx.aka.dbutils.tool.support.path.PPathResourceUtils;
 import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,7 +220,7 @@ public class Path {
      */
     public static void checkResource(Resource[] resources, String location)  throws Exception{
         if (resources == null || resources.length == 0) {
-            throw new DbException("错误！没有找到" + location + "配置文件!");
+            throw new RuntimeException("错误！没有找到" + location + "配置文件!");
         } else if(resources.length == 1){
             if(!resources[0].exists()){
                 throw new Exception("错误！" + location + "配置文件不存在!");
@@ -240,11 +239,11 @@ public class Path {
      * @throws IOException
      */
     public static Resource[] getResourcesLikeAntPathMatch(String antPath) throws IOException {
-        return PathResourceUtils.find(antPath);
+        return PPathResourceUtils.find(antPath);
     }
 
     public static ClassPathRootResource[] convertToClassPathRootResource(Resource[] resources) throws IOException {
-        return PathResourceUtils.convertToClassPathRootResource(resources);
+        return PPathResourceUtils.convertToClassPathRootResource(resources);
     }
 
     public static InputStream getClassPathResource(String fileName)

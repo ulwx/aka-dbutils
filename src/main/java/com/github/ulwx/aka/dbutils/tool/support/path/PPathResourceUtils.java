@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
-public class PathResourceUtils {
+public class PPathResourceUtils {
     /**
      * @param antPath ant格式路径，例如classpath:spring/*.xml当前class路径，
      *                如果为classpath*:spring/*.xml会查找所有类路径（包含jar）

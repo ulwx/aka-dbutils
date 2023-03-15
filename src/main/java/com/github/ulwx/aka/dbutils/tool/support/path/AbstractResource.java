@@ -90,7 +90,7 @@ abstract class AbstractResource implements Resource {
     public URI getURI() throws IOException {
         URL url = getURL();
         try {
-            return ResourceUtils.toURI(url);
+            return PResourceUtils.toURI(url);
         } catch (URISyntaxException ex) {
             throw new RuntimeException("Invalid URI [" + url + "]", ex);
         }

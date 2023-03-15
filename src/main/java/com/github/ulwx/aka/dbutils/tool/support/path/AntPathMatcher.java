@@ -364,7 +364,7 @@ class AntPathMatcher implements PathMatcher {
      * @return the tokenized path parts
      */
     protected String[] tokenizePath(String path) {
-        return StringUtils.tokenizeToStringArray(path, this.pathSeparator, this.trimTokens, true);
+        return PStringUtils.tokenizeToStringArray(path, this.pathSeparator, this.trimTokens, true);
     }
 
     /**
@@ -431,8 +431,8 @@ class AntPathMatcher implements PathMatcher {
      */
     @Override
     public String extractPathWithinPattern(String pattern, String path) {
-        String[] patternParts = StringUtils.tokenizeToStringArray(pattern, this.pathSeparator, this.trimTokens, true);
-        String[] pathParts = StringUtils.tokenizeToStringArray(path, this.pathSeparator, this.trimTokens, true);
+        String[] patternParts = PStringUtils.tokenizeToStringArray(pattern, this.pathSeparator, this.trimTokens, true);
+        String[] pathParts = PStringUtils.tokenizeToStringArray(path, this.pathSeparator, this.trimTokens, true);
         StringBuilder builder = new StringBuilder();
         boolean pathStarted = false;
 
@@ -493,13 +493,13 @@ class AntPathMatcher implements PathMatcher {
      */
     @Override
     public String combine(String pattern1, String pattern2) {
-        if (!StringUtils.hasText(pattern1) && !StringUtils.hasText(pattern2)) {
+        if (!PStringUtils.hasText(pattern1) && !PStringUtils.hasText(pattern2)) {
             return "";
         }
-        if (!StringUtils.hasText(pattern1)) {
+        if (!PStringUtils.hasText(pattern1)) {
             return pattern2;
         }
-        if (!StringUtils.hasText(pattern2)) {
+        if (!PStringUtils.hasText(pattern2)) {
             return pattern1;
         }
 

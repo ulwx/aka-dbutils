@@ -13,13 +13,13 @@ public class DruidDBPoolImpl implements DBPool{
     @Override
     public DataSource getNewDataSource(DBPoolAttr dbPoolAttr) throws Exception {
 
-      //  com.alibaba.druid.pool.DruidDataSource druidDataSource = new com.alibaba.druid.pool.DruidDataSource();
+       // com.alibaba.druid.pool.DruidDataSource druidDataSource = new com.alibaba.druid.pool.DruidDataSource();
         Object p = Class.forName("com.alibaba.druid.pool.DruidDataSource").getDeclaredConstructor().newInstance();
         ReflectionUtil.invoke(p, "setUrl", String.class,dbPoolAttr.getUrl() );
         ReflectionUtil.invoke(p, "setUsername", String.class,dbPoolAttr.getUser() );
         ReflectionUtil.invoke(p, "setPassword", String.class, dbPoolAttr.getPassword());
         ReflectionUtil.invoke(p, "setDriverClassName", String.class,dbPoolAttr.getDriverClassName() );
-        //druidDataSource.setInitialSize(
+
         ReflectionUtil.invoke(p, "setInitialSize", int.class, Integer.valueOf(dbPoolAttr.getMinPoolSize()));
         ReflectionUtil.invoke(p, "setMaxActive", int.class, Integer.valueOf(dbPoolAttr.getMaxPoolSize()));
         ReflectionUtil.invoke(p, "setMinIdle", int.class, Integer.valueOf(dbPoolAttr.getMinPoolSize()));
@@ -41,14 +41,31 @@ public class DruidDBPoolImpl implements DBPool{
         ReflectionUtil.invoke(p, "setTimeBetweenEvictionRunsMillis", long.class, test*1000l);//40秒
         ReflectionUtil.invoke(p, "setMinEvictableIdleTimeMillis", long.class,
                 Integer.valueOf(dbPoolAttr.getMaxIdleTime()) * 1000);
-        ReflectionUtil.invoke(p, "setFilters", String.class,"stat");
+
+        String filters=StringUtils.trim(dbPoolAttr.getAttributes().get("filters"));
+        if(StringUtils.hasText(filters)){
+            ReflectionUtil.invoke(p, "setFilters", String.class, filters);
+        }else{
+            ReflectionUtil.invoke(p, "setFilters", String.class,"stat,wall,slf4j");
+        }
         ReflectionUtil.invoke(p, "setRemoveAbandoned", boolean.class,Boolean.valueOf(dbPoolAttr.getRemoveAbandoned()));
         ReflectionUtil.invoke(p, "setRemoveAbandonedTimeout", int.class,
                 Integer.valueOf(dbPoolAttr.getRemoveAbandonedTimeout()));
         ReflectionUtil.invoke(p, "setLogAbandoned", boolean.class, true);
-        ReflectionUtil.invoke(p, "setConnectionProperties", String.class, "druid.stat.slowSqlMillis=3000");
-        //druid.stat.mergeSql=false;
-        ReflectionUtil.invoke(p, "setUseGlobalDataSourceStat", boolean.class, true);
+        String connectionProperties=StringUtils.trim(dbPoolAttr.getAttributes().get("connectionProperties"));
+        if(StringUtils.hasText(connectionProperties)){
+            ReflectionUtil.invoke(p, "setConnectionProperties", String.class, connectionProperties);
+        }else {
+            ////druid.stat.mergeSql=false;
+            ReflectionUtil.invoke(p, "setConnectionProperties", String.class, "druid.stat.slowSqlMillis=3000");
+        }
+        String useGlobalDataSourceStat=StringUtils.trim(dbPoolAttr.getAttributes().get("useGlobalDataSourceStat"));
+        if(StringUtils.hasText(useGlobalDataSourceStat)){
+            ReflectionUtil.invoke(p, "setUseGlobalDataSourceStat", boolean.class, Boolean.valueOf(useGlobalDataSourceStat));
+        }else{
+            ReflectionUtil.invoke(p, "setUseGlobalDataSourceStat", boolean.class, true);
+        }
+        ReflectionUtil.invoke(p, "init");
         return (DataSource)p;
 
     }

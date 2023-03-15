@@ -23,7 +23,7 @@ public class CompilerTask {
     public static volatile Map<String, Class> LoadedClasses = new ConcurrentHashMap<String, Class>();
     public static volatile Map<String, String> LoadedSoruces = new ConcurrentHashMap<String, String>();
     public static volatile boolean UseThirdpartCompilerTool = true;
-    public static ExecutorService threadPool = Executors.newFixedThreadPool(10);
+    public static ExecutorService threadPool = Executors.newFixedThreadPool(4);
     public static volatile SegmentLock segmentLock = new SegmentLock();
 
     public static String getSource(String classFullName) {
@@ -31,17 +31,17 @@ public class CompilerTask {
     }
 
     static {
-
-        threadPool.execute(new Runnable() {
+        Thread thread=new Thread(){
             @Override
             public void run() {
                 try {
-                  //  preCompileAll();
+                    preCompileAll();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-        });
+        };
+        thread.start();
     }
 
     public static void preCompileAll() throws Exception {
@@ -87,6 +87,7 @@ public class CompilerTask {
         if (DbContext.permitDebugLog()) {
             log.debug("to compile--" + ObjectUtils.toString(mdPathList));
         }
+
         for (int i = 0; i < mdPathList.size(); i++) {
             Integer index = i;
             threadPool.execute(new Runnable() {

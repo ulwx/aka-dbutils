@@ -59,7 +59,15 @@ public class DBPoolFactory {
      * */
     private volatile Map<String, AKaTransactionManager> transactionManagerMap= new ConcurrentHashMap<>();
 
-    private static volatile Map<String, DBPoolFactory> dbpoolFactoryInstanceMap = new ConcurrentHashMap<>();
+    private static final Map<String, DBPoolFactory> dbpoolFactoryInstanceMap = new ConcurrentHashMap<>();
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                DBPoolFactory.close();
+            }
+        }));
+    }
 
     private DBPoolFactory(String dbPoolXmlFileName) {
         this.dbPoolXmlFileName = dbPoolXmlFileName;
@@ -718,9 +726,7 @@ public class DBPoolFactory {
 
 
     public static void main(String[] args) throws Exception {
-        executorService.scheduleWithFixedDelay(() -> {
-            System.out.println(123);
-        }, 2, 2, TimeUnit.SECONDS);
+
     }
 
     public static void close() {

@@ -800,6 +800,7 @@ public class CourseDao {
             }
             sql2.append(sqltxt);
         });
+
         MDbUtils.update(DbPoolName, MD.md(), MD.mapList(course1, course2));
         Assert.equal(sql2.toString(),
                 "UPDATE `course` SET `class_hours` = 231, `creatime` = '2021-03-15 22:31:40' WHERE `name` = 'course_md01';" +

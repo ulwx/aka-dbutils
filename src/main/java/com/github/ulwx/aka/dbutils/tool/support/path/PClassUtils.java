@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
 
-abstract class ClassUtils {
+abstract class PClassUtils {
 
     /**
      * Suffix for array class names: {@code "[]"}.
@@ -169,7 +169,7 @@ abstract class ClassUtils {
         }
         if (cl == null) {
             // No thread context class loader -> use class loader of this class.
-            cl = ClassUtils.class.getClassLoader();
+            cl = PClassUtils.class.getClassLoader();
             if (cl == null) {
                 // getClassLoader() returning null indicates the bootstrap ClassLoader
                 try {

@@ -5,7 +5,7 @@ import com.github.ulwx.aka.dbutils.tool.support.Assert;
 import java.lang.reflect.Array;
 import java.util.*;
 
-abstract class ObjectUtils {
+abstract class PObjectUtils {
 
     private static final int INITIAL_HASH = 7;
     private static final int MULTIPLIER = 31;

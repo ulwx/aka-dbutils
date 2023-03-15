@@ -36,12 +36,12 @@ class ClassPathResource extends AbstractFileResolvingResource {
      */
     public ClassPathResource(String path, ClassLoader classLoader) {
         Assert.notNull(path, "Path must not be null");
-        String pathToUse = StringUtils.cleanPath(path);
+        String pathToUse = PStringUtils.cleanPath(path);
         if (pathToUse.startsWith("/")) {
             pathToUse = pathToUse.substring(1);
         }
         this.path = pathToUse;
-        this.classLoader = (classLoader != null ? classLoader : ClassUtils.getDefaultClassLoader());
+        this.classLoader = (classLoader != null ? classLoader : PClassUtils.getDefaultClassLoader());
     }
 
     /**
@@ -55,7 +55,7 @@ class ClassPathResource extends AbstractFileResolvingResource {
      */
     public ClassPathResource(String path, Class<?> clazz) {
         Assert.notNull(path, "Path must not be null");
-        this.path = StringUtils.cleanPath(path);
+        this.path = PStringUtils.cleanPath(path);
         this.clazz = clazz;
     }
 
@@ -71,7 +71,7 @@ class ClassPathResource extends AbstractFileResolvingResource {
      */
     @Deprecated
     protected ClassPathResource(String path, ClassLoader classLoader, Class<?> clazz) {
-        this.path = StringUtils.cleanPath(path);
+        this.path = PStringUtils.cleanPath(path);
         this.classLoader = classLoader;
         this.clazz = clazz;
     }
@@ -161,7 +161,7 @@ class ClassPathResource extends AbstractFileResolvingResource {
 
     @Override
     public Resource createRelative(String relativePath) {
-        String pathToUse = StringUtils.applyRelativePath(this.path, relativePath);
+        String pathToUse = PStringUtils.applyRelativePath(this.path, relativePath);
         return (this.clazz != null ? new ClassPathResource(pathToUse, this.clazz) :
                 new ClassPathResource(pathToUse, this.classLoader));
     }
@@ -169,7 +169,7 @@ class ClassPathResource extends AbstractFileResolvingResource {
 
     @Override
     public String getFilename() {
-        return StringUtils.getFilename(this.path);
+        return PStringUtils.getFilename(this.path);
     }
 
     /**
@@ -180,7 +180,7 @@ class ClassPathResource extends AbstractFileResolvingResource {
         StringBuilder builder = new StringBuilder("class path resource [");
         String pathToUse = this.path;
         if (this.clazz != null && !pathToUse.startsWith("/")) {
-            builder.append(ClassUtils.classPackageAsResourcePath(this.clazz));
+            builder.append(PClassUtils.classPackageAsResourcePath(this.clazz));
             builder.append('/');
         }
         if (pathToUse.startsWith("/")) {
@@ -205,8 +205,8 @@ class ClassPathResource extends AbstractFileResolvingResource {
         }
         ClassPathResource otherRes = (ClassPathResource) other;
         return (this.path.equals(otherRes.path) &&
-                ObjectUtils.nullSafeEquals(this.classLoader, otherRes.classLoader) &&
-                ObjectUtils.nullSafeEquals(this.clazz, otherRes.clazz));
+                PObjectUtils.nullSafeEquals(this.classLoader, otherRes.classLoader) &&
+                PObjectUtils.nullSafeEquals(this.clazz, otherRes.clazz));
     }
 
     /**

@@ -210,7 +210,7 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implements Conc
     public boolean containsKey(Object key) {
         Reference<K, V> ref = getReference(key, Restructure.WHEN_NECESSARY);
         Entry<K, V> entry = (ref != null ? ref.get() : null);
-        return (entry != null && ObjectUtils.nullSafeEquals(entry.getKey(), key));
+        return (entry != null && PObjectUtils.nullSafeEquals(entry.getKey(), key));
     }
 
     /**
@@ -282,7 +282,7 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implements Conc
         Boolean result = doTask(key, new Task<Boolean>(TaskOption.RESTRUCTURE_AFTER, TaskOption.SKIP_IF_EMPTY) {
             @Override
             protected Boolean execute(Reference<K, V> ref, Entry<K, V> entry) {
-                if (entry != null && ObjectUtils.nullSafeEquals(entry.getValue(), value)) {
+                if (entry != null && PObjectUtils.nullSafeEquals(entry.getValue(), value)) {
                     if (ref != null) {
                         ref.release();
                     }
@@ -299,7 +299,7 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implements Conc
         Boolean result = doTask(key, new Task<Boolean>(TaskOption.RESTRUCTURE_BEFORE, TaskOption.SKIP_IF_EMPTY) {
             @Override
             protected Boolean execute(Reference<K, V> ref, Entry<K, V> entry) {
-                if (entry != null && ObjectUtils.nullSafeEquals(entry.getValue(), oldValue)) {
+                if (entry != null && PObjectUtils.nullSafeEquals(entry.getValue(), oldValue)) {
                     entry.setValue(newValue);
                     return true;
                 }
@@ -611,7 +611,7 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implements Conc
                     Entry<K, V> entry = currRef.get();
                     if (entry != null) {
                         K entryKey = entry.getKey();
-                        if (ObjectUtils.nullSafeEquals(entryKey, key)) {
+                        if (PObjectUtils.nullSafeEquals(entryKey, key)) {
                             return currRef;
                         }
                     }
@@ -734,13 +734,13 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implements Conc
                 return false;
             }
             Map.Entry otherEntry = (Map.Entry) other;
-            return (ObjectUtils.nullSafeEquals(getKey(), otherEntry.getKey()) &&
-                    ObjectUtils.nullSafeEquals(getValue(), otherEntry.getValue()));
+            return (PObjectUtils.nullSafeEquals(getKey(), otherEntry.getKey()) &&
+                    PObjectUtils.nullSafeEquals(getValue(), otherEntry.getValue()));
         }
 
         @Override
         public final int hashCode() {
-            return (ObjectUtils.nullSafeHashCode(this.key) ^ ObjectUtils.nullSafeHashCode(this.value));
+            return (PObjectUtils.nullSafeHashCode(this.key) ^ PObjectUtils.nullSafeHashCode(this.value));
         }
     }
 
@@ -826,7 +826,7 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implements Conc
                 Reference<K, V> ref = ConcurrentReferenceHashMap.this.getReference(entry.getKey(), Restructure.NEVER);
                 Entry<K, V> otherEntry = (ref != null ? ref.get() : null);
                 if (otherEntry != null) {
-                    return ObjectUtils.nullSafeEquals(otherEntry.getValue(), otherEntry.getValue());
+                    return PObjectUtils.nullSafeEquals(otherEntry.getValue(), otherEntry.getValue());
                 }
             }
             return false;

@@ -36,7 +36,7 @@ class FileSystemResource extends AbstractResource implements WritableResource {
      */
     public FileSystemResource(String path) {
         Assert.notNull(path, "Path must not be null");
-        this.path = StringUtils.cleanPath(path);
+        this.path = PStringUtils.cleanPath(path);
         this.file = new File(path);
         this.filePath = this.file.toPath();
     }
@@ -57,14 +57,14 @@ class FileSystemResource extends AbstractResource implements WritableResource {
      */
     public FileSystemResource(File file) {
         Assert.notNull(file, "File must not be null");
-        this.path = StringUtils.cleanPath(file.getPath());
+        this.path = PStringUtils.cleanPath(file.getPath());
         this.file = file;
         this.filePath = file.toPath();
     }
 
     public FileSystemResource(Path filePath) {
         Assert.notNull(filePath, "Path must not be null");
-        this.path = StringUtils.cleanPath(filePath.toString());
+        this.path = PStringUtils.cleanPath(filePath.toString());
         this.file = null;
         this.filePath = filePath;
     }
@@ -83,7 +83,7 @@ class FileSystemResource extends AbstractResource implements WritableResource {
     public FileSystemResource(FileSystem fileSystem, String path) {
         Assert.notNull(fileSystem, "FileSystem must not be null");
         Assert.notNull(path, "Path must not be null");
-        this.path = StringUtils.cleanPath(path);
+        this.path = PStringUtils.cleanPath(path);
         this.file = null;
         this.filePath = fileSystem.getPath(this.path).normalize();
     }
@@ -256,7 +256,7 @@ class FileSystemResource extends AbstractResource implements WritableResource {
 
     @Override
     public Resource createRelative(String relativePath) {
-        String pathToUse = StringUtils.applyRelativePath(this.path, relativePath);
+        String pathToUse = PStringUtils.applyRelativePath(this.path, relativePath);
         return (this.file != null ? new FileSystemResource(pathToUse) :
                 new FileSystemResource(this.filePath.getFileSystem(), pathToUse));
     }

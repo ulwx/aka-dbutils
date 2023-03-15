@@ -49,7 +49,8 @@ public class MDataBaseImpl implements MDataBase {
 
     @Override
     public String exeScriptInDir(String dirFilePath, String sqlFileName,
-                            boolean throwWarning, boolean continueIfError,String delimiters,String encoding) throws DbException {
+                            boolean throwWarning, boolean continueIfError,
+                                 String delimiters,String encoding) throws DbException {
 
         try {
             File f = new File(dirFilePath,sqlFileName);

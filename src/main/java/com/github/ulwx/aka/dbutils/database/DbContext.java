@@ -199,7 +199,9 @@ public class DbContext implements Serializable {
     public static void setDbTransInfo(DBTransInfo dbt) {
         localDbContext.get().contextMap.put(key_db_trans_info, dbt);
     }
-
+    public static void clearDbTransInfo() {
+        localDbContext.get().contextMap.remove(key_db_trans_info);
+    }
     /**
      * 获取主从连接模式
      *
@@ -237,9 +239,7 @@ public class DbContext implements Serializable {
         return (DBTransInfo) localDbContext.get().contextMap.get(key_db_trans_info);
     }
 
-    public static void clearDbTransInfo() {
-        localDbContext.get().contextMap.remove(key_db_trans_info);
-    }
+
 
     public static Stack<Map<String, TransactionContextElem>> getTransactionContextStack() {
         @SuppressWarnings("unchecked")

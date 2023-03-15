@@ -56,7 +56,7 @@ class DefaultResourceLoader implements ResourceLoader {
     @Override
 
     public ClassLoader getClassLoader() {
-        return (this.classLoader != null ? this.classLoader : ClassUtils.getDefaultClassLoader());
+        return (this.classLoader != null ? this.classLoader : PClassUtils.getDefaultClassLoader());
     }
 
     /**
@@ -125,7 +125,7 @@ class DefaultResourceLoader implements ResourceLoader {
             try {
                 // Try to parse the location as a URL...
                 URL url = new URL(location);
-                return (ResourceUtils.isFileURL(url) ? new FileUrlResource(url) : new UrlResource(url));
+                return (PResourceUtils.isFileURL(url) ? new FileUrlResource(url) : new UrlResource(url));
             } catch (MalformedURLException ex) {
                 // No URL -> resolve as resource path.
                 return getResourceByPath(location);
@@ -156,7 +156,7 @@ class DefaultResourceLoader implements ResourceLoader {
 
         @Override
         public Resource createRelative(String relativePath) {
-            String pathToUse = StringUtils.applyRelativePath(getPath(), relativePath);
+            String pathToUse = PStringUtils.applyRelativePath(getPath(), relativePath);
             return new ClassPathContextResource(pathToUse, getClassLoader());
         }
     }

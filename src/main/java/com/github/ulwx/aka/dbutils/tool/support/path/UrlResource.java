@@ -108,7 +108,7 @@ class UrlResource extends AbstractFileResolvingResource {
 
 
     private static URL getCleanedUrl(URL originalUrl, String originalPath) {
-        String cleanedPath = StringUtils.cleanPath(originalPath);
+        String cleanedPath = PStringUtils.cleanPath(originalPath);
         if (!cleanedPath.equals(originalPath)) {
             try {
                 return new URL(cleanedPath);
@@ -147,7 +147,7 @@ class UrlResource extends AbstractFileResolvingResource {
     @Override
     public InputStream getInputStream() throws IOException {
         URLConnection con = this.url.openConnection();
-        ResourceUtils.useCachesIfNecessary(con);
+        PResourceUtils.useCachesIfNecessary(con);
         try {
             return con.getInputStream();
         } catch (IOException ex) {
@@ -223,7 +223,7 @@ class UrlResource extends AbstractFileResolvingResource {
             relativePath = relativePath.substring(1);
         }
         // # can appear in filenames, java.net.URL should not treat it as a fragment
-        relativePath = StringUtils.replace(relativePath, "#", "%23");
+        relativePath = PStringUtils.replace(relativePath, "#", "%23");
         // Use the URL constructor for applying the relative path as a URL spec
         return new URL(this.url, relativePath);
     }
@@ -235,7 +235,7 @@ class UrlResource extends AbstractFileResolvingResource {
      */
     @Override
     public String getFilename() {
-        return StringUtils.getFilename(getCleanedUrl().getPath());
+        return PStringUtils.getFilename(getCleanedUrl().getPath());
     }
 
     /**

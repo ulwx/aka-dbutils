@@ -41,7 +41,7 @@
     <dbpool name="db_student" type="druid" table-name-rule="underline_to_camel"
             table-colum-rule="underline_to_camel">
         <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3306/db_student?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
+        <property name="url">jdbc:mysql://localhost:3306/db_student?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
@@ -55,7 +55,7 @@
 
     <dbpool name="db_teacher_slave1" type="druid">
         <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
+        <property name="url">jdbc:mysql://localhost:3306/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="checkoutTimeout">60000</property>
@@ -67,7 +67,7 @@
     </dbpool>
     <dbpool name="db_teacher_slave2" type="druid">
         <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
+        <property name="url">jdbc:mysql://localhost:3306/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="checkoutTimeout">60000</property>
@@ -79,7 +79,7 @@
     </dbpool>
     <dbpool name="db_teacher" type="druid">
         <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
+        <property name="url">jdbc:mysql://localhost:3306/db_teacher?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
@@ -92,7 +92,7 @@
         <slaves>
             <server name="slave-1">
                 <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-                <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
+                <property name="url">jdbc:mysql://localhost:3306/db_teacher_slave1?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
                 <property name="username">root</property>
                 <property name="password">123456</property>
                 <property name="checkoutTimeout">60000</property>
@@ -104,7 +104,7 @@
             </server>
             <server name="slave-2">
                 <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-                <property name="url">jdbc:mysql://192.168.137.200:3306/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
+                <property name="url">jdbc:mysql://localhost:3306/db_teacher_slave2?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
                 <property name="username">root</property>
                 <property name="password">123456</property>
                 <property name="checkoutTimeout">60000</property>
@@ -124,6 +124,7 @@
     <dbpool name="abc" ref="db_teacher"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"/>
     <!--
+    type属性：指定数据库连接池,可以使用tomcatdbpool,druid,HikariCP
     ref-class属性：实现IDBPoolAttrSource接口的类，通过实现IDBPoolAttrSource接口的类，获取数据源属性。
     table-name-rule属性：指定本数据源对应数据库的表名到javaBean类名的转换规则，覆盖setting里的全局规则。
     table-colum-rule属性：指定本数据源对应数据库里表字段与javaBean属性名的转换规则，覆盖setting里的全局规则。
@@ -131,6 +132,7 @@
     比较，如果不相同则替换并重新用新的属性构造连接池。。
     -->
     <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.mysql.MyIDBPoolAttrSourceTest"
+            type="druid"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
             check-time="0"/>
 </dbpool-config>

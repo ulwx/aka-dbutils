@@ -20,7 +20,7 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
     public boolean exists() {
         try {
             URL url = getURL();
-            if (ResourceUtils.isFileURL(url)) {
+            if (PResourceUtils.isFileURL(url)) {
                 // Proceed with file system resolution
                 return getFile().exists();
             } else {
@@ -59,7 +59,7 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
     public boolean isReadable() {
         try {
             URL url = getURL();
-            if (ResourceUtils.isFileURL(url)) {
+            if (PResourceUtils.isFileURL(url)) {
                 // Proceed with file system resolution
                 File file = getFile();
                 return (file.canRead() && !file.isDirectory());
@@ -96,10 +96,10 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
     public boolean isFile() {
         try {
             URL url = getURL();
-            if (url.getProtocol().startsWith(ResourceUtils.URL_PROTOCOL_VFS)) {
+            if (url.getProtocol().startsWith(PResourceUtils.URL_PROTOCOL_VFS)) {
                 return VfsResourceDelegate.getResource(url).isFile();
             }
-            return ResourceUtils.URL_PROTOCOL_FILE.equals(url.getProtocol());
+            return PResourceUtils.URL_PROTOCOL_FILE.equals(url.getProtocol());
         } catch (IOException ex) {
             return false;
         }
@@ -109,10 +109,10 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
     @Override
     public File getFile() throws IOException {
         URL url = getURL();
-        if (url.getProtocol().startsWith(ResourceUtils.URL_PROTOCOL_VFS)) {
+        if (url.getProtocol().startsWith(PResourceUtils.URL_PROTOCOL_VFS)) {
             return VfsResourceDelegate.getResource(url).getFile();
         }
-        return ResourceUtils.getFile(url, getDescription());
+        return PResourceUtils.getFile(url, getDescription());
     }
 
     /**
@@ -122,12 +122,12 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
     @Override
     protected File getFileForLastModifiedCheck() throws IOException {
         URL url = getURL();
-        if (ResourceUtils.isJarURL(url)) {
-            URL actualUrl = ResourceUtils.extractArchiveURL(url);
-            if (actualUrl.getProtocol().startsWith(ResourceUtils.URL_PROTOCOL_VFS)) {
+        if (PResourceUtils.isJarURL(url)) {
+            URL actualUrl = PResourceUtils.extractArchiveURL(url);
+            if (actualUrl.getProtocol().startsWith(PResourceUtils.URL_PROTOCOL_VFS)) {
                 return VfsResourceDelegate.getResource(actualUrl).getFile();
             }
-            return ResourceUtils.getFile(actualUrl, "Jar URL");
+            return PResourceUtils.getFile(actualUrl, "Jar URL");
         } else {
             return getFile();
         }
@@ -142,10 +142,10 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
      */
     protected boolean isFile(URI uri) {
         try {
-            if (uri.getScheme().startsWith(ResourceUtils.URL_PROTOCOL_VFS)) {
+            if (uri.getScheme().startsWith(PResourceUtils.URL_PROTOCOL_VFS)) {
                 return VfsResourceDelegate.getResource(uri).isFile();
             }
-            return ResourceUtils.URL_PROTOCOL_FILE.equals(uri.getScheme());
+            return PResourceUtils.URL_PROTOCOL_FILE.equals(uri.getScheme());
         } catch (IOException ex) {
             return false;
         }
@@ -153,10 +153,10 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
 
 
     protected File getFile(URI uri) throws IOException {
-        if (uri.getScheme().startsWith(ResourceUtils.URL_PROTOCOL_VFS)) {
+        if (uri.getScheme().startsWith(PResourceUtils.URL_PROTOCOL_VFS)) {
             return VfsResourceDelegate.getResource(uri).getFile();
         }
-        return ResourceUtils.getFile(uri, getDescription());
+        return PResourceUtils.getFile(uri, getDescription());
     }
 
     /**
@@ -180,7 +180,7 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
     @Override
     public long contentLength() throws IOException {
         URL url = getURL();
-        if (ResourceUtils.isFileURL(url)) {
+        if (PResourceUtils.isFileURL(url)) {
             // Proceed with file system resolution
             File file = getFile();
             long length = file.length();
@@ -201,7 +201,7 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
     public long lastModified() throws IOException {
         URL url = getURL();
         boolean fileCheck = false;
-        if (ResourceUtils.isFileURL(url) || ResourceUtils.isJarURL(url)) {
+        if (PResourceUtils.isFileURL(url) || PResourceUtils.isJarURL(url)) {
             // Proceed with file system resolution
             fileCheck = true;
             try {
@@ -228,7 +228,7 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
     /**
      * Customize the given {@link URLConnection}, obtained in the course of an
      * {@link #exists()}, {@link #contentLength()} or {@link #lastModified()} call.
-     * <p>Calls {@link ResourceUtils#useCachesIfNecessary(URLConnection)} and
+     * <p>Calls {@link PResourceUtils#useCachesIfNecessary(URLConnection)} and
      * delegates to {@link #customizeConnection(HttpURLConnection)} if possible.
      * Can be overridden in subclasses.
      *
@@ -236,7 +236,7 @@ abstract class AbstractFileResolvingResource extends AbstractResource {
      * @throws IOException if thrown from URLConnection methods
      */
     protected void customizeConnection(URLConnection con) throws IOException {
-        ResourceUtils.useCachesIfNecessary(con);
+        PResourceUtils.useCachesIfNecessary(con);
         if (con instanceof HttpURLConnection) {
             customizeConnection((HttpURLConnection) con);
         }

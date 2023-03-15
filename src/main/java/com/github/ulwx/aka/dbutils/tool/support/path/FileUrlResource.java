@@ -22,7 +22,7 @@ class FileUrlResource extends UrlResource implements WritableResource {
      * is known to be resolvable to a file, it is acceptable for this purpose.
      *
      * @param url a URL
-     * @see ResourceUtils#isFileURL(URL)
+     * @see PResourceUtils#isFileURL(URL)
      * @see #getFile()
      */
     public FileUrlResource(URL url) {
@@ -37,10 +37,10 @@ class FileUrlResource extends UrlResource implements WritableResource {
      * @param location the location (i.e. the file path within that protocol)
      * @throws MalformedURLException if the given URL specification is not valid
      * @see UrlResource#UrlResource(String, String)
-     * @see ResourceUtils#URL_PROTOCOL_FILE
+     * @see PResourceUtils#URL_PROTOCOL_FILE
      */
     public FileUrlResource(String location) throws MalformedURLException {
-        super(ResourceUtils.URL_PROTOCOL_FILE, location);
+        super(PResourceUtils.URL_PROTOCOL_FILE, location);
     }
 
 

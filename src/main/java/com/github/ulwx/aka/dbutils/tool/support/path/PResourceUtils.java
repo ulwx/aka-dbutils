@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.*;
 
-abstract class ResourceUtils {
+abstract class PResourceUtils {
 
     /**
      * Pseudo URL prefix for loading from the class path: "classpath:".
@@ -124,7 +124,7 @@ abstract class ResourceUtils {
         Assert.notNull(resourceLocation, "Resource location must not be null");
         if (resourceLocation.startsWith(CLASSPATH_URL_PREFIX)) {
             String path = resourceLocation.substring(CLASSPATH_URL_PREFIX.length());
-            ClassLoader cl = ClassUtils.getDefaultClassLoader();
+            ClassLoader cl = PClassUtils.getDefaultClassLoader();
             URL url = (cl != null ? cl.getResource(path) : ClassLoader.getSystemResource(path));
             if (url == null) {
                 String description = "class path resource [" + path + "]";
@@ -164,7 +164,7 @@ abstract class ResourceUtils {
         if (resourceLocation.startsWith(CLASSPATH_URL_PREFIX)) {
             String path = resourceLocation.substring(CLASSPATH_URL_PREFIX.length());
             String description = "class path resource [" + path + "]";
-            ClassLoader cl = ClassUtils.getDefaultClassLoader();
+            ClassLoader cl = PClassUtils.getDefaultClassLoader();
             URL url = (cl != null ? cl.getResource(path) : ClassLoader.getSystemResource(path));
             if (url == null) {
                 throw new FileNotFoundException(description +
@@ -378,7 +378,7 @@ abstract class ResourceUtils {
      * @throws URISyntaxException if the location wasn't a valid URI
      */
     public static URI toURI(String location) throws URISyntaxException {
-        return new URI(StringUtils.replace(location, " ", "%20"));
+        return new URI(PStringUtils.replace(location, " ", "%20"));
     }
 
     /**
