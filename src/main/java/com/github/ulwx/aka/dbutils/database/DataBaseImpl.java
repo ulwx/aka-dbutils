@@ -1483,7 +1483,7 @@ public class DataBaseImpl implements DataBase {
     private String getConnectInfo() {
         String connectInfo = "";
         if (this.connectType == ConnectType.CONNECTION) {
-            connectInfo = ConnectType.CONNECTION + ":";
+            connectInfo = ConnectType.CONNECTION + ":"+this.conn;
         } else if (this.connectType == ConnectType.DATASOURCE) {
             connectInfo = ConnectType.DATASOURCE + ":" + this.dataSource + "";
         } else if ((this.connectType == ConnectType.POOL)) {
@@ -3327,9 +3327,11 @@ public class DataBaseImpl implements DataBase {
                         if (!this.externalControlConClose) {
                             this.setInternalConnectionAutoCommit(true);
                             conn.close();
+                            if (DbContext.permitDebugLog()) {
+                                log.debug("[" + this.getConnectInfo() + "]:closed!");
+                            }
                             conn = null;
                             clearSavePoint();
-                            if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]:closed!");
                         }
                     } catch (Exception ex) {
                         log.error(this.getConnectInfo() + ":close fail!", ex);
