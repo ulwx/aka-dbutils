@@ -29,7 +29,7 @@ public class GlobalTransactionTemplate {
                 serviceLogic.call();
                 return null;
             }
-        },AkaPropagationType.REQUIRED,true);
+        },AkaPropagationType.REQUIRED);
     }
 
     public static <R> R  executeTest(
@@ -53,11 +53,11 @@ public class GlobalTransactionTemplate {
     }
     public static <R> R execute(String dbPoolXmlFileName,
                                 ServiceLogicHasReturnValue<R> serviceLogic){
-        return execute(dbPoolXmlFileName,serviceLogic,AkaPropagationType.REQUIRED,true);
+        return execute(dbPoolXmlFileName,serviceLogic,AkaPropagationType.REQUIRED);
     }
     public static <R> R execute(String dbPoolXmlFileName,
                                 ServiceLogicHasReturnValue<R> serviceLogic,
-                                AkaPropagationType propagationType,boolean async){
+                                AkaPropagationType propagationType){
         SeataAtAkaDistributedTransactionManager manager=
                 (SeataAtAkaDistributedTransactionManager)TransactionManagerFactory.getTransactionManager(dbPoolXmlFileName,
                 AkaTransactionType.SEATA_AT);
@@ -70,9 +70,7 @@ public class GlobalTransactionTemplate {
             throw new DbException(e);
         } finally {
             try {
-                if (!async) {
-                    manager.waitForFinished();
-                }
+                ///
             }finally {
                 AkaTransactionManagerHolder.clear();
                 AkaSeataTransactionHolder.clear();

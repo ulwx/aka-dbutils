@@ -35,7 +35,7 @@ public class CompilerTask {
             @Override
             public void run() {
                 try {
-                    //preCompileAll();
+                   // preCompileAll();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

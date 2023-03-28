@@ -302,7 +302,7 @@ public class DBPoolFactory {
                     } catch (Exception e) {
 
                     }
-                    if (checkTime > 2) {
+                    if (checkTime > 0) {
                         executorService.scheduleWithFixedDelay(() -> {
                             if (this.status != INIT_STATUS.finished) {
                                 return;

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.github.ulwx.aka.dbutils.sharding_jdbc.test.transaction;
+package com.github.ulwx.aka.dbutils.sharding_jdbc.test.seata;
 
 
 import com.github.ulwx.aka.dbutils.database.DbContext;

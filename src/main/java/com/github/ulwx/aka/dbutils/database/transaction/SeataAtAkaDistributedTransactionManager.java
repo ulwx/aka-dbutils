@@ -206,22 +206,22 @@ public class SeataAtAkaDistributedTransactionManager implements  AKaDistributedT
         TmNettyRemotingClient.getInstance().destroy();
     }
 
-    public void waitForFinished(){
-        try {
-
-            while (true){
-                log.debug("******SeataTransactionHolder.get():"+ AkaSeataTransactionHolder.get());
-                GlobalStatus status= AkaSeataTransactionHolder.get().getStatus();
-                log.debug("******GlobalStatus:"+status);
-                if(status.name().equals("Finished")){
-                    return ;
-                }
-                Thread.sleep(1*2000);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
+    // public void waitForFinished(){
+    //     try {
+    //
+    //         while (true){
+    //             log.debug("******SeataTransactionHolder.get():"+ AkaSeataTransactionHolder.get());
+    //             GlobalStatus status= AkaSeataTransactionHolder.get().getStatus();
+    //             log.debug("******GlobalStatus:"+status);
+    //             if(status.name().equals("Finished")){
+    //                 return ;
+    //             }
+    //             Thread.sleep(1*2000);
+    //         }
+    //     }catch (Exception e){
+    //         e.printStackTrace();
+    //     }
+    // }
     @Override
     public void end() {
 

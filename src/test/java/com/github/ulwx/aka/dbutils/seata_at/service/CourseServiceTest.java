@@ -36,7 +36,7 @@ public class CourseServiceTest {
     public void testGlobalTransaction(){
         Course course= GlobalTransactionTemplate.execute(getDbPoolFileName,()->{
             return testTransaction();
-        },AkaPropagationType.REQUIRED,false);
+        },AkaPropagationType.REQUIRED);
 
         Course queryCourse=new Course();
         queryCourse.setId(course.getId());
@@ -71,7 +71,7 @@ public class CourseServiceTest {
     public void testGlobalTransactionWithSavePoint1(){
         Course queryCourse= GlobalTransactionTemplate.execute(getDbPoolFileName,()->{
             return testTransactionWithSavePoint();
-        },AkaPropagationType.REQUIRED,false);
+        },AkaPropagationType.REQUIRED);
 
         queryCourse= MDbUtils.queryOneBy(DbPoolName_Student,queryCourse);
         Assert.equal(queryCourse.getCreatime().format(CTime.DTF_YMD_HH_MM_SS),
@@ -119,7 +119,7 @@ public class CourseServiceTest {
        GlobalTransactionTemplate.execute(getDbPoolFileName,()->{
             testTransactionManager();
             return null;
-        },AkaPropagationType.REQUIRED,false);
+        },AkaPropagationType.REQUIRED);
 
        int i=2;
     }
@@ -156,7 +156,7 @@ public class CourseServiceTest {
         GlobalTransactionTemplate.execute(getDbPoolFileName,()->{
             testTransactionManagerOuter();
             return null;
-        },AkaPropagationType.REQUIRED,false);
+        },AkaPropagationType.REQUIRED);
 
         Course course=new Course();
         course.setId(1);
@@ -164,7 +164,7 @@ public class CourseServiceTest {
         Assert.equal(course.getName(),"update...2");
     }
 
-    //@Test
+
     public void testTransactionManagerOuter(){
         TResult<DataBase> tDataBase=new TResult<>();
         DbContext.setDBInterceptor(new DBInterceptor() {
@@ -203,7 +203,7 @@ public class CourseServiceTest {
                 courseDao.testUpdateInManager("update.exception");
                 int i=1/0;
                 return i;
-            }, AkaPropagationType.REQUIRED, true);
+            }, AkaPropagationType.REQUIRED);
         }catch (Throwable e){
             e.printStackTrace();
         }
@@ -219,7 +219,7 @@ public class CourseServiceTest {
 
                 testTransactionManagerOuterHavingException();
                 return null;
-            }, AkaPropagationType.REQUIRED, true);
+            }, AkaPropagationType.REQUIRED);
         }catch (Throwable e){
             e.printStackTrace();
         }

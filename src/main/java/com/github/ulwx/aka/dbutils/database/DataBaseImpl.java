@@ -2026,10 +2026,10 @@ public class DataBaseImpl implements DataBase {
     }
 
     private void handSequenceForQueryID(SequenceInfo sequeceInfo,
-                                        boolean beforeOrAfter) {
+                                        boolean beforeInsert) {
         if (sequeceInfo != null) {
             boolean callBeforeInsert = sequeceInfo.getCallBeforeInsert();
-            if (callBeforeInsert == beforeOrAfter) {
+            if (callBeforeInsert == beforeInsert) {
                 String sequenceSql = this.getDataBaseType().
                         getSequenceSql((String) sequeceInfo.getSequenceName(), callBeforeInsert);
                 SQLType oldSqlType = this.sqlType;
@@ -2825,9 +2825,9 @@ public class DataBaseImpl implements DataBase {
                    || conn.getMetaData().supportsTransactions()) {
                     conn.commit();
                     clearSavePoint();
-                    if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commit done!");
+                    if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]..commit done!");
                 } else {
-                    if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]commit not done!");
+                    if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]..commit not done!");
                 }
 
             }
