@@ -35,7 +35,7 @@ public class CompilerTask {
             @Override
             public void run() {
                 try {
-                   // preCompileAll();
+                    preCompileAll();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -46,8 +46,8 @@ public class CompilerTask {
 
     public static void preCompileAll() throws Exception {
         // 搜索所有md文件，进行编译
-        Resource[] resources = Path.getResourcesLikeAntPathMatch("classpath*:**/*.md");
-        Resource[] rootResources = Path.getResourcesLikeAntPathMatch("classpath*:/");
+        Resource[] resources = Path.getResourcesLikeAntPathMatch("classpath:**/*.md");
+        Resource[] rootResources = Path.getResourcesLikeAntPathMatch("classpath:/");
         TreeSet<String> classRootResources = new TreeSet<>();
         for (int i = 0; i < rootResources.length; i++) {
             if (!rootResources[i].getURL().getProtocol().equals("jar")) {
@@ -94,7 +94,7 @@ public class CompilerTask {
                 @Override
                 public void run() {
                     try {
-                        preCompileSingle(mdPathList.get(index), UseThirdpartCompilerTool);
+                        compileSingle(mdPathList.get(index), UseThirdpartCompilerTool);
                     } catch (Exception e) {
                         log.error("" + e, e);
                     }
@@ -105,7 +105,7 @@ public class CompilerTask {
 
     }
 
-    public static Class<?> preCompileSingle(String mdPath, boolean useThirdpartCompilerTool) throws Exception {
+    public static Class<?> compileSingle(String mdPath, boolean useThirdpartCompilerTool) throws Exception {
 
         String packagePath = mdPath.substring(0, mdPath.lastIndexOf(".md"));
         // 获得类名

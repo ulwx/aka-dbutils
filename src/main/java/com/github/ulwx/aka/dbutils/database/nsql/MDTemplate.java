@@ -321,7 +321,7 @@ public final class MDTemplate {
      */
     public static String getResultString(String mdPath, String methodName, Map<String, Object> args) throws Exception {
 
-        Class<?> clazz = CompilerTask.preCompileSingle(mdPath, CompilerTask.UseThirdpartCompilerTool);
+        Class<?> clazz = CompilerTask.compileSingle(mdPath, CompilerTask.UseThirdpartCompilerTool);
         if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
             log.debug("mdPath=" + mdPath + ",methodName=" + methodName + ",args=" + ObjectUtils.toString(args) + ",class=" + clazz);
         }

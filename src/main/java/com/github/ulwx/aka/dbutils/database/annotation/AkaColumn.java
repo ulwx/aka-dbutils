@@ -8,9 +8,5 @@ import java.lang.annotation.*;
 public @interface AkaColumn {
     boolean isAutoincrement()  default  false;
     boolean isNullable() default true;
-    String sqlTypeName() default "";
-    int sqlDataType() default Integer.MAX_VALUE;
-    int columnSize()  default -1;
-    String columnName() default "";
 
 }
