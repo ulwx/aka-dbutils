@@ -19,6 +19,8 @@ package com.github.ulwx.aka.dbutils.database.transaction;
 
 import io.seata.tm.api.GlobalTransaction;
 
+import java.util.Stack;
+
 
 /**
  * Seata transaction holder.
@@ -26,7 +28,13 @@ import io.seata.tm.api.GlobalTransaction;
 
 final class AkaSeataTransactionHolder {
     
-    private static final ThreadLocal<GlobalTransaction> CONTEXT = new ThreadLocal<>();
+    private static final ThreadLocal<Stack<GlobalTransaction>> CONTEXT =
+            new ThreadLocal<Stack<GlobalTransaction>>() {
+                @Override
+                protected Stack<GlobalTransaction> initialValue() {
+                    return new Stack<GlobalTransaction>();
+                }
+            };
     
     /**
      * Set seata global transaction.
@@ -34,7 +42,7 @@ final class AkaSeataTransactionHolder {
      * @param transaction global transaction context
      */
     static void set(final GlobalTransaction transaction) {
-        CONTEXT.set(transaction);
+        CONTEXT.get().push(transaction);
     }
     
     /**
@@ -43,13 +51,22 @@ final class AkaSeataTransactionHolder {
      * @return global transaction
      */
     static GlobalTransaction get() {
-        return CONTEXT.get();
+        if(CONTEXT.get().size()>0) {
+            return CONTEXT.get().peek();
+        }else {
+            return null;
+        }
     }
     
     /**
      * Clear global transaction.
      */
     static void clear() {
-        CONTEXT.remove();
+        if(CONTEXT.get().size()>0) {
+            CONTEXT.get().pop();
+        }else{
+
+        }
     }
+
 }

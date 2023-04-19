@@ -9,6 +9,24 @@ public class TransactionContextInfo implements TransactionContextElem {
     private boolean nestedStart = false;//是否是嵌套事务开始，如果是，则nestedLevel=0
     private String nestedStartSavepointName = null;
     private int nestedLevel = -1;//-1表示没有嵌套事务，如果有嵌套事务，则nestedLevel>=0
+    private AkaPropagationType akaPropagationType;
+    private MDbTransactionManager mdbTransactionManager;
+
+    public MDbTransactionManager getMdbTransactionManager() {
+        return mdbTransactionManager;
+    }
+
+    public void setMdbTransactionManager(MDbTransactionManager mdbTransactionManager) {
+        this.mdbTransactionManager = mdbTransactionManager;
+    }
+
+    public AkaPropagationType getAkaPropagationType() {
+        return akaPropagationType;
+    }
+
+    public void setAkaPropagationType(AkaPropagationType akaPropagationType) {
+        this.akaPropagationType = akaPropagationType;
+    }
 
     public boolean isNeedRollBack() {
         return needRollBack;

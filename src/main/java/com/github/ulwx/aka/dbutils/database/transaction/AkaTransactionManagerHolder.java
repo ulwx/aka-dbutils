@@ -2,9 +2,17 @@
 package com.github.ulwx.aka.dbutils.database.transaction;
 
 
+import java.util.Stack;
+
 public final class AkaTransactionManagerHolder {
     
-    private static final ThreadLocal<AKaTransactionManager> CONTEXT = new ThreadLocal<>();
+    private static final ThreadLocal<Stack<AKaTransactionManager>> CONTEXT =
+            new ThreadLocal<Stack<AKaTransactionManager>>() {
+        @Override
+        protected Stack<AKaTransactionManager> initialValue() {
+            return new Stack<AKaTransactionManager>();
+        }
+    };
     
     /**
      * Get transaction type for current thread.
@@ -12,7 +20,11 @@ public final class AkaTransactionManagerHolder {
      * @return transaction Manager
      */
     public static AKaTransactionManager get() {
-        return CONTEXT.get();
+        if(CONTEXT.get().size()>0) {
+            return CONTEXT.get().peek();
+        }else {
+            return null;
+        }
     }
     
     /**
@@ -21,13 +33,16 @@ public final class AkaTransactionManagerHolder {
      * @param transactionManager transaction Manager
      */
     public static void set(final AKaTransactionManager transactionManager) {
-        CONTEXT.set(transactionManager);
+        CONTEXT.get().push(transactionManager);
     }
     
     /**
      * Clear transaction type for current thread.
      */
     public static void clear() {
-        CONTEXT.remove();
+        if(CONTEXT.get().size()>0) {
+            CONTEXT.get().pop();
+        }
     }
+
 }

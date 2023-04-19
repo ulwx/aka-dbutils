@@ -44,21 +44,21 @@ public class TransactionTemplate {
     public static <R> R execute(AkaPropagationType propagationType,
                                 ServiceLogicHasReturnValue<R> serviceLogic)
             throws DbException {
-        MDbTransactionManager mDbTransactionManager= MDbTransactionManager.getInstance();
+        MDbTransactionManager mdbTransactionManager= MDbTransactionManager.getInstance();
         try {
-            AkaTransactionManagerHolder.set(mDbTransactionManager);
-            mDbTransactionManager.begin(propagationType);
+            AkaTransactionManagerHolder.set(mdbTransactionManager);
+            mdbTransactionManager.begin(propagationType);
             R ret = serviceLogic.call();
-            mDbTransactionManager.commit();
+            mdbTransactionManager.commit();
             return ret;
 
         } catch (Throwable e) {
-            mDbTransactionManager.rollback(e);
+            mdbTransactionManager.rollback(e);
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
             try {
-                mDbTransactionManager.end();
+                mdbTransactionManager.end();
             }finally {
                 AkaTransactionManagerHolder.clear();
             }

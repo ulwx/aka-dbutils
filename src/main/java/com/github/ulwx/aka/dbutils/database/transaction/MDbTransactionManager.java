@@ -106,6 +106,8 @@ public class MDbTransactionManager implements AKaTransactionManager {
 
         }
         TransactionContextInfo transactionStart = new TransactionContextInfo(callMethodInfo, level);
+        transactionStart.setAkaPropagationType(propagationType);
+        transactionStart.setMdbTransactionManager(this);
         if (propagationType == AkaPropagationType.NESTED) {
             transactionStart.setNestedStart(true);//表明是嵌套事务
             transactionStart.setNestedLevel(0);//嵌套事务开始时，nestLevel=0；

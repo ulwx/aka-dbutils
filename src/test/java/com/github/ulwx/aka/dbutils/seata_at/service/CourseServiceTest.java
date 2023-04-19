@@ -24,9 +24,9 @@ import java.time.LocalDateTime;
 public class CourseServiceTest {
     private CourseDao courseDao=new CourseDao();
     private TeacherDao teacherDao=new TeacherDao();
-    public static String DbPoolName_Student = "seata_at/dbpool.xml#db_student";
-    public static String DbPoolName_Teacher= "seata_at/dbpool.xml#db_teacher";
-    public static String getDbPoolFileName="seata_at/dbpool.xml";
+    private static String DbPoolName_Student = "seata_at/dbpool.xml#db_student";
+    private static String DbPoolName_Teacher= "seata_at/dbpool.xml#db_teacher";
+    private static String getDbPoolFileName="seata_at/dbpool.xml";
     @Before
     public void setup(){
         Utils.importDbStudent();
@@ -45,7 +45,7 @@ public class CourseServiceTest {
 
     }
 
-    public Course testTransaction(){
+    private Course testTransaction(){
         MDataBase mdb = null;
         Course course=null;
         try {
@@ -81,8 +81,7 @@ public class CourseServiceTest {
     /**
      * 测试事务的SavePoint功能
      */
-    //@Test
-    public Course testTransactionWithSavePoint(){
+    private Course testTransactionWithSavePoint(){
         MDataBase mdb = null;
         Course course=null;
         try {
@@ -123,8 +122,8 @@ public class CourseServiceTest {
 
        int i=2;
     }
-    //@Test
-    public void testTransactionManager(){
+
+    private void testTransactionManager(){
         TResult<DataBase> tDataBase=new TResult<>();
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
@@ -144,7 +143,7 @@ public class CourseServiceTest {
     }
 
 
-    public void testTransactionManagerInner(){
+    private void testTransactionManagerInner(){
 
         TransactionTemplate.execute(()->{
             courseDao.testUpdateInManager("update...1");
@@ -165,7 +164,7 @@ public class CourseServiceTest {
     }
 
 
-    public void testTransactionManagerOuter(){
+    private void testTransactionManagerOuter(){
         TResult<DataBase> tDataBase=new TResult<>();
         DbContext.setDBInterceptor(new DBInterceptor() {
             @Override
@@ -189,7 +188,7 @@ public class CourseServiceTest {
     }
 
 
-    public void executeThrowException(AkaPropagationType propagation){ //抛出异常
+    private void executeThrowException(AkaPropagationType propagation){ //抛出异常
         TransactionTemplate.execute(propagation,()->{
             courseDao.testUpdateInManager("update.exception");
             int i=1/0;
@@ -229,7 +228,7 @@ public class CourseServiceTest {
         Assert.equal(course.getName(),"course1");
     }
 
-    public void testTransactionManagerOuterHavingException(){
+    private void testTransactionManagerOuterHavingException(){
 
         Exception saveException=null;
         try {

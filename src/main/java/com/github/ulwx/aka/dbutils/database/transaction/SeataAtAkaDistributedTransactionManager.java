@@ -155,20 +155,22 @@ public class SeataAtAkaDistributedTransactionManager implements  AKaDistributedT
 
     @Override
     public void begin(int timeout,AkaPropagationType propagationType) {
+        GlobalTransaction globalTransaction=null;
         try {
             AkaTransactionManagerHolder.set(this);
             if (timeout < 0) {
                 throw new TransactionException("timeout should more than 0s");
             }
             Assert.isTrue(enableSeataAT, "seata-at transaction has been disabled.");
-            GlobalTransaction globalTransaction = GlobalTransactionContext.getCurrentOrCreate();
-            globalTransaction.begin(timeout * 1000);
-            AkaSeataTransactionHolder.set(globalTransaction);
+            globalTransaction = GlobalTransactionContext.getCurrentOrCreate();
 
+            globalTransaction.begin(timeout * 1000);
 
         }catch(Exception e){
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
+        }finally {
+            AkaSeataTransactionHolder.set(globalTransaction);
         }
     }
 
@@ -177,6 +179,7 @@ public class SeataAtAkaDistributedTransactionManager implements  AKaDistributedT
         Assert.isTrue(enableSeataAT, "seata-at transaction has been disabled.");
         try {
             AkaSeataTransactionHolder.get().commit();
+
         }catch(Exception e){
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
@@ -199,32 +202,13 @@ public class SeataAtAkaDistributedTransactionManager implements  AKaDistributedT
 
     @Override
     public void close() {
-        dataSourceMap.clear();
-        AkaSeataTransactionHolder.clear();
-        AkaTransactionManagerHolder.clear();
         RmNettyRemotingClient.getInstance().destroy();
         TmNettyRemotingClient.getInstance().destroy();
     }
 
-    // public void waitForFinished(){
-    //     try {
-    //
-    //         while (true){
-    //             log.debug("******SeataTransactionHolder.get():"+ AkaSeataTransactionHolder.get());
-    //             GlobalStatus status= AkaSeataTransactionHolder.get().getStatus();
-    //             log.debug("******GlobalStatus:"+status);
-    //             if(status.name().equals("Finished")){
-    //                 return ;
-    //             }
-    //             Thread.sleep(1*2000);
-    //         }
-    //     }catch (Exception e){
-    //         e.printStackTrace();
-    //     }
-    // }
+
     @Override
     public void end() {
-
         AkaTransactionManagerHolder.clear();
         AkaSeataTransactionHolder.clear();
         RootContext.unbind();

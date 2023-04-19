@@ -63,20 +63,13 @@ public class GlobalTransactionTemplate {
                 AkaTransactionType.SEATA_AT);
         try {
             AkaTransactionManagerHolder.set(manager);
-            return handleGlobalTransaction(serviceLogic,manager.getGlobalTXTimeout(),
+            return handleGlobalTransaction(serviceLogic,manager,
                     "default",propagationType);
         }catch (Throwable e){
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
-            try {
-                ///
-            }finally {
-                AkaTransactionManagerHolder.clear();
-                AkaSeataTransactionHolder.clear();
-            }
-
-
+            AkaTransactionManagerHolder.clear();
         }
     }
     private static final TransactionHook TRANSACTION_HOOK=new TransactionHook(){
@@ -87,8 +80,6 @@ public class GlobalTransactionTemplate {
 
         @Override
         public void afterBegin() {
-            GlobalTransaction globalTransaction = GlobalTransactionContext.getCurrent();
-            AkaSeataTransactionHolder.set(globalTransaction);
         }
 
         @Override
@@ -113,11 +104,10 @@ public class GlobalTransactionTemplate {
 
         @Override
         public void afterCompletion() {
-
         }
     };
     public static <R> R handleGlobalTransaction(ServiceLogicHasReturnValue<R> serviceLogic,
-                                                int globalTransactionTimeout,
+                                                SeataAtAkaDistributedTransactionManager manager,
                                                 String transactionName,
                                                 AkaPropagationType propagationType
                                                 )throws Throwable {
@@ -133,7 +123,7 @@ public class GlobalTransactionTemplate {
                 @Override
                 public TransactionInfo getTransactionInfo() {
                     // reset the value of timeout
-                    int timeout = globalTransactionTimeout;
+                    int timeout = manager.getGlobalTXTimeout();
                     if (timeout <= 0 || timeout == DEFAULT_GLOBAL_TRANSACTION_TIMEOUT) {
                         timeout = DEFAULT_GLOBAL_TRANSACTION_TIMEOUT;
                     }
