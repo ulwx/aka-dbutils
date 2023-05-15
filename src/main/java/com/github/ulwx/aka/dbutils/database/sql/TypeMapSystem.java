@@ -168,10 +168,11 @@ public class TypeMapSystem {
         return sql2javaType.get(column.getData_type());
 
     }
+    static final int ORACLE_CURSOR = -10;
     public static Integer javaType2sql(Class javaType,DBMS dbms){
         if(dbms.isOracleFamily()){
             if(javaType==ResultSet.class){
-                return oracle.jdbc.OracleTypes.CURSOR;
+                return ORACLE_CURSOR;
             }
         }
         return javaType2sql.get(javaType);
