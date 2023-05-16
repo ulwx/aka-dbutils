@@ -224,6 +224,7 @@ public class ReadConfig {
 
             @SuppressWarnings("unchecked")
             Iterator<Element> iterator = root.elementIterator("dbpool");
+
             while (iterator.hasNext()) {
                 HashMap<String, String> map = new HashMap<String, String>();
                 Element config_el = iterator.next();
@@ -286,6 +287,7 @@ public class ReadConfig {
                     Iterator<Element> nSlavePList = server_el.elementIterator("property");
                     HashMap<String, String> mapp = new HashMap<String, String>();
                     slaveServers.put(serverName, mapp);
+                    mapp.put("type",type);
                     while (nSlavePList.hasNext()) {
                         Element pro_el = (Element) nSlavePList.next();
                         String name = pro_el.attributeValue("name");
@@ -294,7 +296,9 @@ public class ReadConfig {
 
                     }
                 }
-                slaveMaps.put(configName, slaveServers);
+                if(!slaveServers.isEmpty()) {
+                    slaveMaps.put(configName, slaveServers);
+                }
             }
 
 

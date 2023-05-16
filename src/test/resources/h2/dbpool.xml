@@ -132,5 +132,5 @@
     -->
     <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.h2.MyIDBPoolAttrSourceTest"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
-            check-time="0"/>
+            check-time="0" type="tomcatdbpool"/>
 </dbpool-config>

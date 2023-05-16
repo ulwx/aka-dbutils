@@ -41,7 +41,7 @@
     <dbpool name="db_student" type="druid" table-name-rule="underline_to_camel"
             table-colum-rule="underline_to_camel">
         <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
-        <property name="url">jdbc:mysql://localhost:3306/db_student?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
+        <property name="url">jdbc:mysql://localhost:3306/common-frame?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=GMT%2B8&amp;useSSL=false&amp;allowMultiQueries=true&amp;allowPublicKeyRetrieval=true</property>
         <property name="username">root</property>
         <property name="password">123456</property>
         <property name="encrypt">0</property><!--password属性是否加密，0：不加密 1：加密-->
@@ -134,5 +134,6 @@
     <dbpool name="xyz" ref-class="com.github.ulwx.aka.dbutils.mysql.MyIDBPoolAttrSourceTest"
             type="druid"
             table-name-rule="underline_to_camel" table-colum-rule="underline_to_camel"
-            check-time="0"/>
+            check-time="0" />
+
 </dbpool-config>

@@ -317,8 +317,7 @@ public class DBPoolFactory {
 
             //处理Ref引用
             for (String poolName : refMap.keySet()) {
-                String ref = refMap.get(poolName);
-                String refDbPoolName = ref;
+                String refDbPoolName = refMap.get(poolName);
                 String refFileName = dbPoolXmlFileName;
                 //本地引用
                 DataSource masterDataSource = poollist.get(refDbPoolName);
@@ -366,6 +365,11 @@ public class DBPoolFactory {
         newMasterMap.put("table-colum-rule", masterMap.get("table-colum-rule"));
         newMasterMap.put("check-time", masterMap.get("check-time"));
         newMasterMap.putAll(lmasterProperties);
+        String type=StringUtils.trim(lmasterProperties.get("type"));
+        if(type.isEmpty()){
+            type=PoolType.TOMCAT_DB_POOL;
+            newMasterMap.put("type",type);
+        }
 
         if (ObjectUtils.deepEquals(newMasterMap, masterMap) &&
                 ObjectUtils.deepEquals(newlaveProperties, slaveProperties)) {
@@ -377,7 +381,7 @@ public class DBPoolFactory {
                 partUpdateStatus = PART_UPDATE_STATUS.doing;
                 rwLock.writeLock().lock();
                 log.debug("get write lock!");
-                String type = StringUtils.trim(masterMap.get("type"), PoolType.TOMCAT_DB_POOL);
+                type = StringUtils.trim(masterMap.get("type"), PoolType.TOMCAT_DB_POOL);
                 close(dbPoolXmlFileName, poolName, type);
                 poolNameMasterMap.put(poolName, newMasterMap);
                 slaveNameMap.put(poolName, newlaveProperties);
@@ -395,7 +399,8 @@ public class DBPoolFactory {
 
     }
 
-    private static ConcurrentHashMap<String, DataSource> getSlaveServerConfig(Map<String, Map<String, String>> slaveServer, String poolType,
+    private static ConcurrentHashMap<String, DataSource> getSlaveServerConfig(Map<String, Map<String, String>> slaveServer,
+                                                                              String poolType,
                                                                               String driverClassName) throws Exception {
 
         ConcurrentHashMap<String, DataSource> slaveDataSources = new ConcurrentHashMap<String, DataSource>();
@@ -745,6 +750,7 @@ public class DBPoolFactory {
     }
 
     private static void close(DataSource dataSource, String poolType) throws Exception {
+        if(poolType==null) return;
         PoolType.getDBPool(poolType).close(dataSource);
     }
 
@@ -759,7 +765,7 @@ public class DBPoolFactory {
                     if (ds == null) return;
                     close(ds, poolType);
                 } catch (Exception e) {
-                    log.error("", e);
+                    log.error(""+e+",poolName="+poolName, e);
                 }
 
                 // 关闭从库的连接池
@@ -769,12 +775,12 @@ public class DBPoolFactory {
                         DataSource dss = slaveMap.get(slaveServerName);
                         close(dss, poolType);
                     } catch (Exception e) {
-                        log.error("", e);
+                        log.error(""+e+",poolName="+poolName, e);
                     }
                 }
 
             } catch (Exception e) {
-                log.error("", e);
+                log.error(""+e, e);
             }
         }
     }
@@ -787,14 +793,15 @@ public class DBPoolFactory {
                 if (dbPoolFactory == null) return;
                 Set<String> sets = dbPoolFactory.poollist.keySet();
                 Iterator<String> iter = sets.iterator();
+                String poolName="";
                 while (iter.hasNext()) {
                     try {
-                        String poolName = iter.next();
+                        poolName = iter.next();
                         ConcurrentHashMap<String, Map<String, String>> maps = dbPoolFactory.readConfig.getDbpoolProperties();
                         Map<String, String> masterMap = maps.get(poolName);
                         close(xmlFileName, poolName, masterMap.get("type"));
                     } catch (Exception e) {
-                        log.error("", e);
+                        log.error(""+e+",poolName="+poolName, e);
                     }
 
                 }
