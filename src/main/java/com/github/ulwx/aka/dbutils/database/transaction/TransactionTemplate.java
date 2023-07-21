@@ -2,6 +2,9 @@ package com.github.ulwx.aka.dbutils.database.transaction;
 
 import com.github.ulwx.aka.dbutils.database.DbException;
 
+/**
+ * 本地事务执行模板
+ */
 public class TransactionTemplate {
 
     /**

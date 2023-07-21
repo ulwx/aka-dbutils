@@ -28,7 +28,7 @@ public final class ModuloHintShardingAlgorithm implements HintShardingAlgorithm<
     
     private Properties props;
 
-    @Override
+
     public Properties getProps() {
         return props;
     }

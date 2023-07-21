@@ -32,7 +32,7 @@ public final class StandardModuloShardingTableAlgorithm implements StandardShard
     
     private Properties props;
 
-    @Override
+
     public Properties getProps() {
         return props;
     }

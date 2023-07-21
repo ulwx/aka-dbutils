@@ -4,6 +4,8 @@ import com.github.ulwx.aka.dbutils.database.DbException;
 import io.seata.common.exception.ShouldNeverHappenException;
 import io.seata.core.event.EventBus;
 import io.seata.core.event.GuavaEventBus;
+import io.seata.core.exception.TmTransactionException;
+import io.seata.core.exception.TransactionExceptionCode;
 import io.seata.spring.event.DegradeCheckEvent;
 import io.seata.tm.api.*;
 import io.seata.tm.api.transaction.*;
@@ -13,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.seata.tm.api.GlobalTransactionRole.Participant;
 
 public class GlobalTransactionTemplate {
     private static final Logger log = LoggerFactory.getLogger(GlobalTransactionTemplate.class);
@@ -149,27 +153,39 @@ public class GlobalTransactionTemplate {
 
             });
         } catch (TransactionalExecutor.ExecutionException e) {
+            GlobalTransaction globalTransaction = e.getTransaction();
+
+            if (globalTransaction.getGlobalTransactionRole() == Participant) {
+                throw e.getOriginalException();
+            }
             TransactionalExecutor.Code code = e.getCode();
+            Throwable cause = e.getCause();
+            boolean timeout = isTimeoutException(cause);
             switch (code) {
                 case RollbackDone:
-                    throw e.getOriginalException();
+                    if (timeout) {
+                        throw cause;
+                    } else {
+                        throw e.getOriginalException();
+                    }
                 case BeginFailure:
                     succeed = false;
-                    failureHandler.onBeginFailure(e.getTransaction(), e.getCause());
-                    throw e.getCause();
+                    failureHandler.onBeginFailure(globalTransaction, cause);
+                    throw cause;
                 case CommitFailure:
                     succeed = false;
-                    failureHandler.onCommitFailure(e.getTransaction(), e.getCause());
-                    throw e.getCause();
+                    failureHandler.onCommitFailure(globalTransaction, cause);
+                    throw cause;
                 case RollbackFailure:
-                    failureHandler.onRollbackFailure(e.getTransaction(), e.getOriginalException());
+                    failureHandler.onRollbackFailure(globalTransaction, e.getOriginalException());
                     throw e.getOriginalException();
-                case RollbackRetrying:
-                    failureHandler.onRollbackRetrying(e.getTransaction(), e.getOriginalException());
-                    throw e.getOriginalException();
-                case TimeoutRollback:
-                    failureHandler.onTimeoutRollback(e.getTransaction(), e.getOriginalException());
-                    throw e.getCause();
+                case Rollbacking:
+                    failureHandler.onRollbacking(globalTransaction, e.getOriginalException());
+                    if (timeout) {
+                        throw cause;
+                    } else {
+                        throw e.getOriginalException();
+                    }
                 default:
                     throw new ShouldNeverHappenException(String.format("Unknown TransactionalExecutor.Code: %s", code));
             }
@@ -179,6 +195,17 @@ public class GlobalTransactionTemplate {
             }
         }
     }
-
+    private static boolean isTimeoutException(Throwable th) {
+        if (null == th) {
+            return false;
+        }
+        if (th instanceof TmTransactionException) {
+            TmTransactionException exx = (TmTransactionException)th;
+            if (TransactionExceptionCode.TransactionTimeout == exx.getCode()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

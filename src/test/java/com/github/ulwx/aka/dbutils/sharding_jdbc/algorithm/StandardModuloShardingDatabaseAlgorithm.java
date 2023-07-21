@@ -31,7 +31,7 @@ public final class StandardModuloShardingDatabaseAlgorithm implements StandardSh
     
     private Properties props;
 
-    @Override
+
     public Properties getProps() {
         return props;
     }

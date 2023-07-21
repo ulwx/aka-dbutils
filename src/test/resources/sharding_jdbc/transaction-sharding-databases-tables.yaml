@@ -52,9 +52,6 @@ rules:
         keyGeneratorName: snowflake2
   bindingTables:
     - t_order,t_order_item
-  broadcastTables:
-    - t_address
-    - undo_log
   defaultDatabaseStrategy:
     standard:
       shardingColumn: user_id
@@ -91,7 +88,12 @@ rules:
       props:
         max-vibration-offset: 5
         worker-id: 3
-
-
+- !BROADCAST
+  tables: # 广播表规则列表
+    - t_address
 props:
   sql-show: true
+
+transaction:
+  defaultType: BASE
+  providerType: Seata

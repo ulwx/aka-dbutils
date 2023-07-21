@@ -26,7 +26,7 @@
         <transaction-manager type="SEATA_AT"  enable="true">
             <property name="seata.application-id">jdbc-test</property>
             <property name="seata.tx-service-group">my_test_tx_group</property>
-            <property name="seata.client.tm.defaultGlobalTransactionTimeout">180000</property>
+            <property name="seata.client.tm.defaultGlobalTransactionTimeout">1800000</property>
         </transaction-manager>
     </transaction-managers>
 

@@ -5,9 +5,9 @@
 	<version>2.0-SNAPSHOT</version>
 	<parent>
 		<groupId>com.github.ulwx</groupId>
-		<artifactId>aka-dbutils-parent</artifactId>
+		<artifactId>aka-common-parent</artifactId>
 		<version>2.0-SNAPSHOT</version>
-		<relativePath>../aka-dbutils-parent/pom.xml</relativePath>
+		<relativePath>../aka-common-parent/pom.xml</relativePath>
 	</parent>
 	<dependencies>
 		<dependency>
@@ -15,7 +15,10 @@
 			<artifactId>jackson-databind</artifactId>
 			<version>2.9.9</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -62,7 +65,22 @@
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr4</artifactId>
-			<version>4.9.2</version>
+			<version>4.10.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr4-runtime</artifactId>
+			<version>4.10.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+			<version>3.1.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>commons-compiler</artifactId>
+			<version>3.1.10</version>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
@@ -104,13 +122,35 @@
 		<dependency>
 			<groupId>org.apache.shardingsphere</groupId>
 			<artifactId>shardingsphere-jdbc-core</artifactId>
-			<version>5.3.1</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.shardingsphere</groupId>
 			<artifactId>shardingsphere-transaction-base-seata-at</artifactId>
-			<version>5.3.1</version>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>io.seata</groupId>
+			<artifactId>seata-all</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>antlr4</artifactId>
+					<groupId>org.antlr</groupId>
+				</exclusion>
+			</exclusions>
+			<optional>true</optional>
+		</dependency>
+		<!--seata -->
+		<dependency>
+			<groupId>com.alibaba.nacos</groupId>
+			<artifactId>nacos-client</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-logging</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+			</exclusions>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -126,31 +166,8 @@
 			<version>2.7.1</version>
 			<scope>test</scope>
 		</dependency>
-		<!--seata -->
-		<dependency>
-			<groupId>com.alibaba.nacos</groupId>
-			<artifactId>nacos-client</artifactId>
-			<version>2.1.2</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>commons-logging</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-			</exclusions>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.seata</groupId>
-			<artifactId>seata-all</artifactId>
-			<version>1.6.1</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>antlr4</artifactId>
-					<groupId>org.antlr</groupId>
-				</exclusion>
-			</exclusions>
-			<optional>true</optional>
-		</dependency>
+
+
 
 		<!-- https://mvnrepository.com/artifact/com.ibm.db2/jcc -->
 		<dependency>

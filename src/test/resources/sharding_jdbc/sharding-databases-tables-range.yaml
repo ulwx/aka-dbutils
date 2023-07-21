@@ -61,8 +61,6 @@ rules:
   defaultShardingColumn: account_id
   bindingTables:
     - t_order,t_order_item
-  broadcastTables:
-    - t_address
   defaultDatabaseStrategy:
     standard:
       shardingColumn: user_id
@@ -89,6 +87,8 @@ rules:
       type: SNOWFLAKE
       props:
         max-vibration-offset: 3
-
+- !BROADCAST
+  tables: # 广播表规则列表
+    - t_address
 props:
   sql-show: true

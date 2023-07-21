@@ -62,6 +62,7 @@ public final class TransactionBaseSeataRawExample {
         exampleService.initEnvironment();
 
         exampleService.insert();
+
         List<TOrder> orderList = exampleService.selectAll();
 
         System.out.println("---------------------------- Print Order Data -------------------");
@@ -69,19 +70,19 @@ public final class TransactionBaseSeataRawExample {
             System.out.println(each);
         }
         Thread.sleep(10000);
-        Assert.equal(orderList.size(),2);
+        Assert.equal(orderList.size(),3);
 
     }
+
     @Test
-    public void testTemplateExe()throws Exception{
+    public void insertWithAutoCommitOfTrue() throws Exception{
         String dbpoolName="sharding_jdbc/dbpool.xml#demo_ds_for_transaction_sharding_databases_and_tables";
         SeataATOrderServiceImpl exampleService =  new SeataATOrderServiceImpl(dbpoolName);;
         exampleService.cleanEnvironment();
         exampleService.initEnvironment();
 
-        GlobalTransactionTemplate.execute("sharding_jdbc/dbpool.xml",()->{
-            exampleService.insert();
-        });
+        exampleService.insertWithAutoCommitOfTrue();
+
         List<TOrder> orderList = exampleService.selectAll();
 
         System.out.println("---------------------------- Print Order Data -------------------");
@@ -89,7 +90,37 @@ public final class TransactionBaseSeataRawExample {
             System.out.println(each);
         }
         Thread.sleep(10000);
-        Assert.equal(orderList.size(),2);
+        Assert.equal(orderList.size(),3);
+
+    }
+    @Test
+    public void testGlobalTemplateExe()throws Exception{
+        String dbpoolName="sharding_jdbc/dbpool.xml#demo_ds_for_transaction_sharding_databases_and_tables";
+        SeataATOrderServiceImpl exampleService =  new SeataATOrderServiceImpl(dbpoolName);;
+        exampleService.cleanEnvironment();
+        exampleService.initEnvironment();
+        //通过sharding-jdbc自身支持seata时，不能再使用GlobalTransactionTemplate，如果使用会报错。
+        // 并且在集成Springboot后，也不能使用seata的@GlobalTransactional注解。
+        //下面的实例会报错
+        try {
+            GlobalTransactionTemplate.execute("sharding_jdbc/dbpool.xml", () -> {
+                exampleService.insert();
+            });
+            Assert.state("不会执行到此处！");
+            List<TOrder> orderList = exampleService.selectAll();
+
+            System.out.println("---------------------------- Print Order Data -------------------");
+            for (Object each : orderList) {
+                System.out.println(each);
+            }
+            Thread.sleep(10000);
+            Assert.equal(orderList.size(), 3);
+
+        }catch (Exception e){
+            Assert.state(e.getCause() instanceof NullPointerException,""+e);
+        }
+
+
     }
 
 }

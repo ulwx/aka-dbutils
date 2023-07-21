@@ -38,9 +38,6 @@ rules:
       actualDataNodes: ds_${0..1}.t_order_item
   bindingTables:
     - t_order,t_order_item
-  broadcastTables:
-    - t_address
-  
   defaultDatabaseStrategy:
     hint:
       shardingAlgorithmName: hint-test
@@ -50,6 +47,8 @@ rules:
   shardingAlgorithms:
     hint-test:
       type: HINT_TEST
-
+- !BROADCAST
+  tables: # 广播表规则列表
+    - t_address
 props:
   sql-show: true

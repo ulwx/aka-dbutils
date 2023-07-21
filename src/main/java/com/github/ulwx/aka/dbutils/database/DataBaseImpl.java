@@ -23,6 +23,9 @@ import com.github.ulwx.aka.dbutils.tool.support.type.TInteger;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
 import com.github.ulwx.aka.dbutils.tool.support.type.TString;
+import io.seata.tm.api.GlobalTransaction;
+import io.seata.tm.api.GlobalTransactionContext;
+import org.apache.shardingsphere.transaction.base.seata.at.SeataTransactionHolder;
 import org.codehaus.groovy.transform.ThreadInterruptibleASTTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,6 +236,11 @@ public class DataBaseImpl implements DataBase {
             }else{
                 if(this.conn.getAutoCommit()!=autoCommit){
                     this.conn.setAutoCommit(autoCommit);
+                }else{
+                    if(this.conn.getClass().getSimpleName().equals("ShardingSphereConnection")){
+                        //org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection
+                        this.conn.setAutoCommit(autoCommit);
+                    }
                 }
             }
 

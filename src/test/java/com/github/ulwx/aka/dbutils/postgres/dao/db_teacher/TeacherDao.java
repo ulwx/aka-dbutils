@@ -64,7 +64,7 @@ public class TeacherDao {
             MDbUtils.insertBy(DbPoolName, teacher);
 
         } catch (Exception e) {
-            Assert.state(e instanceof DbException && e.getMessage().equals("从库只能执行select语句执行！"));
+            Assert.state(e instanceof DbException && e.getMessage().equals("从库只能执行select语句！"));
         }
         sql.setLength(0);
         DbContext.setMainSlaveModeConnectMode(MainSlaveModeConnectMode.Connect_Auto);

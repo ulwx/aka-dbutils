@@ -21,9 +21,6 @@ import com.github.ulwx.aka.dbutils.database.DataBase;
 import com.github.ulwx.aka.dbutils.database.DataBaseFactory;
 import com.github.ulwx.aka.dbutils.sharding_jdbc.dao.demo_ds.OrderDao;
 import com.github.ulwx.aka.dbutils.sharding_jdbc.domain.db.demo_ds.TOrder;
-import com.github.ulwx.aka.dbutils.tool.MDbUtils;
-import org.apache.shardingsphere.transaction.api.TransactionType;
-import org.apache.shardingsphere.transaction.core.TransactionTypeHolder;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -44,9 +41,6 @@ public class SeataATOrderServiceImpl implements ExampleService{
     public void initEnvironment() throws Exception {
         orderDao.createTableIfNotExists();
         orderDao.truncateTable();
-        MDbUtils.exeScript(poolName,
-                "com.github.ulwx.aka.dbutils.sharding_jdbc",
-                "undo_log.sql", false,true,null);
 
     }
 
@@ -63,15 +57,13 @@ public class SeataATOrderServiceImpl implements ExampleService{
      * @throws SQLException SQL exception
      */
     public void insert() throws Exception {
-        TransactionTypeHolder.set(TransactionType.BASE);
-        try{
-            doInsert();
-        }finally {
-            TransactionTypeHolder.clear();
-        }
+        doInsert();
 
     }
-    
+    public void insertWithAutoCommitOfTrue() throws Exception {
+        doInsertWithAutoCommitOfTrue();
+
+    }
     /**
      * Execute XA with exception.
      *
@@ -79,6 +71,7 @@ public class SeataATOrderServiceImpl implements ExampleService{
      */
     public void insertFailed() throws Exception {
         try(DataBase db = DataBaseFactory.getDataBase(poolName)) {
+            //通过setAutoCommit(false)启动seata at分布式事务
             db.setAutoCommit(false);
             for (int i = 0; i < 2; i++) {
                 insertOrder(db,i);
@@ -90,13 +83,28 @@ public class SeataATOrderServiceImpl implements ExampleService{
     public void doInsert() throws Exception {
         try(DataBase db = DataBaseFactory.getDataBase(poolName)) {
             try {
+                //通过setAutoCommit(false)启动seata at分布式事务
                 db.setAutoCommit(false);
                 for (int i = 0; i < 3; i++) {
                     insertOrder(db, i);
                 }
                 db.commit();
             }catch (Exception e){
-                e.printStackTrace();
+                db.rollback();
+
+            }
+        }
+    }
+
+    public void doInsertWithAutoCommitOfTrue() throws Exception {
+        try(DataBase db = DataBaseFactory.getDataBase(poolName)) {
+            try {
+                 db.setAutoCommit(true);
+                for (int i = 0; i < 3; i++) {
+                    insertOrder(db, i);
+                }
+                db.commit();
+            }catch (Exception e){
                 db.rollback();
 
             }

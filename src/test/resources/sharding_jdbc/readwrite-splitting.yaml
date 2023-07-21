@@ -39,11 +39,10 @@ rules:
 - !READWRITE_SPLITTING
   dataSources:
     readwrite_ds:
-      staticStrategy:
-        writeDataSourceName: write_ds
-        readDataSourceNames:
-          - read_ds_0
-          - read_ds_1
+      writeDataSourceName: write_ds
+      readDataSourceNames:
+        - read_ds_0
+        - read_ds_1
       loadBalancerName: weight_lb
   loadBalancers:
     weight_lb:
@@ -51,5 +50,6 @@ rules:
       props:
         read_ds_0: 2
         read_ds_1: 1
+
 props:
   sql-show: true

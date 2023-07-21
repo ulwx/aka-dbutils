@@ -22,7 +22,7 @@ public class CompilerTask {
     private static volatile String classpath = buildClassPath();
     public static volatile Map<String, Class> LoadedClasses = new ConcurrentHashMap<String, Class>();
     public static volatile Map<String, String> LoadedSoruces = new ConcurrentHashMap<String, String>();
-    public static volatile boolean UseThirdpartCompilerTool = true;
+    public static volatile boolean UseThirdpartCompilerTool = false;
     public static ExecutorService threadPool = Executors.newFixedThreadPool(4);
     public static volatile SegmentLock segmentLock = new SegmentLock();
 
