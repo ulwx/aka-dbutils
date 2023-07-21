@@ -7,7 +7,7 @@ import com.github.ulwx.aka.dbutils.database.DbException;
 import java.util.List;
 import java.util.function.Function;
 
-public class BaseDao {
+public class   BaseDao {
 
     protected static <R> R execute(Function<DataBase, R> function, String dbpoolName) {
         DataBase db = null;
