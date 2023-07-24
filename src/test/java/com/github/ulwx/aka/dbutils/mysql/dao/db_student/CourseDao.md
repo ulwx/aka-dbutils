@@ -1,3 +1,7 @@
+testDelAllWithComment
+====
+\/\* abc \*\/ delete from course
+
 testDelAll
 ====
 delete from course

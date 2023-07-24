@@ -686,7 +686,18 @@ public class CourseDao {
         Assert.equal(sql.toString(), "delete from course");
 
     }
+    @Test
+    public void testDelAllWithComment() {
+        StringBuffer sql = new StringBuffer();
+        DbContext.setDebugSQLListener(sqltxt -> {
+            sql.setLength(0);
+            sql.append(sqltxt);
+        });
+        MDbUtils.del(DbPoolName, MD.md(), null);
+        DbContext.removeDebugSQLListener();
+        Assert.equal(sql.toString(), "/* abc */ delete from course");
 
+    }
     @Test
     public void testDelete() {
         LocalDateTime localDateTime = LocalDateTime.parse("2021-03-15 22:31:40", CTime.DTF_YMD_HH_MM_SS);

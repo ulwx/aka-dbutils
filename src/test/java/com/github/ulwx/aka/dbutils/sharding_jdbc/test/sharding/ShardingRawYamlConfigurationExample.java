@@ -25,6 +25,7 @@ import com.github.ulwx.aka.dbutils.sharding_jdbc.domain.db.demo_ds.TOrderItem;
 import com.github.ulwx.aka.dbutils.sharding_jdbc.service.AccountServiceImpl;
 import com.github.ulwx.aka.dbutils.sharding_jdbc.service.ExampleExecuteTemplate;
 import com.github.ulwx.aka.dbutils.sharding_jdbc.service.OrderServiceImpl;
+import com.github.ulwx.aka.dbutils.tool.MDbUtils;
 import com.github.ulwx.aka.dbutils.tool.support.Assert;
 import com.github.ulwx.aka.dbutils.tool.support.type.TResult2;
 import org.junit.After;
@@ -34,6 +35,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.util.List;
+import java.util.Map;
 
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -49,7 +51,19 @@ public final class ShardingRawYamlConfigurationExample {
     public void after() {
         DbContext.removeDebugSQLListener();
     }
+    private void testSingleTable(String dbpoolName) throws Exception{
+        String sql = "CREATE TABLE IF NOT EXISTS t_single (order_id BIGINT NOT NULL AUTO_INCREMENT," +
+                " user_id INT NOT NULL, address_id BIGINT NOT NULL, " +
+                "status VARCHAR(50), PRIMARY KEY (order_id))";
+        String insertSql="insert into `t_single` " +
+                "(`order_id`, `user_id`, `address_id`, `status`) values('1','122','222','3')";
+        MDbUtils.update(dbpoolName,"sql:"+sql, (Map)null);
+        MDbUtils.update(dbpoolName,"sql:"+insertSql, (Map)null);
+        String sqlQuery="/* ShardingSphere hint: dataSourceName=ds_0 */ select * from t_single";
+        List list=MDbUtils.queryMap(dbpoolName,"sql:"+sqlQuery,null );
+        Assert.state(list.size()>0);
 
+    }
     private void test(String dbpoolName) throws Exception{
 
         OrderServiceImpl exampleService=  new OrderServiceImpl(dbpoolName);
@@ -102,7 +116,12 @@ public final class ShardingRawYamlConfigurationExample {
         test(dbpoolName);
 
     }
+    @Test
+    public void test_singleTable() throws Exception{
+        String dbpoolName="sharding_jdbc/dbpool.xml#demo_ds_for_sharding_databases_and_tables";
+        this.testSingleTable(dbpoolName);
 
+    }
     @Test
     public void test_sharding_databases() throws Exception{
         String dbpoolName="sharding_jdbc/dbpool.xml#demo_ds_for_sharding_databases";

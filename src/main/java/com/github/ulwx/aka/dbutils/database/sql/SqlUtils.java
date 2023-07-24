@@ -1424,22 +1424,29 @@ public class SqlUtils {
 
     public static DataBase.SQLType decideSqlType(String sqltxt) throws DbException {
         sqltxt = StringUtils.trim(sqltxt);
-        if (StringUtils.startsWithIgnoreCase(sqltxt, "select")) {
+        //删除/* */
+        int start=sqltxt.indexOf("*/");
+        String newSqltxt=sqltxt;
+        if(start>2) {
+            newSqltxt = sqltxt.substring(sqltxt.indexOf("*/")+2);
+            newSqltxt=newSqltxt.trim();
+        }
+        if (StringUtils.startsWithIgnoreCase(newSqltxt, "select")) {
             return DataBase.SQLType.SELECT;
-        } else if (StringUtils.startsWithIgnoreCase(sqltxt, "insert")) {
+        } else if (StringUtils.startsWithIgnoreCase(newSqltxt, "insert")) {
             return DataBase.SQLType.INSERT;
-        } else if (StringUtils.startsWithIgnoreCase(sqltxt, "update")
-                || StringUtils.startsWithIgnoreCase(sqltxt, "create")
-                || StringUtils.startsWithIgnoreCase(sqltxt, "drop")
-                || StringUtils.startsWithIgnoreCase(sqltxt, "alter")
-                || StringUtils.startsWithIgnoreCase(sqltxt, "truncate")
+        } else if (StringUtils.startsWithIgnoreCase(newSqltxt, "update")
+                || StringUtils.startsWithIgnoreCase(newSqltxt, "create")
+                || StringUtils.startsWithIgnoreCase(newSqltxt, "drop")
+                || StringUtils.startsWithIgnoreCase(newSqltxt, "alter")
+                || StringUtils.startsWithIgnoreCase(newSqltxt, "truncate")
         ) {
             return DataBase.SQLType.UPDATE;
-        } else if (StringUtils.startsWithIgnoreCase(sqltxt, "delete")) {
+        } else if (StringUtils.startsWithIgnoreCase(newSqltxt, "delete")) {
             return DataBase.SQLType.DELETE;
-        } else if (StringUtils.startsWithIgnoreCase(sqltxt, "{")
-                && StringUtils.endsWithIgnoreCase(sqltxt, "}")
-                && StringUtils.indexOf(sqltxt, "[{=]\\s*call\\s+", true) >= 0) {
+        } else if (StringUtils.startsWithIgnoreCase(newSqltxt, "{")
+                && StringUtils.endsWithIgnoreCase(newSqltxt, "}")
+                && StringUtils.indexOf(newSqltxt, "[{=]\\s*call\\s+", true) >= 0) {
             return DataBase.SQLType.STORE_DPROCEDURE;
 
         } else {

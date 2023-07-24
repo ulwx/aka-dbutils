@@ -91,5 +91,12 @@ rules:
 - !BROADCAST
   tables: # 广播表规则列表
     - t_address
+- !SINGLE
+  tables:
+    # MySQL 风格
+    - ds_0.t_single # 加载指定单表
+
+- !SQL_PARSER
+  sqlCommentParseEnabled: true
 props:
   sql-show: true

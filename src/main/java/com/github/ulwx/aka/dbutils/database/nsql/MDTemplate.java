@@ -166,6 +166,9 @@ public final class MDTemplate {
         String commentReg = "(?s)\\/\\*.*?\\*\\/";
         mdContent = mdContent.replaceAll(commentReg, " ");
         mdContent = StringUtils.trim(mdContent);
+        //\/\* abc \*\/
+        mdContent=mdContent.replace("\\/","/");
+        mdContent=mdContent.replace("\\*","*");
 
         try (BufferedReader reader = new BufferedReader(new StringReader(mdContent))) {
             TInteger tabNum = new TInteger(0);
