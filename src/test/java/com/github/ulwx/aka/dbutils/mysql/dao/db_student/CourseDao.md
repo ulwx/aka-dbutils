@@ -9,9 +9,9 @@ delete from course
 testQueryForResultSet
 ====
 select * from course where 1=1 
-@if( $$:name ){ 
+@if( $$:name ){   
 and name like #{name%} 
-@} 
+@}      
 order by id
 
 testQueryForResultSetPage
