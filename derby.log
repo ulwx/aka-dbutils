@@ -1,0 +1,52 @@
+----------------------------------------------------------------
+Tue Jun 27 16:32:04 CST 2023:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0188-fbfb-3553-00000cfab700 
+on database directory D:\suncj\derby\db_teacher_slave1 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@4459eb14 
+Loaded from file:/D:/suncj/maven/maven-repository/org/apache/derby/derby/10.14.2.0/derby-10.14.2.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=11+28
+user.dir=D:\suncj\jydsource\common\common\aka-dbutils
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Tue Jun 27 16:32:04 CST 2023:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance 601a400f-0188-fbfb-3553-00000cfab700 
+on database directory D:\suncj\derby\db_teacher_slave2 with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@4459eb14 
+Loaded from file:/D:/suncj/maven/maven-repository/org/apache/derby/derby/10.14.2.0/derby-10.14.2.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=11+28
+user.dir=D:\suncj\jydsource\common\common\aka-dbutils
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Tue Jun 27 16:32:05 CST 2023:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance f81e0010-0188-fbfb-3553-00000cfab700 
+on database directory D:\suncj\derby\db_teacher with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@4459eb14 
+Loaded from file:/D:/suncj/maven/maven-repository/org/apache/derby/derby/10.14.2.0/derby-10.14.2.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=11+28
+user.dir=D:\suncj\jydsource\common\common\aka-dbutils
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Tue Jun 27 16:32:05 CST 2023:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance 80220011-0188-fbfb-3553-00000cfab700 
+on database directory D:\suncj\derby\db_student with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@4459eb14 
+Loaded from file:/D:/suncj/maven/maven-repository/org/apache/derby/derby/10.14.2.0/derby-10.14.2.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=11+28
+user.dir=D:\suncj\jydsource\common\common\aka-dbutils
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
