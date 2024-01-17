@@ -2175,8 +2175,7 @@ public class DataBaseImpl implements DataBase {
                 DbContext.removeGenerateIDForInsert();
                 DbContext.clearReflectClass();
             }
-            @SuppressWarnings("unchecked") List<Map<Integer, Object>> list = Arrays.asList(maps);
-            int[] res = this.executeBindBatch(sqltexts[0], list);
+            int[] res = this.executeBindManySql(sqltexts, maps);
             for (int n = 0; n < insertObjects.length; n++) {
                 GenerateID updateOptions = listGenerateID.get(n);
                 if (updateOptions != null && updateOptions.getIdValue() != null) {
