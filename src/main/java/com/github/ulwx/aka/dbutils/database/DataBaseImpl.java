@@ -2145,6 +2145,7 @@ public class DataBaseImpl implements DataBase {
         int length = insertObjects.length;
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
+        boolean optimize = true;
         try {
             Class<?> handClass = DbContext.getReflectClass();
             this.sqlType = SQLType.INSERT;
@@ -2170,12 +2171,25 @@ public class DataBaseImpl implements DataBase {
                     maps[i] = vParameters;
                     sqltexts[i] = sql;
 
+                    if (i > 0) {
+                        if (!sql.equals(sqltexts[0])) {
+                            optimize = false;
+                        }
+                    }
+
                 }
             } finally {
                 DbContext.removeGenerateIDForInsert();
                 DbContext.clearReflectClass();
             }
-            int[] res = this.executeBindManySql(sqltexts, maps);
+            int[] res=null;
+            if (optimize) {// 可以优化成批量更新
+                @SuppressWarnings("unchecked") List<Map<Integer, Object>> list = Arrays.asList(maps);
+                res = this.executeBindBatch(sqltexts[0], list);
+            } else {
+                res = this.executeBindManySql(sqltexts, maps);
+
+            }
             for (int n = 0; n < insertObjects.length; n++) {
                 GenerateID updateOptions = listGenerateID.get(n);
                 if (updateOptions != null && updateOptions.getIdValue() != null) {
