@@ -3941,7 +3941,7 @@ public class DataBaseImpl implements DataBase {
     }
 
     @Override
-    public <T> int[] delBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
+    public <T> int[] delManyBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
         Method enclosingMethod = new Object() {
         }.getClass().getEnclosingMethod();
         this.configInterceptorForMehtod(enclosingMethod);

@@ -374,7 +374,7 @@ public interface DBObjectOperation {
      * @return 数组里每个对象生成的delete语句执行后返回删除的条数
      * @throws DbException
      */
-    public <T> int[] delBy(T[] deleteObjects, Object... whereProperties) throws DbException;
+    public <T> int[] delManyBy(T[] deleteObjects, Object... whereProperties) throws DbException;
 
 
 }

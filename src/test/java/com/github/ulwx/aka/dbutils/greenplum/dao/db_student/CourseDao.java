@@ -788,7 +788,7 @@ public class CourseDao {
             }
             sql2.append(sqltxt);
         });
-        rets = MDbUtils.delBy(DbPoolName, courses, MD.of("name"));
+        rets = MDbUtils.delManyBy(DbPoolName, courses, MD.of("name"));
         DbContext.removeDebugSQLListener();
         Assert.equal(sql2.toString(), "delete from \"course\" where \"name\"='add';delete from \"course\" where \"name\"='add1'");
 

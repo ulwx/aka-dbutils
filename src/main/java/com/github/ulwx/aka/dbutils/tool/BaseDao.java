@@ -72,10 +72,10 @@ public class   BaseDao {
      * @return 数组里每个对象生成的delete语句执行后返回删除的条数
      * @throws DbException
      */
-    public static <T> int[] delBy(String dbPoolName, T[] deleteObjects, Object... whereProperties)
+    public static <T> int[] delManyBy(String dbPoolName, T[] deleteObjects, Object... whereProperties)
             throws DbException {
         return execute(db -> {
-            return db.delBy(deleteObjects,
+            return db.delManyBy(deleteObjects,
                     whereProperties);
         }, dbPoolName);
     }

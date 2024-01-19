@@ -365,8 +365,8 @@ public abstract class DataBaseDecorator implements DBObjectOperation, AutoClosea
     }
 
     @Override
-    public <T> int[] delBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
-        return db.delBy(deleteObjects, whereProperteis);
+    public <T> int[] delManyBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
+        return db.delManyBy(deleteObjects, whereProperteis);
     }
 
     @Override
