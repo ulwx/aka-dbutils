@@ -2143,6 +2143,7 @@ public class DataBaseImpl implements DataBase {
      */
     private <T> int[] excuteInsertClass(T[] insertObjects, String[] properties, boolean ignoreNull) throws DbException {
         int length = insertObjects.length;
+        if(insertObjects==null || length==0) return new int[0];
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
         boolean optimize = true;
@@ -2308,7 +2309,6 @@ public class DataBaseImpl implements DataBase {
         String[][] strArray = new String[deleteObject.length][];
         strArray = ArrayUtils.fill(strArray, whereProperteis);
         return this.excuteDeleteObjects(deleteObject, strArray);
-
     }
 
     /**
@@ -2508,6 +2508,7 @@ public class DataBaseImpl implements DataBase {
      */
     private int[] excuteUpdateObjects(Object[] objects, String[][] whereProperteis, String[][] updateProperties, boolean ignoreNull) throws DbException {
         int length = objects.length;
+        if(objects==null || length==0) return new int[0];
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
         boolean optimize = true;
@@ -2570,6 +2571,7 @@ public class DataBaseImpl implements DataBase {
     private int[] excuteDeleteObjects(Object[] deleteObjects, String[][] whereProperties) throws DbException {
 
         int length = deleteObjects.length;
+        if(deleteObjects==null || length==0) return new int[0];
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
         boolean optimize = true;

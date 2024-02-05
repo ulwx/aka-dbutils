@@ -630,6 +630,7 @@ public class MDataBaseImpl implements MDataBase {
 
     @Override
     public <T> int[] delManyBy(T[] deleteObjects, Object[] whereProperteis) throws DbException {
+
         return dataBase.delManyBy(deleteObjects, whereProperteis);
     }
 }
