@@ -1,14 +1,11 @@
 package com.github.ulwx.aka.dbutils.tool;
 
-import com.github.ulwx.aka.dbutils.database.DbException;
+import com.github.ulwx.aka.dbutils.database.*;
 import com.github.ulwx.aka.dbutils.database.MDMethods.InsertOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.InsertOptions.ReturnFlag;
 import com.github.ulwx.aka.dbutils.database.MDMethods.One2ManyMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.One2OneMapNestOptions;
 import com.github.ulwx.aka.dbutils.database.MDMethods.PageOptions;
-import com.github.ulwx.aka.dbutils.database.QueryHint;
-import com.github.ulwx.aka.dbutils.database.QueryMapNestOne2Many;
-import com.github.ulwx.aka.dbutils.database.QueryMapNestOne2One;
 import com.github.ulwx.aka.dbutils.database.dbpool.ReadConfig;
 import com.github.ulwx.aka.dbutils.database.parameter.IDGeneratorParmeter;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
@@ -34,6 +31,9 @@ public class MD {
     }
 
 
+    public static void setReflectClass(Class c){
+        DbContext.setReflectClass(c);
+    }
     public static String md(String mdMethodName) {
         return md(2, mdMethodName);
     }
