@@ -41,7 +41,7 @@ public final class MDTemplate {
     public static void startClass(StringBuilder sb, String className, String packageName, TInteger tabNum) {
         String importPackageName = MDTemplate.class.getPackage().getName();
         sb.append("\npackage " + packageName + ";\n");
-        sb.append("import java.util.Map;\n");
+        sb.append("import java.util.*;\n");
         sb.append("import " + importPackageName + ".NFunction;\n");
         sb.append("import " + importPackageName + ".MDTemplate;\n");
         sb.append("import " + importPackageName + ".MDMehtodOptions;\n");
