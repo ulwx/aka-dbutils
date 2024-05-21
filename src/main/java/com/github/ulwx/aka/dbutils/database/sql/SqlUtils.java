@@ -101,7 +101,11 @@ public class SqlUtils {
             if (TypeMapSystem.checkedSimpleType(typeClass)) {
                 typeName = typeClass.getSimpleName();
             } else {
-                typeName = typeClass.getName();
+                if(typeClass==byte[].class ){
+                    typeName = typeClass.getSimpleName();
+                }else {
+                    typeName = typeClass.getName();
+                }
             }
             String tableColumRule = DbConst.getTableColumRule(dbpool);
             if (StringUtils.isEmpty(tableColumRule)) {
