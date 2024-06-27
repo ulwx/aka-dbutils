@@ -146,15 +146,15 @@ public class DataBaseImpl implements DataBase {
                     upLevelNum++;
                     str = tempInfo;
                     if (i - 1 >= 0) {
-                        tempInfo = "" + getLastTwoClassName(stack[i - 1].getClassName() )+ "." + stack[i - 1].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
-                        str =tempInfo   + "=>" + str;
+                        tempInfo = "" + getLastTwoClassName(stack[i - 1].getClassName()) + "." + stack[i - 1].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
+                        str = tempInfo + "=>" + str;
                         upLevelNum++;
                     }
 
                 } else {
                     String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
                     if (upLevelNum < 3) {
-                        str =str  + "=>" + tempInfo;
+                        str = str + "=>" + tempInfo;
                         upLevelNum++;
                     } else {
                         break;
@@ -226,18 +226,18 @@ public class DataBaseImpl implements DataBase {
 
     private void setInternalConnectionAutoCommit(boolean autoCommit) throws DbException {
         try {
-            if(!this.getDataBaseType().supportTransaction()
-               || !conn.getMetaData().supportsTransactions()){
-                if(!autoCommit) {
+            if (!this.getDataBaseType().supportTransaction()
+                    || !conn.getMetaData().supportsTransactions()) {
+                if (!autoCommit) {
                     log.warn(this.getDataBaseType() + "不支持数据库连接设置为AutoCommit=false," +
                             "已重新设置为true!");
                 }
 
-            }else{
-                if(this.conn.getAutoCommit()!=autoCommit){
+            } else {
+                if (this.conn.getAutoCommit() != autoCommit) {
                     this.conn.setAutoCommit(autoCommit);
-                }else{
-                    if(this.conn.getClass().getSimpleName().equals("ShardingSphereConnection")){
+                } else {
+                    if (this.conn.getClass().getSimpleName().equals("ShardingSphereConnection")) {
                         //org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection
                         this.conn.setAutoCommit(autoCommit);
                     }
@@ -287,6 +287,7 @@ public class DataBaseImpl implements DataBase {
             throw new DbException(e);
         }
     }
+
     public static DataSource getDataSourceFromSlavePool(String dbPoolName, TResult<String> tslaveName) throws DbException {
 
         Map<String, String> map = new HashMap<String, String>();
@@ -299,6 +300,7 @@ public class DataBaseImpl implements DataBase {
             throw new DbException(e);
         }
     }
+
     @Override
     public void connectDb(Connection connection, boolean externalControlConClose) {
         this.connectType = ConnectType.CONNECTION;
@@ -342,10 +344,10 @@ public class DataBaseImpl implements DataBase {
         return this.connectType;
     }
 
-    protected DataSource fetchDataSource(){
-        DataSource dataSource=null;
+    protected DataSource fetchDataSource() {
+        DataSource dataSource = null;
         if (this.connectType == ConnectType.POOL) {
-            String msg="";
+            String msg = "";
             if (this.mainSlaveMode) {
                 if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_SlaveServer) {// 如果是从模式，将连接从库
                     if (!this.getAutoCommit()) {//事务性操作
@@ -356,33 +358,33 @@ public class DataBaseImpl implements DataBase {
                     }
                     this.connectedToMaster = false;
                     TResult<String> tslaveName = new TResult<>();
-                    DataSource ds = getDataSourceFromSlavePool(dbPoolName,tslaveName);
-                    msg="dataSource:"+tslaveName.getValue();
+                    DataSource ds = getDataSourceFromSlavePool(dbPoolName, tslaveName);
+                    msg = "dataSource:" + tslaveName.getValue();
                     dataSource = ds;
 
                 } else if (mainSlaveModeConnectMode == MainSlaveModeConnectMode.Connect_MainServer) {
                     this.connectedToMaster = true;
                     DataSource ds = this.getDataSourceFromPool(dbPoolName);
-                    msg="dataSource:"+dbPoolName;
+                    msg = "dataSource:" + dbPoolName;
                     dataSource = ds;
                 } else { //Connect_Auto
                     if (this.sqlType == SQLType.SELECT) {
                         if (!this.getAutoCommit()) {//事务性操作
                             this.connectedToMaster = true;
                             DataSource ds = this.getDataSourceFromPool(dbPoolName);
-                            msg="dataSource:"+dbPoolName;
+                            msg = "dataSource:" + dbPoolName;
                             dataSource = ds;
                         } else {
                             this.connectedToMaster = false;
                             TResult<String> tslaveName = new TResult<>();
-                            DataSource ds = this.getDataSourceFromSlavePool(dbPoolName,tslaveName);
-                            msg="dataSource:"+tslaveName.getValue();
+                            DataSource ds = this.getDataSourceFromSlavePool(dbPoolName, tslaveName);
+                            msg = "dataSource:" + tslaveName.getValue();
                             dataSource = ds;
                         }
                     } else { //update、delete、存储过程,脚本等都在主库上执行
                         this.connectedToMaster = true;
                         DataSource ds = this.getDataSourceFromPool(dbPoolName);
-                        msg="dataSource:"+dbPoolName;
+                        msg = "dataSource:" + dbPoolName;
                         dataSource = ds;
                     }
 
@@ -390,7 +392,7 @@ public class DataBaseImpl implements DataBase {
             } else { //非主从库方式
                 this.connectedToMaster = true;
                 DataSource ds = this.getDataSourceFromPool(dbPoolName);
-                msg="dataSource:"+dbPoolName;
+                msg = "dataSource:" + dbPoolName;
                 dataSource = ds;
             }
 
@@ -399,21 +401,22 @@ public class DataBaseImpl implements DataBase {
             }
 
 
-        }else if(this.connectType == ConnectType.DATASOURCE){
-            dataSource =this.dataSource;
-        }
-        else if(this.connectType == ConnectType.CONNECTION){
-            dataSource =null;
+        } else if (this.connectType == ConnectType.DATASOURCE) {
+            dataSource = this.dataSource;
+        } else if (this.connectType == ConnectType.CONNECTION) {
+            dataSource = null;
         }
         return dataSource;
     }
-    protected Connection  fetchConnection(DataSource dataSource){
+
+    protected Connection fetchConnection(DataSource dataSource) {
         try {
             return dataSource.getConnection();
-        }catch (Exception e){
-            throw  new DbException(e);
+        } catch (Exception e) {
+            throw new DbException(e);
         }
     }
+
     private void fetchConnection() throws DbException {
         long start0 = System.currentTimeMillis();
         String msg = "";
@@ -421,12 +424,12 @@ public class DataBaseImpl implements DataBase {
         try {
             if (this.isColsed()) {
                 conn = null;
-                DataSource ds=this.fetchDataSource();
-                this.dataSource=ds;
+                DataSource ds = this.fetchDataSource();
+                this.dataSource = ds;
                 if (this.connectType == ConnectType.POOL
-                        || this.connectType==ConnectType.DATASOURCE){
+                        || this.connectType == ConnectType.DATASOURCE) {
                     this.conn = fetchConnection(this.dataSource);
-                }else{ //ConnectType.CONNECTION
+                } else { //ConnectType.CONNECTION
                     //已经存在连接
                 }
                 this.setDataBaseType(conn);
@@ -1491,7 +1494,7 @@ public class DataBaseImpl implements DataBase {
     private String getConnectInfo() {
         String connectInfo = "";
         if (this.connectType == ConnectType.CONNECTION) {
-            connectInfo = ConnectType.CONNECTION + ":"+this.conn;
+            connectInfo = ConnectType.CONNECTION + ":" + this.conn;
         } else if (this.connectType == ConnectType.DATASOURCE) {
             connectInfo = ConnectType.DATASOURCE + ":" + this.dataSource + "";
         } else if ((this.connectType == ConnectType.POOL)) {
@@ -1877,7 +1880,7 @@ public class DataBaseImpl implements DataBase {
             try {
                 if (this.sqlType == SQLType.INSERT) {
                     if (this.getDataBaseType().supportGeneratedKeysForInsert()
-                           ||this.conn.getMetaData().supportsGetGeneratedKeys() ) {//oracle不支持getGeneratedKeys操作
+                            || this.conn.getMetaData().supportsGetGeneratedKeys()) {//oracle不支持getGeneratedKeys操作
                         ResultSet keys = preStmt.getGeneratedKeys();
                         if (keys.next()) {
                             twoInt[1] = keys.getLong(1);
@@ -1906,7 +1909,7 @@ public class DataBaseImpl implements DataBase {
             twoInt[0] = -1;
             twoInt[1] = -1;
             if (e instanceof DbException) throw (DbException) e;
-            throw new DbException(sqltext,e);
+            throw new DbException(sqltext, e);
 
         } finally {
             try {
@@ -1998,7 +2001,6 @@ public class DataBaseImpl implements DataBase {
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
             Class<?> handClass = DbContext.getReflectClass();
-
             Class<?> reflectClass = insertObject.getClass();
             if (handClass != null) {
                 reflectClass = handClass;
@@ -2028,6 +2030,7 @@ public class DataBaseImpl implements DataBase {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
+            DbContext.clearReflectClass();
             DbContext.removeGenerateIDForInsert();
         }
 
@@ -2072,24 +2075,27 @@ public class DataBaseImpl implements DataBase {
 
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-
             Class<?> reflectClass = insertObject.getClass();
             Class<?> handClass = DbContext.getReflectClass();
+            DbContext.clearReflectClass();
             if (handClass != null) {
                 reflectClass = handClass;
             }
             this.sqlType = SQLType.INSERT;
+            GenerateID generateID = null;
+            String sqltext = "";
+            SequenceInfo sequeceInfo = null;
+            UpdateOptions updateOptions = null;
             this.fetchConnection();
             //查询sequence
-            SequenceInfo sequeceInfo = DbContext.getGenerateIDForInsert();
+            sequeceInfo = DbContext.getGenerateIDForInsert();
+            DbContext.removeGenerateIDForInsert();
             handSequenceForQueryID(sequeceInfo, true);
-            GenerateID generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
-            UpdateOptions updateOptions = new UpdateOptions();
+            generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
+            updateOptions = new UpdateOptions();
             updateOptions.setGenerateID(generateID);
-            String sqltext = SqlUtils.generateInsertSql(this.dbPoolName, properties,
+            sqltext = SqlUtils.generateInsertSql(this.dbPoolName, properties,
                     insertObject, reflectClass, vParameters, updateOptions, ignoreNull, this.getDataBaseType());
-
-            DbContext.clearReflectClass();
             long ret = this.executeBindInsertReturnKey(sqltext, vParameters);
 
             handSequenceForQueryID(sequeceInfo, false);
@@ -2112,8 +2118,6 @@ public class DataBaseImpl implements DataBase {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         } finally {
-
-            DbContext.removeGenerateIDForInsert();
         }
 
     }
@@ -2143,47 +2147,46 @@ public class DataBaseImpl implements DataBase {
      */
     private <T> int[] excuteInsertClass(T[] insertObjects, String[] properties, boolean ignoreNull) throws DbException {
         int length = insertObjects.length;
-        if(insertObjects==null || length==0) return new int[0];
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
         boolean optimize = true;
+        List<GenerateID> listGenerateID = new ArrayList<>();
         try {
             Class<?> handClass = DbContext.getReflectClass();
+            DbContext.clearReflectClass();
             this.sqlType = SQLType.INSERT;
-            this.fetchConnection();
-            List<GenerateID> listGenerateID = new ArrayList<>();
-            try {
-                SequenceInfo sequeceInfo = DbContext.getGenerateIDForInsert();
-                for (int i = 0; i < maps.length; i++) {
-                    Object obj = insertObjects[i];
-                    Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
-                    String[] pros = properties;
-                    Class reflectClass = obj.getClass();
-                    if (handClass != null) {
-                        reflectClass = handClass;
-                    }
-                    handSequenceForQueryID(sequeceInfo, true);
-                    GenerateID generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
-                    UpdateOptions updateOptions = new UpdateOptions();
-                    updateOptions.setGenerateID(generateID);
-                    String sql = SqlUtils.generateInsertSql(this.dbPoolName, pros, obj, reflectClass, vParameters,
-                            updateOptions, ignoreNull, this.getDataBaseType());
-                    listGenerateID.add(generateID);
-                    maps[i] = vParameters;
-                    sqltexts[i] = sql;
-
-                    if (i > 0) {
-                        if (!sql.equals(sqltexts[0])) {
-                            optimize = false;
-                        }
-                    }
-
-                }
-            } finally {
-                DbContext.removeGenerateIDForInsert();
-                DbContext.clearReflectClass();
+            if (insertObjects == null || length == 0) {
+                return new int[0];
             }
-            int[] res=null;
+            this.fetchConnection();
+            SequenceInfo sequeceInfo = DbContext.getGenerateIDForInsert();
+            DbContext.removeGenerateIDForInsert();
+            for (int i = 0; i < maps.length; i++) {
+                Object obj = insertObjects[i];
+                Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
+                String[] pros = properties;
+                Class reflectClass = obj.getClass();
+                if (handClass != null) {
+                    reflectClass = handClass;
+                }
+                handSequenceForQueryID(sequeceInfo, true);
+                GenerateID generateID = (sequeceInfo != null ? sequeceInfo.getGenerateID() : null);
+                UpdateOptions updateOptions = new UpdateOptions();
+                updateOptions.setGenerateID(generateID);
+                String sql = SqlUtils.generateInsertSql(this.dbPoolName, pros, obj, reflectClass, vParameters,
+                        updateOptions, ignoreNull, this.getDataBaseType());
+                listGenerateID.add(generateID);
+                maps[i] = vParameters;
+                sqltexts[i] = sql;
+
+                if (i > 0) {
+                    if (!sql.equals(sqltexts[0])) {
+                        optimize = false;
+                    }
+                }
+
+            }
+            int[] res = null;
             if (optimize) {// 可以优化成批量更新
                 @SuppressWarnings("unchecked") List<Map<Integer, Object>> list = Arrays.asList(maps);
                 res = this.executeBindBatch(sqltexts[0], list);
@@ -2241,6 +2244,7 @@ public class DataBaseImpl implements DataBase {
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
             Class<?> handClass = DbContext.getReflectClass();
+            DbContext.clearReflectClass();
             Class<?> reflectClass = updateObject.getClass();
             if (handClass != null) {
                 reflectClass = handClass;
@@ -2248,7 +2252,7 @@ public class DataBaseImpl implements DataBase {
             this.sqlType = SQLType.UPDATE;
             this.fetchConnection();
             String sqltext = SqlUtils.generateUpdateSql(this.dbPoolName, properties, updateObject, reflectClass, whereForProperties, vParameters, null, true, this.getDataBaseType());
-            DbContext.clearReflectClass();
+
             return this.executeBindUpdate(sqltext, vParameters);
 
         } catch (Exception e) {
@@ -2274,8 +2278,8 @@ public class DataBaseImpl implements DataBase {
 
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
-
             Class<?> handClass = DbContext.getReflectClass();
+            DbContext.clearReflectClass();
             Class<?> reflectClass = updateObject.getClass();
             if (handClass != null) {
                 reflectClass = handClass;
@@ -2283,7 +2287,7 @@ public class DataBaseImpl implements DataBase {
             this.sqlType = SQLType.UPDATE;
             this.fetchConnection();
             String sqltext = SqlUtils.generateUpdateSql(this.dbPoolName, properties, updateObject, reflectClass, whereForProperties, vParameters, null, false, this.getDataBaseType());
-            DbContext.clearReflectClass();
+
             return this.executeBindUpdate(sqltext, vParameters);
 
         } catch (Exception e) {
@@ -2325,6 +2329,7 @@ public class DataBaseImpl implements DataBase {
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
             Class<?> handClass = DbContext.getReflectClass();
+            DbContext.clearReflectClass();
             Class<?> reflectClass = deleteObject.getClass();
             if (handClass != null) {
                 reflectClass = handClass;
@@ -2332,7 +2337,6 @@ public class DataBaseImpl implements DataBase {
             this.sqlType = SQLType.DELETE;
             this.fetchConnection();
             String sql = SqlUtils.generateDeleteSql(this.dbPoolName, deleteObject, reflectClass, whereProperteis, vParameters, null, this.getDataBaseType());
-            DbContext.clearReflectClass();
             return this.executeBindDelete(sql, vParameters);
 
         } catch (Exception e) {
@@ -2354,6 +2358,7 @@ public class DataBaseImpl implements DataBase {
         Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
         try {
             Class<?> handClass = DbContext.getReflectClass();
+            DbContext.clearReflectClass();
             Class<?> reflectClass = deleteObject.getClass();
             if (handClass != null) {
                 reflectClass = handClass;
@@ -2361,7 +2366,7 @@ public class DataBaseImpl implements DataBase {
             this.sqlType = SQLType.DELETE;
             this.fetchConnection();
             String sql = SqlUtils.generateDeleteSqlByObject(this.dbPoolName, deleteObject, reflectClass, vParameters, null, this.getDataBaseType());
-            DbContext.clearReflectClass();
+
             return this.executeBindDelete(sql, vParameters);
 
         } catch (Exception e) {
@@ -2508,12 +2513,13 @@ public class DataBaseImpl implements DataBase {
      */
     private int[] excuteUpdateObjects(Object[] objects, String[][] whereProperteis, String[][] updateProperties, boolean ignoreNull) throws DbException {
         int length = objects.length;
-        if(objects==null || length==0) return new int[0];
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
         boolean optimize = true;
         try {
             Class handClass = DbContext.getReflectClass();
+            DbContext.clearReflectClass();
+            if (objects == null || length == 0) return new int[0];
             this.sqlType = SQLType.UPDATE;
             this.fetchConnection();
             for (int i = 0; i < maps.length; i++) {
@@ -2530,7 +2536,6 @@ public class DataBaseImpl implements DataBase {
                 }
                 String sql = SqlUtils.generateUpdateSql(this.dbPoolName, pros, obj, reflectClass,
                         whereps, vParameters, null, ignoreNull, this.getDataBaseType());
-                DbContext.clearReflectClass();
                 maps[i] = vParameters;
                 sqltexts[i] = sql;
 
@@ -2550,7 +2555,6 @@ public class DataBaseImpl implements DataBase {
                 return res;
             } else {
                 int[] res = this.executeBindManySql(sqltexts, maps);
-
                 return res;
             }
 
@@ -2571,12 +2575,14 @@ public class DataBaseImpl implements DataBase {
     private int[] excuteDeleteObjects(Object[] deleteObjects, String[][] whereProperties) throws DbException {
 
         int length = deleteObjects.length;
-        if(deleteObjects==null || length==0) return new int[0];
+
         Map[] maps = new HashMap[length];
         String[] sqltexts = new String[length];
         boolean optimize = true;
         try {
             Class handClass = DbContext.getReflectClass();
+            DbContext.clearReflectClass();
+            if (deleteObjects == null || length == 0) return new int[0];
             this.sqlType = SQLType.DELETE;
             this.fetchConnection();
             for (int i = 0; i < maps.length; i++) {
@@ -2599,7 +2605,6 @@ public class DataBaseImpl implements DataBase {
                     }
                 }
             }
-            DbContext.clearReflectClass();
 
             if (optimize) {// 可以优化成批量更新
                 @SuppressWarnings("unchecked") List<Map<Integer, Object>> list = Arrays.asList(maps);
@@ -2714,7 +2719,7 @@ public class DataBaseImpl implements DataBase {
         try {
             if (conn != null) {
                 if (this.getDataBaseType().supportTransaction()
-                    || conn.getMetaData().supportsTransactions()) {
+                        || conn.getMetaData().supportsTransactions()) {
                     conn.rollback();
                     clearSavePoint();
                     if (DbContext.permitDebugLog()) log.debug(this.getConnectInfo() + ":rollback done!");
@@ -2773,8 +2778,8 @@ public class DataBaseImpl implements DataBase {
                 }
                 Savepoint savepoint = null;
                 if (!savePointMap.containsKey(savepointName)) {
-                    if(!conn.getMetaData().supportsSavepoints()){
-                        throw  new DbException("数据库不支持Savepoint()操作！");
+                    if (!conn.getMetaData().supportsSavepoints()) {
+                        throw new DbException("数据库不支持Savepoint()操作！");
                     }
                     savepoint = conn.setSavepoint(savepointName);
                     if (DbContext.permitDebugLog()) {
@@ -2798,9 +2803,9 @@ public class DataBaseImpl implements DataBase {
             try {
                 if (!this.isColsed()) {
                     if (this.getDataBaseType().supportTransaction()
-                        || conn.getMetaData().supportsTransactions()) {
-                        if(!conn.getMetaData().supportsSavepoints()){
-                            throw  new DbException("数据库不支持Savepoint回滚操作！");
+                            || conn.getMetaData().supportsTransactions()) {
+                        if (!conn.getMetaData().supportsSavepoints()) {
+                            throw new DbException("数据库不支持Savepoint回滚操作！");
                         }
                         conn.rollback(savePointMap.get(savepointName));
                         savePointMap.remove(savepointName);
@@ -2845,7 +2850,7 @@ public class DataBaseImpl implements DataBase {
         try {
             if (conn != null) {
                 if (this.getDataBaseType().supportTransaction()
-                   || conn.getMetaData().supportsTransactions()) {
+                        || conn.getMetaData().supportsTransactions()) {
                     conn.commit();
                     clearSavePoint();
                     if (DbContext.permitDebugLog()) log.debug("[" + this.getConnectInfo() + "]..commit done!");
@@ -3842,7 +3847,6 @@ public class DataBaseImpl implements DataBase {
         this.configInterceptorForMehtod(enclosingMethod);
         List<T> ret = null;
         try {
-
             String sql = "";
             Map<Integer, Object> vParameters = new HashMap<Integer, Object>();
             try {
@@ -4363,7 +4367,8 @@ public class DataBaseImpl implements DataBase {
                 }
                 try {
                     statement.setEscapeProcessing(escapeProcessing);
-                }catch (Exception es){}
+                } catch (Exception es) {
+                }
                 String debugSql = "";
                 if (handArgs) {
                     Collection<Object> vParameters = CollectionUtils.getSortedValues(nsql.getArgs());
