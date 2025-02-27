@@ -55,9 +55,9 @@ public class DataBaseImpl implements DataBase {
     private boolean isAutoCommit = true;
     private SQLType sqlType = SQLType.OTHER;
     private MainSlaveModeConnectMode mainSlaveModeConnectMode = MainSlaveModeConnectMode.Connect_MainServer;
-    private DBMS dataBaseType;
-    private int dataBaseMajorVersion = 0;
-    private int dataBaseMiniVersion = 0;
+    //private DBMS dataBaseType;
+//    private int dataBaseMajorVersion = 0;
+//    private int dataBaseMiniVersion = 0;
     private String dbPoolName = "";
     private boolean externalControlConClose = false;
     private ConnectType connectType = null;
@@ -252,10 +252,6 @@ public class DataBaseImpl implements DataBase {
 
     @Override
     public DBMS getDataBaseType() {
-        return this.dataBaseType;
-    }
-
-    private void setDataBaseType(Connection conn) throws DbException {
         String databaseName;
         String driverName;
         int majorVersion;
@@ -266,14 +262,15 @@ public class DataBaseImpl implements DataBase {
             databaseName = meta.getDatabaseProductName();
             majorVersion = meta.getDatabaseMajorVersion();
             minorVersion = meta.getDatabaseMinorVersion();
-            this.dataBaseMajorVersion = majorVersion;
-            this.dataBaseMiniVersion = minorVersion;
-            this.dataBaseType = DialectClient.decideDialect(driverName, databaseName, majorVersion, minorVersion);
+            DBMS dataBaseType = DialectClient.decideDialect(driverName, databaseName, majorVersion, minorVersion);
+            return dataBaseType;
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
         }
+
     }
+
 
     public static DataSource getDataSourceFromPool(String dbPoolName) throws DbException {
 
@@ -314,7 +311,7 @@ public class DataBaseImpl implements DataBase {
         this.conn = connection;
         this.dataSource = null;
         this.dbPoolName = "";
-        this.setDataBaseType(conn);
+
     }
 
     @Override
@@ -423,16 +420,14 @@ public class DataBaseImpl implements DataBase {
         this.connectedToMaster = true;
         try {
             if (this.isColsed()) {
-                conn = null;
-                DataSource ds = this.fetchDataSource();
-                this.dataSource = ds;
                 if (this.connectType == ConnectType.POOL
                         || this.connectType == ConnectType.DATASOURCE) {
+                    DataSource ds = this.fetchDataSource();
+                    this.dataSource = ds;
                     this.conn = fetchConnection(this.dataSource);
                 } else { //ConnectType.CONNECTION
                     //已经存在连接
                 }
-                this.setDataBaseType(conn);
                 this.setInternalConnectionAutoCommit(this.getAutoCommit());
 
                 if (DbContext.permitDebugLog()) {
@@ -1399,7 +1394,7 @@ public class DataBaseImpl implements DataBase {
 
 
     private String getCountSql(String sqlQuery) throws Exception {
-        return this.dataBaseType.CountSql(sqlQuery);
+        return this.getDataBaseType().CountSql(sqlQuery);
     }
 
     private String getPagedSql(String sqlQuery, Collection<Object> vParameters, int page, int perPage, PageBean pageBean, String countSql) throws DbException {
@@ -1425,7 +1420,7 @@ public class DataBaseImpl implements DataBase {
                     maxSql = this.getCountSql(sqlQuery);
 
                 } else {// 说明指定了查询总行数的sql语句
-                    maxSql = this.dataBaseType.trimTailOrderBy(maxSql, new TString());
+                    maxSql = this.getDataBaseType().trimTailOrderBy(maxSql, new TString());
                 }
 
                 RowSet rs = this.doCachedQuery(maxSql, vParameters, true);// 不关闭数据库连接
@@ -1441,7 +1436,7 @@ public class DataBaseImpl implements DataBase {
             if (pageBean.isEmpty()) {
                 return "";
             }
-            sql = SqlUtils.getPageSql(sqlQuery, pageBean.getPage(), pageBean.getPerPage(), this.dataBaseType);
+            sql = SqlUtils.getPageSql(sqlQuery, pageBean.getPage(), pageBean.getPerPage(), this.getDataBaseType());
 
             return sql;
 
@@ -1676,7 +1671,7 @@ public class DataBaseImpl implements DataBase {
             String inParamStr = SqlUtils.setToPreStatment(inParms, cs);
 
             // 注册输出参数
-            String outParamStr = SqlUtils.registForStoredProc(outParms, cs, this.dataBaseType);
+            String outParamStr = SqlUtils.registForStoredProc(outParms, cs, this.getDataBaseType());
 
             Map<Integer, Object> inOutParms = new HashMap<Integer, Object>();
             inOutParms.putAll(inParms);
