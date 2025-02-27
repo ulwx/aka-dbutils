@@ -172,17 +172,41 @@ public class SqlUtils {
             db = DataBaseFactory.getDataBase(pool);
             db.setAutoCommit(false);
             Connection conn = db.getConnection(true);
+
             DatabaseMetaData dd = conn.getMetaData();
             if (StringUtils.isEmpty(schema)) {
                 schema = conn.getCatalog();
             }
             ResultSet rs = null;
-            rs = dd.getTables(conn.getCatalog(), schema, "%",
-                    new String[]{"TABLE"});
-
             ArrayList<String> tablelist = new ArrayList();
             ArrayList<String> tableCommentList = new ArrayList();
             ArrayList<Map<String, String>> tableColumCommentList = new ArrayList<>();
+
+            if(db.getDataBaseType().isPostgresFamily()){
+                String sqltable="SELECT " +
+                        "    '' as REMARKS," +
+                        "    t.table_name as TABLE_NAME " +
+                        "FROM " +
+                        "    information_schema.tables t " +
+                        "LEFT JOIN  " +
+                        "    pg_catalog.pg_class c ON c.relname = t.table_name " +
+                        "LEFT JOIN  " +
+                        "    pg_catalog.pg_inherits i ON c.oid = i.inhrelid " +
+                        "WHERE " +
+                        "    t.table_schema NOT IN ('information_schema', 'pg_catalog') " +
+                        "    AND t.table_type = 'BASE TABLE' " +
+                        "    AND i.inhrelid IS NULL  " +
+                        "ORDER BY " +
+                        "    t.table_schema," +
+                        "    t.table_name;";
+                Statement stmt = conn.createStatement();
+                rs = stmt.executeQuery(sqltable);
+            }else {
+
+                rs = dd.getTables(conn.getCatalog(), schema, "%",
+                        new String[]{"TABLE"});
+
+            }
             while (rs.next()) {
                 String tableName = rs.getString("TABLE_NAME");
                 tablelist.add(tableName);
@@ -209,7 +233,7 @@ public class SqlUtils {
                             dbrs = db.queryForResultSet(sqlColum, args);
                             if (dbrs != null) {
                                 while (dbrs.next()) {
-                                    if(colCommentMap==null) {
+                                    if (colCommentMap == null) {
                                         colCommentMap = new HashMap<>();
                                     }
                                     String colName = dbrs.getString("COLUMN_NAME");
@@ -225,7 +249,6 @@ public class SqlUtils {
                 tableCommentList.add(tableComment);
                 tableColumCommentList.add(colCommentMap);
             }
-
             rs.close();
             for (int i = 0; i < tablelist.size(); i++) {
 
