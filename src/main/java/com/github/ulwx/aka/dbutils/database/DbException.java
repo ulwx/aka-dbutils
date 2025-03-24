@@ -8,7 +8,7 @@ public class DbException extends RuntimeException {
     }
 
     private int code = 0;
-
+    private String msg = "";
     public DbException() {
 
         super();
@@ -16,17 +16,26 @@ public class DbException extends RuntimeException {
 
     public DbException(Throwable cause) {
         super(cause);
-        //causes.add(cause);
+        while(cause .getCause() != null) {
+            cause=cause.getCause();
+        }
+        this.msg = msg+";"+cause.getMessage();
     }
 
     public DbException(String msg, Throwable cause) {
         super(msg, cause);
+        this.msg = msg;
+        while(cause.getCause() != null) {
+            cause=cause.getCause();
+        }
+        this.msg = msg+";"+cause.getMessage();
         //causes.add(cause);
     }
 
     public DbException(String msg, int code) {
         super(msg);
         this.code = code;
+
     }
 
     public DbException(String msg) {
@@ -34,7 +43,7 @@ public class DbException extends RuntimeException {
     }
 
     public String toString() {
-        return super.toString() + ":code[" + code + "]";
+        return this.msg+ ":code[" + code + "]";
     }
 
     public SQLException getSQLException() {
