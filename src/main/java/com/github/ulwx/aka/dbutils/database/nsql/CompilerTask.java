@@ -107,6 +107,7 @@ public class CompilerTask {
 
     public static Class<?> compileSingle(String mdPath, boolean useThirdpartCompilerTool) throws Exception {
 
+
         String packagePath = mdPath.substring(0, mdPath.lastIndexOf(".md"));
         // 获得类名
         int lastPos = packagePath.lastIndexOf(".");
@@ -114,42 +115,46 @@ public class CompilerTask {
         String packageName = packagePath.substring(0, lastPos);
         String classFullName = packageName + "." + className;
         Class aClass = null;
-
-        aClass = LoadedClasses.get(classFullName);
-        if (aClass == null) {
-            try {
-                segmentLock.lock(classFullName);
-                aClass = LoadedClasses.get(classFullName);
-                if (aClass == null) {
-                    String source = MDTemplate.parseFromMdFileToJavaSource(packageName, className);
-                    if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-                        log.debug("to compile java class source:" + classFullName
-                                 +" ;source="+source
-                        );
-                        log.debug("build classpath=" + classpath);
+        String source="";
+        try {
+            aClass = LoadedClasses.get(classFullName);
+            if (aClass == null) {
+                try {
+                    segmentLock.lock(classFullName);
+                    aClass = LoadedClasses.get(classFullName);
+                    if (aClass == null) {
+                        source = MDTemplate.parseFromMdFileToJavaSource(packageName, className);
+                        if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
+                            log.debug("to compile java class source:" + classFullName
+                                    + " ;source=" + source
+                            );
+                            log.debug("build classpath=" + classpath);
+                        }
+                        if (useThirdpartCompilerTool) {
+                            JavaStringCompiler compiler = new JavaStringCompiler();
+                            Map<String, byte[]> results = compiler.compile(className + ".java", source, classpath);
+                            aClass = compiler.loadClass(classFullName, results);
+                            log.debug("compile " +
+                                    classFullName + "finished!");
+                        } else {
+                            aClass = CompilerUtils.compileAndLoadClass(classFullName, source, classpath);
+                        }
+                        LoadedClasses.put(classFullName, aClass);
+                        LoadedSoruces.put(classFullName, source);
                     }
-                    if (useThirdpartCompilerTool) {
-                        JavaStringCompiler compiler = new JavaStringCompiler();
-                        Map<String, byte[]> results = compiler.compile(className + ".java", source, classpath);
-                        aClass = compiler.loadClass(classFullName, results);
-                        log.debug("compile " +
-                                classFullName + "finished!" );
-                    } else {
-                        aClass = CompilerUtils.compileAndLoadClass(classFullName, source, classpath);
-                    }
-                    LoadedClasses.put(classFullName, aClass);
-                    LoadedSoruces.put(classFullName, source);
+                } finally {
+                    segmentLock.unlock(classFullName);
                 }
-            } finally {
-                segmentLock.unlock(classFullName);
-            }
 
-        } else {
-            if (log.isDebugEnabled()) {
-                // log.debug("source-" + CompilerTask.getCompiledClassOfSource(classFullName));
+            } else {
+                if (log.isDebugEnabled()) {
+                     //log.debug("source-" + CompilerTask.getCompiledClassOfSource(classFullName));
+                }
             }
+            return aClass;
+        }catch (Exception e) {
+            throw new RuntimeException(""+classFullName+"\n"+source,e);
         }
-        return aClass;
     }
 
     /**
