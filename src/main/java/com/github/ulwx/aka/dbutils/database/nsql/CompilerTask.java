@@ -65,6 +65,7 @@ public class CompilerTask {
                     if (mdPath.startsWith("META-INF")) {
                         continue;
                     }
+                    mdPath=StringUtils.trimLeadingString(mdPath,"BOOT-INF.classes!.");
                     mdPathList.add(mdPath);
                 } else if (resources[i].getURL().getProtocol().equals("file")) {
                     Iterator<String> iterator = classRootResources.descendingIterator();
@@ -76,6 +77,7 @@ public class CompilerTask {
                             if (mdPath.startsWith("META-INF")) {
                                 break;
                             }
+                            mdPath=StringUtils.trimLeadingString(mdPath,"BOOT-INF.classes!.");
                             mdPathList.add(mdPath);
                             break;
                         }

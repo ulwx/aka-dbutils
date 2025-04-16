@@ -48,6 +48,7 @@ public class MD {
         } else {
             methodName = ste.getMethodName();
         }
+
         className=StringUtils.trimLeadingString(className,"BOOT-INF.classes!.");
         return className + ".md:" + methodName;
     }
