@@ -51,7 +51,7 @@ public class Path {
             return new File(url.toURI()).getAbsolutePath();
 
         } catch (Exception e) {
-            log.error("" + e, e);
+            log.error(url+"" + e, e);
             return null;
         }
     }

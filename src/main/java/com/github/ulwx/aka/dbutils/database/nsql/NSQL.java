@@ -131,6 +131,7 @@ public final class NSQL {
         if (mdPath.equalsIgnoreCase("sql")) {
             return getNSQL(methodName, "sql", map);
         }
+        log.debug("mdPath="+mdPath);
         String sql = MDTemplate.getResultString(mdPath, methodName, map);
         return getNSQL(sql, mdPath + ":" + methodName, map);
     }

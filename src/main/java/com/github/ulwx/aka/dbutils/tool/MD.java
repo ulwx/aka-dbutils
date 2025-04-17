@@ -13,6 +13,8 @@ import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.path.Resource;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.CGetFun;
 import com.github.ulwx.aka.dbutils.tool.support.reflect.GetFun;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MD {
+    private final static Logger log = LoggerFactory.getLogger(MD.class);
     public static String md(Class daoClass, String mdMethodName) {
         String prefix = daoClass.getName();
         return prefix + ".md:" + mdMethodName;
@@ -48,8 +51,8 @@ public class MD {
         } else {
             methodName = ste.getMethodName();
         }
-
-        className=StringUtils.trimLeadingString(className,"BOOT-INF.classes!.");
+        log.debug("+++"+className + ".md:" + methodName);
+       // className=StringUtils.trimLeadingString(className,"BOOT-INF.classes!.");
         return className + ".md:" + methodName;
     }
 
