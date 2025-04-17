@@ -261,11 +261,14 @@ public class SqlUtils {
                 while (rs.next()) {
 
                     Column co = new Column();
+                    String colName=rs.getString("COLUMN_NAME");
+                    colName=StringUtils.trimLeadingString(colName,"';");
                     co.setDbms(db.getDataBaseType());
-                    co.setColumn_name(StringUtils.trimLeadingString("';",rs.getString("COLUMN_NAME")));
+                    co.setColumn_name(colName);
                     co.setColumn_size(rs.getInt("COLUMN_SIZE"));
                     co.setData_type(rs.getInt("DATA_TYPE"));
                     co.setIs_nullable(rs.getString("IS_NULLABLE"));
+
 
                     if(tableColumCommentList.get(i)!=null){
                         co.setRemarks(tableColumCommentList.get(i).get(co.getColumn_name()));
@@ -300,7 +303,7 @@ public class SqlUtils {
                     }catch (Exception ex) {
                     }
                     try {
-                        columMap.put(StringUtils.trimLeadingString("';",rs.getString("COLUMN_NAME")), co);
+                        columMap.put(colName, co);
                     }catch (Exception ex) {
                     }
 
