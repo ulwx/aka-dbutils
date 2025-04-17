@@ -262,7 +262,7 @@ public class SqlUtils {
 
                     Column co = new Column();
                     co.setDbms(db.getDataBaseType());
-                    co.setColumn_name(rs.getString("COLUMN_NAME"));
+                    co.setColumn_name(StringUtils.trimLeadingString("';",rs.getString("COLUMN_NAME")));
                     co.setColumn_size(rs.getInt("COLUMN_SIZE"));
                     co.setData_type(rs.getInt("DATA_TYPE"));
                     co.setIs_nullable(rs.getString("IS_NULLABLE"));
@@ -300,7 +300,7 @@ public class SqlUtils {
                     }catch (Exception ex) {
                     }
                     try {
-                        columMap.put(rs.getString("COLUMN_NAME"), co);
+                        columMap.put(StringUtils.trimLeadingString("';",rs.getString("COLUMN_NAME")), co);
                     }catch (Exception ex) {
                     }
 
