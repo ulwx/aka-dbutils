@@ -1480,7 +1480,7 @@ public class DataBaseImpl implements DataBase {
         long start = System.currentTimeMillis();
         this.rs = preStmt.executeQuery();
         if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
-            log.debug("sql执行:" + (System.currentTimeMillis() - start));
+            log.debug("sql执行时间:" + (System.currentTimeMillis() - start));
         }
 
         return new DataBaseSet(this.rs);
@@ -4398,7 +4398,7 @@ public class DataBaseImpl implements DataBase {
                 }
                 if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
 
-                    log.debug("sql执行:" + (System.currentTimeMillis() - start) + (!hasResults ? ",更新条数:" + statement.getUpdateCount() : ""));
+                    log.debug("sql执行时间:" + (System.currentTimeMillis() - start) + (!hasResults ? ",更新条数:" + statement.getUpdateCount() : ""));
                 }
                 while (!(!hasResults && statement.getUpdateCount() == -1)) {
                     checkWarnings(statement);
