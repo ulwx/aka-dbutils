@@ -482,6 +482,24 @@ public class CTime {
         }
     }
 
+    public static LocalDateTime parseToLocalDateTime(String dateString,DateTimeFormatter formatter) {
+        return LocalDateTime.parse(dateString, formatter);
+    }
+    public static LocalDateTime parseToLocalDateTime(String dateString) {
+        return LocalDateTime.parse(dateString, CTime.DTF_YMD_HH_MM_SS);
+    }
+    public static LocalDate parseToLocalDate(String dateString,DateTimeFormatter formatter) {
+        return LocalDate.parse(dateString, formatter);
+    }
+    public static LocalDate parseToLocalDate(String dateString) {
+        return LocalDate.parse(dateString, CTime.DTF_YMD);
+    }
+    public static LocalTime parseToLocalTime(String dateString,DateTimeFormatter formatter) {
+        return LocalTime.parse(dateString, formatter);
+    }
+    public static LocalTime parseToLocalTime(String dateString) {
+        return LocalTime.parse(dateString,  CTime.DTF_HH_MM_SS);
+    }
     /**
      * 根据给定的format格式返回日期
      *
