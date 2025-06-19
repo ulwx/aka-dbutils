@@ -244,16 +244,26 @@ public enum DBMS {
             case POSTGRE:
                 if (dateObj instanceof Date) {
                     String str = "'" + CTime.formatWholeDate((Date) dateObj) + "'";
-                    return "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+                    return "to_timestamp(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+
                 } else if (dateObj instanceof LocalDate) {
                     String str = "'" + CTime.formatLocalDate((LocalDate) dateObj) + "'";
                     return "to_date(" + str + ",'yyyy-mm-dd')";
                 } else if (dateObj instanceof LocalDateTime) {
                     String str = "'" + ((LocalDateTime) dateObj).format(CTime.DTF_YMD_HH_MM_SS) + "'";
-                    return "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+                    if(this.dbType==DBType.POSTGRE) {
+                        return "to_timestamp(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+                    }else{
+                        return "to_date(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
+                    }
                 } else if (dateObj instanceof LocalTime) {
                     String str = "'" + ((LocalTime) dateObj).format(CTime.DTF_HH_MM_SS) + "'";
-                    return "to_date(" + str + ",'hh24:mi:ss')";
+                    if(this.dbType==DBType.POSTGRE) {
+                        return "'"+str+"'::TIME";
+                    }else{
+                        return "to_date(" + str + ",'hh24:mi:ss')";
+                    }
+
                 } else {
                 }
                 break;
