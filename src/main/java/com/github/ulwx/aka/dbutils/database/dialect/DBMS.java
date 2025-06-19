@@ -244,13 +244,22 @@ public enum DBMS {
             case POSTGRE:
                 if (dateObj instanceof Date) {
                     String str = "'" + CTime.formatWholeDate((Date) dateObj) + "'";
+                    if(this.dbType==DBType.HSQL){
+                        return "TIMESTAMP(" + str + ")";
+                    }
                     return "to_timestamp(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
 
                 } else if (dateObj instanceof LocalDate) {
                     String str = "'" + CTime.formatLocalDate((LocalDate) dateObj) + "'";
+                    if(this.dbType==DBType.HSQL){
+                        return "PARSEDATETIME(" + str + ",'yyyy-mm-dd')";
+                    }
                     return "to_date(" + str + ",'yyyy-mm-dd')";
                 } else if (dateObj instanceof LocalDateTime) {
                     String str = "'" + ((LocalDateTime) dateObj).format(CTime.DTF_YMD_HH_MM_SS) + "'";
+                    if(this.dbType==DBType.HSQL){
+                        return "TIMESTAMP(" + str + ")";
+                    }
                     if(this.dbType==DBType.POSTGRE) {
                         return "to_timestamp(" + str + ",'yyyy-mm-dd hh24:mi:ss')";
                     }else{
@@ -258,8 +267,11 @@ public enum DBMS {
                     }
                 } else if (dateObj instanceof LocalTime) {
                     String str = "'" + ((LocalTime) dateObj).format(CTime.DTF_HH_MM_SS) + "'";
+                    if(this.dbType==DBType.HSQL){
+                        return "PARSEDATETIME(" + str + ",'HH:mm:ss')";
+                    }
                     if(this.dbType==DBType.POSTGRE) {
-                        return "'"+str+"'::TIME";
+                        return ""+str+"::TIME";
                     }else{
                         return "to_date(" + str + ",'hh24:mi:ss')";
                     }
