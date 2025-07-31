@@ -613,9 +613,10 @@ public enum DBMS {
         sqlQuery = sqlQuery.trim();
         sqlQuery = trimTailOrderBy(sqlQuery, new TString());
         StringBuilder sb = new StringBuilder(sqlQuery);
-        if (!StringUtils.startsWithIgnoreCase(sqlQuery, "select")) {
-            throw new IllegalArgumentException("语句不是select查询语句！");
-        }
+//        if (!StringUtils.startsWithIgnoreCase(sqlQuery, "select")||
+//                !StringUtils.startsWithIgnoreCase(sqlQuery, "with")) {
+//            throw new IllegalArgumentException("语句不是select查询语句！");
+//        }
         if (this.isSQLServerFamily()) {
 
             countSql = "select count(1) from (" + sb.toString() + ") t";
