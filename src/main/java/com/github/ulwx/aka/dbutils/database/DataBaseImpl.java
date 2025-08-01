@@ -1878,7 +1878,11 @@ public class DataBaseImpl implements DataBase {
                             || this.conn.getMetaData().supportsGetGeneratedKeys()) {//oracle不支持getGeneratedKeys操作
                         ResultSet keys = preStmt.getGeneratedKeys();
                         if (keys.next()) {
-                            twoInt[1] = keys.getLong(1);
+                            try {
+                                twoInt[1] = keys.getLong(1);
+                            }catch (Exception e) {
+                                twoInt[1]=0;
+                            }
                         } else {
                             twoInt[1] = -1;
                         }
