@@ -135,7 +135,9 @@ public final class MDTemplate {
             @Override
             public String handler(String groupStr) {
                 String key = StringUtils.trim(groupStr);
-                if (key.startsWith("=")) {
+                if (key.startsWith(":")) {
+                    return "\"+(" + NFunction.class.getSimpleName() + ".trimArgValue(\"" + key.substring(1) + "\",args,\",\",options)" + ")+\"";
+                }else if (key.startsWith("=")) {
                     return "\"+(" + key.substring(1) + ")+\"";
                 } else if (key.startsWith("&")) {
                     // ${&getDataCount2}

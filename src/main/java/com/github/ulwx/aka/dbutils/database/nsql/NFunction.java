@@ -56,6 +56,10 @@ public class NFunction {
         return StringUtils.trimTailString(str, trimStr);
     }
 
+    public static String trimArgValue(String groupStr, Map<String, Object> args,
+                                      String arrayToStringDelimeter, MDMehtodOptions options) {
+        return trim(argValue(groupStr,args,arrayToStringDelimeter,options),"'");
+    }
     public static String argValue(String groupStr, Map<String, Object> args,
                                   String arrayToStringDelimeter, MDMehtodOptions options) {
         String key = groupStr.trim();
