@@ -51,7 +51,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param throwWarning     脚本执行时如果出现warning时是否抛出异常并回滚
      * @param delimiters       脚本执行时判断脚本里某条执行语句结束的标志，例如 ";" 。注意：执行语句结尾处的delimiters之后后面必须为换行符
@@ -68,7 +68,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName         分如下两种情况：<ul>
      *                                 <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                                 <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                                 <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                                 </ul>
      * @param args                     md方法里用到的参数
      * @param page                     当前页码（从1开始）
@@ -90,7 +90,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             md方法里用到的参数
      * @return 返回离线结果集
@@ -116,7 +116,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName         分如下两种情况：<ul>
      *                                 <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                                 <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                                 <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                                 </ul>
      * @param args                     md方法所用到的参数
      * @param page                     当前请求页码
@@ -153,7 +153,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName         分如下两种情况：<ul>
      *                                 <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                                 <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                                 <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                                 </ul>
      * @param args                     md方法所用到的参数
      * @param page                     当前请求页码
@@ -176,7 +176,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      * @param clazz            记录映射到对象的类型
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             md方法用到的参数
      * @param <T>
@@ -192,7 +192,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      * @param clazz            映射的对象的类型
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             md方法所用到的参数
      * @param <T>
@@ -280,7 +280,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      * @param clazz                 映射到的对象所属类型
      * @param mdFullMethodName      分如下两种情况：<ul>
      *                              <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                              <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                              <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                              </ul>
      * @param args                  md方法里用到的参数
      * @param one2OneMapNestOptions 关联子对象的映射配置对象。
@@ -310,7 +310,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      * @param clazz                    记录映射到对象的类型
      * @param mdFullMethodName         分如下两种情况：<ul>
      *                                 <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                                 <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                                 <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                                 </ul>
      * @param args                     md方法用到的参数
      * @param page                     当前请求页码
@@ -414,7 +414,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      * @param clazz                    映射到的对象所属类型
      * @param mdFullMethodName         分如下两种情况：<ul>
      *                                 <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                                 <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                                 <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                                 </ul>
      * @param args                     md方法里用到的参数
      * @param one2OneMapNestOptions    关联子对象的映射配置对象。
@@ -522,7 +522,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      * @param clazz                  映射到的对象所属类型
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args                   md方法里用到的参数
      * @param one2ManyMapNestOptions 指定一对多关联子对象的映射信息，为数组类型，可以指定多个一对多关联映射
@@ -539,7 +539,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             md方法所用到的参数，如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile
      * @param rowMapper        自定义映射接口，可通过此接口，开发者可以自定义结果集到对象的映射
@@ -554,7 +554,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>。
      * @param args             md方法所用到的参数
      * @return 返回一个含有map的List，每个map对应一行记录，key为表字段名称，value为字段的值
@@ -567,7 +567,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             md方法里用到的参数
      * @return 返回删除操作删除的条数
@@ -606,7 +606,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param parms              传入的参数
      * @param outPramsValues     输出参数
@@ -621,7 +621,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>。
      * @param args             为动态生成SQL语句的参数
      * @return 返回执行插入操作后插入记录的条数
@@ -634,7 +634,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>。
      * @param args             为动态生成SQL语句的参数
      * @return 返回插入单条记录的自增主键id
@@ -647,7 +647,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args              mdFullMethodNames数组里每个md方法地址所定义的SQL，可以被提供一个Map&lt;String, Object&gt;对象，用于传递参数。
      * @return 每个md方法地址指定的SQL执行插入操作返回的记录条数存放于int数组相应位置
@@ -660,7 +660,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @return 每个md方法地址指定的SQL执行插入操作返回的记录条数存放于int数组相应位置
      * @throws DbException
@@ -672,7 +672,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             参数数组，会根据数组里的每个参数执行一次md方法，从而生成不同的insert语句
      * @return 每此执行插入操作返回的记录条数存放于int数组相应位置
@@ -685,7 +685,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             多个Map&lt;String, Object&gt;对象，对应于每次执行的md方法
      * @return 返回每次执行md方法的SQL语句返回的条数
@@ -698,7 +698,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args              每个md方法的SQL可以使用一个Map&lt;String, Object&gt;对象来传递参数
      * @return 返回每次执行md方法的SQL语句返回的条数
@@ -711,7 +711,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @return 返回每个md方法地址指定的SQL所更新的记录条数
      * @throws DbException
@@ -723,7 +723,7 @@ public interface MDataBase extends DBObjectOperation, AutoCloseable {
      *
      * @param mdFullMethodName 分如下两种情况：<ul>
      *                         <li>md方法地址：如com.hithub.ulwx.demo.dao.CourseDao.md:queryListFromMdFile。</li>
-     *                         <li><xmp>sql:<SQL语句></xmp>：如"sql:select * from stu where name=#{stuName}"。</li>
+     *                         <li>sql:&lt;SQL语句&gt;：如"sql:select * from stu where name=#{stuName}"。</li>
      *                         </ul>
      * @param args             md方法用到的参数
      * @return md方法地址指定的SQL执行返回的条数

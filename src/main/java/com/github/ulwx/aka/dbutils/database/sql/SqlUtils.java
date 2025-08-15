@@ -1478,8 +1478,9 @@ public class SqlUtils {
                 && StringUtils.endsWithIgnoreCase(newSqltxt, "}")
                 && StringUtils.indexOf(newSqltxt, "[{=]\\s*call\\s+", true) >= 0) {
             return DataBase.SQLType.STORE_DPROCEDURE;
-
-        } else {
+        }else if (StringUtils.startsWithIgnoreCase(newSqltxt, "call")){
+            return DataBase.SQLType.STORE_DPROCEDURE;
+        }else {
             return DataBase.SQLType.OTHER;
         }
     }
