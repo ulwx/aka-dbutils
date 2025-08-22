@@ -10,7 +10,7 @@ import java.util.function.Function;
 public class   BaseDao {
 
     protected static <R> R execute(Function<DataBase, R> function, String dbpoolName) {
-        DataBase db = null;
+        DataBase db  = null;
         try {
             db = DataBaseFactory.getDataBase(dbpoolName);
             return function.apply(db);
