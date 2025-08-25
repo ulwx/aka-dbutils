@@ -175,11 +175,15 @@ public final class NSQL {
      * @return 返回NSQL对象
      */
 
-    public static NSQL parseSql(String sqltxt, final Map<String, Object> args, NSQL nsql) {
+    public static NSQL parseSql(String sqltxt,  Map<String, Object> _args, NSQL nsql) {
 
         sqltxt = StringUtils.trim(sqltxt);
         if (sqltxt.isEmpty()) {
             throw new NullPointerException("SQL String is empty or null");
+        }
+        Map<String, Object> args=new HashMap<>();
+        if(_args!=null){
+            args.putAll(_args);
         }
         String sql = sqltxt;
         //判断sql的类型
