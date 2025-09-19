@@ -260,6 +260,9 @@ public class MD {
         return new QueryHint();
     }
 
+    public static void setQueryHint(QueryHint hint){
+        DbContext.setQueryHint(hint);
+    }
     public static IDGeneratorParmeter ofIDGenParmeter(String parmName,String sequenceName){
         IDGeneratorParmeter idGeneratorParmeter=new IDGeneratorParmeter();
         idGeneratorParmeter.setName(parmName);
