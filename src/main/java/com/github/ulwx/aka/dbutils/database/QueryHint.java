@@ -50,6 +50,7 @@ public class QueryHint {
     public QueryHint orderBy(String orderByStr) {
 
         this.orderBy = orderByStr;
+
         return this;
     }
 
@@ -63,6 +64,10 @@ public class QueryHint {
         return this;
     }
 
+    public QueryHint hint(){
+        DbContext.setQueryHint(this);
+        return this;
+    }
     /**
      * 返回设置的limit值
      *
