@@ -102,7 +102,7 @@ public final class MDTemplate {
             @Override
             public String handler(String groupStr) {
 
-                return "args.get(\"" + groupStr + "\") ";
+                return "(args.get(\"" + groupStr + "\")) ";
             }
         });
 

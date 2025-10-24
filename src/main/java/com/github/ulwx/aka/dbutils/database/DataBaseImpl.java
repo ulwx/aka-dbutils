@@ -136,7 +136,9 @@ public class DataBaseImpl implements DataBase {
                     continue;
                 } else if (stack[i].getClassName().startsWith("jdk.internal.") || stack[i].getClassName().startsWith("java.lang.")
                         || stack[i].getClassName().contains("CGLIB$$")
-                        || stack[i].getClassName().startsWith("org.springframework")) {
+                        || stack[i].getClassName().startsWith("org.springframework")
+                ||stack[i].getClassName().endsWith("Aspect" )
+                ||stack[i].getClassName().endsWith("MDataBaseTemplate" )){
                     continue;
                 }
 
@@ -145,11 +147,11 @@ public class DataBaseImpl implements DataBase {
                     String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
                     upLevelNum++;
                     str = tempInfo;
-                    if (i - 1 >= 0) {
-                        tempInfo = "" + getLastTwoClassName(stack[i - 1].getClassName()) + "." + stack[i - 1].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
-                        str = tempInfo + "=>" + str;
-                        upLevelNum++;
-                    }
+//                    if (i - 1 >= 0) {
+//                        tempInfo = "" + getLastTwoClassName(stack[i - 1].getClassName()) + "." + stack[i - 1].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
+//                        str = tempInfo + "=>" + str;
+//                        upLevelNum++;
+//                    }
 
                 } else {
                     String tempInfo = "" + getLastTwoClassName(stack[i].getClassName()) + "." + stack[i].getMethodName() + "(" + stack[i].getFileName() + ":" + stack[i].getLineNumber() + ")";
