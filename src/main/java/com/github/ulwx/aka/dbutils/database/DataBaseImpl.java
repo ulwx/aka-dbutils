@@ -3259,11 +3259,12 @@ public class DataBaseImpl implements DataBase {
             } else {
                 throw new DbException("不能决定sql语句的类型！" + sqltxt);
             }
-
+            ps.setQueryTimeout(0);
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException("" + sqltxt, e);
         }
+
         return ps;
     }
 
@@ -3294,7 +3295,7 @@ public class DataBaseImpl implements DataBase {
             } else {
                 throw new DbException("不能决定sql语句的类型！");
             }
-
+            statement.setQueryTimeout(0);
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
             throw new DbException(e);
