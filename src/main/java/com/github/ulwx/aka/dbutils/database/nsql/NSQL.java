@@ -102,7 +102,7 @@ public final class NSQL {
 
         } catch (Exception e) {
             if (e instanceof DbException) throw (DbException) e;
-            throw new DbException(e.getMessage(), e);
+            throw new DbException(e.getMessage()+e, e);
         }
     }
 
