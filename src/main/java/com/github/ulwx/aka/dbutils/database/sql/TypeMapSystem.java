@@ -164,6 +164,11 @@ public class TypeMapSystem {
                      column.getType_name().equals("NVARCHAR2")){
                 return String.class;
             }
+        }else if(column.getDbms().isPostgresFamily()){
+            if(column.getData_type()== Types.BIT &&
+                    column.getType_name().equals("bool")){
+                return Boolean.class;
+            }
         }
         return sql2javaType.get(column.getData_type());
 
