@@ -131,6 +131,7 @@ public class CompilerTask {
                     aClass = LoadedClasses.get(classFullName);
                     if (aClass == null) {
                         source = MDTemplate.parseFromMdFileToJavaSource(packageName, className);
+
                         if (log.isDebugEnabled() && DbContext.permitDebugLog()) {
                             log.debug("to compile java class source:" + classFullName
                                     + " ;source=" + source
