@@ -1,6 +1,7 @@
 package com.github.ulwx.aka.dbutils.database.nsql;
 
 import com.github.ulwx.aka.dbutils.database.DbContext;
+import com.github.ulwx.aka.dbutils.database.nsql.compiler.GroovyStringCompiler;
 import com.github.ulwx.aka.dbutils.database.nsql.compiler.newer.JavaStringCompiler;
 import com.github.ulwx.aka.dbutils.database.nsql.compiler.older.CompilerUtils;
 import com.github.ulwx.aka.dbutils.tool.support.*;
@@ -22,11 +23,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CompilerTask {
+    public static enum CompilerTool{
+        COMMON,
+        JAVA,
+        GROOVY
+    }
     private static Logger log = LoggerFactory.getLogger(CompilerTask.class);
     private static volatile String classpath = buildClassPath();
     public static volatile Map<String, Class> LoadedClasses = new ConcurrentHashMap<String, Class>();
     public static volatile Map<String, String> LoadedSoruces = new ConcurrentHashMap<String, String>();
-    public static volatile boolean UseThirdpartCompilerTool = false;
+    public static volatile CompilerTool UseCompilerTool = CompilerTool.GROOVY;
     public static ExecutorService threadPool = Executors.newFixedThreadPool(4);
     public static volatile SegmentLock segmentLock = new SegmentLock();
 
@@ -100,7 +106,7 @@ public class CompilerTask {
                 @Override
                 public void run() {
                     try {
-                        compileSingle(mdPathList.get(index), UseThirdpartCompilerTool);
+                        compileSingle(mdPathList.get(index), UseCompilerTool);
                     } catch (Exception e) {
                         log.error("" + e, e);
                     }
@@ -110,9 +116,8 @@ public class CompilerTask {
         threadPool.shutdown();
 
     }
-
-    public static Class<?> compileSingle(String mdPath, boolean useThirdpartCompilerTool) throws Exception {
-
+    public static Class<?> compileSingle(String mdPath,
+                       CompilerTool UseCompilerTool) throws Exception {
 
         log.debug("mdPath="+mdPath);
         String packagePath = mdPath.substring(0, mdPath.lastIndexOf(".md"));
@@ -138,12 +143,18 @@ public class CompilerTask {
                             );
                             log.debug("build classpath=" + classpath);
                         }
-                        if (useThirdpartCompilerTool) {
+                        if (UseCompilerTool==CompilerTool.JAVA) {
                             JavaStringCompiler compiler = new JavaStringCompiler();
                             Map<String, byte[]> results = compiler.compile(className + ".java", source, classpath);
                             aClass = compiler.loadClass(classFullName, results);
-                            log.debug("compile " +
+                            log.debug("compile JAVA " +
                                     classFullName + "finished!");
+                        } else if(UseCompilerTool==CompilerTool.GROOVY){
+                            GroovyStringCompiler compiler = new GroovyStringCompiler();
+                            aClass = compiler.compile(className + ".java", source, classpath);
+                            log.debug("compile GROOVY " +
+                                    classFullName + "finished!");
+
                         } else {
                             aClass = CompilerUtils.compileAndLoadClass(classFullName, source, classpath);
                         }
