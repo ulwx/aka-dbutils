@@ -16,7 +16,8 @@ public class DbException extends RuntimeException {
 
     public DbException(Throwable cause) {
         super(cause);
-        while(cause .getCause() != null) {
+        if(cause==null) return;
+        while(cause.getCause() != null) {
             cause=cause.getCause();
         }
         this.msg = msg+";"+cause.getMessage();

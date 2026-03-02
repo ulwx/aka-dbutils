@@ -6,7 +6,7 @@ import io.seata.core.event.EventBus;
 import io.seata.core.event.GuavaEventBus;
 import io.seata.core.exception.TmTransactionException;
 import io.seata.core.exception.TransactionExceptionCode;
-import io.seata.spring.event.DegradeCheckEvent;
+import io.seata.integration.tx.api.event.DegradeCheckEvent;
 import io.seata.tm.api.*;
 import io.seata.tm.api.transaction.*;
 import org.slf4j.Logger;

@@ -10,13 +10,17 @@ import com.github.ulwx.aka.dbutils.tool.support.NumberUtils;
 import com.github.ulwx.aka.dbutils.tool.support.ObjectUtils;
 import com.github.ulwx.aka.dbutils.tool.support.StringUtils;
 import com.github.ulwx.aka.dbutils.tool.support.type.*;
-import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
+import net.bytebuddy.ByteBuddy;
+
+import net.bytebuddy.implementation.InvocationHandlerAdapter;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.SuperMethodCall;
+import net.bytebuddy.implementation.bind.annotation.*;
+import net.bytebuddy.matcher.ElementMatchers;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.*;
@@ -29,73 +33,70 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+
+import static com.alibaba.nacos.shaded.io.grpc.ClientInterceptors.intercept;
+import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public class MapperFactory {
     private static Logger log = LoggerFactory.getLogger(DataBase.class);
 
-    /**
-     * 根据type指定的接口生成动态代理。type接口里的方法映射到名称相同的md方法
-     *
-     * @param mapperType 指定抽象接口的类型，从而生成代理对象
-     * @param <T>
-     * @return 返回继承type接口的代理对象
-     */
-    public static <T> T getMapper(Class<T> mapperType, MDataBase mDataBase) {
-        if (!AkaMapper.class.isAssignableFrom(mapperType)) {
-            throw new DbException("aka-dbutils mapper必须继承自" + AkaMapper.class.getName() + "!");
+    @SuppressWarnings("unchecked")
+    public static <T> T getMapper(Class<T> mapperType,  MDataBase mDataBase) {
+        try {
+
+            if (!AkaMapper.class.isAssignableFrom(mapperType)) {
+                throw new DbException("类" + mapperType.getName() + "必须继承" + AkaMapper.class.getName() + "接口！");
+            }
+            T proxy= (T) new ByteBuddy()
+                    .subclass(mapperType)
+                    .method(
+                            ElementMatchers.isDeclaredBy(mapperType)
+                                    .and(ElementMatchers.isAbstract())
+                    )
+                    .intercept(
+                            MethodDelegation.to(new MapperProxy(mDataBase,mapperType))
+                    )
+                    .make()
+                    .load(mapperType.getClassLoader())
+                    .getLoaded()
+                    .getDeclaredConstructor()
+                    .newInstance();
+
+            ((AkaMapper)proxy).setMdDataBase(mDataBase);
+
+            return proxy;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create mapper proxy for: " + mapperType.getName(), e);
         }
-        MapperProxy<T> mapperProxy = new MapperProxy<T>(mDataBase, mapperType);
-        Enhancer enhancer = new Enhancer();
-        enhancer.setSuperclass(mapperType);
-        enhancer.setCallback(mapperProxy);
-        T mapperObj = (T) enhancer.create();
-        ((AkaMapper) mapperObj).setMdDataBase(mDataBase);
-        return mapperObj;
     }
 
-    public static class MapperProxy<T> implements MethodInterceptor, Serializable {
 
-        private static final long serialVersionUID = -6424540398559729839L;
+    public static class MapperProxy<T>  {
+
         private final MDataBase mDataBase;
-        private final Class<T> mapperType;
+        private Class<T> mapperType;
 
         public MapperProxy(MDataBase mDataBase, Class<T> mapperType) {
             this.mDataBase = mDataBase;
-            this.mapperType = mapperType;
+            this.mapperType=mapperType;
         }
 
         private String methodInfo(Method method) {
             return method.getDeclaringClass().getName() + "#" + method.getName() + "(...)";
         }
 
-        @Override
-        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-            return invoke(obj, method, args, proxy);
-        }
-
-        public Object invoke(Object proxy, Method method, Object[] args, MethodProxy mthodProxy) throws Throwable {
-            if (Object.class.equals(method.getDeclaringClass())) {
-                return method.invoke(this, args);
-            } else if (method.isDefault()) {
-                return invokeDefaultMethod(proxy, method, args);
-            }
-            if (proxy instanceof AkaMapper) {
-                if (method.getDeclaringClass() == AkaMapper.class) {
-                    return mthodProxy.invokeSuper(proxy, args);
-                }
-            } else {
-                throw new DbException("类" + mapperType.getName() + "必须继承" + AkaMapper.class.getName() + "接口！");
-            }
-            if (!Modifier.isAbstract(method.getModifiers())) {
-
-                return mthodProxy.invokeSuper(proxy, args);
-            }
-
+        @RuntimeType
+        public   Object interceptor(@This Object proxy,
+                                    @Origin Method method,
+                                    @AllArguments Object[] args) throws Throwable{
             Map<String, Object> argMap = new HashMap<>();
             PageOptions pageOptions = null;
             MapNestOptions mapNestOptions = null;
             InsertOptions insertOptions = null;
+
             if (args == null || args.length == 0) {
                 ///
             } else {
