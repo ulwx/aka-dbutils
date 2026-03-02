@@ -50,7 +50,7 @@ public class SqlUtils {
         sb.append("import java.sql.*;\n");
         sb.append("import java.time.*;\n");
         // sb.append("import " + MdbOptions.class.getName() + ";\n");
-        sb.append("import " + ObjectUtils.class.getName() + ";\n");
+        sb.append("import " + ObjectPrinter.class.getName() + ";\n");
         sb.append("import " + AkaColumn.class.getName() + ";\n");
         sb.append("\n/*********************************************\n");
         sb.append(tableRemark);
@@ -137,7 +137,7 @@ public class SqlUtils {
             sm.append("\t\treturn " + name + ";\n\t}\n");
         }
         String toStringMethod = "\n\tpublic String toString(){\n";
-        toStringMethod = toStringMethod + "\t\treturn  ObjectUtils.toString(this);\n\t}\n";
+        toStringMethod = toStringMethod + "\t\treturn  ObjectPrinter.print(this);\n\t}\n";
 
         sb.append("\n" + sm);
         sb.append(toStringMethod);
