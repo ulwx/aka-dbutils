@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
 
 public class DataBaseImpl implements DataBase {
     private final static Logger log = LoggerFactory.getLogger(DataBase.class);
-    private Connection conn = null;
+    private Connection  conn = null;
     private PreparedStatement ps = null;
     private ResultSet rs = null;
     private boolean mainSlaveMode = false;
