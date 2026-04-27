@@ -58,7 +58,9 @@ public class NFunction {
 
     public static String trimArgValue(String groupStr, Map<String, Object> args,
                                       String arrayToStringDelimeter, MDMehtodOptions options) {
-        return trim(argValue(groupStr,args,arrayToStringDelimeter,options),"'");
+        String key = groupStr.trim();
+        String val = args.get(key)+"";
+        return val;
     }
     public static String argValue(String groupStr, Map<String, Object> args,
                                   String arrayToStringDelimeter, MDMehtodOptions options) {
